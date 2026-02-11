@@ -7,6 +7,10 @@ from gpt_trader.monitoring.metrics_exporter import (
     _parse_metric_key,
     format_prometheus,
 )
+from gpt_trader.monitoring.status_reporter import (
+    HEARTBEAT_LAG_BUCKETS,
+    HEARTBEAT_LAG_METRIC,
+)
 
 
 class TestParseMetricKey:
@@ -148,3 +152,71 @@ class TestFormatPrometheus:
         summary = {"counters": {"simple_counter": 42}}
         result = format_prometheus(summary)
         assert "simple_counter 42" in result
+
+
+def _build_heartbeat_histogram_summary(
+    bucket_counts: tuple[int, ...],
+    total: float,
+) -> dict[str, dict[str, object]]:
+    """Helper for building heartbeat histogram summaries."""
+
+    assert len(bucket_counts) == len(HEARTBEAT_LAG_BUCKETS)
+    bucket_map = {str(bound): count for bound, count in zip(HEARTBEAT_LAG_BUCKETS, bucket_counts)}
+    count = sum(bucket_counts)
+    return {
+        "histograms": {
+            HEARTBEAT_LAG_METRIC: {
+                "count": count,
+                "sum": total,
+                "buckets": bucket_map,
+            }
+        }
+    }
+
+
+def _expected_heartbeat_bucket_lines(bucket_counts: tuple[int, ...]) -> list[str]:
+    """Expected bucket lines for heartbeat lag histograms."""
+
+    expected: list[str] = []
+    cumulative = 0
+    for bound, bucket in zip(HEARTBEAT_LAG_BUCKETS, bucket_counts):
+        cumulative += bucket
+        expected.append(f'{HEARTBEAT_LAG_METRIC}_bucket{{le="{bound}"}} {cumulative}')
+    expected.append(f'{HEARTBEAT_LAG_METRIC}_bucket{{le="+Inf"}} {sum(bucket_counts)}')
+    return expected
+
+
+class TestHeartbeatHistogramExport:
+    """Heart beat histogram coverage for metric exporter."""
+
+    def test_zero_data_remains_deterministic(self) -> None:
+        """Zero-sample histogram emits deterministic bucket exposure."""
+
+        bucket_counts = (0,) * len(HEARTBEAT_LAG_BUCKETS)
+        summary = _build_heartbeat_histogram_summary(bucket_counts, total=0.0)
+        result = format_prometheus(summary)
+
+        assert "# TYPE gpt_trader_ws_heartbeat_lag_seconds histogram" in result
+        bucket_lines = [
+            line
+            for line in result.splitlines()
+            if line.startswith(f"{HEARTBEAT_LAG_METRIC}_bucket")
+        ]
+        assert len(bucket_lines) == len(HEARTBEAT_LAG_BUCKETS) + 1
+        assert all(line.endswith(" 0") for line in bucket_lines)
+        assert f"{HEARTBEAT_LAG_METRIC}_sum 0.0" in result
+        assert f"{HEARTBEAT_LAG_METRIC}_count 0" in result
+
+    def test_populated_data_exposes_bucket_boundaries(self) -> None:
+        """Populated histogram highlights each bucket boundary and units."""
+
+        bucket_counts = (1, 0, 2, 1, 0, 3, 0, 0, 2, 0, 0, 1, 0)
+        total = 12.7
+        summary = _build_heartbeat_histogram_summary(bucket_counts, total=total)
+        result = format_prometheus(summary)
+
+        assert "# TYPE gpt_trader_ws_heartbeat_lag_seconds histogram" in result
+        for line in _expected_heartbeat_bucket_lines(bucket_counts):
+            assert line in result
+        assert f"{HEARTBEAT_LAG_METRIC}_sum {total}" in result
+        assert f"{HEARTBEAT_LAG_METRIC}_count {sum(bucket_counts)}" in result

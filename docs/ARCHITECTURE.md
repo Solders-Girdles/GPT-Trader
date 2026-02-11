@@ -476,7 +476,7 @@ Supported profile sources:
 
 - `config/profiles/<profile>.yaml` (YAML-first loading via `ProfileLoader.load`)
 - `_PROFILE_DEFAULTS` hardcoded fallbacks in the same module when a profile YAML file is missing
-- CLI overrides baked into `src/gpt_trader/cli/services.py:build_config_from_args()` (e.g., `--profile`, `--dry-run`, `--symbols`, `--config`)
+- CLI overrides baked into `src/gpt_trader/cli/services.py` via `build_config_from_args()` (e.g., `--profile`, `--dry-run`, `--symbols`, `--config`)
 - Environment variables surfaced by `BotConfig.from_env()` (e.g., `DRY_RUN`, `RISK_*`, `TRADING_SYMBOLS`, `MOCK_BROKER`)
 - Runtime artifacts under `runtime_data/<profile>/…` that the readiness gate consumes (see [Readiness pillars](READINESS.md#readiness-pillars-must-have))
 

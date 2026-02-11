@@ -8,7 +8,7 @@ import warnings
 import pytest
 
 from gpt_trader.app.config import BotConfig
-from gpt_trader.app.config.bot_config import MeanReversionConfig
+from gpt_trader.app.config.bot_config import HealthThresholdsConfig, MeanReversionConfig
 from gpt_trader.features.live_trade.strategies.perps_baseline import PerpsStrategyConfig
 
 
@@ -166,3 +166,42 @@ class TestFromDictLegacyProfileMapping:
             config = BotConfig.from_dict({"profile_name": "minimal"})
 
         assert config.symbols
+
+
+class TestHealthThresholdsConfig:
+    """Tests for health threshold model conversion."""
+
+    def test_to_health_thresholds_preserves_values(self) -> None:
+        configured = HealthThresholdsConfig(
+            order_error_rate_warn=0.02,
+            order_error_rate_crit=0.12,
+            order_retry_rate_warn=0.07,
+            order_retry_rate_crit=0.22,
+            broker_latency_ms_warn=900.0,
+            broker_latency_ms_crit=2800.0,
+            ws_staleness_seconds_warn=20.0,
+            ws_staleness_seconds_crit=50.0,
+            market_data_staleness_seconds_warn=8.0,
+            market_data_staleness_seconds_crit=25.0,
+            guard_trip_count_warn=4,
+            guard_trip_count_crit=11,
+            missing_decision_id_count_warn=2,
+            missing_decision_id_count_crit=5,
+        )
+
+        converted = configured.to_health_thresholds()
+
+        assert converted.order_error_rate_warn == 0.02
+        assert converted.order_error_rate_crit == 0.12
+        assert converted.order_retry_rate_warn == 0.07
+        assert converted.order_retry_rate_crit == 0.22
+        assert converted.broker_latency_ms_warn == 900.0
+        assert converted.broker_latency_ms_crit == 2800.0
+        assert converted.ws_staleness_seconds_warn == 20.0
+        assert converted.ws_staleness_seconds_crit == 50.0
+        assert converted.market_data_staleness_seconds_warn == 8.0
+        assert converted.market_data_staleness_seconds_crit == 25.0
+        assert converted.guard_trip_count_warn == 4
+        assert converted.guard_trip_count_crit == 11
+        assert converted.missing_decision_id_count_warn == 2
+        assert converted.missing_decision_id_count_crit == 5

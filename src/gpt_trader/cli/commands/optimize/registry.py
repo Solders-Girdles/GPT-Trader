@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import Any, Callable, Iterable
+from typing import Any
 
 from gpt_trader.features.optimize.objectives.factories import (
     create_execution_quality_objective,
@@ -79,6 +80,13 @@ class ObjectiveSpec:
 
 
 DEFAULT_PARAMETER_GROUPS = ("strategy", "risk")
+LEGACY_RISK_FALLBACK_PARAMETER_NAMES = frozenset(
+    {
+        "max_position_size",
+        "max_drawdown_pct",
+        "reduce_only_threshold",
+    }
+)
 
 
 STRATEGY_GROUP = ParameterGroupSpec(
@@ -212,7 +220,12 @@ def categorize_parameters_by_group(
 
     for param_name, value in parameters.items():
         group = _parameter_to_group.get(param_name)
-        target = group.name if group else fallback_group
+        if group:
+            target = group.name
+        elif param_name in LEGACY_RISK_FALLBACK_PARAMETER_NAMES:
+            target = RISK_GROUP.name
+        else:
+            target = fallback_group
         grouped[target][param_name] = value
 
     return grouped

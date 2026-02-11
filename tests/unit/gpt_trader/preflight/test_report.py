@@ -11,7 +11,12 @@ import pytest
 
 from gpt_trader.preflight.core import PreflightCheck
 from gpt_trader.preflight.hints import DEFAULT_REMEDIATION_HINT
-from gpt_trader.preflight.report import format_preflight_report, generate_report
+from gpt_trader.preflight.report import (
+    evaluate_preflight_status,
+    format_preflight_report,
+    generate_report,
+    report_path_for_timestamp,
+)
 
 
 @pytest.fixture
@@ -185,6 +190,33 @@ class TestGenerateReport:
         captured = capsys.readouterr()
         assert "PREFLIGHT REPORT" in captured.out
 
+    def test_respects_explicit_report_path(
+        self,
+        report_cwd: Path,
+    ) -> None:
+        checker = PreflightCheck(profile="prod")
+        checker.context.successes.append("Success")
+        explicit_path = report_cwd / "reports" / "custom_preflight_report.json"
+
+        success, status = generate_report(checker, report_path=explicit_path)
+
+        assert success is True
+        assert status == "READY"
+        assert explicit_path.exists()
+        report_data = json.loads(explicit_path.read_text(encoding="utf-8"))
+        assert report_data["profile"] == "prod"
+
+    def test_report_dir_and_report_path_are_mutually_exclusive(
+        self,
+        report_cwd: Path,
+    ) -> None:
+        checker = PreflightCheck()
+        checker.context.successes.append("Success")
+        explicit_path = report_cwd / "explicit.json"
+
+        with pytest.raises(ValueError, match="mutually exclusive"):
+            generate_report(checker, report_dir=report_cwd / "reports", report_path=explicit_path)
+
 
 class TestReportCalculations:
     """Test report calculations."""
@@ -218,6 +250,39 @@ class TestReportFormatting:
         assert report_data["details"]["successes"] == ["S1", "S2"]
         assert report_data["details"]["warnings"] == ["W1"]
         assert not list(report_cwd.glob("preflight_report_*.json"))
+
+    @pytest.mark.parametrize(
+        ("warning_count", "error_count", "expected_status"),
+        [
+            (0, 0, "READY"),
+            (3, 0, "READY"),
+            (4, 0, "REVIEW"),
+            (0, 1, "NOT READY"),
+            (10, 2, "NOT READY"),
+        ],
+    )
+    def test_evaluate_preflight_status_boundaries(
+        self,
+        warning_count: int,
+        error_count: int,
+        expected_status: str,
+    ) -> None:
+        status, _message = evaluate_preflight_status(
+            success_count=5,
+            warning_count=warning_count,
+            error_count=error_count,
+        )
+
+        assert status == expected_status
+
+    def test_report_path_for_timestamp_honors_output_dir(self) -> None:
+        timestamp = datetime(2026, 2, 11, 16, 2, 58, tzinfo=timezone.utc)
+        report_path = report_path_for_timestamp(
+            timestamp,
+            output_dir=Path("var/reports/preflight"),
+        )
+
+        assert report_path == Path("var/reports/preflight/preflight_report_20260211_160258.json")
 
 
 class TestReportHints:

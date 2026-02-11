@@ -12,6 +12,9 @@ import pytest
 from gpt_trader.app.config.profile_loader import (
     ProfileLoader,
     ProfileSchema,
+    get_env_defaults_for_profile,
+    get_profile_registry_entry_by_name,
+    is_dev_profile,
 )
 from gpt_trader.config.types import Profile
 
@@ -195,3 +198,59 @@ class TestProfileSchema:
         assert schema.execution.time_in_force == "FOK"
         assert schema.session.trading_days == ["monday", "wednesday", "friday"]
         assert schema.monitoring.update_interval == 120
+
+    def test_from_yaml_uses_trading_execution_when_top_level_execution_missing(self) -> None:
+        """Nested trading.execution should backfill execution settings."""
+        data = {
+            "profile_name": "nested-execution",
+            "trading": {
+                "execution": {
+                    "time_in_force": "IOC",
+                    "dry_run": True,
+                    "mock_broker": True,
+                    "use_limit_orders": True,
+                    "market_order_fallback": False,
+                }
+            },
+        }
+
+        schema = ProfileSchema.from_yaml(data, "nested-execution")
+
+        assert schema.execution.time_in_force == "IOC"
+        assert schema.execution.dry_run is True
+        assert schema.execution.mock_broker is True
+        assert schema.execution.use_limit_orders is True
+        assert schema.execution.market_order_fallback is False
+
+
+class TestProfileRegistryHelpers:
+    """Tests for profile registry helper functions."""
+
+    def test_get_env_defaults_for_unknown_profile_uses_prod_defaults(self) -> None:
+        defaults = get_env_defaults_for_profile("unknown-profile")
+
+        assert defaults["COINBASE_SANDBOX"] == ("0", True)
+        assert defaults["COINBASE_API_MODE"] == ("advanced", True)
+
+    @pytest.mark.parametrize(
+        ("profile_name", "expected"),
+        [
+            ("dev", True),
+            ("DEV", True),
+            ("paper", True),
+            ("test", True),
+            ("prod", False),
+            ("canary", False),
+            ("not-real", False),
+            (None, False),
+        ],
+    )
+    def test_is_dev_profile(self, profile_name: str | None, expected: bool) -> None:
+        assert is_dev_profile(profile_name) is expected
+
+    def test_registry_lookup_is_case_insensitive(self) -> None:
+        entry = get_profile_registry_entry_by_name("CaNaRy")
+
+        assert entry is not None
+        assert entry.profile is Profile.CANARY
+        assert entry.preflight_default is True

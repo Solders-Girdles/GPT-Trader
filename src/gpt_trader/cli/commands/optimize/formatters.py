@@ -8,6 +8,12 @@ import json
 from datetime import datetime
 from typing import Any
 
+COMPARISON_METRICS: tuple[tuple[str, str], ...] = (
+    ("best_objective_value", "Best Objective Value"),
+    ("total_trials", "Total Trials"),
+    ("feasible_trials", "Feasible Trials"),
+)
+
 
 def format_run_summary_text(run: dict[str, Any]) -> str:
     """
@@ -235,16 +241,21 @@ def format_run_list_json(runs: list[dict[str, Any]], compact: bool = False) -> s
     return json.dumps({"runs": runs}, indent=2)
 
 
-def format_comparison_text(runs: list[dict[str, Any]]) -> str:
+def format_comparison_text(comparison: dict[str, Any]) -> str:
     """
-    Format a comparison of multiple runs.
+    Format a comparison payload for human-readable output.
 
     Args:
-        runs: List of run data dictionaries
+        comparison: Dictionary containing matrix and run metadata
 
     Returns:
         Formatted comparison text
     """
+    runs = comparison.get("runs", [])
+    matrix = comparison.get("matrix", [])
+    baseline = comparison.get("baseline_run")
+    best_run = comparison.get("best_run")
+
     if not runs:
         return "No runs to compare."
 
@@ -258,76 +269,122 @@ def format_comparison_text(runs: list[dict[str, Any]]) -> str:
         "",
     ]
 
-    # Summary table
-    lines.extend(
-        [
-            "-" * 80,
-            f"{'Study':<20} {'Objective':>12} {'Trials':>8} {'Feasible':>8} {'Run ID':<24}",
-            "-" * 80,
-        ]
-    )
+    if baseline:
+        baseline_label = f"{baseline['study_name']} ({baseline['run_id']})"
+        lines.append(f"Baseline: {baseline_label}")
+        if baseline.get("started_at"):
+            lines.append(f"Started: {baseline['started_at']}")
+        lines.append("")
 
-    for run in runs:
-        best_val = run.get("best_objective_value")
-        best_str = f"{best_val:.4f}" if best_val is not None else "N/A"
+    if best_run and best_run.get("objective_value") is not None:
         lines.append(
-            f"{run['study_name'][:18]:<20} {best_str:>12} "
-            f"{run['total_trials']:>8} {run['feasible_trials']:>8} "
-            f"{run['run_id'][:22]:<24}"
+            f"Best objective: {best_run['objective_value']:.4f} "
+            f"(run {best_run['run_id']})"
+        )
+        lines.append("")
+
+    lines.append("Metric matrix (values ± deltas vs baseline):")
+    lines.append("")
+    lines.extend(_format_comparison_matrix(matrix, runs, baseline.get("run_id") if baseline else None))
+
+    lines.append("")
+    lines.append("Runs:")
+    for run in runs:
+        marker = " (baseline)" if baseline and run["run_id"] == baseline["run_id"] else ""
+        lines.append(
+            f"  - {run['study_name']} ({run['run_id']}){marker}"
         )
 
-    # Parameter comparison if all runs have best parameters
-    all_have_params = all(run.get("best_parameters") for run in runs)
-    if all_have_params:
-        lines.extend(["", "-" * 80, "Best Parameters Comparison:", "-" * 80])
-
-        # Collect all parameter keys
-        all_keys: set[str] = set()
-        for run in runs:
-            all_keys.update(run.get("best_parameters", {}).keys())
-
-        for key in sorted(all_keys):
-            values = []
-            for run in runs:
-                params = run.get("best_parameters", {})
-                values.append(_format_value(params.get(key, "N/A")))
-
-            lines.append(f"  {key}:")
-            for i, (run, val) in enumerate(zip(runs, values)):
-                lines.append(f"    [{run['study_name'][:15]}] {val}")
-
+    lines.append("")
     lines.append("=" * 80)
     return "\n".join(lines)
 
 
-def format_comparison_json(runs: list[dict[str, Any]], compact: bool = False) -> str:
+def format_comparison_json(comparison: dict[str, Any], compact: bool = False) -> str:
     """
-    Format a comparison of multiple runs as JSON.
+    Format a comparison payload as JSON.
 
     Args:
-        runs: List of run data dictionaries
+        comparison: Comparison payload dictionary
         compact: If True, use compact JSON format
 
     Returns:
         JSON string
     """
-    comparison = {
-        "comparison": [
-            {
-                "run_id": run["run_id"],
-                "study_name": run["study_name"],
-                "best_objective_value": run.get("best_objective_value"),
-                "total_trials": run["total_trials"],
-                "feasible_trials": run["feasible_trials"],
-                "best_parameters": run.get("best_parameters"),
-            }
-            for run in runs
-        ]
-    }
-
+    payload = {"comparison": comparison}
     if compact:
-        return json.dumps(comparison, separators=(",", ":"))
-    return json.dumps(comparison, indent=2)
+        return json.dumps(payload, separators=(",", ":"))
+    return json.dumps(payload, indent=2)
+
+
+def _format_comparison_matrix(
+    matrix: list[dict[str, Any]],
+    runs: list[dict[str, Any]],
+    baseline_run_id: str | None,
+) -> list[str]:
+    """Render the comparison matrix as an aligned table."""
+    if not matrix or not runs:
+        return ["No comparison metrics available."]
+
+    header = ["Metric"]
+    header.extend(_format_header_label(run, baseline_run_id) for run in runs)
+
+    rows: list[list[str]] = []
+    for row in matrix:
+        entries = [row["label"]]
+        entry_map = {entry["run_id"]: entry for entry in row.get("values", [])}
+        for run in runs:
+            entry = entry_map.get(run["run_id"], {"value": None, "delta": None})
+            entry_value = _format_matrix_value(entry.get("value"))
+            delta_str = _format_delta(entry.get("delta"))
+            entries.append(f"{entry_value} (Δ {delta_str})")
+        rows.append(entries)
+
+    all_rows = [header] + rows
+    col_widths: list[int] = []
+    for col_idx in range(len(header)):
+        max_width = max(len(row[col_idx]) for row in all_rows if len(row) > col_idx)
+        col_widths.append(max_width)
+
+    formatted: list[str] = []
+    header_line = " | ".join(
+        header[col_idx].ljust(col_widths[col_idx]) for col_idx in range(len(header))
+    )
+    separator = "-+-".join("-" * width for width in col_widths)
+    formatted.append(header_line)
+    formatted.append(separator)
+
+    for row in rows:
+        row_line = " | ".join(
+            row[col_idx].ljust(col_widths[col_idx]) for col_idx in range(len(header))
+        )
+        formatted.append(row_line)
+
+    return formatted
+
+
+def _format_header_label(run: dict[str, Any], baseline_run_id: str | None) -> str:
+    """Create a column header label for a run."""
+    label = run["run_id"]
+    if baseline_run_id and run["run_id"] == baseline_run_id:
+        label += " (baseline)"
+    return label
+
+
+def _format_matrix_value(value: Any) -> str:
+    """Format a matrix cell value."""
+    if value is None:
+        return "N/A"
+    return _format_value(value)
+
+
+def _format_delta(delta: Any | None) -> str:
+    """Format a delta value with sign."""
+    if delta is None:
+        return "N/A"
+    if isinstance(delta, int):
+        return f"{delta:+d}"
+    return f"{float(delta):+.4f}"
 
 
 def _format_datetime(dt_str: str | None) -> str:

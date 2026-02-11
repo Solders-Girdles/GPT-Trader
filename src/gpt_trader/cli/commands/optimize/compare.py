@@ -5,7 +5,10 @@ from __future__ import annotations
 from argparse import Namespace
 from typing import Any
 
-from gpt_trader.cli.commands.optimize.formatters import format_comparison_text
+from gpt_trader.cli.commands.optimize.formatters import (
+    COMPARISON_METRICS,
+    format_comparison_text,
+)
 from gpt_trader.cli.options import add_output_options
 from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.features.optimize.persistence.storage import OptimizationStorage
@@ -32,6 +35,13 @@ def register(subparsers: Any) -> None:
     )
 
     add_output_options(parser, include_quiet=False)
+
+    parser.add_argument(
+        "--baseline",
+        type=str,
+        default=None,
+        help="Run ID to treat as the baseline for delta calculations (default: first run)",
+    )
 
     parser.set_defaults(handler=execute, subcommand="compare")
 
@@ -69,27 +79,36 @@ def execute(args: Namespace) -> CliResponse | int:
             logger.error(f"Run not found: {run_id}")
             return 1
         run_data = run.to_dict()
-        runs.append(run_data)
+        run_summary = {
+            "run_id": run_data["run_id"],
+            "study_name": run_data["study_name"],
+            "best_objective_value": run_data.get("best_objective_value"),
+            "total_trials": run_data.get("total_trials", 0),
+            "feasible_trials": run_data.get("feasible_trials", 0),
+            "best_parameters": run_data.get("best_parameters"),
+            "started_at": run_data.get("started_at"),
+            "completed_at": run_data.get("completed_at"),
+        }
+        runs.append(run_summary)
 
         # Add warning if run has no feasible trials
-        if run_data.get("feasible_trials", 0) == 0:
+        if run_summary.get("feasible_trials", 0) == 0:
             warnings.append(f"Run {run_id} has no feasible trials")
+    # Determine baseline run (default to first provided run)
+    baseline_id = getattr(args, "baseline", None) or args.run_ids[0]
+    run_ids = [run["run_id"] for run in runs]
+    if baseline_id not in run_ids:
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=COMMAND_NAME,
+                code=CliErrorCode.INVALID_ARGUMENT,
+                message=f"Baseline run {baseline_id} is not part of the comparison set",
+                details={"baseline_run_id": baseline_id},
+            )
+        logger.error(f"Baseline run {baseline_id} is not part of the comparison set")
+        return 1
 
-    # Build comparison data
-    comparison_data = {
-        "runs": [
-            {
-                "run_id": r["run_id"],
-                "study_name": r["study_name"],
-                "best_objective_value": r.get("best_objective_value"),
-                "total_trials": r["total_trials"],
-                "feasible_trials": r["feasible_trials"],
-                "best_parameters": r.get("best_parameters"),
-            }
-            for r in runs
-        ],
-        "best_run": _find_best_run(runs),
-    }
+    comparison_data = _build_comparison_payload(runs, baseline_id)
 
     if output_format == "json":
         return CliResponse.success_response(
@@ -99,7 +118,7 @@ def execute(args: Namespace) -> CliResponse | int:
         )
 
     # Text format
-    print(format_comparison_text(runs))
+    print(format_comparison_text(comparison_data))
     for warning in warnings:
         print(f"Note: {warning}")
 
@@ -119,3 +138,61 @@ def _find_best_run(runs: list[dict[str, Any]]) -> dict[str, Any] | None:
                 "objective_value": value,
             }
     return best
+
+
+def _build_comparison_payload(runs: list[dict[str, Any]], baseline_run_id: str) -> dict[str, Any]:
+    """Build comparison payload including baseline metadata and metric matrix."""
+    baseline_run = _find_run(runs, baseline_run_id)
+
+    matrix = []
+    baseline_metrics: dict[str, Any] = {}
+    for metric_key, metric_label in COMPARISON_METRICS:
+        baseline_value = baseline_run.get(metric_key)
+        baseline_metrics[metric_key] = baseline_value
+        row_values = []
+        for run in runs:
+            value = run.get(metric_key)
+            delta = _calculate_delta(value, baseline_value)
+            row_values.append(
+                {
+                    "run_id": run["run_id"],
+                    "study_name": run["study_name"],
+                    "value": value,
+                    "delta": delta,
+                }
+            )
+        matrix.append({"metric": metric_key, "label": metric_label, "values": row_values})
+
+    baseline_metadata = {
+        "run_id": baseline_run["run_id"],
+        "study_name": baseline_run["study_name"],
+        "started_at": baseline_run.get("started_at"),
+        "completed_at": baseline_run.get("completed_at"),
+        "metrics": baseline_metrics,
+    }
+
+    return {
+        "runs": runs,
+        "baseline_run": baseline_metadata,
+        "baseline_run_id": baseline_run_id,
+        "matrix": matrix,
+        "best_run": _find_best_run(runs),
+    }
+
+
+def _find_run(runs: list[dict[str, Any]], run_id: str) -> dict[str, Any]:
+    """Find run data by run ID."""
+    for run in runs:
+        if run["run_id"] == run_id:
+            return run
+    return runs[0]
+
+
+def _calculate_delta(value: float | int | None, baseline: float | int | None) -> float | int | None:
+    """Return difference between value and baseline if both present."""
+    if value is None or baseline is None:
+        return None
+    delta = value - baseline
+    if isinstance(value, int) and isinstance(baseline, int):
+        return int(delta)
+    return float(delta)

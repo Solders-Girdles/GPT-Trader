@@ -1,58 +1,31 @@
-# GitHub Issue #675: [enhancement] Add strategy profile diff command for active runtime
-https://github.com/Solders-Girdles/GPT-Trader/issues/675
+# GitHub Issue #707: [ci] Resolve Type Check failure blocking PR #703
+https://github.com/Solders-Girdles/GPT-Trader/issues/707
+
+<!-- codex-handoff-key-ci-pr-703 -->
 
 ## Why / Context
-Operators need a direct way to understand profile drift between configured and active runtime values.
+PR #703 is blocked by failing CI checks that were not auto-remediated by `ci_fixer.mjs`.
+- PR: https://github.com/Solders-Girdles/GPT-Trader/pull/703
+- Branch: `codex/692-enhancement-add-optimize-compare-matrix-`
+- Handoff reason: no auto-fix mapping for current failing checks
 
-## Scope
-**In scope**
-- Add a command that diffs active runtime profile values against configured baseline.
-- Provide deterministic output suitable for automation parsing.
-- Document diff semantics and ignored fields.
+## Required Outcome
+- Fix the Type Check failure on the PR branch with the smallest safe change.
+- Keep all required checks green.
+- Avoid unrelated refactors.
 
-**Out of scope**
-- Automatic profile mutation based on diff output.
-- Schema changes to unrelated strategy modules.
+## Failing Checks
+- Type Check — https://github.com/Solders-Girdles/GPT-Trader/actions/runs/21909620476/job/63259429134
 
-Constraints:
-- Keep changes small/mergeable.
-- Deterministic tests only.
-- Avoid touching unrelated generated artifacts unless required.
+## Evidence
+- `src/gpt_trader/cli/commands/optimize/formatters.py:356`: Incompatible types in assignment (`list[str]` assigned to `dict[str, Any]`).
+- `src/gpt_trader/cli/commands/optimize/formatters.py:358`: Invalid index type `int` for `dict[str, Any]`.
+- `src/gpt_trader/cli/commands/optimize/formatters.py:370`: Returning `Any` from function declared to return `str`.
 
-## Acceptance Criteria (required)
-- [ ] Command prints stable diff entries for changed/unchanged/missing keys.
-- [ ] Output can be emitted in machine-readable mode.
-- [ ] Ignored/noisy fields are explicit and tested.
-- [ ] Unit tests cover no-diff, partial-diff, and missing-profile scenarios.
+## File Pointers
+- `src/gpt_trader/cli/commands/optimize/formatters.py`
 
-## Implementation Notes / Pointers
-**Likely files / modules:**
-- `src/gpt_trader/features/strategy_dev/config/strategy_profile.py`
-- `src/gpt_trader/features/strategy_dev/config/registry.py`
-- `src/gpt_trader/cli/commands/optimize/compare.py`
-
-**Related tests:**
-- `tests/unit/gpt_trader/features/strategy_dev/config/test_strategy_profile.py`
-- `tests/unit/gpt_trader/features/strategy_dev/config/test_registry.py`
-- `tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py`
-
-**Edge cases to handle:**
-- Nested config values should diff deterministically.
-- Missing active-profile values should be represented explicitly.
-- Ordering in rendered diffs should remain stable.
-
-## Commands (local)
-- `make fmt`
-- `make lint`
-- `uv run pytest -q tests/unit/gpt_trader/features/strategy_dev/config/test_strategy_profile.py tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py`
-
-## PR Requirements
-- PR title should match the issue.
-- PR body must include: `Fixes #<issue-number>`
-- CI must be green; if Agent Artifacts Freshness fails, run `uv run agent-regenerate`, then commit `var/agents/...` updates.
-
-## Codex-Ready Checklist (for the issue creator)
-- [x] Clear acceptance criteria
-- [x] At least one file pointer
-- [x] Commands included
-- [x] No ambiguous "do the right thing" language
+## Verification
+- `gh pr checkout 703 --repo Solders-Girdles/GPT-Trader`
+- `uv run mypy src`
+- Confirm required PR checks are green.

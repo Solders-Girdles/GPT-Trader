@@ -7,6 +7,7 @@ import json
 import pytest
 
 from gpt_trader.cli.commands.optimize.formatters import (
+    COMPARISON_METRICS,
     format_comparison_json,
     format_comparison_text,
     format_run_list_json,
@@ -35,6 +36,71 @@ def sample_run():
             "rsi_period": 14,
         },
     }
+
+
+@pytest.fixture
+def comparison_payload(sample_run):
+    """Create a sample comparison payload."""
+    baseline = dict(sample_run)
+    comparison_run = dict(sample_run)
+    comparison_run["run_id"] = "opt_20241128_def456"
+    comparison_run["study_name"] = "test_sortino"
+    comparison_run["best_objective_value"] = 1.95
+    comparison_run["total_trials"] = 90
+    comparison_run["feasible_trials"] = 80
+
+    def compute_delta(value, baseline_value):
+        if value is None or baseline_value is None:
+            return None
+        delta_value = value - baseline_value
+        if isinstance(value, int) and isinstance(baseline_value, int):
+            return int(delta_value)
+        return float(delta_value)
+
+    matrix = []
+    for metric_key, metric_label in COMPARISON_METRICS:
+        baseline_value = baseline.get(metric_key)
+        target_value = comparison_run.get(metric_key)
+        matrix.append(
+            {
+                "metric": metric_key,
+                "label": metric_label,
+                "values": [
+                    {
+                        "run_id": baseline["run_id"],
+                        "study_name": baseline["study_name"],
+                        "value": baseline_value,
+                        "delta": compute_delta(baseline_value, baseline_value),
+                    },
+                    {
+                        "run_id": comparison_run["run_id"],
+                        "study_name": comparison_run["study_name"],
+                        "value": target_value,
+                        "delta": compute_delta(target_value, baseline_value),
+                    },
+                ],
+            }
+        )
+
+    payload = {
+        "runs": [baseline, comparison_run],
+        "baseline_run": {
+            "run_id": baseline["run_id"],
+            "study_name": baseline["study_name"],
+            "started_at": baseline["started_at"],
+            "completed_at": baseline["completed_at"],
+            "metrics": {
+                metric_key: baseline.get(metric_key) for metric_key, _ in COMPARISON_METRICS
+            },
+        },
+        "baseline_run_id": baseline["run_id"],
+        "matrix": matrix,
+        "best_run": {
+            "run_id": baseline["run_id"],
+            "objective_value": baseline["best_objective_value"],
+        },
+    }
+    return payload
 
 
 @pytest.fixture
@@ -189,29 +255,40 @@ class TestFormatRunListJson:
 
 
 class TestFormatComparisonText:
-    def test_shows_multiple_runs(self, sample_run):
-        """Test output shows multiple runs."""
-        run2 = dict(sample_run)
-        run2["run_id"] = "opt_20241128_def456"
-        run2["best_objective_value"] = 1.89
-
-        result = format_comparison_text([sample_run, run2])
-        assert "opt_20241128_abc123" in result
-        assert "opt_20241128_def456" in result
+    def test_shows_baseline_and_runs(self, comparison_payload):
+        """Test output highlights the baseline and run list."""
+        result = format_comparison_text(comparison_payload)
+        assert "Baseline: test_sharpe (opt_20241128_abc123)" in result
+        assert "Metric matrix" in result
+        assert "Runs:" in result
+        assert "(baseline)" in result
 
     def test_single_run_shows_summary(self, sample_run):
         """Test single run shows summary."""
-        result = format_comparison_text([sample_run])
+        result = format_comparison_text({"runs": [sample_run]})
         assert "test_sharpe" in result
+
+    def test_includes_delta_values(self, comparison_payload):
+        """Test deltas are rendered with sign formatting."""
+        result = format_comparison_text(comparison_payload)
+        assert "Δ +0.0000" in result
+        assert "Δ -0.3900" in result
 
 
 class TestFormatComparisonJson:
-    def test_returns_valid_json(self, sample_run):
-        """Test output is valid JSON."""
-        run2 = dict(sample_run)
-        run2["run_id"] = "opt_20241128_def456"
-
-        result = format_comparison_json([sample_run, run2])
+    def test_includes_baseline_metadata(self, comparison_payload):
+        """Test JSON payload maintains baseline metadata."""
+        result = format_comparison_json(comparison_payload)
         parsed = json.loads(result)
         assert "comparison" in parsed
-        assert len(parsed["comparison"]) == 2
+        data = parsed["comparison"]
+        assert data["baseline_run"]["run_id"] == "opt_20241128_abc123"
+        assert "matrix" in data
+        assert len(data["runs"]) == 2
+
+    def test_matrix_deltas_serialized(self, comparison_payload):
+        """Test deltas are preserved in the JSON matrix."""
+        result = format_comparison_json(comparison_payload)
+        parsed = json.loads(result)
+        matrix = parsed["comparison"]["matrix"]
+        assert pytest.approx(-0.39, rel=1e-3) == matrix[0]["values"][1]["delta"]

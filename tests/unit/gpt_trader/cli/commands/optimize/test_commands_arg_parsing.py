@@ -62,6 +62,13 @@ class TestArgumentParsing:
         args = parser.parse_args(["optimize", "compare", "opt_123", "opt_456"])
         assert args.run_ids == ["opt_123", "opt_456"]
 
+    def test_compare_parses_baseline(self, parser):
+        """Test compare command parses baseline argument."""
+        args = parser.parse_args(
+            ["optimize", "compare", "opt_123", "opt_456", "--baseline", "opt_456"]
+        )
+        assert args.baseline == "opt_456"
+
     def test_export_parses_format(self, parser):
         """Test export command parses export format."""
         args = parser.parse_args(["optimize", "export", "--export-format", "csv"])

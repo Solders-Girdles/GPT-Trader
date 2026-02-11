@@ -103,6 +103,89 @@ class TestCompareCommand:
         result = compare.execute(args)
         assert result == 1
 
+    def _mock_run(self, data: dict[str, Any]) -> MagicMock:
+        run = MagicMock()
+        run.to_dict.return_value = data
+        return run
+
+    def test_execute_json_returns_baseline_payload(self, monkeypatch: pytest.MonkeyPatch):
+        """Test JSON output includes baseline metadata and matrix deltas."""
+        run_a = {
+            "run_id": "opt_a",
+            "study_name": "alpha",
+            "started_at": "2024-01-01T00:00:00",
+            "completed_at": "2024-01-01T01:00:00",
+            "total_trials": 100,
+            "feasible_trials": 90,
+            "best_objective_value": 1.8,
+            "best_parameters": {"p": 1},
+        }
+        run_b = {
+            "run_id": "opt_b",
+            "study_name": "beta",
+            "started_at": "2024-01-02T00:00:00",
+            "completed_at": "2024-01-02T01:00:00",
+            "total_trials": 95,
+            "feasible_trials": 88,
+            "best_objective_value": 2.0,
+            "best_parameters": {"p": 2},
+        }
+
+        mock_storage = MagicMock()
+        mock_storage.load_run.side_effect = [
+            self._mock_run(run_a),
+            self._mock_run(run_b),
+        ]
+
+        monkeypatch.setattr(compare, "OptimizationStorage", MagicMock(return_value=mock_storage))
+
+        args = Namespace(run_ids=["opt_a", "opt_b"], output_format="json", baseline="opt_b")
+        response = compare.execute(args)
+
+        assert isinstance(response, CliResponse)
+        assert response.success
+        assert response.data["baseline_run"]["run_id"] == "opt_b"
+        matrix = response.data["matrix"]
+        assert matrix[0]["values"][0]["delta"] == pytest.approx(1.8 - 2.0)
+        assert matrix[0]["values"][1]["delta"] == pytest.approx(0.0)
+
+    def test_execute_json_invalid_baseline_returns_error(self, monkeypatch: pytest.MonkeyPatch):
+        """Test baseline validation rejects run IDs outside the comparison set."""
+        run_a = {
+            "run_id": "opt_a",
+            "study_name": "alpha",
+            "started_at": "2024-01-01T00:00:00",
+            "completed_at": "2024-01-01T01:00:00",
+            "total_trials": 100,
+            "feasible_trials": 90,
+            "best_objective_value": 1.8,
+        }
+        run_b = {
+            "run_id": "opt_b",
+            "study_name": "beta",
+            "started_at": "2024-01-02T00:00:00",
+            "completed_at": "2024-01-02T01:00:00",
+            "total_trials": 95,
+            "feasible_trials": 88,
+            "best_objective_value": 2.0,
+        }
+
+        mock_storage = MagicMock()
+        mock_storage.load_run.side_effect = [
+            self._mock_run(run_a),
+            self._mock_run(run_b),
+        ]
+
+        monkeypatch.setattr(compare, "OptimizationStorage", MagicMock(return_value=mock_storage))
+
+        args = Namespace(run_ids=["opt_a", "opt_b"], output_format="json", baseline="missing")
+        response = compare.execute(args)
+
+        assert isinstance(response, CliResponse)
+        assert not response.success
+        assert response.errors
+        assert response.errors[0].code == CliErrorCode.INVALID_ARGUMENT.value
+
 
 class TestExportCommand:
     """Test export command functionality."""

@@ -19,7 +19,10 @@
           "details": {
             "api_key": "<redacted>",
             "errors": [
-              "{'code': 'rate_limit', 'private_info': 'secret'}"
+              {
+                "code": "rate_limit",
+                "private_info": "<redacted>"
+              }
             ]
           }
         },

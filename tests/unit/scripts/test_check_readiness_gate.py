@@ -173,6 +173,7 @@ def test_main_fails_when_pillar_not_green(tmp_path: Path, capsys) -> None:
     assert result == 1
     assert "Execution correctness" in error_output
     assert "api_errors" in error_output
+    assert "reason_codes=readiness_execution_api_errors" in error_output
 
 
 def test_main_skips_when_no_reports(tmp_path: Path, capsys) -> None:
@@ -295,6 +296,7 @@ def test_main_strict_mode_fails_when_reports_are_stale(tmp_path: Path, capsys) -
     assert result == 1
     assert "Readiness gate degraded" in error_output
     assert "Readiness gate FAILED" in error_output
+    assert "reason_codes=readiness_reports_stale" in error_output
 
 
 def test_find_latest_report_for_profile_prefers_newest_report_date(tmp_path: Path) -> None:

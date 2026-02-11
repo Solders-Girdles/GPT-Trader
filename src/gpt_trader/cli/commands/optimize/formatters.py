@@ -278,22 +278,21 @@ def format_comparison_text(comparison: dict[str, Any]) -> str:
 
     if best_run and best_run.get("objective_value") is not None:
         lines.append(
-            f"Best objective: {best_run['objective_value']:.4f} "
-            f"(run {best_run['run_id']})"
+            f"Best objective: {best_run['objective_value']:.4f} " f"(run {best_run['run_id']})"
         )
         lines.append("")
 
     lines.append("Metric matrix (values ± deltas vs baseline):")
     lines.append("")
-    lines.extend(_format_comparison_matrix(matrix, runs, baseline.get("run_id") if baseline else None))
+    lines.extend(
+        _format_comparison_matrix(matrix, runs, baseline.get("run_id") if baseline else None)
+    )
 
     lines.append("")
     lines.append("Runs:")
     for run in runs:
         marker = " (baseline)" if baseline and run["run_id"] == baseline["run_id"] else ""
-        lines.append(
-            f"  - {run['study_name']} ({run['run_id']}){marker}"
-        )
+        lines.append(f"  - {run['study_name']} ({run['run_id']}){marker}")
 
     lines.append("")
     lines.append("=" * 80)

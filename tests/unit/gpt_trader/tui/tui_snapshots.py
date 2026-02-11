@@ -26,6 +26,7 @@ from textual.pilot import Pilot
 try:
     from syrupy import SnapshotAssertion
     from syrupy.extensions.single_file import SingleFileSnapshotExtension, WriteMode
+
     _SYRUPY_AVAILABLE = True
 except ImportError:  # pragma: no cover - not available everywhere
     SnapshotAssertion = None  # type: ignore[assignment]
@@ -64,7 +65,10 @@ def _normalize_svg(text: str) -> str:
     return normalized
 
 
-if SingleFileSnapshotExtension is not None:  # pragma: no cover - only available when syrupy is installed
+if (
+    SingleFileSnapshotExtension is not None
+):  # pragma: no cover - only available when syrupy is installed
+
     class NormalizedSVGImageExtension(SingleFileSnapshotExtension):
         """SVG extension that normalizes Textual's hashed terminal CSS class names."""
 
@@ -87,14 +91,18 @@ if SingleFileSnapshotExtension is not None:  # pragma: no cover - only available
             if isinstance(data, str):
                 return _normalize_svg(data)
             return data
+
 else:
+
     class NormalizedSVGImageExtension:
         """Simple stand-in when syrupy is unavailable."""
 
         def serialize(self, data, *, exclude=None, include=None, matcher=None):
             return _normalize_svg(data)
 
-        def read_snapshot_data_from_location(self, *, snapshot_location: str, snapshot_name: str, session_id: str):
+        def read_snapshot_data_from_location(
+            self, *, snapshot_location: str, snapshot_name: str, session_id: str
+        ):
             return ""
 
 

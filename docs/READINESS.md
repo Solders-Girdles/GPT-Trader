@@ -17,6 +17,10 @@ Each pillar has measurable evidence so the decision is objective, repeatable, an
 3. Fill in the checklist below with evidence paths and notes.
 4. Enable the readiness gate in preflight/CI for enforcement.
 
+### Profile-aware readiness inputs
+
+This doc shares the same runtime profile selection logic described in [Runtime Profile Registry](ARCHITECTURE.md#runtime-profile-registry). That section highlights `ProfileLoader`, the profile registry, and the precedence between CLI overrides, config files, profile YAMLs, and environment variables so you can trace how `runtime_data/<profile>/reports/`, `events.db`, and `orders.db` get assigned to a given run.
+
 ## Readiness gate freshness guard
 
 `scripts/ci/check_readiness_gate.py` now enforces a freshness guard on the latest daily report.

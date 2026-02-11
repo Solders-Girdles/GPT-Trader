@@ -3,13 +3,12 @@
 from __future__ import annotations
 
 from argparse import Namespace
-from dataclasses import fields
 from pathlib import Path
 from typing import Any
 
 import yaml
 
-from gpt_trader.app.config.bot_config import BotRiskConfig
+from gpt_trader.cli.commands.optimize.registry import categorize_parameters_by_group
 from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.features.optimize.persistence.storage import OptimizationStorage
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -17,9 +16,6 @@ from gpt_trader.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="cli")
 
 COMMAND_NAME = "optimize apply"
-
-
-RISK_PARAM_NAMES = {field.name for field in fields(BotRiskConfig)}
 
 
 def register(subparsers: Any) -> None:
@@ -259,28 +255,10 @@ def _build_output_config(
     """
     best_params = run_data.get("best_parameters", {})
 
-    # Categorize parameters
-    strategy_params = {}
-    risk_params = {}
-    simulation_params = {}
-
-    # Known risk parameter names derived from BotRiskConfig to avoid fallback leakage
-    risk_param_names = RISK_PARAM_NAMES
-
-    # Known simulation parameter names
-    simulation_param_names = {
-        "fee_tier",
-        "slippage_bps",
-        "spread_impact_pct",
-    }
-
-    for name, value in best_params.items():
-        if name in risk_param_names:
-            risk_params[name] = value
-        elif name in simulation_param_names:
-            simulation_params[name] = value
-        else:
-            strategy_params[name] = value
+    grouped = categorize_parameters_by_group(best_params)
+    strategy_params = grouped.get("strategy", {})
+    risk_params = grouped.get("risk", {})
+    simulation_params = grouped.get("simulation", {})
 
     # Build output structure
     output = dict(base_config)

@@ -12,7 +12,6 @@ from typing import Any
 
 from gpt_trader.backtesting.data.manager import HistoricalDataManager, create_coinbase_data_provider
 from gpt_trader.cli.commands.optimize.config_loader import (
-    OBJECTIVE_PRESETS,
     ConfigValidationError,
     OptimizeCliConfig,
     build_optimization_config,
@@ -23,6 +22,7 @@ from gpt_trader.cli.commands.optimize.config_loader import (
     merge_cli_overrides,
     parse_config,
 )
+from gpt_trader.cli.commands.optimize.registry import list_objective_names
 from gpt_trader.cli.commands.optimize.formatters import format_run_summary_text
 from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
@@ -71,7 +71,7 @@ def register(subparsers: Any) -> None:
     parser.add_argument(
         "--objective",
         type=str,
-        choices=list(OBJECTIVE_PRESETS.keys()),
+        choices=list_objective_names(),
         default="sharpe",
         help="Objective function preset (default: sharpe)",
     )

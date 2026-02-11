@@ -39,6 +39,10 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.app.config.profile_error_payloads import (
+    profile_yaml_missing_payload,
+    profile_yaml_parse_error_payload,
+)
 from gpt_trader.config import path_registry
 from gpt_trader.config.types import Profile
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -508,15 +512,30 @@ class ProfileLoader:
                 )
 
                 return schema
-
-            except Exception as e:
+            except Exception as exc:
+                payload = profile_yaml_parse_error_payload(
+                    profile=profile.value,
+                    path=yaml_path,
+                    exception=exc,
+                )
                 logger.warning(
                     "Failed to load profile YAML, using defaults",
                     operation="profile_load",
                     profile=profile.value,
-                    error=str(e),
+                    path=str(yaml_path),
+                    error=payload["reason"],
+                    details=payload,
                 )
+                return defaults
 
+        payload = profile_yaml_missing_payload(profile=profile.value, path=yaml_path)
+        logger.warning(
+            "Profile YAML not found, using defaults",
+            operation="profile_load",
+            profile=profile.value,
+            path=str(yaml_path),
+            details=payload,
+        )
         return defaults
 
     def to_bot_config_kwargs(self, schema: ProfileSchema, profile: Profile) -> dict[str, Any]:

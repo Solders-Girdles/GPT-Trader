@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -15,6 +16,12 @@ def _write_profile(tmp_path: Path, profile: str, content: str) -> Path:
     profile_path.parent.mkdir(parents=True, exist_ok=True)
     profile_path.write_text(content, encoding="utf-8")
     return profile_path
+
+
+def _last_result_details(checker: PreflightCheck) -> dict[str, Any]:
+    if not checker.results:
+        return {}
+    return checker.results[-1]["details"]  # type: ignore[index]
 
 
 class TestCheckProfileConfiguration:
@@ -97,7 +104,11 @@ risk_management:
         result = check_profile_configuration(checker)
 
         assert result is False
-        assert any("Failed to parse profile" in e for e in checker.errors)
+        assert any(e.startswith("Failed to parse profile:") for e in checker.errors)
+        details = _last_result_details(checker)
+        assert details.get("category") == "yaml_parse"
+        assert details.get("severity") == "error"
+        assert details.get("remediation", "").startswith("Inspect")
 
     def test_warns_when_profile_not_found(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -111,6 +122,9 @@ risk_management:
         # Should still pass with warning
         assert result is True
         assert any("not found" in w for w in checker.warnings)
+        details = _last_result_details(checker)
+        assert details.get("category") == "missing_file"
+        assert details.get("severity") == "warning"
 
     def test_shows_canary_defaults_when_missing(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture

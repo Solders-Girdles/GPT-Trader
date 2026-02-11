@@ -42,6 +42,7 @@ def test_main_json_require_reports_emits_failure_payload_without_reports(
     assert payload["failure_reasons"] == [expected_message]
     assert payload["days"] == []
     assert payload["streak_window"]["dates"] == []
+    assert payload["reason_codes"] == ["readiness_no_daily_reports"]
 
 
 def test_main_json_output_passes_with_machine_payload(tmp_path: Path, capsys) -> None:
@@ -76,6 +77,8 @@ def test_main_json_output_passes_with_machine_payload(tmp_path: Path, capsys) ->
         "2026-01-17",
     ]
     assert all(day["preflight_status"] == "READY" for day in payload["days"])
+    assert payload["reason_codes"] == []
+    assert all(day["reason_codes"] == [] for day in payload["days"])
 
 
 def test_main_json_output_reports_failures(tmp_path: Path, capsys) -> None:
@@ -115,6 +118,11 @@ def test_main_json_output_reports_failures(tmp_path: Path, capsys) -> None:
     assert payload["status"] == "FAILED"
     assert any("missing preflight report" in reason for reason in payload["failure_reasons"])
     assert any(not day["green"] for day in payload["days"])
+    assert payload["reason_codes"] == ["readiness_missing_preflight_report"]
+    assert any(
+        not day["green"] and day["reason_codes"] == ["readiness_missing_preflight_report"]
+        for day in payload["days"]
+    )
 
 
 def test_main_json_output_skips_when_no_reports(tmp_path: Path, capsys) -> None:
@@ -142,3 +150,4 @@ def test_main_json_output_skips_when_no_reports(tmp_path: Path, capsys) -> None:
     assert payload["failure_reasons"] == [expected_message]
     assert payload["days"] == []
     assert payload["streak_window"]["dates"] == []
+    assert payload["reason_codes"] == ["readiness_no_daily_reports"]

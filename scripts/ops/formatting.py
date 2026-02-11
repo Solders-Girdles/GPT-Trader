@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -85,3 +86,8 @@ def format_status_line(
         return f"{name}={text}"
     except Exception:
         return f"{name}={placeholder}"
+
+
+def format_reason_codes(codes: Sequence[str]) -> str:
+    text = ",".join(str(code) for code in codes if code)
+    return format_status_line("reason_codes", text)

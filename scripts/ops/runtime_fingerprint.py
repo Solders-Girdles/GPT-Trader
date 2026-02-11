@@ -14,6 +14,13 @@ except ModuleNotFoundError:  # pragma: no cover
     import formatting  # type: ignore
 
 
+REASON_DB_NOT_FOUND = "runtime_fingerprint_events_db_missing"
+REASON_DB_READ_ERROR = "runtime_fingerprint_events_db_read_error"
+REASON_RUNTIME_START_MISSING = "runtime_fingerprint_runtime_start_missing"
+REASON_EVENT_ID_NOT_NEWER = "runtime_fingerprint_event_id_not_newer"
+REASON_BUILD_SHA_MISMATCH = "runtime_fingerprint_build_sha_mismatch"
+
+
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Print latest runtime_start fingerprint from events.db"
@@ -79,18 +86,25 @@ def _validate_runtime_start(
     *,
     min_event_id: int | None,
     expected_build_sha: str | None,
-) -> tuple[bool, str]:
+) -> tuple[bool, str, tuple[str, ...]]:
     event_id = payload.get("event_id")
+    reasons: list[str] = []
+    reason_codes: list[str] = []
+
     if min_event_id is not None:
         if event_id is None or event_id <= min_event_id:
-            return False, "runtime_start event_id is not newer than baseline"
+            reasons.append("runtime_start event_id is not newer than baseline")
+            reason_codes.append(REASON_EVENT_ID_NOT_NEWER)
 
     if expected_build_sha is not None:
         payload_sha = payload.get("build_sha")
         if payload_sha != expected_build_sha:
-            return False, "runtime_start build_sha does not match expected"
+            reasons.append("runtime_start build_sha does not match expected")
+            reason_codes.append(REASON_BUILD_SHA_MISMATCH)
 
-    return True, "ok"
+    if not reasons:
+        return True, "ok", tuple()
+    return False, "; ".join(reasons), tuple(reason_codes)
 
 
 def _print_payload(payload: dict[str, Any]) -> None:
@@ -111,30 +125,39 @@ def _print_payload(payload: dict[str, Any]) -> None:
         print(formatting.format_status_line(field, value))
 
 
+def _print_error(message: str, *, reason_codes: tuple[str, ...] = ()) -> None:
+    print(formatting.format_status_line("error", message))
+    if reason_codes:
+        print(formatting.format_reason_codes(reason_codes))
+
+
 def main() -> int:
     args = _parse_args()
     events_db = args.runtime_root / "runtime_data" / args.profile / "events.db"
     if not events_db.exists():
-        print(formatting.format_status_line("error", f"events.db not found: {events_db}"))
+        _print_error(f"events.db not found: {events_db}", reason_codes=(REASON_DB_NOT_FOUND,))
         return 1
 
     try:
         payload = _read_latest_runtime_start(events_db)
     except sqlite3.Error as exc:
-        print(formatting.format_status_line("error", f"failed to read events.db: {exc}"))
+        _print_error(
+            f"failed to read events.db: {exc}",
+            reason_codes=(REASON_DB_READ_ERROR,),
+        )
         return 2
 
     if payload is None:
-        print(formatting.format_status_line("error", "no runtime_start events"))
+        _print_error("no runtime_start events", reason_codes=(REASON_RUNTIME_START_MISSING,))
         return 3
 
-    is_valid, reason = _validate_runtime_start(
+    is_valid, reason, reason_codes = _validate_runtime_start(
         payload,
         min_event_id=args.min_event_id,
         expected_build_sha=args.expected_build_sha,
     )
     if not is_valid:
-        print(formatting.format_status_line("error", reason))
+        _print_error(reason, reason_codes=reason_codes)
         return 4
 
     _print_payload(payload)

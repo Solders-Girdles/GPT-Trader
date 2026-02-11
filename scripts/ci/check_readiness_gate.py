@@ -59,6 +59,7 @@ class DayEvaluation:
     preflight_path: Path | None
     green: bool
     notes: tuple[str, ...]
+    reason_codes: tuple[str, ...]
     pillars: tuple[PillarEvaluation, ...]
     preflight_status: str | None
 
@@ -68,6 +69,63 @@ class FreshnessStatus:
     latest_date: date
     age: timedelta
     max_age_days: int
+
+
+REASON_CODE_MISSING_DAILY_REPORT = "readiness_missing_daily_report"
+REASON_CODE_MISSING_PREFLIGHT_REPORT = "readiness_missing_preflight_report"
+REASON_CODE_PREFLIGHT_NOT_READY = "readiness_preflight_not_ready"
+REASON_CODE_NO_REPORTS = "readiness_no_daily_reports"
+REASON_CODE_REPORTS_STALE = "readiness_reports_stale"
+REASON_CODE_MARKET_DATA_MISSING_HEALTH = "readiness_market_data_missing_health"
+REASON_CODE_MARKET_DATA_STALE_MARKS = "readiness_market_data_stale_marks"
+REASON_CODE_MARKET_DATA_WS_RECONNECTS = "readiness_market_data_ws_reconnects"
+REASON_CODE_MARKET_DATA_LIVENESS_MISSING_SNAPSHOT = (
+    "readiness_market_data_liveness_missing_snapshot"
+)
+REASON_CODE_MARKET_DATA_LIVENESS_MISSING_EVENTS = "readiness_market_data_liveness_missing_events"
+REASON_CODE_MARKET_DATA_LIVENESS_MISSING_AGES = "readiness_market_data_liveness_missing_ages"
+REASON_CODE_MARKET_DATA_LIVENESS_FALLBACK = "readiness_market_data_liveness_fallback"
+REASON_CODE_MARKET_DATA_LIVENESS_STALE = "readiness_market_data_liveness_stale"
+REASON_CODE_MARKET_DATA_LIVENESS_UNKNOWN = "readiness_market_data_liveness_unknown"
+REASON_CODE_EXECUTION_MISSING_HEALTH = "readiness_execution_missing_health"
+REASON_CODE_EXECUTION_UNFILLED_ORDERS = "readiness_execution_unfilled_orders"
+REASON_CODE_EXECUTION_API_ERRORS = "readiness_execution_api_errors"
+REASON_CODE_EXECUTION_UNKNOWN = "readiness_execution_unknown"
+REASON_CODE_RISK_MISSING_SECTION = "readiness_risk_missing_section"
+REASON_CODE_RISK_GUARD_TRIGGERS = "readiness_risk_guard_triggers"
+REASON_CODE_RISK_CIRCUIT_BREAKER = "readiness_risk_circuit_breaker_triggered"
+REASON_CODE_RISK_UNKNOWN = "readiness_risk_unknown"
+REASON_CODE_UNKNOWN_DAILY_ISSUE = "readiness_unknown_daily_issue"
+
+
+def _dedupe_reason_codes(codes: Sequence[str]) -> tuple[str, ...]:
+    seen: set[str] = set()
+    ordered: list[str] = []
+    for code in codes:
+        if not code or code in seen:
+            continue
+        seen.add(code)
+        ordered.append(code)
+    return tuple(ordered)
+
+
+def _format_reason_codes_line(codes: Sequence[str]) -> str:
+    text = ",".join(str(code) for code in codes if code)
+    if not text:
+        text = "-"
+    return f"reason_codes={text}"
+
+
+def _aggregate_reason_codes(
+    entries: Sequence[DayEvaluation],
+    extra: Sequence[str] | None = None,
+) -> tuple[str, ...]:
+    codes: list[str] = []
+    for entry in entries:
+        codes.extend(entry.reason_codes)
+    if extra:
+        codes.extend(extra)
+    return _dedupe_reason_codes(codes)
 
 
 def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -438,10 +496,49 @@ def _evaluate_risk(
     )
 
 
+def _map_pillar_reason_to_codes(pillar_name: str, reason: str) -> tuple[str, ...]:
+    normalized_reason = reason.lower()
+    if pillar_name == "Market data integrity":
+        if normalized_reason == "missing health section":
+            return (REASON_CODE_MARKET_DATA_MISSING_HEALTH,)
+        if normalized_reason.startswith("stale_marks"):
+            return (REASON_CODE_MARKET_DATA_STALE_MARKS,)
+        if normalized_reason.startswith("ws_reconnects"):
+            return (REASON_CODE_MARKET_DATA_WS_RECONNECTS,)
+        if normalized_reason == "missing liveness snapshot":
+            return (REASON_CODE_MARKET_DATA_LIVENESS_MISSING_SNAPSHOT,)
+        if normalized_reason == "missing liveness events":
+            return (REASON_CODE_MARKET_DATA_LIVENESS_MISSING_EVENTS,)
+        if normalized_reason == "missing liveness ages":
+            return (REASON_CODE_MARKET_DATA_LIVENESS_MISSING_AGES,)
+        if normalized_reason.startswith("liveness fallback"):
+            return (REASON_CODE_MARKET_DATA_LIVENESS_FALLBACK,)
+        if normalized_reason.startswith("liveness "):
+            return (REASON_CODE_MARKET_DATA_LIVENESS_STALE,)
+        return (REASON_CODE_MARKET_DATA_LIVENESS_UNKNOWN,)
+    if pillar_name == "Execution correctness":
+        if normalized_reason == "missing health section":
+            return (REASON_CODE_EXECUTION_MISSING_HEALTH,)
+        if normalized_reason.startswith("unfilled_orders"):
+            return (REASON_CODE_EXECUTION_UNFILLED_ORDERS,)
+        if normalized_reason.startswith("api_errors"):
+            return (REASON_CODE_EXECUTION_API_ERRORS,)
+        return (REASON_CODE_EXECUTION_UNKNOWN,)
+    if pillar_name == "Risk management":
+        if normalized_reason == "missing risk section":
+            return (REASON_CODE_RISK_MISSING_SECTION,)
+        if normalized_reason.startswith("guard_triggers"):
+            return (REASON_CODE_RISK_GUARD_TRIGGERS,)
+        if normalized_reason == "circuit_breaker triggered":
+            return (REASON_CODE_RISK_CIRCUIT_BREAKER,)
+        return (REASON_CODE_RISK_UNKNOWN,)
+    return (REASON_CODE_UNKNOWN_DAILY_ISSUE,)
+
+
 def _evaluate_daily_report(
     report: dict[str, Any],
     thresholds: Thresholds,
-) -> tuple[tuple[PillarEvaluation, ...], list[str]]:
+) -> tuple[tuple[PillarEvaluation, ...], list[str], tuple[str, ...]]:
     health = report.get("health")
     risk = report.get("risk")
     pillars = (
@@ -450,12 +547,14 @@ def _evaluate_daily_report(
         _evaluate_execution(health, thresholds),
     )
     notes: list[str] = []
+    codes: list[str] = []
     for pillar in pillars:
         if pillar.green:
             continue
         for reason in pillar.reasons:
             notes.append(f"{pillar.name}: {reason}")
-    return pillars, notes
+            codes.extend(_map_pillar_reason_to_codes(pillar.name, reason))
+    return pillars, notes, _dedupe_reason_codes(codes)
 
 
 def _build_lookup(
@@ -493,28 +592,37 @@ def _evaluate_profile(
         daily_entry = daily_by_date.get(report_date)
         preflight_entry = preflight_by_date.get(report_date)
         notes: list[str] = []
+        reason_codes: list[str] = []
         pillars: tuple[PillarEvaluation, ...] = ()
         green = True
 
         if daily_entry is None:
             green = False
             notes.append("missing daily report")
+            reason_codes.append(REASON_CODE_MISSING_DAILY_REPORT)
         else:
-            pillars, pillar_notes = _evaluate_daily_report(daily_entry.data, thresholds)
+            pillars, pillar_notes, pillar_codes = _evaluate_daily_report(
+                daily_entry.data,
+                thresholds,
+            )
             if pillar_notes:
                 green = False
                 notes.extend(pillar_notes)
+                reason_codes.extend(pillar_codes)
 
         preflight_status: str | None = None
         if preflight_entry is None:
             green = False
             notes.append("missing preflight report")
+            reason_codes.append(REASON_CODE_MISSING_PREFLIGHT_REPORT)
         else:
             preflight_status = str(preflight_entry.data.get("status", "UNKNOWN"))
             if preflight_status != "READY":
                 green = False
                 notes.append(f"preflight status {preflight_status}")
+                reason_codes.append(REASON_CODE_PREFLIGHT_NOT_READY)
 
+        day_reason_codes = _dedupe_reason_codes(reason_codes)
         evaluations.append(
             DayEvaluation(
                 report_date=report_date,
@@ -522,6 +630,7 @@ def _evaluate_profile(
                 preflight_path=preflight_entry.path if preflight_entry else None,
                 green=green,
                 notes=tuple(notes),
+                reason_codes=day_reason_codes,
                 pillars=pillars,
                 preflight_status=preflight_status,
             )
@@ -580,6 +689,7 @@ def _day_payload(entry: DayEvaluation) -> dict[str, Any]:
         "date": entry.report_date.isoformat(),
         "green": entry.green,
         "notes": list(entry.notes),
+        "reason_codes": list(entry.reason_codes),
         "pillars": [
             {"name": pillar.name, "green": pillar.green, "reasons": list(pillar.reasons)}
             for pillar in entry.pillars
@@ -609,6 +719,7 @@ def _build_json_payload(
     status: str,
     status_message: str,
     extra_failure_reasons: Sequence[str] | None = None,
+    extra_reason_codes: Sequence[str] | None = None,
 ) -> dict[str, Any]:
     dates = [entry.report_date.isoformat() for entry in evaluations]
     streak_window = {
@@ -619,6 +730,7 @@ def _build_json_payload(
     failure_reasons = list(_collect_failure_reasons(evaluations))
     if extra_failure_reasons:
         failure_reasons.extend(extra_failure_reasons)
+    reason_codes = list(_aggregate_reason_codes(evaluations, extra_reason_codes))
     return {
         "profile": profile,
         "streak_days": streak_days,
@@ -636,6 +748,7 @@ def _build_json_payload(
         },
         "days": [_day_payload(entry) for entry in evaluations],
         "failure_reasons": failure_reasons,
+        "reason_codes": reason_codes,
     }
 
 
@@ -781,6 +894,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                         "Readiness gate FAILED: stale daily report exceeds max age.",
                         file=sys.stderr,
                     )
+                    print(
+                        _format_reason_codes_line((REASON_CODE_REPORTS_STALE,)),
+                        file=sys.stderr,
+                    )
                     return 1
                 print(message)
                 print(
@@ -813,10 +930,15 @@ def main(argv: Sequence[str] | None = None) -> int:
                     status="FAILED",
                     status_message=message,
                     extra_failure_reasons=(message,),
+                    extra_reason_codes=(REASON_CODE_NO_REPORTS,),
                 )
                 print(json.dumps(payload))
                 return 1
             print(f"Error: {message}", file=sys.stderr)
+            print(
+                _format_reason_codes_line((REASON_CODE_NO_REPORTS,)),
+                file=sys.stderr,
+            )
             return 1
         if args.json:
             payload = _build_json_payload(
@@ -828,6 +950,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 status="SKIPPED",
                 status_message=message,
                 extra_failure_reasons=(message,),
+                extra_reason_codes=(REASON_CODE_NO_REPORTS,),
             )
             print(json.dumps(payload))
             return 0
@@ -890,6 +1013,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 continue
             reasons = "; ".join(entry.notes) if entry.notes else "not green"
             print(f"- {entry.report_date.isoformat()}: {reasons}", file=sys.stderr)
+        aggregated_codes = _aggregate_reason_codes(evaluations)
+        if aggregated_codes:
+            print(_format_reason_codes_line(aggregated_codes), file=sys.stderr)
         return 1
 
     if not args.json:

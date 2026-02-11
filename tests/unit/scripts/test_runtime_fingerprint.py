@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import argparse
 import json
 import sqlite3
 from pathlib import Path
+
+import pytest
 
 from scripts.ops import runtime_fingerprint
 
@@ -60,7 +63,7 @@ def test_read_latest_runtime_start_missing_returns_none(tmp_path: Path) -> None:
 
 def test_validate_runtime_start_fails_on_event_id() -> None:
     payload = {"event_id": 1, "build_sha": "abc"}
-    is_valid, reason = runtime_fingerprint._validate_runtime_start(
+    is_valid, reason, codes = runtime_fingerprint._validate_runtime_start(
         payload,
         min_event_id=2,
         expected_build_sha=None,
@@ -68,11 +71,12 @@ def test_validate_runtime_start_fails_on_event_id() -> None:
 
     assert is_valid is False
     assert "event_id" in reason
+    assert codes == (runtime_fingerprint.REASON_EVENT_ID_NOT_NEWER,)
 
 
 def test_validate_runtime_start_fails_on_build_sha() -> None:
     payload = {"event_id": 5, "build_sha": "abc"}
-    is_valid, reason = runtime_fingerprint._validate_runtime_start(
+    is_valid, reason, codes = runtime_fingerprint._validate_runtime_start(
         payload,
         min_event_id=1,
         expected_build_sha="def",
@@ -80,11 +84,12 @@ def test_validate_runtime_start_fails_on_build_sha() -> None:
 
     assert is_valid is False
     assert "build_sha" in reason
+    assert codes == (runtime_fingerprint.REASON_BUILD_SHA_MISMATCH,)
 
 
 def test_validate_runtime_start_passes_when_matching() -> None:
     payload = {"event_id": 5, "build_sha": "abc"}
-    is_valid, reason = runtime_fingerprint._validate_runtime_start(
+    is_valid, reason, codes = runtime_fingerprint._validate_runtime_start(
         payload,
         min_event_id=1,
         expected_build_sha="abc",
@@ -92,6 +97,24 @@ def test_validate_runtime_start_passes_when_matching() -> None:
 
     assert is_valid is True
     assert reason == "ok"
+    assert codes == ()
+
+
+def test_validate_runtime_start_returns_multiple_reason_codes() -> None:
+    payload = {"event_id": 1, "build_sha": "abc"}
+    is_valid, reason, codes = runtime_fingerprint._validate_runtime_start(
+        payload,
+        min_event_id=5,
+        expected_build_sha="def",
+    )
+
+    assert is_valid is False
+    assert "event_id" in reason
+    assert "build_sha" in reason
+    assert codes == (
+        runtime_fingerprint.REASON_EVENT_ID_NOT_NEWER,
+        runtime_fingerprint.REASON_BUILD_SHA_MISMATCH,
+    )
 
 
 def test_print_payload_normalizes_timestamp(capsys) -> None:
@@ -107,3 +130,77 @@ def test_print_payload_normalizes_timestamp(capsys) -> None:
 
     assert values["timestamp"] == "2026-02-01T12:00:00+00:00"
     assert values["event_id"] == "1"
+
+
+def test_main_success_does_not_emit_reason_codes(
+    tmp_path: Path,
+    capsys,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime_root = tmp_path
+    profile = "canary"
+    db_path = runtime_root / "runtime_data" / profile / "events.db"
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    _create_events_db(db_path)
+
+    payload = {
+        "profile": profile,
+        "build_sha": "abc",
+    }
+    with sqlite3.connect(str(db_path)) as connection:
+        connection.execute(
+            "INSERT INTO events (event_type, payload) VALUES (?, ?)",
+            ("runtime_start", json.dumps(payload)),
+        )
+        connection.commit()
+
+    args = argparse.Namespace(
+        profile=profile,
+        runtime_root=runtime_root,
+        min_event_id=0,
+        expected_build_sha="abc",
+    )
+    monkeypatch.setattr(runtime_fingerprint, "_parse_args", lambda: args)
+    result = runtime_fingerprint.main()
+
+    output_lines = capsys.readouterr().out.strip().splitlines()
+    assert result == 0
+    assert not any(line.startswith("reason_codes=") for line in output_lines)
+
+
+def test_main_failure_emits_reason_codes(
+    tmp_path: Path,
+    capsys,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    runtime_root = tmp_path
+    profile = "canary"
+    db_path = runtime_root / "runtime_data" / profile / "events.db"
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    _create_events_db(db_path)
+
+    payload = {
+        "profile": profile,
+        "build_sha": "abc",
+    }
+    with sqlite3.connect(str(db_path)) as connection:
+        connection.execute(
+            "INSERT INTO events (event_type, payload) VALUES (?, ?)",
+            ("runtime_start", json.dumps(payload)),
+        )
+        connection.commit()
+
+    args = argparse.Namespace(
+        profile=profile,
+        runtime_root=runtime_root,
+        min_event_id=100,
+        expected_build_sha="def",
+    )
+    monkeypatch.setattr(runtime_fingerprint, "_parse_args", lambda: args)
+    result = runtime_fingerprint.main()
+
+    output_lines = [
+        line.strip() for line in capsys.readouterr().out.strip().splitlines() if line.strip()
+    ]
+    assert result == 4
+    assert output_lines[-1] == "reason_codes=runtime_fingerprint_event_id_not_newer,runtime_fingerprint_build_sha_mismatch"

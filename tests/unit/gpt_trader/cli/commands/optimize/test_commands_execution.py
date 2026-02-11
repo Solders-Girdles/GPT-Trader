@@ -229,6 +229,80 @@ class TestApplyCommand:
 
         assert result == 1  # Error: no runs found
 
+    def test_build_output_config_strategy_only_filters_groups(self):
+        run_data = {
+            "run_id": "opt_123",
+            "study_name": "study",
+            "best_objective_value": 1.23,
+            "best_parameters": {
+                "short_ma_period": 10,
+                "target_leverage": 4,
+                "slippage_bps": 5,
+            },
+        }
+
+        output = apply._build_output_config(
+            run_data,
+            base_config={},
+            profile_name="test",
+            strategy_only=True,
+        )
+
+        assert output["strategy"]["short_ma_period"] == 10
+        assert "risk" not in output
+        assert "simulation" not in output
+
+    def test_build_output_config_includes_all_groups(self):
+        run_data = {
+            "run_id": "opt_321",
+            "study_name": "study",
+            "best_objective_value": 2.46,
+            "best_parameters": {
+                "short_ma_period": 8,
+                "target_leverage": 5,
+                "slippage_bps": 10,
+            },
+        }
+
+        output = apply._build_output_config(
+            run_data,
+            base_config={},
+            profile_name="test",
+            strategy_only=False,
+        )
+
+        assert output["strategy"]["short_ma_period"] == 8
+        assert output["risk"]["target_leverage"] == 5
+        assert output["simulation"]["slippage_bps"] == 10
+
+    def test_build_output_config_routes_legacy_risk_keys_to_risk_group(self):
+        run_data = {
+            "run_id": "opt_legacy_risk",
+            "study_name": "study",
+            "best_objective_value": 3.14,
+            "best_parameters": {
+                "short_ma_period": 7,
+                "max_position_size": 10000,
+                "max_drawdown_pct": 8.5,
+                "reduce_only_threshold": 0.15,
+            },
+        }
+
+        output = apply._build_output_config(
+            run_data,
+            base_config={},
+            profile_name="test",
+            strategy_only=False,
+        )
+
+        assert output["strategy"]["short_ma_period"] == 7
+        assert "max_position_size" not in output["strategy"]
+        assert "max_drawdown_pct" not in output["strategy"]
+        assert "reduce_only_threshold" not in output["strategy"]
+        assert output["risk"]["max_position_size"] == 10000
+        assert output["risk"]["max_drawdown_pct"] == 8.5
+        assert output["risk"]["reduce_only_threshold"] == 0.15
+
 
 class TestStrategyProfileDiffCommand:
     """Tests for the strategy profile diff CLI."""

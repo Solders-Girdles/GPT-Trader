@@ -7,7 +7,6 @@ from datetime import datetime
 import pytest
 
 from gpt_trader.cli.commands.optimize.config_loader import (
-    OBJECTIVE_PRESETS,
     ConfigValidationError,
     build_optimization_config,
     build_parameter_space_from_config,
@@ -18,6 +17,7 @@ from gpt_trader.cli.commands.optimize.config_loader import (
     merge_cli_overrides,
     parse_config,
 )
+from gpt_trader.cli.commands.optimize.registry import list_objective_names
 
 
 def test_load_config_file_loads_valid_yaml(tmp_path):
@@ -83,6 +83,16 @@ def test_parse_config_full():
 def test_parse_config_missing_study_name():
     with pytest.raises(ConfigValidationError, match="study.name is required"):
         parse_config({"study": {}})
+
+
+def test_parse_config_invalid_parameter_group():
+    raw = {
+        "study": {"name": "group_test"},
+        "parameter_space": {"include_groups": ["strategy", "unknown_group"]},
+    }
+
+    with pytest.raises(ConfigValidationError, match="Unknown parameter group"):
+        parse_config(raw)
 
 
 @pytest.mark.parametrize(
@@ -205,13 +215,12 @@ def test_get_objective_direction_unknown():
         get_objective_direction("nonexistent")
 
 
-def test_objective_presets_have_direction():
-    for preset_name in OBJECTIVE_PRESETS:
-        _, direction = OBJECTIVE_PRESETS[preset_name]
-        assert direction in ("maximize", "minimize")
+def test_objective_registry_has_valid_direction():
+    for preset_name in list_objective_names():
+        assert get_objective_direction(preset_name) in ("maximize", "minimize")
 
 
-def test_objective_presets_create():
-    for preset_name in OBJECTIVE_PRESETS:
+def test_objective_registry_creates_instances():
+    for preset_name in list_objective_names():
         objective = create_objective_from_preset(preset_name)
         assert objective is not None

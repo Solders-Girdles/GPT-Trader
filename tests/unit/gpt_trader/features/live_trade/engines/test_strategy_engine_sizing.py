@@ -7,7 +7,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.core import Product
+import gpt_trader.security.validate as security_validate_module
+from gpt_trader.core import OrderSide, Product
+from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
 from gpt_trader.features.live_trade.execution.submission_result import OrderSubmissionStatus
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 
@@ -67,3 +69,37 @@ def test_calculate_order_quantity_min_size(engine):
 
     quantity = engine._calculate_order_quantity("BTC-USD", price, equity, product)
     assert quantity == Decimal("0")
+
+
+@pytest.mark.asyncio
+async def test_security_validation_falls_back_when_position_fraction_is_malformed(
+    engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Malformed risk sizing input should degrade safely to default validator limits."""
+    engine.context.config.risk.position_fraction = "bad-fraction"
+    trace = OrderDecisionTrace(
+        symbol="BTC-USD",
+        side="BUY",
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+        quantity=Decimal("0.02"),
+        reduce_only=False,
+        reason="test",
+    )
+
+    mock_validator = MagicMock()
+    mock_validator.validate_order_request.return_value.is_valid = True
+    monkeypatch.setattr(security_validate_module, "get_validator", lambda: mock_validator)
+
+    result = await engine._run_security_validation(
+        symbol="BTC-USD",
+        side=OrderSide.BUY,
+        quantity=Decimal("0.02"),
+        price=Decimal("50000"),
+        equity=Decimal("10000"),
+        trace=trace,
+    )
+
+    assert result is None
+    limits = mock_validator.validate_order_request.call_args.kwargs["limits"]
+    assert limits["max_position_size"] == 0.05

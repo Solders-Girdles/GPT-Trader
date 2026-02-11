@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -10,22 +10,14 @@ from typing import Any
 
 import yaml
 
-from gpt_trader.features.optimize.objectives.factories import (
-    create_execution_quality_objective,
-    create_perpetuals_objective,
-    create_risk_averse_objective,
-    create_streak_resilient_objective,
-    create_tail_risk_aware_objective,
-    create_time_efficient_objective,
-)
-from gpt_trader.features.optimize.objectives.single import (
-    CalmarRatioObjective,
-    MaxDrawdownObjective,
-    ProfitFactorObjective,
-    SharpeRatioObjective,
-    SortinoRatioObjective,
-    TotalReturnObjective,
-    WinRateObjective,
+from gpt_trader.cli.commands.optimize.registry import (
+    DEFAULT_PARAMETER_GROUPS,
+    add_parameter_groups,
+    get_objective_spec,
+    has_objective,
+    has_parameter_group,
+    list_objective_names,
+    list_parameter_group_names,
 )
 from gpt_trader.features.optimize.parameter_space.builder import ParameterSpaceBuilder
 from gpt_trader.features.optimize.types import OptimizationConfig, ParameterSpace
@@ -68,27 +60,44 @@ class OptimizeCliConfig:
     symbols: list[str] = field(default_factory=lambda: ["BTC-USD"])
     backtest: BacktestSettings | None = None
     parameter_overrides: dict[str, dict[str, Any]] = field(default_factory=dict)
-    include_parameter_groups: list[str] = field(default_factory=lambda: ["strategy", "risk"])
+    include_parameter_groups: list[str] = field(
+        default_factory=lambda: list(DEFAULT_PARAMETER_GROUPS)
+    )
 
 
-# Mapping of preset names to factory functions
-OBJECTIVE_PRESETS: dict[str, tuple[type | Callable, str]] = {
-    # Simple objectives
-    "sharpe": (SharpeRatioObjective, "maximize"),
-    "sortino": (SortinoRatioObjective, "maximize"),
-    "calmar": (CalmarRatioObjective, "maximize"),
-    "total_return": (TotalReturnObjective, "maximize"),
-    "win_rate": (WinRateObjective, "maximize"),
-    "profit_factor": (ProfitFactorObjective, "maximize"),
-    "max_drawdown": (MaxDrawdownObjective, "minimize"),
-    # Composite factory presets
-    "risk_averse": (create_risk_averse_objective, "maximize"),
-    "execution_quality": (create_execution_quality_objective, "maximize"),
-    "time_efficient": (create_time_efficient_objective, "maximize"),
-    "streak_resilient": (create_streak_resilient_objective, "maximize"),
-    "perpetuals": (create_perpetuals_objective, "maximize"),
-    "tail_risk_aware": (create_tail_risk_aware_objective, "maximize"),
-}
+def _normalize_parameter_groups(
+    raw_value: Any | None,
+) -> list[str]:
+    if raw_value is None:
+        candidate_groups: list[str] = list(DEFAULT_PARAMETER_GROUPS)
+    elif isinstance(raw_value, str):
+        candidate_groups = [raw_value]
+    elif isinstance(raw_value, Sequence):
+        candidate_groups = list(raw_value)
+    else:
+        raise ConfigValidationError("parameter_space.include_groups must be a list of strings")
+
+    normalized: list[str] = []
+    available = list_parameter_group_names()
+    for group in candidate_groups:
+        if not isinstance(group, str):
+            raise ConfigValidationError("Parameter group names must be strings")
+        if not has_parameter_group(group):
+            raise ConfigValidationError(
+                f"Unknown parameter group: {group}. Available: {', '.join(available)}"
+            )
+        if group not in normalized:
+            normalized.append(group)
+
+    return normalized or list(DEFAULT_PARAMETER_GROUPS)
+
+
+def _validate_objective_name(raw_name: str | None) -> str:
+    name = raw_name or "sharpe"
+    if not has_objective(name):
+        available = ", ".join(list_objective_names())
+        raise ConfigValidationError(f"Unknown objective preset: {name}. Available: {available}")
+    return name
 
 
 def load_config_file(config_path: Path) -> dict[str, Any]:
@@ -148,7 +157,7 @@ def parse_config(raw_config: dict[str, Any]) -> OptimizeCliConfig:
 
     # Parse objective
     objective_raw = raw_config.get("objective", {})
-    objective_name = objective_raw.get("preset", "sharpe")
+    objective_name = _validate_objective_name(objective_raw.get("preset"))
     objective_kwargs = {}
 
     if "constraints" in objective_raw:
@@ -201,7 +210,7 @@ def parse_config(raw_config: dict[str, Any]) -> OptimizeCliConfig:
 
     # Parse parameter space
     param_space_raw = raw_config.get("parameter_space", {})
-    include_groups = param_space_raw.get("include_groups", ["strategy", "risk"])
+    include_groups = _normalize_parameter_groups(param_space_raw.get("include_groups"))
     parameter_overrides = param_space_raw.get("overrides", {})
 
     return OptimizeCliConfig(
@@ -283,22 +292,9 @@ def create_objective_from_preset(preset_name: str, **kwargs: Any) -> Any:
     Raises:
         ConfigValidationError: If preset is unknown
     """
-    if preset_name not in OBJECTIVE_PRESETS:
-        available = ", ".join(sorted(OBJECTIVE_PRESETS.keys()))
-        raise ConfigValidationError(
-            f"Unknown objective preset: {preset_name}. Available: {available}"
-        )
-
-    factory, _direction = OBJECTIVE_PRESETS[preset_name]
-
-    # Filter kwargs to only include valid parameters for the factory
-    if callable(factory) and not isinstance(factory, type):
-        # It's a factory function, pass kwargs
-        return factory(**kwargs)
-    else:
-        # It's a class, instantiate with min_trades if available
-        min_trades = kwargs.get("min_trades", 10)
-        return factory(min_trades=min_trades)
+    validated_name = _validate_objective_name(preset_name)
+    spec = get_objective_spec(validated_name)
+    return spec.factory(**kwargs)
 
 
 def get_objective_direction(preset_name: str) -> str:
@@ -314,40 +310,23 @@ def get_objective_direction(preset_name: str) -> str:
     Raises:
         ConfigValidationError: If preset is unknown
     """
-    if preset_name not in OBJECTIVE_PRESETS:
-        raise ConfigValidationError(f"Unknown objective preset: {preset_name}")
-
-    _, direction = OBJECTIVE_PRESETS[preset_name]
-    return direction
+    validated_name = _validate_objective_name(preset_name)
+    spec = get_objective_spec(validated_name)
+    return spec.direction
 
 
-def build_parameter_space_from_config(
-    config: OptimizeCliConfig,
-    strategy_type: str | None = None,
-) -> ParameterSpace:
+def build_parameter_space_from_config(config: OptimizeCliConfig) -> ParameterSpace:
     """
     Build a parameter space from configuration.
 
     Args:
         config: CLI configuration
-        strategy_type: Optional strategy type override
 
     Returns:
         Configured ParameterSpace
     """
     builder = ParameterSpaceBuilder()
-
-    # Add parameters based on included groups
-    groups = config.include_parameter_groups
-
-    if "strategy" in groups:
-        builder.with_strategy_defaults()
-
-    if "risk" in groups:
-        builder.with_risk_defaults()
-
-    if "simulation" in groups:
-        builder.with_simulation_defaults()
+    builder = add_parameter_groups(builder, config.include_parameter_groups)
 
     # Apply overrides
     for param_name, override_config in config.parameter_overrides.items():

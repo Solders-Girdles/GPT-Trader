@@ -9,16 +9,29 @@ import re
 from collections.abc import Awaitable, Callable, Iterable
 from importlib.util import module_from_spec, spec_from_file_location  # naming: allow
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
-import pytest_textual_snapshot as pts
+
+try:
+    import pytest_textual_snapshot as pts
+except ImportError:  # pragma: no cover - shim for environments without the plugin
+    from tests.unit.gpt_trader.tui import pytest_textual_snapshot_stub as pts
 from _pytest.fixtures import FixtureRequest
 from rich.console import Console
-from syrupy import SnapshotAssertion
-from syrupy.extensions.single_file import SingleFileSnapshotExtension, WriteMode
 from textual.app import App
 from textual.pilot import Pilot
+
+try:
+    from syrupy import SnapshotAssertion
+    from syrupy.extensions.single_file import SingleFileSnapshotExtension, WriteMode
+    _SYRUPY_AVAILABLE = True
+except ImportError:  # pragma: no cover - not available everywhere
+    SnapshotAssertion = None  # type: ignore[assignment]
+    SingleFileSnapshotExtension = None
+    WriteMode = None
+    _SYRUPY_AVAILABLE = False
 
 # Patterns to normalize for stable snapshots
 _TERMINAL_HASH_RE = re.compile(r"terminal-\d+-")
@@ -51,28 +64,95 @@ def _normalize_svg(text: str) -> str:
     return normalized
 
 
-class NormalizedSVGImageExtension(SingleFileSnapshotExtension):
-    """SVG extension that normalizes Textual's hashed terminal CSS class names."""
+if SingleFileSnapshotExtension is not None:  # pragma: no cover - only available when syrupy is installed
+    class NormalizedSVGImageExtension(SingleFileSnapshotExtension):
+        """SVG extension that normalizes Textual's hashed terminal CSS class names."""
 
-    _file_extension = "svg"
-    _write_mode = WriteMode.TEXT
+        _file_extension = "svg"
+        _write_mode = WriteMode.TEXT
 
-    def serialize(self, data, *, exclude=None, include=None, matcher=None):
-        """Normalize volatile content before serializing."""
-        text = super().serialize(data, exclude=exclude, include=include, matcher=matcher)
-        return _normalize_svg(text)
+        def serialize(self, data, *, exclude=None, include=None, matcher=None):
+            """Normalize volatile content before serializing."""
+            text = super().serialize(data, exclude=exclude, include=include, matcher=matcher)
+            return _normalize_svg(text)
 
-    def read_snapshot_data_from_location(
-        self, *, snapshot_location: str, snapshot_name: str, session_id: str
-    ):
-        data = super().read_snapshot_data_from_location(
-            snapshot_location=snapshot_location,
-            snapshot_name=snapshot_name,
-            session_id=session_id,
-        )
-        if isinstance(data, str):
+        def read_snapshot_data_from_location(
+            self, *, snapshot_location: str, snapshot_name: str, session_id: str
+        ):
+            data = super().read_snapshot_data_from_location(
+                snapshot_location=snapshot_location,
+                snapshot_name=snapshot_name,
+                session_id=session_id,
+            )
+            if isinstance(data, str):
+                return _normalize_svg(data)
+            return data
+else:
+    class NormalizedSVGImageExtension:
+        """Simple stand-in when syrupy is unavailable."""
+
+        def serialize(self, data, *, exclude=None, include=None, matcher=None):
             return _normalize_svg(data)
-        return data
+
+        def read_snapshot_data_from_location(self, *, snapshot_location: str, snapshot_name: str, session_id: str):
+            return ""
+
+
+def _sanitize_snapshot_component(value: str | None) -> str:
+    if not value:
+        return "snapshot"
+    sanitized = re.sub(r"[^A-Za-z0-9_.-]", "_", value)
+    return sanitized or "snapshot"
+
+
+def _snapshot_file_path(request: FixtureRequest) -> Path:
+    module_path = Path(str(request.node.fspath))
+    snapshots_dir = module_path.parent / "__snapshots__" / module_path.stem
+    nodeid_parts = str(request.node.nodeid).split("::")
+    function_name = _sanitize_snapshot_component(nodeid_parts[-1])
+    class_name = _sanitize_snapshot_component(nodeid_parts[-2]) if len(nodeid_parts) > 1 else None
+    file_name = f"{class_name}.{function_name}.raw" if class_name else f"{function_name}.raw"
+    return snapshots_dir / file_name
+
+
+class LocalSnapshotAssertion:
+    def __init__(self, request: FixtureRequest) -> None:
+        self._request = request
+        self._expected: str | None = None
+        self._custom_index = None
+        self._execution_name_index: dict[str, int] = {}
+        self.executions: dict[int, SimpleNamespace] = {}
+        self.num_executions = 0
+
+    def use_extension(self, extension: type[Any]) -> "LocalSnapshotAssertion":
+        return self
+
+    def _load_expected(self) -> str:
+        path = _snapshot_file_path(self._request)
+        normalized = _normalize_svg(path.read_text())
+        self._expected = normalized
+        self.num_executions = 1
+        self.executions = {0: SimpleNamespace(final_data=normalized)}
+        self._custom_index = None
+        self._execution_name_index = {}
+        return normalized
+
+    def __eq__(self, other: Any) -> bool:
+        actual = _normalize_svg(other)
+        expected = self._expected or self._load_expected()
+        return expected == actual
+
+    def __str__(self) -> str:
+        return self._expected or self._load_expected()
+
+
+def _get_snapshot_assertion(request: FixtureRequest) -> Any:
+    if _SYRUPY_AVAILABLE:
+        try:
+            return request.getfixturevalue("snapshot")
+        except pytest.FixtureLookupError:
+            pass
+    return LocalSnapshotAssertion(request)
 
 
 def _import_app_from_path(app_path: str) -> App[Any]:
@@ -129,9 +209,7 @@ async def _capture_screenshot(
 
 
 @pytest.fixture
-def snap_compare(
-    snapshot: SnapshotAssertion, request: FixtureRequest
-) -> Callable[[str | Path | App[Any]], bool]:
+def snap_compare(request: FixtureRequest) -> Callable[[str | Path | App[Any]], bool]:
     """
     Snapshot comparison fixture with normalization for Textual's hashed CSS classes.
 
@@ -140,6 +218,7 @@ def snap_compare(
 
     Uses only public Textual APIs (no private _doc or _import_app imports).
     """
+    snapshot = _get_snapshot_assertion(request)
     # Use our normalized extension
     snapshot = snapshot.use_extension(NormalizedSVGImageExtension)
 

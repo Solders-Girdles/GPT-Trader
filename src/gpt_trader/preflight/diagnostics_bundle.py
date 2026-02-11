@@ -175,8 +175,6 @@ def _sanitize_details(details: Any, depth: int = MAX_DEPTH) -> Any:
 
 
 def _sanitize_value(value: Any, *, depth: int) -> Any:
-    if depth <= 0:
-        return _bound_string(str(value))
     if isinstance(value, Mapping):
         sanitized: dict[str, Any] = {}
         for key in sorted(value):
@@ -194,6 +192,8 @@ def _sanitize_value(value: Any, *, depth: int) -> Any:
                 break
             limited.append(_sanitize_value(item, depth=depth - 1))
         return limited
+    if depth <= 0:
+        return _bound_string(str(value))
     if isinstance(value, str):
         return _bound_string(value)
     if isinstance(value, (int, float, bool)):

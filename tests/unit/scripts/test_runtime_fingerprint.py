@@ -203,4 +203,7 @@ def test_main_failure_emits_reason_codes(
         line.strip() for line in capsys.readouterr().out.strip().splitlines() if line.strip()
     ]
     assert result == 4
-    assert output_lines[-1] == "reason_codes=runtime_fingerprint_event_id_not_newer,runtime_fingerprint_build_sha_mismatch"
+    assert (
+        output_lines[-1]
+        == "reason_codes=runtime_fingerprint_event_id_not_newer,runtime_fingerprint_build_sha_mismatch"
+    )

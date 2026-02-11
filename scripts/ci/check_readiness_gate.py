@@ -82,9 +82,7 @@ REASON_CODE_MARKET_DATA_WS_RECONNECTS = "readiness_market_data_ws_reconnects"
 REASON_CODE_MARKET_DATA_LIVENESS_MISSING_SNAPSHOT = (
     "readiness_market_data_liveness_missing_snapshot"
 )
-REASON_CODE_MARKET_DATA_LIVENESS_MISSING_EVENTS = (
-    "readiness_market_data_liveness_missing_events"
-)
+REASON_CODE_MARKET_DATA_LIVENESS_MISSING_EVENTS = "readiness_market_data_liveness_missing_events"
 REASON_CODE_MARKET_DATA_LIVENESS_MISSING_AGES = "readiness_market_data_liveness_missing_ages"
 REASON_CODE_MARKET_DATA_LIVENESS_FALLBACK = "readiness_market_data_liveness_fallback"
 REASON_CODE_MARKET_DATA_LIVENESS_STALE = "readiness_market_data_liveness_stale"

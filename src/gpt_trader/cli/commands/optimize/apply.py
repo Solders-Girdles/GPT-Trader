@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from argparse import Namespace
+from dataclasses import fields
 from pathlib import Path
 from typing import Any
 
 import yaml
 
+from gpt_trader.app.config.bot_config import BotRiskConfig
 from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.features.optimize.persistence.storage import OptimizationStorage
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -15,6 +17,9 @@ from gpt_trader.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="cli")
 
 COMMAND_NAME = "optimize apply"
+
+
+RISK_PARAM_NAMES = {field.name for field in fields(BotRiskConfig)}
 
 
 def register(subparsers: Any) -> None:
@@ -259,17 +264,8 @@ def _build_output_config(
     risk_params = {}
     simulation_params = {}
 
-    # Known risk parameter names
-    risk_param_names = {
-        "target_leverage",
-        "max_leverage",
-        "position_fraction",
-        "max_position_size",
-        "stop_loss_pct",
-        "take_profit_pct",
-        "max_drawdown_pct",
-        "reduce_only_threshold",
-    }
+    # Known risk parameter names derived from BotRiskConfig to avoid fallback leakage
+    risk_param_names = RISK_PARAM_NAMES
 
     # Known simulation parameter names
     simulation_param_names = {

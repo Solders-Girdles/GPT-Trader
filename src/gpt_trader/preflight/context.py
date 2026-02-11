@@ -12,6 +12,7 @@ from gpt_trader.features.brokerages.coinbase.credentials import (
     ResolvedCoinbaseCredentials,
     resolve_coinbase_credentials,
 )
+from gpt_trader.preflight.hints import get_remediation_hint
 from gpt_trader.preflight.validation_result import (
     PreflightResultPayload,
     normalize_preflight_result,
@@ -36,6 +37,7 @@ class PreflightContext:
 
     verbose: bool = False
     profile: str = "canary"
+    current_check: str | None = field(default=None)
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     successes: list[str] = field(default_factory=list)
@@ -50,9 +52,15 @@ class PreflightContext:
         message: str,
         details: Mapping[str, Any] | str | None = None,
     ) -> None:
-        self.results.append(
-            normalize_preflight_result(status=status, message=message, details=details)
-        )
+        normalized = normalize_preflight_result(status=status, message=message, details=details)
+        self._attach_metadata(normalized["details"], normalized["status"])
+        self.results.append(normalized)
+
+    def _attach_metadata(self, details: dict[str, Any], status: str) -> None:
+        if self.current_check and "check" not in details:
+            details["check"] = self.current_check
+        if status == "fail" and "hint" not in details:
+            details["hint"] = get_remediation_hint(details.get("check"))
 
     def log_success(self, message: str, details: Mapping[str, Any] | str | None = None) -> None:
         self.successes.append(message)
@@ -72,6 +80,9 @@ class PreflightContext:
     def log_info(self, message: str) -> None:
         if self.verbose:
             print(f"{Colors.CYAN}ℹ️  {message}{Colors.RESET}")
+
+    def set_current_check(self, check_name: str | None) -> None:
+        self.current_check = check_name
 
     def section_header(self, title: str) -> None:
         print(f"\n{Colors.BOLD}{Colors.BLUE}{'=' * 70}{Colors.RESET}")

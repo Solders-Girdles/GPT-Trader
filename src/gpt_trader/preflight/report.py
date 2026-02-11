@@ -3,12 +3,37 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping
+from typing import TYPE_CHECKING, Any, Mapping, TypedDict
+
+from gpt_trader.preflight.hints import DEFAULT_REMEDIATION_HINT
 
 from .context import Colors
 
 if TYPE_CHECKING:
+    from gpt_trader.preflight.context import PreflightContext
     from gpt_trader.preflight.core import PreflightCheck
+
+
+class FailureHint(TypedDict):
+    message: str
+    hint: str
+    check: str | None
+
+
+def _collect_failure_hints(context: "PreflightContext") -> list[FailureHint]:
+    hints: list[FailureHint] = []
+    for result in context.results:
+        if result["status"] != "fail":
+            continue
+        details = result["details"]
+        hints.append(
+            FailureHint(
+                message=result["message"],
+                hint=details.get("hint") or DEFAULT_REMEDIATION_HINT,
+                check=details.get("check"),
+            )
+        )
+    return hints
 
 
 def evaluate_preflight_status(
@@ -41,6 +66,7 @@ def format_preflight_report(
         error_count=len(ctx.errors),
     )
     total_checks = len(ctx.successes) + len(ctx.warnings) + len(ctx.errors)
+    failure_hints = _collect_failure_hints(ctx)
 
     return {
         "timestamp": timestamp.isoformat(),
@@ -53,6 +79,7 @@ def format_preflight_report(
             "successes": list(ctx.successes),
             "warnings": list(ctx.warnings),
             "errors": list(ctx.errors),
+            "error_hints": failure_hints,
         },
         "total_checks": total_checks,
     }
@@ -85,6 +112,7 @@ def generate_report(
 ) -> tuple[bool, str]:
     """Render terminal summary and persist JSON report."""
     ctx = checker.context
+    failure_hints = _collect_failure_hints(ctx)
     checker.section_header("PREFLIGHT REPORT")
 
     print(f"\n{Colors.BOLD}Summary:{Colors.RESET}")
@@ -107,6 +135,11 @@ def generate_report(
     print(f"{Colors.BOLD}{color}STATUS: {status}{Colors.RESET}")
     print(f"{color}{message}{Colors.RESET}")
     print(f"{Colors.BOLD}{color}{'=' * 70}{Colors.RESET}")
+
+    if failure_hints:
+        print(f"\n{Colors.BOLD}Remediation hints:{Colors.RESET}")
+        for idx, hint in enumerate(failure_hints, start=1):
+            print(f"{idx}. {hint['hint']} — {hint['message']}")
 
     print(f"\n{Colors.BOLD}Recommendations:{Colors.RESET}")
     if status == "READY":

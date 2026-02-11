@@ -67,10 +67,14 @@ def _run_preflight(args: PreflightCliArgs) -> int:
     ]
 
     for check in check_functions:
+        check_name = getattr(check, "__name__", type(check).__name__)
+        checker.context.set_current_check(check_name)
         try:
             check()
         except Exception as exc:  # pragma: no cover - defensive runtime safeguard
             checker.log_error(f"Check failed with exception: {exc}")
+        finally:
+            checker.context.set_current_check(None)
 
     success, _status = checker.generate_report(
         report_dir=args.report_dir, report_path=args.report_path

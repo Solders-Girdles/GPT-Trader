@@ -10,6 +10,7 @@ from typing import Any
 import pytest
 
 from gpt_trader.preflight.core import PreflightCheck
+from gpt_trader.preflight.hints import DEFAULT_REMEDIATION_HINT
 from gpt_trader.preflight.report import format_preflight_report, generate_report
 
 
@@ -113,6 +114,31 @@ class TestGenerateReport:
         assert "Fix all critical errors" in captured.out
         assert "Run tests:" in captured.out
 
+    def test_prints_remediation_hints_for_failed_checks(
+        self, report_cwd: Path, capsys: pytest.CaptureFixture
+    ) -> None:
+        checker = PreflightCheck()
+        checker.context.set_current_check("check_python_version")
+        checker.log_error("Python 3.11 is not supported")
+        checker.context.set_current_check(None)
+
+        generate_report(checker)
+
+        captured = capsys.readouterr()
+        assert "Remediation hints:" in captured.out
+        assert "Install Python 3.12" in captured.out
+
+    def test_does_not_print_remediation_hints_when_ready(
+        self, report_cwd: Path, capsys: pytest.CaptureFixture
+    ) -> None:
+        checker = PreflightCheck()
+        checker.context.successes.append("Success")
+
+        generate_report(checker)
+
+        captured = capsys.readouterr()
+        assert "Remediation hints:" not in captured.out
+
     def test_saves_json_report(self, report_cwd: Path) -> None:
         checker = PreflightCheck(profile="prod")
         checker.context.successes.extend(["S1", "S2"])
@@ -192,3 +218,35 @@ class TestReportFormatting:
         assert report_data["details"]["successes"] == ["S1", "S2"]
         assert report_data["details"]["warnings"] == ["W1"]
         assert not list(report_cwd.glob("preflight_report_*.json"))
+
+
+class TestReportHints:
+    """Tests for structured remediation hints in preflight reports."""
+
+    def test_error_hints_reflect_known_checks(self, report_cwd: Path) -> None:
+        checker = PreflightCheck()
+        checker.context.set_current_check("check_python_version")
+        checker.log_error("Python 3.11 is not supported")
+        checker.context.set_current_check(None)
+        timestamp = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+
+        report_data = format_preflight_report(checker, timestamp=timestamp)
+        hints = report_data["details"]["error_hints"]
+
+        assert len(hints) == 1
+        assert hints[0]["message"] == "Python 3.11 is not supported"
+        assert "Python 3.12" in hints[0]["hint"]
+        assert hints[0]["check"] == "check_python_version"
+
+    def test_error_hints_use_generic_fallback(self, report_cwd: Path) -> None:
+        checker = PreflightCheck()
+        checker.context.set_current_check("unknown_check")
+        checker.log_error("Something unexpected occurred")
+        checker.context.set_current_check(None)
+        timestamp = datetime(2026, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+
+        report_data = format_preflight_report(checker, timestamp=timestamp)
+        hints = report_data["details"]["error_hints"]
+
+        assert hints
+        assert hints[0]["hint"] == DEFAULT_REMEDIATION_HINT

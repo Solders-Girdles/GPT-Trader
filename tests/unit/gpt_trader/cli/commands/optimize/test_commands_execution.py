@@ -275,6 +275,7 @@ class TestApplyCommand:
         assert output["risk"]["target_leverage"] == 5
         assert output["simulation"]["slippage_bps"] == 10
 
+
 class TestStrategyProfileDiffCommand:
     """Tests for the strategy profile diff CLI."""
 

@@ -22,8 +22,8 @@ from gpt_trader.cli.commands.optimize.config_loader import (
     merge_cli_overrides,
     parse_config,
 )
-from gpt_trader.cli.commands.optimize.registry import list_objective_names
 from gpt_trader.cli.commands.optimize.formatters import format_run_summary_text
+from gpt_trader.cli.commands.optimize.registry import list_objective_names
 from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.features.brokerages.coinbase.auth import SimpleAuth
 from gpt_trader.features.brokerages.coinbase.client.client import CoinbaseClient

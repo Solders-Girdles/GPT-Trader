@@ -132,19 +132,43 @@ for spec in PARAMETER_GROUP_REGISTRY.values():
 
 
 OBJECTIVE_SPEC_ENTRIES = [
-    ObjectiveSpec(name="sharpe", factory=_wrap_class_factory(SharpeRatioObjective), direction="maximize"),
-    ObjectiveSpec(name="sortino", factory=_wrap_class_factory(SortinoRatioObjective), direction="maximize"),
-    ObjectiveSpec(name="calmar", factory=_wrap_class_factory(CalmarRatioObjective), direction="maximize"),
-    ObjectiveSpec(name="total_return", factory=_wrap_class_factory(TotalReturnObjective), direction="maximize"),
-    ObjectiveSpec(name="win_rate", factory=_wrap_class_factory(WinRateObjective), direction="maximize"),
-    ObjectiveSpec(name="profit_factor", factory=_wrap_class_factory(ProfitFactorObjective), direction="maximize"),
-    ObjectiveSpec(name="max_drawdown", factory=_wrap_class_factory(MaxDrawdownObjective), direction="minimize"),
+    ObjectiveSpec(
+        name="sharpe", factory=_wrap_class_factory(SharpeRatioObjective), direction="maximize"
+    ),
+    ObjectiveSpec(
+        name="sortino", factory=_wrap_class_factory(SortinoRatioObjective), direction="maximize"
+    ),
+    ObjectiveSpec(
+        name="calmar", factory=_wrap_class_factory(CalmarRatioObjective), direction="maximize"
+    ),
+    ObjectiveSpec(
+        name="total_return", factory=_wrap_class_factory(TotalReturnObjective), direction="maximize"
+    ),
+    ObjectiveSpec(
+        name="win_rate", factory=_wrap_class_factory(WinRateObjective), direction="maximize"
+    ),
+    ObjectiveSpec(
+        name="profit_factor",
+        factory=_wrap_class_factory(ProfitFactorObjective),
+        direction="maximize",
+    ),
+    ObjectiveSpec(
+        name="max_drawdown", factory=_wrap_class_factory(MaxDrawdownObjective), direction="minimize"
+    ),
     ObjectiveSpec(name="risk_averse", factory=create_risk_averse_objective, direction="maximize"),
-    ObjectiveSpec(name="execution_quality", factory=create_execution_quality_objective, direction="maximize"),
-    ObjectiveSpec(name="time_efficient", factory=create_time_efficient_objective, direction="maximize"),
-    ObjectiveSpec(name="streak_resilient", factory=create_streak_resilient_objective, direction="maximize"),
+    ObjectiveSpec(
+        name="execution_quality", factory=create_execution_quality_objective, direction="maximize"
+    ),
+    ObjectiveSpec(
+        name="time_efficient", factory=create_time_efficient_objective, direction="maximize"
+    ),
+    ObjectiveSpec(
+        name="streak_resilient", factory=create_streak_resilient_objective, direction="maximize"
+    ),
     ObjectiveSpec(name="perpetuals", factory=create_perpetuals_objective, direction="maximize"),
-    ObjectiveSpec(name="tail_risk_aware", factory=create_tail_risk_aware_objective, direction="maximize"),
+    ObjectiveSpec(
+        name="tail_risk_aware", factory=create_tail_risk_aware_objective, direction="maximize"
+    ),
 ]
 
 
@@ -167,7 +191,10 @@ def list_objective_names() -> tuple[str, ...]:
     """Return all registered objective names in deterministic order."""
     return tuple(OBJECTIVE_REGISTRY.keys())
 
-def add_parameter_groups(builder: ParameterSpaceBuilder, groups: Iterable[str]) -> ParameterSpaceBuilder:
+
+def add_parameter_groups(
+    builder: ParameterSpaceBuilder, groups: Iterable[str]
+) -> ParameterSpaceBuilder:
     """Apply the requested parameter groups to the builder."""
     for group_name in groups:
         group = PARAMETER_GROUP_REGISTRY[group_name]

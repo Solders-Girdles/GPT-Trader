@@ -60,8 +60,9 @@ class OptimizeCliConfig:
     symbols: list[str] = field(default_factory=lambda: ["BTC-USD"])
     backtest: BacktestSettings | None = None
     parameter_overrides: dict[str, dict[str, Any]] = field(default_factory=dict)
-    include_parameter_groups: list[str] = field(default_factory=lambda: list(DEFAULT_PARAMETER_GROUPS))
-
+    include_parameter_groups: list[str] = field(
+        default_factory=lambda: list(DEFAULT_PARAMETER_GROUPS)
+    )
 
 
 def _normalize_parameter_groups(
@@ -95,10 +96,9 @@ def _validate_objective_name(raw_name: str | None) -> str:
     name = raw_name or "sharpe"
     if not has_objective(name):
         available = ", ".join(list_objective_names())
-        raise ConfigValidationError(
-            f"Unknown objective preset: {name}. Available: {available}"
-        )
+        raise ConfigValidationError(f"Unknown objective preset: {name}. Available: {available}")
     return name
+
 
 def load_config_file(config_path: Path) -> dict[str, Any]:
     """

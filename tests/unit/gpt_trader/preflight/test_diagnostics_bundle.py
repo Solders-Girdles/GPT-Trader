@@ -253,6 +253,9 @@ def test_diagnostics_bundle_matches_fixture_degraded(monkeypatch: pytest.MonkeyP
     expected = _load_fixture("degraded.json")
 
     assert bundle == expected
-    assert bundle["bundle"]["readiness"]["checks"][0]["details"]["errors"][0]["private_info"] == "<redacted>"
+    assert (
+        bundle["bundle"]["readiness"]["checks"][0]["details"]["errors"][0]["private_info"]
+        == "<redacted>"
+    )
     assert bundle["bundle"]["environment"]["cdp_credentials_present"] is True
     assert bundle["bundle"]["readiness"]["status"] == "NOT READY"

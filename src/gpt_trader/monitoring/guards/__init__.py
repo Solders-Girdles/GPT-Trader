@@ -7,6 +7,7 @@ from .builtins import (
     DailyLossGuard,
     DrawdownGuard,
     ErrorRateGuard,
+    LauncherStarvationGuard,
     PositionStuckGuard,
     StaleMarkGuard,
 )
@@ -26,6 +27,7 @@ __all__ = [
     "DailyLossGuard",
     "DrawdownGuard",
     "ErrorRateGuard",
+    "LauncherStarvationGuard",
     "PositionStuckGuard",
     "StaleMarkGuard",
     "RuntimeGuardManager",

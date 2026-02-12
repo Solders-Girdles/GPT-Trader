@@ -184,10 +184,47 @@ class DrawdownGuard(RuntimeGuard):
         return False, ""
 
 
+class LauncherStarvationGuard(RuntimeGuard):
+    """Monitor repeated launcher no-candidate streaks."""
+
+    def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
+        streak_raw = context.get("no_candidate_streak")
+        if streak_raw is None:
+            return False, ""
+
+        try:
+            streak_value = int(streak_raw)
+        except (TypeError, ValueError):
+            return False, ""
+
+        threshold_override = context.get("threshold_override") or context.get("threshold")
+        threshold_decimal = self._coerce_decimal(threshold_override)
+        if threshold_decimal is None:
+            threshold_decimal = self._coerce_decimal(self.config.threshold)
+        if threshold_decimal is None:
+            threshold_value = 0
+        else:
+            threshold_value = int(threshold_decimal)
+
+        if streak_value <= threshold_value:
+            return False, ""
+
+        opportunity_id = context.get("opportunity_id")
+        message = (
+            f"Launcher reported {streak_value} consecutive no-candidate cycles "
+            f"(threshold: {threshold_value})."
+        )
+        if isinstance(opportunity_id, str) and opportunity_id:
+            message += f" Last opportunity: {opportunity_id}."
+
+        return True, message
+
+
 __all__ = [
     "DailyLossGuard",
     "StaleMarkGuard",
     "ErrorRateGuard",
     "PositionStuckGuard",
     "DrawdownGuard",
+    "LauncherStarvationGuard",
 ]

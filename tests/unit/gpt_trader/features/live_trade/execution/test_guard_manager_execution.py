@@ -6,9 +6,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.features.live_trade.execution.guards import RuntimeGuardState
 import gpt_trader.features.live_trade.execution.guard_manager as guard_manager_module
 import gpt_trader.features.live_trade.execution.guards.pnl_telemetry as pnl_telemetry_module
+from gpt_trader.features.live_trade.execution.guards import RuntimeGuardState
 from gpt_trader.features.live_trade.guard_errors import (
     RiskGuardActionError,
     RiskGuardComputationError,
@@ -107,9 +107,7 @@ def test_guard_daily_loss_escalation_boundary_triggers_once(
         nonlocal reduce_only_triggered
         if equity < Decimal("9500"):
             if not reduce_only_triggered:
-                mock_risk_manager.set_reduce_only_mode(
-                    True, reason="daily_loss_limit_breached"
-                )
+                mock_risk_manager.set_reduce_only_mode(True, reason="daily_loss_limit_breached")
                 reduce_only_triggered = True
             return True
         return False
@@ -240,9 +238,7 @@ def test_log_guard_telemetry_failure_raises(guard_manager, sample_guard_state, p
 def test_run_runtime_guards_incremental_resets_guard_events(
     guard_manager, mock_broker, mock_risk_manager, monkeypatch: pytest.MonkeyPatch
 ):
-    api_guard = next(
-        (guard for guard in guard_manager._guards if guard.name == "api_health"), None
-    )
+    api_guard = next((guard for guard in guard_manager._guards if guard.name == "api_health"), None)
     if api_guard is not None:
         monkeypatch.setattr(api_guard, "check", lambda state, incremental=False: None)
     mock_broker.client = None

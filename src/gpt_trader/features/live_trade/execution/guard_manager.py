@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import replace
 from collections.abc import Callable
+from dataclasses import replace
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
 

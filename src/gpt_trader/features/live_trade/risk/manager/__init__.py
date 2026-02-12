@@ -19,7 +19,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
@@ -155,6 +155,8 @@ class LiveRiskManager:
         self._daily_pnl_triggered: bool = False
         self._risk_metrics: list[dict[str, Any]] = []
         self._start_of_day_equity: Decimal | None = None
+        self._state_load_error: str | None = None
+        self._state_save_error: str | None = None
         # Allows time mocking for tests; defaults to real UTC time
         self._now_provider: Callable[[], datetime] = utc_now
 
@@ -174,32 +176,39 @@ class LiveRiskManager:
         import os
 
         if not self.state_file or not os.path.exists(self.state_file):
+            self._state_load_error = None
             return
 
         try:
             with open(self.state_file) as f:
-                state = json.load(f)
+                payload = f.read()
 
-            # Check if state is from today (UTC)
+            state = json.loads(payload)
+            if not isinstance(state, dict):
+                raise ValueError("Risk state payload is not an object")
+
             saved_date = state.get("date")
             current_date = self._now_provider().strftime("%Y-%m-%d")
 
-            if saved_date == current_date:
-                if state.get("start_of_day_equity"):
-                    self._start_of_day_equity = Decimal(str(state["start_of_day_equity"]))
-                self._daily_pnl_triggered = state.get("daily_pnl_triggered", False)
-                self._reduce_only_mode = state.get("reduce_only_mode", False)
-                self._reduce_only_reason = state.get("reduce_only_reason", "")
-                # Restore reduce-only flags for positions if needed
-                # (For now we just restore global flags)
-            else:
-                # New day, reset state but keep file for history?
-                # Actually, reset_daily_tracking will handle logic, but here we just don't load stale state
-                pass
+            if saved_date != current_date:
+                self._state_load_error = None
+                return
 
-        except Exception as e:
-            # Log error but don't crash
-            print(f"Failed to load risk state: {e}")
+            start_of_day_value = state.get("start_of_day_equity")
+            if start_of_day_value is not None:
+                self._start_of_day_equity = Decimal(str(start_of_day_value))
+
+            self._daily_pnl_triggered = state.get("daily_pnl_triggered", False)
+            self._reduce_only_mode = state.get("reduce_only_mode", False)
+            self._reduce_only_reason = state.get("reduce_only_reason", "")
+            self._cfm_reduce_only_mode = state.get("cfm_reduce_only_mode", False)
+            self._cfm_reduce_only_reason = state.get("cfm_reduce_only_reason", "")
+            self._state_load_error = None
+
+        except (json.JSONDecodeError, ValueError, TypeError, InvalidOperation) as exc:
+            self._handle_state_load_error(exc)
+        except Exception as exc:
+            self._handle_state_load_error(exc)
 
     def _save_state(self) -> None:
         """Save risk state to disk."""
@@ -208,6 +217,7 @@ class LiveRiskManager:
         if not self.state_file:
             return
 
+        self._state_save_error = None
         try:
             # Ensure directory exists
             from pathlib import Path
@@ -228,8 +238,30 @@ class LiveRiskManager:
             with open(self.state_file, "w") as f:
                 json.dump(state, f, indent=2)
 
+            self._state_save_error = None
         except Exception as e:
-            print(f"Failed to save risk state: {e}")
+            self._handle_state_save_error(e)
+        return
+
+    def _handle_state_load_error(self, exc: Exception) -> None:
+        """Reset to safe defaults after a state load failure."""
+        print(f"Failed to load risk state: {exc}")
+        self._reset_state_after_load_failure()
+        self._state_load_error = str(exc)
+
+    def _handle_state_save_error(self, exc: Exception) -> None:
+        """Track save failures without crashing."""
+        print(f"Failed to save risk state: {exc}")
+        self._state_save_error = str(exc)
+
+    def _reset_state_after_load_failure(self) -> None:
+        """Restore defaults when persisted state cannot be consumed."""
+        self._start_of_day_equity = None
+        self._daily_pnl_triggered = False
+        self._reduce_only_mode = False
+        self._reduce_only_reason = ""
+        self._cfm_reduce_only_mode = False
+        self._cfm_reduce_only_reason = ""
 
     def check_order(self, order: Any) -> bool:
         """Check if an order is allowed by risk rules.

@@ -101,6 +101,7 @@ class NotificationService:
 
         # Deduplication
         dedup_key = self._build_dedup_key(
+            severity=severity,
             title=title,
             message=message,
             source=source,
@@ -154,6 +155,7 @@ class NotificationService:
             return False
 
         dedup_key = self._build_dedup_key(
+            severity=alert.severity,
             title=alert.title,
             message=alert.message,
             source=alert.source,
@@ -240,6 +242,7 @@ class NotificationService:
     def _build_dedup_key(
         self,
         *,
+        severity: AlertSeverity | None,
         title: str | None,
         message: str | None,
         source: str | None,
@@ -249,6 +252,7 @@ class NotificationService:
     ) -> str:
         """Generate a stable deduplication key for alerts."""
         segments = [
+            str(severity.value if severity is not None else ""),
             str(title or ""),
             str(message or ""),
             str(source or ""),

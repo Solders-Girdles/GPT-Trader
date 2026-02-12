@@ -1,8 +1,8 @@
-# GitHub Issue #689: [qa] [quality] Reduce issue-queue skip category: duplicate
-https://github.com/Solders-Girdles/GPT-Trader/issues/689
+# GitHub Issue #690: [qa] [quality] Reduce issue-queue skip category: no-safe-candidate
+https://github.com/Solders-Girdles/GPT-Trader/issues/690
 
 ## Why / Context
-Generated from live event-lane telemetry and ranked by the opportunity synthesizer. Value score: 0.694; source type: issue.skipped. If we reduce skip category duplicate, issue generation throughput and quality should improve.
+Generated from live event-lane telemetry and ranked by the opportunity synthesizer. Value score: 0.694; source type: issue.skipped. If we reduce skip category no-safe-candidate, issue generation throughput and quality should improve.
 
 ## Dependency Metadata
 - Value score: 0.694
@@ -29,7 +29,7 @@ Constraints:
 
 ## Implementation Notes / Pointers
 **Likely files / modules:**
-- `opportunity:opp_1bd46f779a`
+- `opportunity:opp_b4640f744f`
 
 **Related tests:**
 
@@ -37,9 +37,9 @@ Constraints:
 **Edge cases to handle:**
 - Signal may be intermittent; include at least one regression path for recurrence.
 - Avoid introducing false positives in existing duplicate guards or cooldown logic.
-- issue.skipped (evt_79dc76f75432)
-- issue.skipped (evt_f1c080c016c7)
-- issue.skipped (evt_03a32f88dea7)
+- issue.skipped (evt_8e8555d2d2e3)
+- issue.skipped (evt_b716da1eb9ef)
+- issue.skipped (evt_fb639d4f7f75)
 
 ## Commands (local)
 - `make lint`

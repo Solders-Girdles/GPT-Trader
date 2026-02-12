@@ -51,3 +51,11 @@ def test_cooldown_prevents_alerts_until_elapsed() -> None:
     clock.advance(31)
     second_alert = guard.check({"no_candidate_streak": 7})
     assert second_alert is not None
+
+
+def test_zero_threshold_override_is_honored() -> None:
+    guard = _create_guard(threshold=5)
+    alert = guard.check({"no_candidate_streak": 1, "threshold_override": 0})
+
+    assert alert is not None
+    assert "threshold: 0" in alert.message

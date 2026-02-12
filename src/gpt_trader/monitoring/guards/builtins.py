@@ -197,7 +197,9 @@ class LauncherStarvationGuard(RuntimeGuard):
         except (TypeError, ValueError):
             return False, ""
 
-        threshold_override = context.get("threshold_override") or context.get("threshold")
+        threshold_override = context.get("threshold_override")
+        if threshold_override is None:
+            threshold_override = context.get("threshold")
         threshold_decimal = self._coerce_decimal(threshold_override)
         if threshold_decimal is None:
             threshold_decimal = self._coerce_decimal(self.config.threshold)

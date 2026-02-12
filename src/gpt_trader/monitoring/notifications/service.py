@@ -99,6 +99,9 @@ class NotificationService:
             logger.warning("Rate limit exceeded, notification dropped")
             return False
 
+        normalized_context = context or {}
+        normalized_metadata = metadata or {}
+
         # Deduplication
         dedup_key = self._build_dedup_key(
             severity=severity,
@@ -106,8 +109,8 @@ class NotificationService:
             message=message,
             source=source,
             category=category,
-            context=context,
-            metadata=metadata,
+            context=normalized_context,
+            metadata=normalized_metadata,
         )
         if not force and self._is_duplicate(dedup_key):
             logger.debug(f"Duplicate alert suppressed: {title}")
@@ -120,8 +123,8 @@ class NotificationService:
             message=message,
             source=source,
             category=category,
-            context=context or {},
-            metadata=metadata or {},
+            context=normalized_context,
+            metadata=normalized_metadata,
         )
 
         # Dispatch to all backends

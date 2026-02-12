@@ -26,6 +26,7 @@ __all__ = [
     "RuntimeGuard",
     "DailyLossGuard",
     "DrawdownGuard",
+    "LauncherStarvationGuard",
     "ErrorRateGuard",
     "LauncherStarvationGuard",
     "PositionStuckGuard",

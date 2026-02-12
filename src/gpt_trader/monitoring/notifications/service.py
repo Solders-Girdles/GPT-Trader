@@ -36,11 +36,20 @@ class NotificationService:
     rate_limit_per_minute: int = 30
     dedup_window_seconds: int = 300  # 5 minutes
     enabled: bool = True
+    dedup_include_message: bool = False
+    dedup_include_context: bool = False
+    dedup_include_metadata: bool = False
+    dedup_context_ignore_keys: frozenset[str] | None = field(default=None, repr=False)
+    dedup_metadata_ignore_keys: frozenset[str] | None = field(default=None, repr=False)
 
     # Internal state
     _recent_alerts: dict[str, datetime] = field(default_factory=dict, repr=False)
     _sent_count_this_minute: int = field(default=0, repr=False)
     _minute_reset_time: datetime = field(default_factory=utc_now, repr=False)
+
+    def __post_init__(self) -> None:
+        self.dedup_context_ignore_keys = frozenset(self.dedup_context_ignore_keys or ())
+        self.dedup_metadata_ignore_keys = frozenset(self.dedup_metadata_ignore_keys or ())
 
     def add_backend(self, backend: NotificationBackend) -> None:
         """Add a notification backend."""
@@ -254,17 +263,34 @@ class NotificationService:
         metadata: dict[str, Any] | None,
     ) -> str:
         """Generate a stable deduplication key for alerts."""
+        normalized_context = self._filter_for_dedup(context, self.dedup_context_ignore_keys)
+        normalized_metadata = self._filter_for_dedup(metadata, self.dedup_metadata_ignore_keys)
+
         segments = [
             str(severity.value if severity is not None else ""),
             str(title or ""),
-            str(message or ""),
             str(source or ""),
             str(category or ""),
-            self._serialize_for_dedup(context),
-            self._serialize_for_dedup(metadata),
         ]
+        if self.dedup_include_message:
+            segments.append(str(message or ""))
+        if self.dedup_include_context:
+            segments.append(self._serialize_for_dedup(normalized_context))
+        if self.dedup_include_metadata:
+            segments.append(self._serialize_for_dedup(normalized_metadata))
         raw = "\u0001".join(segments)
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    def _filter_for_dedup(
+        self,
+        value: Any,
+        ignore_keys: frozenset[str] | None,
+    ) -> Any:
+        """Return a dedup target with ignored keys removed."""
+        if not ignore_keys or not isinstance(value, Mapping):
+            return value
+
+        return {k: v for k, v in value.items() if k not in ignore_keys}
 
     @classmethod
     def _serialize_for_dedup(cls, value: Any) -> str:

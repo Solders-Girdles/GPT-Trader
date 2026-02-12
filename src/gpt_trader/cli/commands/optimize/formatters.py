@@ -329,9 +329,9 @@ def _format_comparison_matrix(
     header.extend(_format_header_label(run, baseline_run_id) for run in runs)
 
     rows: list[list[str]] = []
-    for row in matrix:
-        entries: list[str] = [str(row.get("label", ""))]
-        raw_values = row.get("values", [])
+    for matrix_row in matrix:
+        entries: list[str] = [str(matrix_row.get("label", ""))]
+        raw_values = matrix_row.get("values", [])
         entry_map: dict[str, dict[str, Any]] = {}
         if isinstance(raw_values, list):
             for raw_entry in raw_values:
@@ -348,10 +348,14 @@ def _format_comparison_matrix(
             entries.append(f"{entry_value} (Δ {delta_str})")
         rows.append(entries)
 
-    all_rows = [header] + rows
+    all_rows: list[list[str]] = [header] + rows
     col_widths: list[int] = []
     for col_idx in range(len(header)):
-        max_width = max(len(row[col_idx]) for row in all_rows if len(row) > col_idx)
+        max_width = max(
+            len(row_cells[col_idx])
+            for row_cells in all_rows
+            if len(row_cells) > col_idx
+        )
         col_widths.append(max_width)
 
     formatted: list[str] = []
@@ -362,9 +366,9 @@ def _format_comparison_matrix(
     formatted.append(header_line)
     formatted.append(separator)
 
-    for row_values in rows:
+    for row_cells in rows:
         row_line = " | ".join(
-            row_values[col_idx].ljust(col_widths[col_idx]) for col_idx in range(len(header))
+            row_cells[col_idx].ljust(col_widths[col_idx]) for col_idx in range(len(header))
         )
         formatted.append(row_line)
 

@@ -10,6 +10,10 @@ import pytest
 import gpt_trader.features.live_trade.execution.order_event_recorder as recorder_module
 from gpt_trader.core import OrderSide, OrderType
 from gpt_trader.features.live_trade.execution.order_event_recorder import OrderEventRecorder
+from gpt_trader.features.live_trade.execution.order_event_schema import (
+    OrderEventSchemaError,
+    OrderSubmissionAttemptEvent,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -190,3 +194,53 @@ class TestRecordSubmissionAttempt:
             price=Decimal("50000"),
         )
         monitoring_logger.log_order_submission.assert_called_once()
+
+    def test_record_submission_attempt_emits_metric(
+        self,
+        order_event_recorder: OrderEventRecorder,
+        emit_metric_mock: MagicMock,
+    ) -> None:
+        """Test that submission attempt emits normalized telemetry data."""
+        order_event_recorder.record_submission_attempt(
+            submit_id="client-abc",
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+        )
+
+        emit_metric_mock.assert_called_once()
+        payload = emit_metric_mock.call_args[0][2]
+        expected_payload = OrderSubmissionAttemptEvent(
+            client_order_id="client-abc",
+            symbol="BTC-USD",
+            side=OrderSide.BUY,
+            order_type=OrderType.LIMIT,
+            quantity=Decimal("1.0"),
+            price=Decimal("50000"),
+        ).serialize()
+        assert payload == expected_payload
+
+    def test_record_submission_attempt_schema_error_logs_and_propagates(
+        self,
+        order_event_recorder: OrderEventRecorder,
+        emit_metric_mock: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test that schema validation failures are logged and raised."""
+        mock_logger = MagicMock()
+        monkeypatch.setattr(recorder_module, "logger", mock_logger)
+
+        with pytest.raises(OrderEventSchemaError):
+            order_event_recorder.record_submission_attempt(
+                submit_id="client-123",
+                symbol="BTC-USD",
+                side=OrderSide.BUY,
+                order_type=OrderType.LIMIT,
+                quantity=None,
+                price=Decimal("50000"),
+            )
+
+        emit_metric_mock.assert_not_called()
+        mock_logger.error.assert_called_once()

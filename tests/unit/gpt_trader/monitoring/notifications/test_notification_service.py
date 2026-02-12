@@ -168,6 +168,52 @@ class TestNotificationService:
         assert mock_backend.send.call_count == 1
 
     @pytest.mark.asyncio
+    async def test_notify_context_ignore_key(self, mock_backend) -> None:
+        service = NotificationService(
+            dedup_window_seconds=60,
+            dedup_context_ignore_keys={"timestamp"},
+        )
+        service.add_backend(mock_backend)
+
+        await service.notify(
+            title="Context Ignore",
+            message="ignore timestamp",
+            source="test",
+            context={"timestamp": 1, "step": 1},
+        )
+        await service.notify(
+            title="Context Ignore",
+            message="ignore timestamp",
+            source="test",
+            context={"timestamp": 2, "step": 1},
+        )
+
+        assert mock_backend.send.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_notify_metadata_ignore_key(self, mock_backend) -> None:
+        service = NotificationService(
+            dedup_window_seconds=60,
+            dedup_metadata_ignore_keys={"event_id"},
+        )
+        service.add_backend(mock_backend)
+
+        await service.notify(
+            title="Metadata Ignore",
+            message="ignore event id",
+            source="test",
+            metadata={"event_id": "a", "stage": "alpha"},
+        )
+        await service.notify(
+            title="Metadata Ignore",
+            message="ignore event id",
+            source="test",
+            metadata={"event_id": "b", "stage": "alpha"},
+        )
+
+        assert mock_backend.send.call_count == 1
+
+    @pytest.mark.asyncio
     async def test_notify_and_notify_alert_share_normalized_dedup_key(self, mock_backend) -> None:
         service = NotificationService(dedup_window_seconds=60)
         service.add_backend(mock_backend)

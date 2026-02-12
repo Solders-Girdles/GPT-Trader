@@ -84,6 +84,35 @@ def _stop_signal_active(stop_signal: threading.Event | None) -> bool:
     return False
 
 
+def _sleep_with_stop_signal(delay: float, stop_signal: threading.Event | None) -> bool:
+    """Sleep for delay seconds, returning early when stop signal is set."""
+    normalized_delay = max(float(delay), 0.0)
+
+    if stop_signal is None:
+        time.sleep(normalized_delay)
+        return False
+
+    if normalized_delay <= 0:
+        return _stop_signal_active(stop_signal)
+
+    waiter = getattr(stop_signal, "wait", None)
+    if callable(waiter):
+        try:
+            result = waiter(normalized_delay)
+            return bool(result) if isinstance(result, bool) else _stop_signal_active(stop_signal)
+        except Exception as exc:
+            logger.error(
+                "Failed to wait on stop signal",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="run_stream_loop",
+                stage="stop_signal_wait",
+            )
+
+    time.sleep(normalized_delay)
+    return _stop_signal_active(stop_signal)
+
+
 def _supports_kwarg(fn: Any, keyword: str) -> bool:
     try:
         params = inspect.signature(fn).parameters
@@ -395,13 +424,16 @@ def _run_stream_loop(
         user_handler = handler_state.get("_user_event_handler")
     include_user_events = user_handler is not None
     retry_state = _get_retry_state(coordinator)
+    retry_state.reset()
     coordinator._stream_gap_count = 0
 
     try:
+        first_attempt = True
         while True:
-            if _stop_signal_active(stop_signal):
+            if not first_attempt and _stop_signal_active(stop_signal):
                 retry_state.reset()
                 break
+            first_attempt = False
             try:
                 stream: Any | None = None
                 try:
@@ -530,7 +562,9 @@ def _run_stream_loop(
                         "attempts": retry_state.attempts,
                     },
                 )
-                time.sleep(delay)
+                if _sleep_with_stop_signal(delay, stop_signal):
+                    retry_state.reset()
+                    break
                 continue
     finally:
         ctx = coordinator.context

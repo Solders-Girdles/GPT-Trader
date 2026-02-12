@@ -17,6 +17,7 @@ from .builtins import (
     DailyLossGuard,
     DrawdownGuard,
     ErrorRateGuard,
+    LauncherStarvationGuard,
     PositionStuckGuard,
     StaleMarkGuard,
 )
@@ -205,6 +206,21 @@ def create_default_runtime_guard_manager(
                 threshold=max_drawdown,
                 severity=AlertSeverity.ERROR,
                 auto_shutdown=True,
+            ),
+            time_provider=time_provider,
+        )
+    )
+
+    launcher_starvation_threshold = _to_float(
+        circuit_config.get("launcher_starvation_threshold"),
+        3.0,
+    )
+    manager.add_guard(
+        LauncherStarvationGuard(
+            GuardConfig(
+                name="launcher_starvation",
+                threshold=launcher_starvation_threshold,
+                severity=AlertSeverity.ERROR,
             ),
             time_provider=time_provider,
         )

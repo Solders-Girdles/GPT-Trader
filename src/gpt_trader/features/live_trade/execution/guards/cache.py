@@ -33,11 +33,17 @@ class GuardStateCache:
         self._last_full_ts: float = 0.0
         self._full_interval: float = full_interval
         self._invalidate_callback = invalidate_callback
+        self._invalidation_count: int = 0
 
     @property
     def state(self) -> RuntimeGuardState | None:
         """Get cached state if available."""
         return self._state
+
+    @property
+    def invalidation_count(self) -> int:
+        """Monotonic counter incremented each time the cache is invalidated."""
+        return self._invalidation_count
 
     def is_valid_for_incremental(self, now: float) -> bool:
         """Check if cached state can be reused for incremental check."""
@@ -72,6 +78,7 @@ class GuardStateCache:
         """Force refresh on next check."""
         self._state = None
         self._dirty = True
+        self._invalidation_count += 1
         if self._invalidate_callback is not None:
             self._invalidate_callback()
 

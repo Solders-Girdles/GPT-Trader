@@ -282,6 +282,49 @@ def test_run_runtime_guards_incremental_resets_guard_events(
     assert mock_broker.get_candles.call_count == 2
 
 
+def test_run_runtime_guards_preserves_invalidation_from_guard_actions(
+    guard_manager, monkeypatch: pytest.MonkeyPatch
+):
+    state = RuntimeGuardState(
+        timestamp=time.time(),
+        balances=[],
+        equity=Decimal("10000"),
+        positions=[],
+        positions_pnl={},
+        positions_dict={},
+        guard_events=[],
+    )
+    monkeypatch.setattr(guard_manager, "collect_runtime_guard_state", lambda: state)
+
+    def invalidate_cache(_state: RuntimeGuardState, _incremental: bool) -> None:
+        guard_manager._cache.invalidate()
+
+    monkeypatch.setattr(guard_manager, "run_guards_for_state", invalidate_cache)
+
+    observed_state = guard_manager.run_runtime_guards(force_full=True)
+
+    assert observed_state is state
+    assert guard_manager._runtime_guard_state is None
+    assert guard_manager._runtime_guard_dirty is True
+
+
+def test_run_runtime_guards_handles_non_dataclass_cached_state(
+    guard_manager, monkeypatch: pytest.MonkeyPatch
+):
+    class LegacyState:
+        def __init__(self) -> None:
+            self.guard_events = [{"reason": "legacy"}]
+
+    state = LegacyState()
+    guard_manager._cache.update(state, time.time())  # type: ignore[arg-type]
+    monkeypatch.setattr(guard_manager, "run_guards_for_state", lambda *_: None)
+
+    observed_state = guard_manager.run_runtime_guards(force_full=False)
+
+    assert observed_state is state
+    assert state.guard_events == []
+
+
 class TestGuardManagerEdgeCases:
     def test_data_unavailable_is_recorded_and_surfaces(
         self, guard_manager, sample_guard_state, monkeypatch: pytest.MonkeyPatch

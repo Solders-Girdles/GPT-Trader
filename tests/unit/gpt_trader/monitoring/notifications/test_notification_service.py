@@ -98,6 +98,36 @@ class TestNotificationService:
         assert mock_backend.send.call_count == 1  # Only one call
 
     @pytest.mark.asyncio
+    async def test_notify_distinguishes_by_message(self, mock_backend) -> None:
+        service = NotificationService(dedup_window_seconds=60)
+        service.add_backend(mock_backend)
+
+        await service.notify(title="Duplicate", message="first", source="test")
+        await service.notify(title="Duplicate", message="second", source="test")
+
+        assert mock_backend.send.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_notify_distinguishes_by_context(self, mock_backend) -> None:
+        service = NotificationService(dedup_window_seconds=60)
+        service.add_backend(mock_backend)
+
+        await service.notify(
+            title="Duplicate",
+            message="same",
+            source="test",
+            context={"step": 1},
+        )
+        await service.notify(
+            title="Duplicate",
+            message="same",
+            source="test",
+            context={"step": 2},
+        )
+
+        assert mock_backend.send.call_count == 2
+
+    @pytest.mark.asyncio
     async def test_notify_force_bypasses_dedup(self, mock_backend) -> None:
         service = NotificationService(dedup_window_seconds=60)
         service.add_backend(mock_backend)

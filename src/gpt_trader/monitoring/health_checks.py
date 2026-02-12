@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 from gpt_trader.monitoring.interfaces import HealthCheckResult
 from gpt_trader.monitoring.metrics_collector import record_counter
 from gpt_trader.monitoring.profiling import profile_span
+from gpt_trader.utilities.backoff_policy import BackoffDecision, evaluate_backoff_delay
 from gpt_trader.utilities.datetime_helpers import age_since_timestamp_seconds
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.time_provider import TimeProvider, get_clock
@@ -1040,6 +1041,39 @@ def _ratio_or_zero(numerator: int | float, denominator: int | float) -> float:
     return 0.0
 
 
+def _evaluate_monitoring_timeout_decision(
+    age_seconds: float,
+    warn_threshold: float,
+    crit_threshold: float,
+) -> tuple[BackoffDecision, int]:
+    """Determine timeout decision from elapsed age and warn/crit thresholds."""
+
+    warn_delay = max(0.0, warn_threshold)
+    crit_delay = max(warn_delay, crit_threshold)
+    if warn_delay == 0.0:
+        warn_delay = crit_delay or 1.0
+
+    multiplier = crit_delay / warn_delay if warn_delay > 0 else 1.0
+    multiplier = max(multiplier, 1.0)
+
+    if age_seconds <= warn_delay:
+        attempt = 1
+    elif crit_delay > warn_delay and age_seconds <= crit_delay:
+        attempt = 2
+    else:
+        attempt = 3
+
+    decision = evaluate_backoff_delay(
+        attempt=attempt,
+        base_delay=warn_delay,
+        max_delay=crit_delay,
+        multiplier=multiplier,
+        jitter=0.0,
+    )
+
+    return decision, attempt
+
+
 def check_market_data_staleness_signal(
     market_data_service: TickerFreshnessService | None,
     thresholds: HealthThresholds | None = None,
@@ -1078,8 +1112,23 @@ def check_market_data_staleness_signal(
     if staleness == float("inf"):
         staleness = 9999.0
 
-    return HealthSignal.from_value(
+    decision, attempt = _evaluate_monitoring_timeout_decision(
+        staleness,
+        warn_threshold=thresholds.market_data_staleness_seconds_warn,
+        crit_threshold=thresholds.market_data_staleness_seconds_crit,
+    )
+
+    status = (
+        HealthStatus.OK
+        if attempt == 1
+        else HealthStatus.WARN
+        if attempt == 2
+        else HealthStatus.CRIT
+    )
+
+    return HealthSignal(
         name="market_data_staleness",
+        status=status,
         value=staleness,
         threshold_warn=thresholds.market_data_staleness_seconds_warn,
         threshold_crit=thresholds.market_data_staleness_seconds_crit,
@@ -1087,6 +1136,9 @@ def check_market_data_staleness_signal(
         details={
             **details,
             "last_update_ts": last_ts if last_ts is not None else 0.0,
+            "timeout_attempt": attempt,
+            "timeout_delay_seconds": decision.delay_seconds,
+            "timeout_capped": decision.capped,
         },
     )
 

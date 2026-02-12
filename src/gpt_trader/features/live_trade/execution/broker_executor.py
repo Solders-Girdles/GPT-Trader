@@ -7,7 +7,6 @@ including retry/timeout policies for resilient order submission.
 
 from __future__ import annotations
 
-import random
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -16,6 +15,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 
 from gpt_trader.core import NotFoundError, OrderSide, OrderType, RateLimitError
 from gpt_trader.monitoring.metrics_collector import record_histogram
+from gpt_trader.utilities.backoff_policy import evaluate_backoff_delay
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -56,23 +56,15 @@ class RetryPolicy:
             object.__setattr__(self, "jitter", clamped)
 
     def calculate_delay(self, attempt: int) -> float:
-        """Calculate delay for a given attempt number (1-indexed).
-
-        Uses exponential backoff with jitter.
-        """
-        if attempt <= 1:
-            return 0.0
-
-        # Exponential backoff: base_delay * 2^(attempt-2)
-        delay: float = self.base_delay * (2 ** (attempt - 2))
-        delay = min(delay, self.max_delay)
-
-        # Add jitter
-        if self.jitter > 0:
-            jitter_amount = delay * self.jitter * random.random()
-            delay += jitter_amount
-
-        return delay
+        """Calculate delay for a given attempt number (1-indexed)."""
+        decision = evaluate_backoff_delay(
+            attempt=attempt,
+            base_delay=self.base_delay,
+            max_delay=self.max_delay,
+            multiplier=2.0,
+            jitter=self.jitter,
+        )
+        return decision.delay_seconds
 
 
 # Default policy for order submission

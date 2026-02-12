@@ -36,6 +36,9 @@ class NotificationService:
     rate_limit_per_minute: int = 30
     dedup_window_seconds: int = 300  # 5 minutes
     enabled: bool = True
+    dedup_include_message: bool = False
+    dedup_include_context: bool = False
+    dedup_include_metadata: bool = False
     dedup_context_ignore_keys: frozenset[str] | None = field(default=None, repr=False)
     dedup_metadata_ignore_keys: frozenset[str] | None = field(default=None, repr=False)
 
@@ -266,12 +269,15 @@ class NotificationService:
         segments = [
             str(severity.value if severity is not None else ""),
             str(title or ""),
-            str(message or ""),
             str(source or ""),
             str(category or ""),
-            self._serialize_for_dedup(normalized_context),
-            self._serialize_for_dedup(normalized_metadata),
         ]
+        if self.dedup_include_message:
+            segments.append(str(message or ""))
+        if self.dedup_include_context:
+            segments.append(self._serialize_for_dedup(normalized_context))
+        if self.dedup_include_metadata:
+            segments.append(self._serialize_for_dedup(normalized_metadata))
         raw = "\u0001".join(segments)
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 

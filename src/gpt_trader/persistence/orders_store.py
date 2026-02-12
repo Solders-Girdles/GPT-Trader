@@ -519,6 +519,52 @@ class OrdersStore:
 
         return [self._row_to_record(row) for row in cursor]
 
+    def list_orders(
+        self,
+        *,
+        limit: int = 100,
+        symbol: str | None = None,
+        status: OrderStatus | None = None,
+    ) -> list[OrderRecord]:
+        """
+        Retrieve recent order records with optional filtering.
+
+        Returns rows ordered by updated_at DESC and order_id ASC to keep the output
+        deterministic.
+        """
+        if limit < 1:
+            raise ValueError("limit must be at least 1")
+
+        self._ensure_initialized()
+        connection = self._get_connection()
+
+        filters: list[str] = []
+        params: list[object] = []
+
+        if symbol:
+            filters.append("symbol = ?")
+            params.append(symbol)
+
+        if status:
+            filters.append("status = ?")
+            params.append(status.value)
+
+        where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+        sql_parts = ["SELECT * FROM orders"]
+        if where_clause:
+            sql_parts.append(where_clause)
+        sql_parts.extend(
+            [
+                "ORDER BY updated_at DESC, order_id ASC",
+                "LIMIT ?",
+            ]
+        )
+        sql = " ".join(sql_parts)
+        params.append(limit)
+
+        cursor = connection.execute(sql, tuple(params))
+        return [self._row_to_record(row) for row in cursor]
+
     def update_status(
         self,
         order_id: str,

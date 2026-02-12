@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import time
 from collections.abc import Callable
+from dataclasses import is_dataclass, replace
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
 
@@ -332,6 +333,16 @@ class GuardManager:
                 lambda g=guard: g.check(state, incremental),  # type: ignore[misc]
             )
 
+    def _prepare_cached_state(self, state: RuntimeGuardState) -> RuntimeGuardState:
+        """Create a cache-safe state snapshot without per-run guard events."""
+        if is_dataclass(state):
+            return cast(RuntimeGuardState, replace(state, guard_events=[]))
+        try:
+            setattr(state, "guard_events", [])
+        except Exception:
+            pass
+        return state
+
     def run_runtime_guards(self, force_full: bool = False) -> RuntimeGuardState:
         """
         Execute runtime guards and return the guard state.
@@ -347,11 +358,17 @@ class GuardManager:
 
         if not incremental or self._cache.state is None:
             state = self.collect_runtime_guard_state()
-            self._cache.update(state, now)
         else:
             state = self._cache.state
 
+        invalidation_count_before_run = self._cache.invalidation_count
         self.run_guards_for_state(state, incremental)
+
+        if self._cache.invalidation_count != invalidation_count_before_run:
+            return state
+
+        cached_state = self._prepare_cached_state(state)
+        self._cache.update(cached_state, now, update_last_full_ts=not incremental)
         return state
 
     def cancel_all_orders(self) -> int:

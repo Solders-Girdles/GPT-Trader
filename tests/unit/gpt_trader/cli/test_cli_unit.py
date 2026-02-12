@@ -167,3 +167,32 @@ def test_cli_preflight_delegates_to_preflight_cli(monkeypatch):
 
     assert exit_code == 0
     assert captured["argv"] == ["--profile", "prod", "--warn-only"]
+
+
+def test_orders_profile_argument_inherits_across_nested_subcommands():
+    cli = importlib.import_module("gpt_trader.cli")
+    parser = cli._build_parser()
+
+    history_from_parent = parser.parse_args(["orders", "--profile", "prod", "history", "list"])
+    assert history_from_parent.profile == "prod"
+
+    history_from_leaf = parser.parse_args(["orders", "history", "list", "--profile", "prod"])
+    assert history_from_leaf.profile == "prod"
+
+    preview_from_parent = parser.parse_args(
+        [
+            "orders",
+            "--profile",
+            "prod",
+            "preview",
+            "--symbol",
+            "BTC-PERP",
+            "--side",
+            "buy",
+            "--type",
+            "market",
+            "--quantity",
+            "1",
+        ]
+    )
+    assert preview_from_parent.profile == "prod"

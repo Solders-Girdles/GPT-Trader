@@ -5,9 +5,10 @@ from __future__ import annotations
 import asyncio
 import json
 from argparse import Namespace
+from collections.abc import Callable
 from dataclasses import asdict
 from decimal import Decimal
-from typing import Any, Callable, Protocol, TypeVar, cast, runtime_checkable
+from typing import Any, Protocol, TypeVar, cast, runtime_checkable
 
 from gpt_trader.app.container import create_application_container
 from gpt_trader.cli import options, services
@@ -43,7 +44,7 @@ def register(subparsers: Any) -> None:
     orders_subparsers = parser.add_subparsers(dest="orders_command", required=True)
 
     preview = orders_subparsers.add_parser("preview", help="Preview a new order and exit")
-    options.add_profile_option(preview)
+    options.add_profile_option(preview, inherit_from_parent=True)
     options.add_order_arguments(preview)
     options.add_output_options(preview, include_quiet=False)
     preview.set_defaults(handler=_handle_preview, subcommand="preview")
@@ -51,7 +52,7 @@ def register(subparsers: Any) -> None:
     edit_preview = orders_subparsers.add_parser(
         "edit-preview", help="Preview edits for an existing order"
     )
-    options.add_profile_option(edit_preview)
+    options.add_profile_option(edit_preview, inherit_from_parent=True)
     edit_preview.add_argument("--order-id", required=True, help="Order identifier to edit")
     options.add_order_arguments(edit_preview)
     options.add_output_options(edit_preview, include_quiet=False)
@@ -60,7 +61,7 @@ def register(subparsers: Any) -> None:
     apply_edit = orders_subparsers.add_parser(
         "apply-edit", help="Apply a previously previewed order edit"
     )
-    options.add_profile_option(apply_edit)
+    options.add_profile_option(apply_edit, inherit_from_parent=True)
     apply_edit.add_argument("--order-id", required=True, help="Order identifier")
     apply_edit.add_argument("--preview-id", required=True, help="Preview identifier to apply")
     options.add_output_options(apply_edit, include_quiet=False)
@@ -69,13 +70,13 @@ def register(subparsers: Any) -> None:
     history = orders_subparsers.add_parser(
         "history", help="Inspect persisted order lifecycle records"
     )
-    options.add_profile_option(history)
+    options.add_profile_option(history, inherit_from_parent=True)
     history_subparsers = history.add_subparsers(dest="history_command", required=True)
 
     history_list = history_subparsers.add_parser(
         "list", help="List recent persisted order lifecycle rows"
     )
-    options.add_profile_option(history_list)
+    options.add_profile_option(history_list, inherit_from_parent=True)
     history_list.add_argument(
         "--limit",
         type=int,
@@ -358,7 +359,7 @@ def _format_history_text(
         f"Filters: symbol={symbol_filter or 'any'}, "
         f"status={status_filter.value if status_filter else 'any'}"
     )
-    header = "Order history (limit={})".format(limit)
+    header = f"Order history (limit={limit})"
     summary = f"Returned {count} record{'s' if count != 1 else ''}"
 
     column_names = [

@@ -12,6 +12,7 @@ from gpt_trader.monitoring.guards.builtins import (
     DailyLossGuard,
     DrawdownGuard,
     ErrorRateGuard,
+    LauncherStarvationGuard,
     PositionStuckGuard,
     StaleMarkGuard,
 )
@@ -29,6 +30,7 @@ class TestDefaultGuardManagerCreation:
                 "stale_mark_seconds": 10.0,
                 "error_threshold": 5.0,
                 "position_timeout_seconds": 900.0,
+                "launcher_starvation_threshold": 4.0,
             },
             "risk_management": {
                 "max_drawdown_pct": 3.0,
@@ -43,6 +45,7 @@ class TestDefaultGuardManagerCreation:
             "error_rate",
             "position_stuck",
             "max_drawdown",
+            "launcher_starvation",
         }
         assert set(manager.guards.keys()) == expected_guards
 
@@ -64,6 +67,11 @@ class TestDefaultGuardManagerCreation:
         assert drawdown_guard.config.threshold == 3.0
         assert drawdown_guard.config.auto_shutdown is True
 
+        launcher_starvation_guard = manager.guards["launcher_starvation"]
+        assert isinstance(launcher_starvation_guard, LauncherStarvationGuard)
+        assert launcher_starvation_guard.config.threshold == 4.0
+        assert launcher_starvation_guard.config.auto_shutdown is False
+
     def test_create_default_with_missing_config(self):
         manager = create_default_runtime_guard_manager({})
 
@@ -72,6 +80,9 @@ class TestDefaultGuardManagerCreation:
 
         stale_mark_guard = manager.guards["stale_mark"]
         assert stale_mark_guard.config.threshold == 15.0
+
+        launcher_starvation_guard = manager.guards["launcher_starvation"]
+        assert launcher_starvation_guard.config.threshold == 3.0
 
 
 class TestGuardStateTransitions:

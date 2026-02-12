@@ -82,10 +82,13 @@ class ObjectiveSpec:
 DEFAULT_PARAMETER_GROUPS = ("strategy", "risk")
 LEGACY_RISK_FALLBACK_PARAMETER_NAMES = frozenset(
     {
+        "daily_loss_limit",
         "daily_loss_limit_pct",
-        "max_position_size",
+        "dry_run_equity_usd",
         "max_drawdown_pct",
+        "max_position_size",
         "reduce_only_threshold",
+        "trailing_stop_pct",
     }
 )
 

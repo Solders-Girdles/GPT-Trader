@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -97,7 +100,14 @@ class NotificationService:
             return False
 
         # Deduplication
-        dedup_key = f"{title}:{source}:{category}"
+        dedup_key = self._build_dedup_key(
+            title=title,
+            message=message,
+            source=source,
+            category=category,
+            context=context,
+            metadata=metadata,
+        )
         if not force and self._is_duplicate(dedup_key):
             logger.debug(f"Duplicate alert suppressed: {title}")
             return True  # Deduplicated, not failed
@@ -143,7 +153,14 @@ class NotificationService:
             logger.warning("Rate limit exceeded, notification dropped")
             return False
 
-        dedup_key = f"{alert.title}:{alert.source}:{alert.category}"
+        dedup_key = self._build_dedup_key(
+            title=alert.title,
+            message=alert.message,
+            source=alert.source,
+            category=alert.category,
+            context=alert.context,
+            metadata=alert.metadata,
+        )
         if not force and self._is_duplicate(dedup_key):
             logger.debug(f"Duplicate alert suppressed: {alert.title}")
             return True
@@ -219,6 +236,43 @@ class NotificationService:
         expired = [k for k, v in self._recent_alerts.items() if v < cutoff]
         for k in expired:
             del self._recent_alerts[k]
+
+    def _build_dedup_key(
+        self,
+        *,
+        title: str | None,
+        message: str | None,
+        source: str | None,
+        category: str | None,
+        context: dict[str, Any] | None,
+        metadata: dict[str, Any] | None,
+    ) -> str:
+        """Generate a stable deduplication key for alerts."""
+        segments = [
+            str(title or ""),
+            str(message or ""),
+            str(source or ""),
+            str(category or ""),
+            self._serialize_for_dedup(context),
+            self._serialize_for_dedup(metadata),
+        ]
+        raw = "\u0001".join(segments)
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    @classmethod
+    def _serialize_for_dedup(cls, value: Any) -> str:
+        """Serialize context/metadata for deduplication hashing."""
+        if value is None:
+            return ""
+        if isinstance(value, Mapping):
+            return json.dumps(value, sort_keys=True, default=cls._json_default)
+        if isinstance(value, (list, tuple)):
+            return json.dumps(list(value), default=cls._json_default)
+        return str(value)
+
+    @staticmethod
+    def _json_default(obj: Any) -> str:
+        return str(obj)
 
     async def test_backends(self) -> dict[str, bool]:
         """Test connectivity to all backends."""

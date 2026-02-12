@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from argparse import Namespace
 
+from gpt_trader.cli.commands import orders as orders_cmd
+
 
 def make_args(**overrides):
     defaults = dict(
@@ -19,6 +21,21 @@ def make_args(**overrides):
         reduce_only=True,
         order_id="abc",
         preview_id="def",
+    )
+    defaults.update(overrides)
+    return Namespace(**defaults)
+
+
+def make_history_args(**overrides):
+    defaults = dict(
+        profile="dev",
+        orders_command="history",
+        history_command="list",
+        limit=orders_cmd._DEFAULT_HISTORY_LIMIT,
+        symbol=None,
+        status=None,
+        output_format="text",
+        subcommand="history list",
     )
     defaults.update(overrides)
     return Namespace(**defaults)

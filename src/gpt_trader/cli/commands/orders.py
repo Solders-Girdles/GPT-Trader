@@ -5,13 +5,16 @@ from __future__ import annotations
 import asyncio
 import json
 from argparse import Namespace
+from collections.abc import Callable
 from dataclasses import asdict
 from decimal import Decimal
-from typing import Any, Protocol, cast, runtime_checkable
+from typing import Any, Protocol, TypeVar, cast, runtime_checkable
 
+from gpt_trader.app.container import create_application_container
 from gpt_trader.cli import options, services
 from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.core import OrderSide, OrderType, TimeInForce
+from gpt_trader.persistence.orders_store import OrderRecord, OrdersStore, OrderStatus
 
 _CONFIG_SKIP_KEYS = {
     "orders_command",
@@ -29,6 +32,11 @@ _CONFIG_SKIP_KEYS = {
     "reduce_only",
 }
 
+_DEFAULT_HISTORY_LIMIT = 20
+_MAX_HISTORY_LIMIT = 200
+_HISTORY_COMMAND_NAME = "orders history list"
+T = TypeVar("T")
+
 
 def register(subparsers: Any) -> None:
     parser = subparsers.add_parser("orders", help="Order preview and edit tooling")
@@ -36,7 +44,7 @@ def register(subparsers: Any) -> None:
     orders_subparsers = parser.add_subparsers(dest="orders_command", required=True)
 
     preview = orders_subparsers.add_parser("preview", help="Preview a new order and exit")
-    options.add_profile_option(preview)
+    options.add_profile_option(preview, inherit_from_parent=True)
     options.add_order_arguments(preview)
     options.add_output_options(preview, include_quiet=False)
     preview.set_defaults(handler=_handle_preview, subcommand="preview")
@@ -44,7 +52,7 @@ def register(subparsers: Any) -> None:
     edit_preview = orders_subparsers.add_parser(
         "edit-preview", help="Preview edits for an existing order"
     )
-    options.add_profile_option(edit_preview)
+    options.add_profile_option(edit_preview, inherit_from_parent=True)
     edit_preview.add_argument("--order-id", required=True, help="Order identifier to edit")
     options.add_order_arguments(edit_preview)
     options.add_output_options(edit_preview, include_quiet=False)
@@ -53,11 +61,47 @@ def register(subparsers: Any) -> None:
     apply_edit = orders_subparsers.add_parser(
         "apply-edit", help="Apply a previously previewed order edit"
     )
-    options.add_profile_option(apply_edit)
+    options.add_profile_option(apply_edit, inherit_from_parent=True)
     apply_edit.add_argument("--order-id", required=True, help="Order identifier")
     apply_edit.add_argument("--preview-id", required=True, help="Preview identifier to apply")
     options.add_output_options(apply_edit, include_quiet=False)
     apply_edit.set_defaults(handler=_handle_apply_edit, subcommand="apply-edit")
+
+    history = orders_subparsers.add_parser(
+        "history", help="Inspect persisted order lifecycle records"
+    )
+    options.add_profile_option(history, inherit_from_parent=True)
+    history_subparsers = history.add_subparsers(dest="history_command", required=True)
+
+    history_list = history_subparsers.add_parser(
+        "list", help="List recent persisted order lifecycle rows"
+    )
+    options.add_profile_option(history_list, inherit_from_parent=True)
+    history_list.add_argument(
+        "--limit",
+        type=int,
+        default=_DEFAULT_HISTORY_LIMIT,
+        help=(
+            "Maximum number of records to return (1-"
+            f"{_MAX_HISTORY_LIMIT}, default {_DEFAULT_HISTORY_LIMIT})"
+        ),
+    )
+    history_list.add_argument(
+        "--symbol",
+        type=str,
+        help="Filter history by a trading symbol (exact match)",
+    )
+    history_list.add_argument(
+        "--status",
+        type=str,
+        metavar="STATUS",
+        help=(
+            "Filter history by order status (pending, open, partially_filled, filled, "
+            "cancelled, rejected, expired, failed)"
+        ),
+    )
+    options.add_output_options(history_list, include_quiet=False)
+    history_list.set_defaults(handler=_handle_history_list, subcommand="history list")
 
 
 def _handle_preview(args: Namespace) -> CliResponse | int:
@@ -189,6 +233,192 @@ def _handle_apply_edit(args: Namespace) -> CliResponse | int:
         return 0
     finally:
         asyncio.run(bot.shutdown())
+
+
+def _handle_history_list(args: Namespace) -> CliResponse | int:
+    output_format = getattr(args, "output_format", "text")
+    command_name = _HISTORY_COMMAND_NAME
+
+    try:
+        limit = _validate_history_limit(args.limit)
+    except ValueError as exc:
+        message = str(exc)
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=command_name,
+                code=CliErrorCode.INVALID_ARGUMENT,
+                message=message,
+                details={"limit": args.limit},
+            )
+        print(f"Error: {message}")
+        return 1
+
+    symbol = args.symbol.strip() if args.symbol else None
+    if args.symbol is not None and not symbol:
+        message = "Symbol filter cannot be empty"
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=command_name,
+                code=CliErrorCode.INVALID_ARGUMENT,
+                message=message,
+                details={"symbol": args.symbol},
+            )
+        print(f"Error: {message}")
+        return 1
+
+    status_filter: OrderStatus | None = None
+    if args.status:
+        try:
+            status_filter = _parse_status_filter(args.status)
+        except ValueError as exc:
+            message = str(exc)
+            if output_format == "json":
+                return CliResponse.error_response(
+                    command=command_name,
+                    code=CliErrorCode.INVALID_ARGUMENT,
+                    message=message,
+                    details={"status": args.status},
+                )
+            print(f"Error: {message}")
+            return 1
+
+    try:
+        records = _with_orders_store(
+            args,
+            lambda store: store.list_orders(
+                limit=limit,
+                symbol=symbol,
+                status=status_filter,
+            ),
+        )
+    except Exception as exc:
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=command_name,
+                code=CliErrorCode.OPERATION_FAILED,
+                message="Failed to read order history",
+                details={"error": str(exc)},
+            )
+        print(f"Error: Failed to read order history: {exc}")
+        return 1
+
+    if output_format == "json":
+        return CliResponse.success_response(
+            command=command_name,
+            data={
+                "orders": [record.to_dict() for record in records],
+                "count": len(records),
+                "filters": {
+                    "limit": limit,
+                    "symbol": symbol,
+                    "status": status_filter.value if status_filter else None,
+                },
+            },
+        )
+
+    if not records:
+        print("No order history records found.")
+        return 0
+
+    print(_format_history_text(records, limit, symbol, status_filter))
+    return 0
+
+
+def _validate_history_limit(limit: int) -> int:
+    if limit < 1:
+        raise ValueError("Limit must be at least 1")
+    if limit > _MAX_HISTORY_LIMIT:
+        raise ValueError(f"Limit must not exceed {_MAX_HISTORY_LIMIT}")
+    return limit
+
+
+def _parse_status_filter(raw: str) -> OrderStatus:
+    normalized = raw.strip()
+    if not normalized:
+        raise ValueError("Status filter cannot be empty")
+
+    try:
+        return OrderStatus[normalized.upper()]
+    except KeyError:
+        pass
+
+    try:
+        return OrderStatus(normalized.lower())
+    except ValueError:
+        raise ValueError(f"Unknown order status '{raw}'")
+
+
+def _format_history_text(
+    records: list[OrderRecord],
+    limit: int,
+    symbol_filter: str | None,
+    status_filter: OrderStatus | None,
+) -> str:
+    count = len(records)
+    filters_line = (
+        f"Filters: symbol={symbol_filter or 'any'}, "
+        f"status={status_filter.value if status_filter else 'any'}"
+    )
+    header = f"Order history (limit={limit})"
+    summary = f"Returned {count} record{'s' if count != 1 else ''}"
+
+    column_names = [
+        "Order ID",
+        "Client ID",
+        "Symbol",
+        "Status",
+        "Quantity",
+        "Filled",
+        "Price",
+        "Updated At",
+    ]
+
+    rows: list[list[str]] = []
+    for record in records:
+        rows.append(
+            [
+                record.order_id,
+                record.client_order_id or "-",
+                record.symbol,
+                record.status.value,
+                str(record.quantity),
+                str(record.filled_quantity),
+                str(record.price) if record.price is not None else "-",
+                record.updated_at.isoformat(),
+            ]
+        )
+
+    widths = [
+        max(len(column), max(len(row[idx]) for row in rows))
+        for idx, column in enumerate(column_names)
+    ]
+
+    header_row = " | ".join(column.ljust(widths[idx]) for idx, column in enumerate(column_names))
+    divider = "-+-".join("-" * width for width in widths)
+
+    lines = [
+        header,
+        filters_line,
+        summary,
+        "",
+        header_row,
+        divider,
+    ]
+    lines.extend(
+        " | ".join(value.ljust(widths[idx]) for idx, value in enumerate(row)) for row in rows
+    )
+
+    return "\n".join(lines)
+
+
+def _with_orders_store(args: Namespace, callback: Callable[[OrdersStore], T]) -> T:
+    config = services.build_config_from_args(args, skip=_CONFIG_SKIP_KEYS)
+    container = create_application_container(config)
+    store = container.orders_store
+    try:
+        return callback(store)
+    finally:
+        store.close()
 
 
 def _build_order_payload(args: Namespace) -> dict[str, object]:

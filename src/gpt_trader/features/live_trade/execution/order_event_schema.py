@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import Any, Mapping
+from typing import Any
 
 
 class OrderEventSchemaError(ValueError):
@@ -68,7 +69,9 @@ class OrderPreviewEvent:
             "order_type": _coerce_identifier(
                 self.order_type, field_name="order_type", event_type=event_type
             ),
-            "quantity": _coerce_decimal(self.quantity, field_name="quantity", event_type=event_type),
+            "quantity": _coerce_decimal(
+                self.quantity, field_name="quantity", event_type=event_type
+            ),
             "price": _format_price(self.price, event_type=event_type),
             "preview": _normalize_preview_data(self.preview, event_type=event_type),
         }
@@ -98,7 +101,9 @@ class OrderSubmissionAttemptEvent:
             "order_type": _coerce_identifier(
                 self.order_type, field_name="order_type", event_type=event_type
             ),
-            "quantity": _coerce_decimal(self.quantity, field_name="quantity", event_type=event_type),
+            "quantity": _coerce_decimal(
+                self.quantity, field_name="quantity", event_type=event_type
+            ),
             "price": _format_price(self.price, event_type=event_type),
         }
 
@@ -115,9 +120,7 @@ class OrderRejectionEvent:
 
     def serialize(self) -> dict[str, Any]:
         event_type = "order_rejected"
-        reason_text = _coerce_identifier(
-            self.reason, field_name="reason", event_type=event_type
-        )
+        reason_text = _coerce_identifier(self.reason, field_name="reason", event_type=event_type)
         payload: dict[str, Any] = {
             "event_type": event_type,
             "symbol": _coerce_identifier(self.symbol, field_name="symbol", event_type=event_type),

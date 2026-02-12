@@ -4,18 +4,24 @@ from __future__ import annotations
 
 import asyncio
 import threading
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
 import pytest
 
 import gpt_trader.utilities.telemetry as telemetry_module
+import gpt_trader.features.live_trade.engines.telemetry_streaming as telemetry_streaming_module
 from gpt_trader.features.live_trade.engines.telemetry_streaming import (
     _emit_metric,
     _handle_stream_task_completion,
+    _run_stream_loop,
     _run_stream_loop_async,
     _schedule_coroutine,
     _should_enable_streaming,
+    StreamingRetryState,
+    WS_STREAM_RETRY_EVENT,
+    WS_STREAM_RETRY_EXHAUSTED_EVENT,
 )
 
 
@@ -223,3 +229,106 @@ class TestRunStreamLoopAsync:
             await task
 
         assert stop_signal.is_set()
+
+
+def _create_coordinator(broker: Mock | None = None) -> tuple[Mock, SimpleNamespace]:
+    coordinator = Mock()
+    context = SimpleNamespace(
+        broker=broker or Mock(),
+        event_store=Mock(),
+        bot_id="telemetry-test-bot",
+    )
+    coordinator.context = context
+    coordinator._extract_mark_from_message = Mock(return_value=50000.5)
+    coordinator._update_mark_and_metrics = Mock()
+    return coordinator, context
+
+
+class TestRunStreamLoopRetryBackoff:
+    def test_reconnect_backoff_progression(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        broker = Mock()
+
+        def success_stream() -> Any:
+            yield {"channel": "ticker", "product_id": "BTC-PERP", "bid": "50000", "ask": "50001"}
+
+        broker.stream_orderbook.side_effect = [RuntimeError("boot"), success_stream()]
+        broker.stream_trades.side_effect = RuntimeError("trades unavailable")
+
+        coordinator, context = _create_coordinator(broker)
+        mock_emit = Mock()
+        monkeypatch.setattr(telemetry_streaming_module, "_emit_metric", mock_emit)
+        sleep_mock = Mock()
+        monkeypatch.setattr(telemetry_streaming_module.time, "sleep", sleep_mock)
+
+        _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
+
+        sleep_mock.assert_called_once_with(0.5)
+        retry_calls = [
+            call
+            for call in mock_emit.call_args_list
+            if call.args[2].get("event_type") == WS_STREAM_RETRY_EVENT
+        ]
+        assert len(retry_calls) == 1
+        assert retry_calls[0].args[2]["delay_seconds"] == 0.5
+        assert retry_calls[0].args[2]["gap_count"] == 0
+        assert coordinator._stream_retry_state.attempts == 0
+
+    def test_gap_count_and_backfill_on_success(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        broker = Mock()
+
+        def failing_stream() -> Any:
+            yield {"channel": "ticker", "product_id": "BTC-PERP", "bid": "50000", "ask": "50001", "gap_detected": True}
+            raise RuntimeError("stream drop")
+
+        def success_stream() -> Any:
+            yield {"channel": "ticker", "product_id": "BTC-PERP", "bid": "50000", "ask": "50001"}
+
+        broker.stream_orderbook.side_effect = [failing_stream(), success_stream()]
+        broker.stream_trades.side_effect = RuntimeError("trades unavailable")
+
+        coordinator, context = _create_coordinator(broker)
+        user_handler = Mock()
+        user_handler.request_backfill = Mock()
+        coordinator._user_event_handler = user_handler
+
+        mock_emit = Mock()
+        monkeypatch.setattr(telemetry_streaming_module, "_emit_metric", mock_emit)
+        sleep_mock = Mock()
+        monkeypatch.setattr(telemetry_streaming_module.time, "sleep", sleep_mock)
+
+        _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
+
+        retry_calls = [
+            call for call in mock_emit.call_args_list if call.args[2].get("event_type") == WS_STREAM_RETRY_EVENT
+        ]
+        assert retry_calls
+        assert retry_calls[0].args[2]["gap_count"] == 1
+        reasons = [call.kwargs.get("reason") for call in user_handler.request_backfill.call_args_list]
+        assert "sequence_gap" in reasons
+        assert coordinator._stream_retry_state.attempts == 0
+
+    def test_retry_exhaustion_emits_diagnostic(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        broker = Mock()
+        broker.stream_orderbook.side_effect = RuntimeError("always fail")
+        broker.stream_trades.side_effect = RuntimeError("fallback fail")
+
+        coordinator, context = _create_coordinator(broker)
+        coordinator._stream_retry_state = StreamingRetryState(
+            base_delay=0.0, multiplier=1.0, max_delay=0.0, max_attempts=2
+        )
+
+        mock_emit = Mock()
+        monkeypatch.setattr(telemetry_streaming_module, "_emit_metric", mock_emit)
+        sleep_mock = Mock()
+        monkeypatch.setattr(telemetry_streaming_module.time, "sleep", sleep_mock)
+
+        _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
+
+        assert sleep_mock.call_count == 2
+        exhausted_calls = [
+            call
+            for call in mock_emit.call_args_list
+            if call.args[2].get("event_type") == WS_STREAM_RETRY_EXHAUSTED_EVENT
+        ]
+        assert exhausted_calls
+        assert exhausted_calls[0].args[2]["attempts"] == 2

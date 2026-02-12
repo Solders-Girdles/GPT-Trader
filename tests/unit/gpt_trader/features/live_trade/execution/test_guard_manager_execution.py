@@ -1,9 +1,12 @@
 """Tests for GuardManager order cancellation, safe-run, guard steps, and telemetry."""
 
+import time
+from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.features.live_trade.execution.guards import RuntimeGuardState
 import gpt_trader.features.live_trade.execution.guard_manager as guard_manager_module
 import gpt_trader.features.live_trade.execution.guards.pnl_telemetry as pnl_telemetry_module
 from gpt_trader.features.live_trade.guard_errors import (
@@ -94,6 +97,67 @@ def test_safe_run_runtime_guards_reduce_only_failure(
     guard_manager._invalidate_cache_callback.assert_called()
 
 
+def test_guard_daily_loss_escalation_boundary_triggers_once(
+    guard_manager, mock_risk_manager, mock_broker
+):
+    mock_risk_manager.set_reduce_only_mode = MagicMock()
+    reduce_only_triggered = False
+
+    def track_daily_pnl(equity, positions_pnl):
+        nonlocal reduce_only_triggered
+        if equity < Decimal("9500"):
+            if not reduce_only_triggered:
+                mock_risk_manager.set_reduce_only_mode(
+                    True, reason="daily_loss_limit_breached"
+                )
+                reduce_only_triggered = True
+            return True
+        return False
+
+    mock_risk_manager.track_daily_pnl.side_effect = track_daily_pnl
+
+    safe_state = RuntimeGuardState(
+        timestamp=time.time(),
+        balances=[],
+        equity=Decimal("9600"),
+        positions=[],
+        positions_pnl={},
+        positions_dict={},
+        guard_events=[],
+    )
+
+    guard_manager.guard_daily_loss(safe_state)
+
+    assert mock_broker.cancel_order.call_count == 0
+    mock_risk_manager.set_reduce_only_mode.assert_not_called()
+    guard_manager._invalidate_cache_callback.assert_not_called()
+
+    breach_state = RuntimeGuardState(
+        timestamp=time.time(),
+        balances=[],
+        equity=Decimal("9300"),
+        positions=[],
+        positions_pnl={},
+        positions_dict={},
+        guard_events=[],
+    )
+
+    guard_manager.guard_daily_loss(breach_state)
+
+    assert mock_broker.cancel_order.call_count == 2
+    assert guard_manager.open_orders == []
+    mock_risk_manager.set_reduce_only_mode.assert_called_once_with(
+        True, reason="daily_loss_limit_breached"
+    )
+    assert guard_manager._invalidate_cache_callback.call_count == 2
+
+    guard_manager.guard_daily_loss(breach_state)
+
+    assert mock_broker.cancel_order.call_count == 2
+    assert guard_manager._invalidate_cache_callback.call_count == 3
+    mock_risk_manager.set_reduce_only_mode.assert_called_once()
+
+
 @pytest.fixture
 def record_guard_success_mock(monkeypatch: pytest.MonkeyPatch) -> MagicMock:
     mock_success = MagicMock()
@@ -171,6 +235,55 @@ def test_log_guard_telemetry_failure_raises(guard_manager, sample_guard_state, p
         guard_manager.log_guard_telemetry(sample_guard_state)
 
     assert "BTC-PERP" in str(exc_info.value.details)
+
+
+def test_run_runtime_guards_incremental_resets_guard_events(
+    guard_manager, mock_broker, mock_risk_manager, monkeypatch: pytest.MonkeyPatch
+):
+    api_guard = next(
+        (guard for guard in guard_manager._guards if guard.name == "api_health"), None
+    )
+    if api_guard is not None:
+        monkeypatch.setattr(api_guard, "check", lambda state, incremental=False: None)
+    mock_broker.client = None
+    mock_broker._client = None
+
+    mock_risk_manager.last_mark_update = {"BTC-PERP": time.time()}
+    mock_risk_manager.config.volatility_window_periods = 20
+
+    mock_candle = MagicMock()
+    mock_candle.close = Decimal("50000")
+    mock_broker.get_candles.return_value = [mock_candle] * 20
+
+    first_outcome = MagicMock()
+    first_outcome.triggered = True
+    first_outcome.to_payload.return_value = {
+        "triggered": True,
+        "symbol": "BTC-PERP",
+        "reason": "volatility spike",
+    }
+    second_outcome = MagicMock()
+    second_outcome.triggered = False
+    second_outcome.to_payload.return_value = {
+        "triggered": False,
+        "symbol": "BTC-PERP",
+        "reason": "calm",
+    }
+    mock_risk_manager.check_volatility_circuit_breaker.side_effect = [
+        first_outcome,
+        second_outcome,
+    ]
+
+    full_state = guard_manager.run_runtime_guards(force_full=True)
+
+    assert len(full_state.guard_events) == 1
+    assert full_state.guard_events[0] == first_outcome.to_payload.return_value
+
+    incremental_state = guard_manager.run_runtime_guards(force_full=False)
+
+    assert incremental_state.guard_events == []
+    assert mock_risk_manager.check_volatility_circuit_breaker.call_count == 2
+    assert mock_broker.get_candles.call_count == 2
 
 
 class TestGuardManagerEdgeCases:

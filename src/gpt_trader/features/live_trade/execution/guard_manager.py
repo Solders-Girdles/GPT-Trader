@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 import time
+from dataclasses import replace
 from collections.abc import Callable
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any, cast
@@ -347,11 +348,13 @@ class GuardManager:
 
         if not incremental or self._cache.state is None:
             state = self.collect_runtime_guard_state()
-            self._cache.update(state, now)
         else:
             state = self._cache.state
 
         self.run_guards_for_state(state, incremental)
+
+        cached_state = replace(state, guard_events=[])
+        self._cache.update(cached_state, now, update_last_full_ts=not incremental)
         return state
 
     def cancel_all_orders(self) -> int:

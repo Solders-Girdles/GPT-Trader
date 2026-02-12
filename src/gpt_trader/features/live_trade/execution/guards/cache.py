@@ -51,10 +51,21 @@ class GuardStateCache:
         """Check if a full guard run is needed."""
         return not self.is_valid_for_incremental(now)
 
-    def update(self, state: RuntimeGuardState, now: float) -> None:
-        """Update cached state after full collection."""
+    def update(
+        self,
+        state: RuntimeGuardState,
+        now: float,
+        *,
+        update_last_full_ts: bool = True,
+    ) -> None:
+        """Update cached state after full collection.
+
+        Args:
+            update_last_full_ts: Whether to update the last full timestamp.
+        """
         self._state = state
-        self._last_full_ts = now
+        if update_last_full_ts:
+            self._last_full_ts = now
         self._dirty = False
 
     def invalidate(self) -> None:

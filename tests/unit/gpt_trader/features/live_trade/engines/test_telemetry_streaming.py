@@ -10,18 +10,18 @@ from unittest.mock import MagicMock, Mock
 
 import pytest
 
-import gpt_trader.utilities.telemetry as telemetry_module
 import gpt_trader.features.live_trade.engines.telemetry_streaming as telemetry_streaming_module
+import gpt_trader.utilities.telemetry as telemetry_module
 from gpt_trader.features.live_trade.engines.telemetry_streaming import (
+    WS_STREAM_RETRY_EVENT,
+    WS_STREAM_RETRY_EXHAUSTED_EVENT,
+    StreamingRetryState,
     _emit_metric,
     _handle_stream_task_completion,
     _run_stream_loop,
     _run_stream_loop_async,
     _schedule_coroutine,
     _should_enable_streaming,
-    StreamingRetryState,
-    WS_STREAM_RETRY_EVENT,
-    WS_STREAM_RETRY_EXHAUSTED_EVENT,
 )
 
 
@@ -277,7 +277,13 @@ class TestRunStreamLoopRetryBackoff:
         broker = Mock()
 
         def failing_stream() -> Any:
-            yield {"channel": "ticker", "product_id": "BTC-PERP", "bid": "50000", "ask": "50001", "gap_detected": True}
+            yield {
+                "channel": "ticker",
+                "product_id": "BTC-PERP",
+                "bid": "50000",
+                "ask": "50001",
+                "gap_detected": True,
+            }
             raise RuntimeError("stream drop")
 
         def success_stream() -> Any:
@@ -299,11 +305,15 @@ class TestRunStreamLoopRetryBackoff:
         _run_stream_loop(coordinator, ["BTC-PERP"], 1, None)
 
         retry_calls = [
-            call for call in mock_emit.call_args_list if call.args[2].get("event_type") == WS_STREAM_RETRY_EVENT
+            call
+            for call in mock_emit.call_args_list
+            if call.args[2].get("event_type") == WS_STREAM_RETRY_EVENT
         ]
         assert retry_calls
         assert retry_calls[0].args[2]["gap_count"] == 1
-        reasons = [call.kwargs.get("reason") for call in user_handler.request_backfill.call_args_list]
+        reasons = [
+            call.kwargs.get("reason") for call in user_handler.request_backfill.call_args_list
+        ]
         assert "sequence_gap" in reasons
         assert coordinator._stream_retry_state.attempts == 0
 

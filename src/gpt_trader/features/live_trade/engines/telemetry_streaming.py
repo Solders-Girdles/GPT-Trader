@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
 import inspect
 import threading
 import time
 from collections.abc import Awaitable, Coroutine
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -405,7 +405,9 @@ def _run_stream_loop(
             try:
                 stream: Any | None = None
                 try:
-                    if include_user_events and _supports_kwarg(broker.stream_orderbook, "include_user_events"):
+                    if include_user_events and _supports_kwarg(
+                        broker.stream_orderbook, "include_user_events"
+                    ):
                         stream = broker.stream_orderbook(
                             symbols,
                             level=level,

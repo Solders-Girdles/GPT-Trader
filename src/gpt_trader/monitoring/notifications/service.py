@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -96,8 +97,10 @@ class NotificationService:
             logger.warning("Rate limit exceeded, notification dropped")
             return False
 
+        normalized_context = self._normalize_context(context)
+
         # Deduplication
-        dedup_key = f"{title}:{source}:{category}"
+        dedup_key = self._build_dedup_key(title, source, category, normalized_context)
         if not force and self._is_duplicate(dedup_key):
             logger.debug(f"Duplicate alert suppressed: {title}")
             return True  # Deduplicated, not failed
@@ -109,7 +112,7 @@ class NotificationService:
             message=message,
             source=source,
             category=category,
-            context=context or {},
+            context=normalized_context,
             metadata=metadata or {},
         )
 
@@ -143,7 +146,8 @@ class NotificationService:
             logger.warning("Rate limit exceeded, notification dropped")
             return False
 
-        dedup_key = f"{alert.title}:{alert.source}:{alert.category}"
+        normalized_context = self._normalize_context(alert.context)
+        dedup_key = self._build_dedup_key(alert.title, alert.source, alert.category, normalized_context)
         if not force and self._is_duplicate(dedup_key):
             logger.debug(f"Duplicate alert suppressed: {alert.title}")
             return True
@@ -219,6 +223,26 @@ class NotificationService:
         expired = [k for k, v in self._recent_alerts.items() if v < cutoff]
         for k in expired:
             del self._recent_alerts[k]
+
+    def _build_dedup_key(
+        self,
+        title: str,
+        source: str | None,
+        category: str | None,
+        context: dict[str, Any],
+    ) -> str:
+        """Compose the dedup key from alert identifiers and normalized context."""
+        base_key = f"{title}:{source}:{category}"
+        context_signature = self._context_signature(context)
+        return f"{base_key}:{context_signature}"
+
+    def _context_signature(self, context: dict[str, Any]) -> str:
+        """Serialize context for deterministic deduplication."""
+        return json.dumps(context, sort_keys=True, separators=(",", ":"), default=str)
+
+    def _normalize_context(self, context: dict[str, Any] | None) -> dict[str, Any]:
+        """Ensure context is a standalone dict (empty if falsy)."""
+        return dict(context) if context else {}
 
     async def test_backends(self) -> dict[str, bool]:
         """Test connectivity to all backends."""

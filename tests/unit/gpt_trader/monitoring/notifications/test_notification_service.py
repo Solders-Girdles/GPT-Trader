@@ -108,6 +108,38 @@ class TestNotificationService:
         assert mock_backend.send.call_count == 2
 
     @pytest.mark.asyncio
+    async def test_notify_context_sensitive_deduplication(self, mock_backend) -> None:
+        service = NotificationService(dedup_window_seconds=60)
+        service.add_backend(mock_backend)
+
+        await service.notify(
+            title="Context",
+            message="msg",
+            context={"key": "value"},
+        )
+
+        result = await service.notify(
+            title="Context",
+            message="msg",
+            context={"key": "different"},
+        )
+
+        assert result is True
+        assert mock_backend.send.call_count == 2
+
+    @pytest.mark.asyncio
+    async def test_notify_empty_context_normalized_for_dedup(self, mock_backend) -> None:
+        service = NotificationService(dedup_window_seconds=60)
+        service.add_backend(mock_backend)
+
+        await service.notify(title="Context", message="msg", context=None)
+
+        result = await service.notify(title="Context", message="msg", context={})
+
+        assert result is True
+        assert mock_backend.send.call_count == 1
+
+    @pytest.mark.asyncio
     async def test_notify_disabled_service(self, mock_backend) -> None:
         service = NotificationService(enabled=False)
         service.add_backend(mock_backend)

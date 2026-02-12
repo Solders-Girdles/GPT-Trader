@@ -6,7 +6,9 @@ from gpt_trader.monitoring.guards import GuardConfig, GuardStatus, LauncherStarv
 from gpt_trader.utilities.time_provider import FakeClock
 
 
-def _create_guard(*, threshold: int = 2, cooldown_seconds: int = 30, time_provider=None) -> LauncherStarvationGuard:
+def _create_guard(
+    *, threshold: int = 2, cooldown_seconds: int = 30, time_provider=None
+) -> LauncherStarvationGuard:
     config = GuardConfig(
         name="launcher_starvation",
         threshold=threshold,

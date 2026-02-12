@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import pytest
-
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
+
+import pytest
 
 from gpt_trader.persistence.orders_store import OrdersStore, OrderStatus
 from tests.unit.gpt_trader.persistence.orders_store_test_helpers import create_test_order

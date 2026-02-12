@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Callable
 
-from gpt_trader.cli.response import CliErrorCode, CliResponse
 import gpt_trader.cli.commands.orders as orders_cmd
+from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.persistence.orders_store import OrderStatus
 from tests.unit.gpt_trader.cli.orders_command_test_helpers import make_history_args
 from tests.unit.gpt_trader.persistence.orders_store_test_helpers import create_test_order

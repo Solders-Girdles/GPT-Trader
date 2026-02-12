@@ -13,7 +13,7 @@ from gpt_trader.app.container import create_application_container
 from gpt_trader.cli import options, services
 from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.core import OrderSide, OrderType, TimeInForce
-from gpt_trader.persistence.orders_store import OrderRecord, OrderStatus, OrdersStore
+from gpt_trader.persistence.orders_store import OrderRecord, OrdersStore, OrderStatus
 
 _CONFIG_SKIP_KEYS = {
     "orders_command",
@@ -392,9 +392,7 @@ def _format_history_text(
         for idx, column in enumerate(column_names)
     ]
 
-    header_row = " | ".join(
-        column.ljust(widths[idx]) for idx, column in enumerate(column_names)
-    )
+    header_row = " | ".join(column.ljust(widths[idx]) for idx, column in enumerate(column_names))
     divider = "-+-".join("-" * width for width in widths)
 
     lines = [
@@ -406,8 +404,7 @@ def _format_history_text(
         divider,
     ]
     lines.extend(
-        " | ".join(value.ljust(widths[idx]) for idx, value in enumerate(row))
-        for row in rows
+        " | ".join(value.ljust(widths[idx]) for idx, value in enumerate(row)) for row in rows
     )
 
     return "\n".join(lines)

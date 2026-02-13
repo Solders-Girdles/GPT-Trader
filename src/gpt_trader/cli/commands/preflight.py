@@ -33,4 +33,8 @@ def execute(args: Namespace) -> int:
         argv.extend(["--report-dir", str(args.report_dir)])
     if getattr(args, "report_path", None):
         argv.extend(["--report-path", str(args.report_path)])
+    report_target = getattr(args, "report_target", None)
+    report_target_value = getattr(report_target, "value", report_target)
+    if report_target_value == "stdout":
+        argv.extend(["--report-target", "stdout"])
     return run_preflight_cli(argv)

@@ -49,7 +49,6 @@ def load_config_from_yaml(path: str | Path) -> BotConfig:
         warnings.filterwarnings(
             "ignore",
             message="Legacy profile-style YAML mapping via BotConfig.from_dict\\(\\) is deprecated.*",
-            category=DeprecationWarning,
         )
         return BotConfig.from_dict(data)
 

@@ -6,6 +6,7 @@ import argparse
 from argparse import Namespace
 
 from gpt_trader.cli.commands import preflight as preflight_cmd
+from gpt_trader.preflight.report import ReportTarget
 
 
 def test_preflight_registers_parser() -> None:
@@ -51,3 +52,19 @@ def test_preflight_execute_sends_bundle_flag(monkeypatch) -> None:
 
     assert exit_code == 0
     assert "--diagnostics-bundle" in captured["argv"]
+
+
+def test_preflight_execute_forwards_report_target(monkeypatch) -> None:
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(argv=None):
+        captured["argv"] = list(argv or [])
+        return 0
+
+    monkeypatch.setattr(preflight_cmd, "run_preflight_cli", fake_run)
+
+    args = Namespace(profile="prod", report_target=ReportTarget.STDOUT)
+    exit_code = preflight_cmd.execute(args)
+
+    assert exit_code == 0
+    assert captured["argv"] == ["--profile", "prod", "--report-target", "stdout"]

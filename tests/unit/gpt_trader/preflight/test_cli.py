@@ -12,6 +12,7 @@ import pytest
 
 from gpt_trader.preflight.cli import _header, main
 from gpt_trader.preflight.cli_args import PreflightCliArgs, parse_preflight_args
+from gpt_trader.preflight.report import ReportTarget
 
 
 @dataclass(frozen=True)
@@ -73,12 +74,29 @@ class TestParsePreflightArgs:
             diagnostics_bundle=False,
             report_dir=None,
             report_path=None,
+            report_target=ReportTarget.FILE,
         )
 
     def test_warn_only_flag(self) -> None:
         parsed = parse_preflight_args(["--warn-only"])
 
         assert parsed.warn_only is True
+
+    def test_report_target_flag(self) -> None:
+        parsed = parse_preflight_args(["--report-target", "stdout"])
+
+        assert parsed.report_target == ReportTarget.STDOUT
+
+    def test_report_target_stdout_rejects_report_dir(self, tmp_path: Path) -> None:
+        with pytest.raises(SystemExit):
+            parse_preflight_args(
+                ["--report-target", "stdout", "--report-dir", str(tmp_path / "reports")]
+            )
+
+    def test_report_target_stdout_rejects_report_path(self, tmp_path: Path) -> None:
+        target_file = tmp_path / "explicit.json"
+        with pytest.raises(SystemExit):
+            parse_preflight_args(["--report-target", "stdout", "--report-path", str(target_file)])
 
     def test_diagnostics_bundle_flag(self) -> None:
         parsed = parse_preflight_args(["--diagnostics-bundle"])
@@ -197,6 +215,24 @@ class TestMain:
         main(["--warn-only"])
 
         assert os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY") == "1"
+
+    def test_generate_report_called_with_default_target(self, cli_mocks: CLIMocks) -> None:
+        main([])
+
+        cli_mocks.checker.generate_report.assert_called_once_with(
+            report_dir=None,
+            report_path=None,
+            report_target=ReportTarget.FILE,
+        )
+
+    def test_report_target_flag_passes_to_generate_report(self, cli_mocks: CLIMocks) -> None:
+        main(["--report-target", "stdout"])
+
+        cli_mocks.checker.generate_report.assert_called_once_with(
+            report_dir=None,
+            report_path=None,
+            report_target=ReportTarget.STDOUT,
+        )
 
     def test_diagnostics_bundle_mode_outputs_bundle(self, cli_mocks: CLIMocks, monkeypatch, capsys):
         bundle = {

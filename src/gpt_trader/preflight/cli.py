@@ -77,7 +77,9 @@ def _run_preflight(args: PreflightCliArgs) -> int:
             checker.context.set_current_check(None)
 
     success, _status = checker.generate_report(
-        report_dir=args.report_dir, report_path=args.report_path
+        report_dir=args.report_dir,
+        report_path=args.report_path,
+        report_target=args.report_target,
     )
     return 0 if success else 1
 

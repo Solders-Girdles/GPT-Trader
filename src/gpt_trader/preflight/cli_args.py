@@ -9,6 +9,7 @@ from gpt_trader.app.config.profile_loader import (
     DEFAULT_PREFLIGHT_PROFILE_NAME,
     PREFLIGHT_PROFILE_CHOICES,
 )
+from gpt_trader.preflight.report import ReportTarget
 
 PROFILE_CHOICES = PREFLIGHT_PROFILE_CHOICES
 
@@ -21,6 +22,7 @@ class PreflightCliArgs:
     diagnostics_bundle: bool
     report_dir: Path | None
     report_path: Path | None
+    report_target: ReportTarget
 
 
 def add_preflight_arguments(parser: argparse.ArgumentParser) -> None:
@@ -54,6 +56,13 @@ def add_preflight_arguments(parser: argparse.ArgumentParser) -> None:
         type=Path,
         help="Explicit file path for preflight report JSON",
     )
+    parser.add_argument(
+        "--report-target",
+        type=ReportTarget,
+        choices=list(ReportTarget),
+        default=ReportTarget.FILE,
+        help="Artifact target for the preflight report (default: file)",
+    )
 
 
 def build_preflight_parser() -> argparse.ArgumentParser:
@@ -73,6 +82,10 @@ def _normalize_preflight_args(
 ) -> PreflightCliArgs:
     report_dir = _normalize_report_dir(parser, args.report_dir)
     report_path = _normalize_report_path(parser, args.report_path)
+    report_target = args.report_target
+
+    if report_target == ReportTarget.STDOUT and (report_dir is not None or report_path is not None):
+        parser.error("--report-target stdout cannot be combined with --report-dir/--report-path")
 
     return PreflightCliArgs(
         verbose=bool(args.verbose),
@@ -81,6 +94,7 @@ def _normalize_preflight_args(
         diagnostics_bundle=bool(args.diagnostics_bundle),
         report_dir=report_dir,
         report_path=report_path,
+        report_target=report_target,
     )
 
 

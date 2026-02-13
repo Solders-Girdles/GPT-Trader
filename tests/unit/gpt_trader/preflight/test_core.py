@@ -8,6 +8,7 @@ import pytest
 
 import gpt_trader.preflight.core as preflight_core_module
 from gpt_trader.preflight.core import PreflightCheck
+from gpt_trader.preflight.report import ReportTarget
 
 
 class TestPreflightCheckInit:
@@ -113,7 +114,13 @@ class TestPreflightCheckDelegations:
         result = getattr(check, method_name)()
 
         if function_name == "generate_report":
-            mock.assert_called_once_with(check, report_dir=None, report_path=None)
+            mock.assert_called_once_with(
+                check,
+                report_dir=None,
+                report_path=None,
+                report_target=ReportTarget.FILE,
+                timestamp=None,
+            )
         else:
             mock.assert_called_once_with(check)
         assert result == return_value

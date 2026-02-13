@@ -352,9 +352,7 @@ def _format_comparison_matrix(
     col_widths: list[int] = []
     for col_idx in range(len(header)):
         max_width = max(
-            len(row_cells[col_idx])
-            for row_cells in all_rows
-            if len(row_cells) > col_idx
+            len(row_cells[col_idx]) for row_cells in all_rows if len(row_cells) > col_idx
         )
         col_widths.append(max_width)
 

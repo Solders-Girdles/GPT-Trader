@@ -31,10 +31,12 @@ Schema Structure:
 
 from __future__ import annotations
 
+import os
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import time
 from decimal import Decimal
+from enum import Enum
 from pathlib import Path
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
@@ -232,6 +234,61 @@ class ProfileSchema:
             session=session,
             monitoring=monitoring,
         )
+
+
+class ProfileOverrideSource(Enum):
+    """Describes which source supplied the resolved profile."""
+
+    CLI = "cli"
+    FILE = "file"
+    ENV = "env"
+    DEFAULT = "default"
+
+
+@dataclass(frozen=True)
+class ProfileOverrideDecision:
+    """Pure result of evaluating profile overrides."""
+
+    profile: str
+    source: ProfileOverrideSource
+
+
+def _normalize_profile_candidate(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip()
+    return normalized if normalized else None
+
+
+def resolve_profile_override(
+    *,
+    cli_profile: str | None,
+    file_profile: str | None,
+    env_profile: str | None,
+    default_profile: str,
+) -> ProfileOverrideDecision:
+    """Choose the active profile according to CLI > file > env > default."""
+
+    candidates: list[tuple[ProfileOverrideSource, str | None]] = [
+        (ProfileOverrideSource.CLI, _normalize_profile_candidate(cli_profile)),
+        (ProfileOverrideSource.FILE, _normalize_profile_candidate(file_profile)),
+        (ProfileOverrideSource.ENV, _normalize_profile_candidate(env_profile)),
+    ]
+    for source, value in candidates:
+        if value is not None:
+            return ProfileOverrideDecision(profile=value, source=source)
+
+    normalized_default = _normalize_profile_candidate(default_profile)
+    return ProfileOverrideDecision(
+        profile=normalized_default or default_profile,
+        source=ProfileOverrideSource.DEFAULT,
+    )
+
+
+def get_env_profile_override() -> str | None:
+    """Return a profile override from the environment, if any."""
+
+    return os.getenv("GPT_TRADER_PROFILE") or os.getenv("BOT_PROFILE")
 
 
 @dataclass(frozen=True)
@@ -720,13 +777,17 @@ __all__ = [
     "ExecutionConfig",
     "MonitoringConfig",
     "ProfileLoader",
+    "ProfileOverrideDecision",
+    "ProfileOverrideSource",
     "ProfileSchema",
     "ProfileRegistryEntry",
     "PROFILE_REGISTRY",
+    "get_env_defaults_for_profile",
+    "get_env_profile_override",
     "get_profile_registry_entry",
     "get_profile_registry_entry_by_name",
-    "get_env_defaults_for_profile",
     "is_dev_profile",
+    "resolve_profile_override",
     "DEFAULT_RUNTIME_PROFILE_NAME",
     "RUNTIME_PROFILE_CHOICES",
     "DEFAULT_PREFLIGHT_PROFILE_NAME",

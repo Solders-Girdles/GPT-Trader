@@ -75,7 +75,7 @@ class TestParsePreflightArgs:
 
         assert parsed == PreflightCliArgs(
             verbose=False,
-            profile="canary",
+            profile=None,
             warn_only=False,
             diagnostics_bundle=False,
             report_dir=None,
@@ -189,6 +189,13 @@ class TestMain:
         main([])
 
         cli_mocks.preflight_class.assert_called_once_with(verbose=False, profile="canary")
+
+    def test_env_profile_override(self, cli_mocks: CLIMocks, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("GPT_TRADER_PROFILE", "spot")
+
+        main([])
+
+        cli_mocks.preflight_class.assert_called_once_with(verbose=False, profile="spot")
 
     def test_runs_all_check_functions(self, cli_mocks: CLIMocks) -> None:
         """Should call all check functions."""

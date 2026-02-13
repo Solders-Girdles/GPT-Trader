@@ -17,7 +17,7 @@ PROFILE_CHOICES = PREFLIGHT_PROFILE_CHOICES
 @dataclass(frozen=True)
 class PreflightCliArgs:
     verbose: bool
-    profile: str
+    profile: str | None
     warn_only: bool
     diagnostics_bundle: bool
     report_dir: Path | None
@@ -30,7 +30,7 @@ def add_preflight_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--profile",
         "-p",
-        default=DEFAULT_PREFLIGHT_PROFILE_NAME,
+        default=None,
         choices=PROFILE_CHOICES,
         help="Trading profile to validate (default: canary)",
     )

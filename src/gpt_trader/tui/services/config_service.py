@@ -9,8 +9,15 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.app.config.bot_config import BotConfig
+from gpt_trader.app.container import get_application_container
+from gpt_trader.app.runtime.fingerprint import (
+    compare_startup_config_fingerprints,
+    compute_startup_config_fingerprint,
+    load_startup_config_fingerprint,
+)
 from gpt_trader.tui.events import ConfigChanged, ConfigReloadRequested
-from gpt_trader.tui.notification_helpers import notify_error
+from gpt_trader.tui.notification_helpers import notify_error, notify_warning
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -44,6 +51,9 @@ class ConfigService:
         Args:
             config: The bot configuration object to display.
         """
+        # Validate fingerprint before showing modal
+        self._diagnose_startup_config_fingerprint(config)
+
         # Import at runtime to avoid circular import
         from gpt_trader.tui.widgets.config import ConfigModal
 
@@ -72,3 +82,35 @@ class ConfigService:
         """
         self.app.post_message(ConfigChanged(config=config))
         logger.debug("Config changed event posted")
+
+    def _diagnose_startup_config_fingerprint(self, config: Any) -> None:
+        """Detect startup config drift by comparing manifests."""
+
+        if not isinstance(config, BotConfig):
+            return
+
+        container = get_application_container()
+        if container is None:
+            return
+
+        fingerprint_path = container.runtime_paths.config_fingerprint_path
+        expected = load_startup_config_fingerprint(fingerprint_path)
+        if expected is None:
+            return
+
+        actual = compute_startup_config_fingerprint(config)
+        match, reason = compare_startup_config_fingerprints(expected, actual)
+        if match:
+            logger.debug(
+                "Startup config fingerprint validated (TUI)",
+                config_digest=actual.digest,
+            )
+            return
+
+        notify_warning(
+            self.app,
+            f"Configuration fingerprint mismatch: {reason}",
+            title="Configuration",
+            recovery_hint="Restart the CLI/TUI to refresh startup state",
+        )
+        logger.warning("Config fingerprint mismatch detected via TUI", reason=reason)

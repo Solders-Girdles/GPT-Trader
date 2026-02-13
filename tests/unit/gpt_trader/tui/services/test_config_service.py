@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.tui.services.config_service as config_service_module
 import gpt_trader.tui.widgets.config as config_widget_module
+from gpt_trader.app.config import BotConfig
+from gpt_trader.app.runtime.fingerprint import StartupConfigFingerprint
+from gpt_trader.app.runtime.paths import RuntimePaths
 from gpt_trader.tui.services.config_service import ConfigService
 
 
@@ -68,3 +73,83 @@ class TestConfigService:
         mock_app.post_message.assert_called_once()
         event = mock_app.post_message.call_args[0][0]
         assert event.config == mock_config
+
+
+class DummyContainer:
+    def __init__(self, runtime_paths: RuntimePaths) -> None:
+        self.runtime_paths = runtime_paths
+
+
+def _make_runtime_paths(tmp_path: Path) -> RuntimePaths:
+    storage_dir = tmp_path / "runtime_data"
+    fingerprint_path = storage_dir / "startup_config_fingerprint.json"
+    return RuntimePaths(
+        storage_dir=storage_dir,
+        event_store_root=storage_dir,
+        config_fingerprint_path=fingerprint_path,
+    )
+
+
+def test_diagnose_startup_config_fingerprint_warns_on_mismatch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mock_app = MagicMock()
+    container = DummyContainer(runtime_paths=_make_runtime_paths(tmp_path))
+    service = ConfigService(mock_app)
+
+    monkeypatch.setattr(
+        config_service_module,
+        "get_application_container",
+        lambda: container,
+    )
+    notify_mock = MagicMock()
+    monkeypatch.setattr(
+        config_service_module,
+        "notify_warning",
+        notify_mock,
+    )
+    monkeypatch.setattr(
+        config_service_module,
+        "load_startup_config_fingerprint",
+        lambda path: StartupConfigFingerprint(digest="abc", payload={}),
+    )
+    monkeypatch.setattr(
+        config_service_module,
+        "compute_startup_config_fingerprint",
+        lambda config: StartupConfigFingerprint(digest="def", payload={}),
+    )
+
+    service._diagnose_startup_config_fingerprint(BotConfig())
+
+    notify_mock.assert_called_once()
+
+
+def test_diagnose_startup_config_fingerprint_skips_when_no_expected(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mock_app = MagicMock()
+    container = DummyContainer(runtime_paths=_make_runtime_paths(tmp_path))
+    service = ConfigService(mock_app)
+
+    monkeypatch.setattr(
+        config_service_module,
+        "get_application_container",
+        lambda: container,
+    )
+    notify_mock = MagicMock()
+    monkeypatch.setattr(
+        config_service_module,
+        "notify_warning",
+        notify_mock,
+    )
+    monkeypatch.setattr(
+        config_service_module,
+        "load_startup_config_fingerprint",
+        lambda path: None,
+    )
+
+    service._diagnose_startup_config_fingerprint(BotConfig())
+
+    notify_mock.assert_not_called()

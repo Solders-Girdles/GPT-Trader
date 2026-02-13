@@ -137,3 +137,51 @@ def test_submit_order_latency_uses_time_provider(
 
     assert outcome.success is True
     assert captured["latency_seconds"] == pytest.approx(1.25)
+
+
+def test_retry_delays_use_backoff_policy_with_fake_clock(
+    mock_broker: MagicMock,
+    mock_event_store: MagicMock,
+    open_orders: list[str],
+    submit_order_with_result_call,
+    mock_order,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    clock = FakeClock(start_time=1000.0, start_monotonic=500.0)
+    delays: list[float] = []
+
+    def sleep_fn(seconds: float) -> None:
+        delays.append(seconds)
+        clock.advance(seconds)
+
+    policy = order_submission_module.RetryPolicy(
+        max_attempts=4,
+        base_delay=0.1,
+        max_delay=0.3,
+        jitter=0.0,
+    )
+    monkeypatch.setattr(order_submission_module, "SUBMISSION_RETRY_POLICY", policy)
+
+    mock_broker.place_order.side_effect = [
+        ConnectionError("network down"),
+        ConnectionError("network still down"),
+        ConnectionError("still down"),
+        mock_order,
+    ]
+
+    submitter = OrderSubmitter(
+        broker=mock_broker,
+        event_store=mock_event_store,
+        bot_id="test-bot",
+        open_orders=open_orders,
+        enable_retries=True,
+        sleep_fn=sleep_fn,
+        time_provider=clock,
+    )
+
+    outcome = submit_order_with_result_call(submitter, client_order_id="timeout-retry")
+
+    assert outcome.success is True
+    assert delays == [0.1, 0.2, 0.3]
+    assert delays[-1] == pytest.approx(policy.max_delay)
+    assert clock.monotonic() == pytest.approx(500.0 + sum(delays))

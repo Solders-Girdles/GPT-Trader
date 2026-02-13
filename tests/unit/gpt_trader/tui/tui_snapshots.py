@@ -57,6 +57,8 @@ def _normalize_svg(text: str) -> str:
     text = _LOCAL_DATETIME_RE.sub("XX-XX XX:XX:XX", text)
     text = _LOCAL_TIME_RE.sub("XX:XX:XX", text)
     text = _BRAILLE_SPINNER_RE.sub("⠋", text)  # Normalize to first spinner frame
+    text = re.sub(r"\.terminal-r\d+\s*\{[^}]*\}\s*", "", text)
+    text = re.sub(r"terminal-r\d+", "terminal-r", text)
     lines = [line.rstrip() for line in text.splitlines()]
     lines = ["" if line.strip() == "" else line for line in lines]
     normalized = "\n".join(lines)

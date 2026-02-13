@@ -3,7 +3,9 @@ from __future__ import annotations
 import asyncio
 import inspect
 import threading
+import time
 from collections.abc import Awaitable, Coroutine
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -12,6 +14,103 @@ if TYPE_CHECKING:  # pragma: no cover
     pass  # No type-only imports needed currently
 
 logger = get_logger(__name__, component="telemetry_streaming")
+
+
+STREAM_RETRY_BASE_SECONDS = 0.5
+STREAM_RETRY_MULTIPLIER = 2.0
+STREAM_RETRY_MAX_SECONDS = 60.0
+STREAM_RETRY_MAX_ATTEMPTS = 5
+WS_STREAM_RETRY_EVENT = "ws_stream_retry"
+WS_STREAM_RETRY_EXHAUSTED_EVENT = "ws_stream_retry_exhausted"
+
+
+@dataclass
+class StreamingRetryState:
+    """Track retry progress for telemetry streaming loops."""
+
+    base_delay: float = STREAM_RETRY_BASE_SECONDS
+    multiplier: float = STREAM_RETRY_MULTIPLIER
+    max_delay: float = STREAM_RETRY_MAX_SECONDS
+    max_attempts: int = STREAM_RETRY_MAX_ATTEMPTS
+    attempts: int = 0
+
+    def next_delay(self) -> float:
+        delay = min(self.base_delay * (self.multiplier**self.attempts), self.max_delay)
+        self.attempts += 1
+        return delay
+
+    def exhausted(self) -> bool:
+        if self.max_attempts <= 0:
+            return False
+        return self.attempts >= self.max_attempts
+
+    def reset(self) -> None:
+        self.attempts = 0
+
+
+def _get_retry_state(coordinator: Any) -> StreamingRetryState:
+    state = getattr(coordinator, "_stream_retry_state", None)
+    if not isinstance(state, StreamingRetryState):
+        state = StreamingRetryState()
+        setattr(coordinator, "_stream_retry_state", state)
+    return state
+
+
+def _consume_gap_count(coordinator: Any) -> int:
+    gap_count = getattr(coordinator, "_stream_gap_count", 0)
+    setattr(coordinator, "_stream_gap_count", 0)
+    return gap_count
+
+
+def _stop_signal_active(stop_signal: threading.Event | None) -> bool:
+    if stop_signal is None:
+        return False
+    checker = getattr(stop_signal, "is_set", None)
+    if callable(checker):
+        try:
+            result = checker()
+            return bool(result) if isinstance(result, bool) else False
+        except Exception as exc:
+            logger.error(
+                "Failed to check stop signal",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="run_stream_loop",
+                stage="stop_signal_check",
+            )
+            return False
+    if isinstance(stop_signal, bool):
+        return bool(stop_signal)
+    return False
+
+
+def _sleep_with_stop_signal(delay: float, stop_signal: threading.Event | None) -> bool:
+    """Sleep for delay seconds, returning early when stop signal is set."""
+    normalized_delay = max(float(delay), 0.0)
+
+    if stop_signal is None:
+        time.sleep(normalized_delay)
+        return False
+
+    if normalized_delay <= 0:
+        return _stop_signal_active(stop_signal)
+
+    waiter = getattr(stop_signal, "wait", None)
+    if callable(waiter):
+        try:
+            result = waiter(normalized_delay)
+            return bool(result) if isinstance(result, bool) else _stop_signal_active(stop_signal)
+        except Exception as exc:
+            logger.error(
+                "Failed to wait on stop signal",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="run_stream_loop",
+                stage="stop_signal_wait",
+            )
+
+    time.sleep(normalized_delay)
+    return _stop_signal_active(stop_signal)
 
 
 def _supports_kwarg(fn: Any, keyword: str) -> bool:
@@ -319,123 +418,161 @@ def _run_stream_loop(
         )
         return
 
-    stream: Any | None = None
     user_handler = None
     handler_state = getattr(coordinator, "__dict__", {})
     if isinstance(handler_state, dict) and "_user_event_handler" in handler_state:
         user_handler = handler_state.get("_user_event_handler")
     include_user_events = user_handler is not None
-    try:
-        # Enable include_trades=True to get market_trades for volume analysis
-        if include_user_events and _supports_kwarg(broker.stream_orderbook, "include_user_events"):
-            stream = broker.stream_orderbook(
-                symbols,
-                level=level,
-                include_trades=True,
-                include_user_events=True,
-            )
-        else:
-            stream = broker.stream_orderbook(symbols, level=level, include_trades=True)
-    except Exception as exc:  # pragma: no cover - dependent on broker impl
-        logger.warning(
-            f"Orderbook stream unavailable, falling back to trades ({exc})",
-            error=str(exc),
-            operation="telemetry_stream",
-            stage="orderbook",
-        )
-        try:
-            stream = broker.stream_trades(symbols)
-        except Exception as trade_exc:
-            logger.error(
-                f"Failed to start streaming trades ({trade_exc})",
-                error=str(trade_exc),
-                operation="telemetry_stream",
-                stage="trades",
-            )
-            stream = None
+    retry_state = _get_retry_state(coordinator)
+    retry_state.reset()
+    coordinator._stream_gap_count = 0
 
     try:
-        if include_user_events:
-            backfill = getattr(user_handler, "request_backfill", None)
-            if callable(backfill):
-                backfill(reason="startup")
-        for msg in stream or []:
-            should_stop = False
-            if stop_signal is not None:
-                checker = getattr(stop_signal, "is_set", None)
-                if callable(checker):
-                    try:
-                        result = checker()
-                        should_stop = bool(result) if isinstance(result, bool) else False
-                    except Exception as exc:
-                        logger.error(
-                            "Failed to check stop signal",
-                            error_type=type(exc).__name__,
-                            error_message=str(exc),
-                            operation="run_stream_loop",
-                            stage="stop_signal_check",
-                        )
-                        should_stop = False
-                elif isinstance(stop_signal, bool):
-                    should_stop = stop_signal
-            if should_stop:
+        first_attempt = True
+        while True:
+            if not first_attempt and _stop_signal_active(stop_signal):
+                retry_state.reset()
                 break
-            if not isinstance(msg, dict):
-                continue
-            ctx = coordinator.context
-
-            # Route message based on channel type
-            channel = msg.get("channel", "")
-
-            if msg.get("gap_detected"):
-                backfill = getattr(user_handler, "request_backfill", None)
-                if callable(backfill):
-                    backfill(reason="sequence_gap")
-
-            if channel == "user":
-                handler = getattr(user_handler, "handle_user_message", None)
-                if callable(handler):
-                    try:
-                        handler(msg)
-                    except Exception as exc:
-                        logger.debug(
-                            "Failed to handle user event message",
-                            error=str(exc),
-                            operation="telemetry_stream",
-                            stage="user_event_handler",
+            first_attempt = False
+            try:
+                stream: Any | None = None
+                try:
+                    if include_user_events and _supports_kwarg(
+                        broker.stream_orderbook, "include_user_events"
+                    ):
+                        stream = broker.stream_orderbook(
+                            symbols,
+                            level=level,
+                            include_trades=True,
+                            include_user_events=True,
                         )
+                    else:
+                        stream = broker.stream_orderbook(symbols, level=level, include_trades=True)
+                except Exception as exc:  # pragma: no cover - dependent on broker impl
+                    logger.warning(
+                        f"Orderbook stream unavailable, falling back to trades ({exc})",
+                        error=str(exc),
+                        operation="telemetry_stream",
+                        stage="orderbook",
+                    )
+                    try:
+                        stream = broker.stream_trades(symbols)
+                    except Exception as trade_exc:
+                        logger.error(
+                            f"Failed to start streaming trades ({trade_exc})",
+                            error=str(trade_exc),
+                            operation="telemetry_stream",
+                            stage="trades",
+                        )
+                        raise RuntimeError("Failed to start telemetry stream") from trade_exc
+
+                if include_user_events:
+                    backfill = getattr(user_handler, "request_backfill", None)
+                    if callable(backfill):
+                        backfill(reason="startup")
+
+                should_stop = False
+                for msg in stream or []:
+                    if _stop_signal_active(stop_signal):
+                        should_stop = True
+                        break
+                    if not isinstance(msg, dict):
+                        continue
+                    ctx = coordinator.context
+
+                    channel = msg.get("channel", "")
+
+                    if msg.get("gap_detected"):
+                        coordinator._stream_gap_count = (
+                            getattr(coordinator, "_stream_gap_count", 0) + 1
+                        )
+                        gap_backfill = getattr(user_handler, "request_backfill", None)
+                        if callable(gap_backfill):
+                            gap_backfill(reason="sequence_gap")
+
+                    if channel == "user":
+                        handler = getattr(user_handler, "handle_user_message", None)
+                        if callable(handler):
+                            try:
+                                handler(msg)
+                            except Exception as exc:
+                                logger.debug(
+                                    "Failed to handle user event message",
+                                    error=str(exc),
+                                    operation="telemetry_stream",
+                                    stage="user_event_handler",
+                                )
+                        continue
+
+                    if channel == "l2_data":
+                        _handle_orderbook_message(coordinator, ctx, msg)
+                    elif channel == "market_trades":
+                        _handle_trade_message(coordinator, ctx, msg)
+                    else:
+                        sym = str(msg.get("product_id") or msg.get("symbol") or "")
+                        if not sym:
+                            continue
+
+                        mark = coordinator._extract_mark_from_message(msg)
+                        if mark is None or mark <= 0:
+                            continue
+
+                        coordinator._update_mark_and_metrics(ctx, sym, mark)
+
+                retry_state.reset()
+                if should_stop:
+                    break
+                break
+            except Exception as exc:  # pragma: no cover - defensive logging
+                gap_count = _consume_gap_count(coordinator)
+                ctx = coordinator.context
+                _emit_metric(
+                    ctx.event_store,
+                    ctx.bot_id,
+                    {
+                        "event_type": "ws_stream_error",
+                        "message": str(exc),
+                        "gap_count": gap_count,
+                        "attempts": retry_state.attempts,
+                    },
+                )
+                if _stop_signal_active(stop_signal):
+                    break
+                if retry_state.exhausted():
+                    _emit_metric(
+                        ctx.event_store,
+                        ctx.bot_id,
+                        {
+                            "event_type": WS_STREAM_RETRY_EXHAUSTED_EVENT,
+                            "error": str(exc),
+                            "gap_count": gap_count,
+                            "attempts": retry_state.attempts,
+                        },
+                    )
+                    break
+                delay = retry_state.next_delay()
+                _emit_metric(
+                    ctx.event_store,
+                    ctx.bot_id,
+                    {
+                        "event_type": WS_STREAM_RETRY_EVENT,
+                        "delay_seconds": delay,
+                        "error": str(exc),
+                        "gap_count": gap_count,
+                        "attempts": retry_state.attempts,
+                    },
+                )
+                if _sleep_with_stop_signal(delay, stop_signal):
+                    retry_state.reset()
+                    break
                 continue
-
-            if channel == "l2_data":
-                # Level 2 orderbook update
-                _handle_orderbook_message(coordinator, ctx, msg)
-            elif channel == "market_trades":
-                # Market trade event
-                _handle_trade_message(coordinator, ctx, msg)
-            else:
-                # Ticker or other message - extract mark price
-                sym = str(msg.get("product_id") or msg.get("symbol") or "")
-                if not sym:
-                    continue
-
-                mark = coordinator._extract_mark_from_message(msg)
-                if mark is None or mark <= 0:
-                    continue
-
-                coordinator._update_mark_and_metrics(ctx, sym, mark)
-    except Exception as exc:  # pragma: no cover - defensive logging
-        ctx = coordinator.context
-        _emit_metric(
-            ctx.event_store,
-            ctx.bot_id,
-            {"event_type": "ws_stream_error", "message": str(exc)},
-        )
     finally:
         ctx = coordinator.context
+        gap_count = _consume_gap_count(coordinator)
         _emit_metric(
             ctx.event_store,
             ctx.bot_id,
-            {"event_type": "ws_stream_exit"},
+            {"event_type": "ws_stream_exit", "gap_count": gap_count},
         )
 
 

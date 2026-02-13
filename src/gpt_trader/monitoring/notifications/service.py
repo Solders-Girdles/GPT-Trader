@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Any
@@ -33,11 +36,20 @@ class NotificationService:
     rate_limit_per_minute: int = 30
     dedup_window_seconds: int = 300  # 5 minutes
     enabled: bool = True
+    dedup_include_message: bool = False
+    dedup_include_context: bool = False
+    dedup_include_metadata: bool = False
+    dedup_context_ignore_keys: frozenset[str] | None = field(default=None, repr=False)
+    dedup_metadata_ignore_keys: frozenset[str] | None = field(default=None, repr=False)
 
     # Internal state
     _recent_alerts: dict[str, datetime] = field(default_factory=dict, repr=False)
     _sent_count_this_minute: int = field(default=0, repr=False)
     _minute_reset_time: datetime = field(default_factory=utc_now, repr=False)
+
+    def __post_init__(self) -> None:
+        self.dedup_context_ignore_keys = frozenset(self.dedup_context_ignore_keys or ())
+        self.dedup_metadata_ignore_keys = frozenset(self.dedup_metadata_ignore_keys or ())
 
     def add_backend(self, backend: NotificationBackend) -> None:
         """Add a notification backend."""
@@ -96,8 +108,19 @@ class NotificationService:
             logger.warning("Rate limit exceeded, notification dropped")
             return False
 
+        normalized_context = context or {}
+        normalized_metadata = metadata or {}
+
         # Deduplication
-        dedup_key = f"{title}:{source}:{category}"
+        dedup_key = self._build_dedup_key(
+            severity=severity,
+            title=title,
+            message=message,
+            source=source,
+            category=category,
+            context=normalized_context,
+            metadata=normalized_metadata,
+        )
         if not force and self._is_duplicate(dedup_key):
             logger.debug(f"Duplicate alert suppressed: {title}")
             return True  # Deduplicated, not failed
@@ -109,8 +132,8 @@ class NotificationService:
             message=message,
             source=source,
             category=category,
-            context=context or {},
-            metadata=metadata or {},
+            context=normalized_context,
+            metadata=normalized_metadata,
         )
 
         # Dispatch to all backends
@@ -143,7 +166,15 @@ class NotificationService:
             logger.warning("Rate limit exceeded, notification dropped")
             return False
 
-        dedup_key = f"{alert.title}:{alert.source}:{alert.category}"
+        dedup_key = self._build_dedup_key(
+            severity=alert.severity,
+            title=alert.title,
+            message=alert.message,
+            source=alert.source,
+            category=alert.category,
+            context=alert.context,
+            metadata=alert.metadata,
+        )
         if not force and self._is_duplicate(dedup_key):
             logger.debug(f"Duplicate alert suppressed: {alert.title}")
             return True
@@ -219,6 +250,62 @@ class NotificationService:
         expired = [k for k, v in self._recent_alerts.items() if v < cutoff]
         for k in expired:
             del self._recent_alerts[k]
+
+    def _build_dedup_key(
+        self,
+        *,
+        severity: AlertSeverity | None,
+        title: str | None,
+        message: str | None,
+        source: str | None,
+        category: str | None,
+        context: dict[str, Any] | None,
+        metadata: dict[str, Any] | None,
+    ) -> str:
+        """Generate a stable deduplication key for alerts."""
+        normalized_context = self._filter_for_dedup(context, self.dedup_context_ignore_keys)
+        normalized_metadata = self._filter_for_dedup(metadata, self.dedup_metadata_ignore_keys)
+
+        segments = [
+            str(severity.value if severity is not None else ""),
+            str(title or ""),
+            str(source or ""),
+            str(category or ""),
+        ]
+        if self.dedup_include_message:
+            segments.append(str(message or ""))
+        if self.dedup_include_context:
+            segments.append(self._serialize_for_dedup(normalized_context))
+        if self.dedup_include_metadata:
+            segments.append(self._serialize_for_dedup(normalized_metadata))
+        raw = "\u0001".join(segments)
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    def _filter_for_dedup(
+        self,
+        value: Any,
+        ignore_keys: frozenset[str] | None,
+    ) -> Any:
+        """Return a dedup target with ignored keys removed."""
+        if not ignore_keys or not isinstance(value, Mapping):
+            return value
+
+        return {k: v for k, v in value.items() if k not in ignore_keys}
+
+    @classmethod
+    def _serialize_for_dedup(cls, value: Any) -> str:
+        """Serialize context/metadata for deduplication hashing."""
+        if value is None:
+            return ""
+        if isinstance(value, Mapping):
+            return json.dumps(value, sort_keys=True, default=cls._json_default)
+        if isinstance(value, (list, tuple)):
+            return json.dumps(list(value), default=cls._json_default)
+        return str(value)
+
+    @staticmethod
+    def _json_default(obj: Any) -> str:
+        return str(obj)
 
     async def test_backends(self) -> dict[str, bool]:
         """Test connectivity to all backends."""

@@ -1,40 +1,57 @@
-# GitHub Issue #716: [ci] Resolve failing checks blocking PR #712
-https://github.com/Solders-Girdles/GPT-Trader/issues/716
-
-<!-- codex-handoff-key-ci-pr-712 -->
+# GitHub Issue #689: [qa] [quality] Reduce issue-queue skip category: duplicate
+https://github.com/Solders-Girdles/GPT-Trader/issues/689
 
 ## Why / Context
-PR #712 is blocked by failing CI checks that were not auto-remediated by `ci_fixer.mjs`.
-- PR: https://github.com/Solders-Girdles/GPT-Trader/pull/712
-- Branch: `codex/694-architecture-introduce-typed-order-event`
-- Handoff reason: all fix commands failed
+Generated from live event-lane telemetry and ranked by the opportunity synthesizer. Value score: 0.694; source type: issue.skipped. If we reduce skip category duplicate, issue generation throughput and quality should improve.
 
-## Required Outcome
-- Fix the CI failure(s) on the PR branch with the smallest safe change.
-- Keep all required checks green.
-- Avoid unrelated refactors.
+## Dependency Metadata
+- Value score: 0.694
 
-## Failing Checks
-- Lint & Format — https://github.com/Solders-Girdles/GPT-Trader/actions/runs/21924563914/job/63313599465
-- Test Guardrails — https://github.com/Solders-Girdles/GPT-Trader/actions/runs/21924563914/job/63313599503
-- Unit Tests (Core) — https://github.com/Solders-Girdles/GPT-Trader/actions/runs/21924563914/job/63313599463
+## Scope
+**In scope**
+- Investigate the evidence chain and isolate the smallest bounded fix that addresses the signal.
+- Implement the remediation in the likely modules listed below.
+- Add deterministic verification that demonstrates signal improvement after the change.
 
-## Evidence
-- Lint & Format: Lint/format checks failed with auto-fixable formatting issues.
-  - Lint & Format Lint (Ruff) 2026-02-11T21:55:36.3576897Z 35 | with pytest.raises(OrderEventSchemaError):
-  - Lint & Format Lint (Ruff) 2026-02-11T21:55:36.3579133Z 35 | with pytest.raises(OrderEventSchemaError):
-- Test Guardrails: Could not map failure to a known fix pattern.
-  - Test Guardrails Check triage backlog 2026-02-11T21:55:41.2429764Z make: *** [Makefile:106: test-triage-check] Error 1
-  - Test Guardrails Check triage backlog 2026-02-11T21:55:41.2446285Z ##[error]Process completed with exit code 2.
-- Unit Tests (Core): Could not map failure to a known fix pattern.
-  - Unit Tests (Core) Run unit tests (excluding TUI snapshots) 2026-02-11T21:55:36.3824662Z ##[group]Run uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py
-  - Unit Tests (Core) Run unit tests (excluding TUI snapshots) 2026-02-11T21:55:36.3825459Z uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py
+**Out of scope**
+- Broad refactors or architectural rewrites unrelated to this signal.
+- Unbounded scope growth across unrelated components.
 
-## File Pointers
-- `src/gpt_trader/**`
-- `tests/**`
+Constraints:
+- Keep changes small/mergeable.
+- Deterministic tests only.
+- Avoid touching unrelated generated artifacts unless required.
 
-## Verification
-- `gh pr checkout 712 --repo Solders-Girdles/GPT-Trader`
-- Run the failing check(s) locally and confirm pass.
-- Confirm required PR checks are green.
+## Acceptance Criteria (required)
+- [ ] Root cause for the opportunity signal is identified and remediated with bounded blast radius.
+- [ ] Deterministic tests or scripted checks are added/updated and fail before the fix but pass after.
+- [ ] PR description includes before/after evidence tied to the originating signal.
+
+## Implementation Notes / Pointers
+**Likely files / modules:**
+- `opportunity:opp_1bd46f779a`
+
+**Related tests:**
+
+
+**Edge cases to handle:**
+- Signal may be intermittent; include at least one regression path for recurrence.
+- Avoid introducing false positives in existing duplicate guards or cooldown logic.
+- issue.skipped (evt_79dc76f75432)
+- issue.skipped (evt_f1c080c016c7)
+- issue.skipped (evt_03a32f88dea7)
+
+## Commands (local)
+- `make lint`
+- `make test`
+
+## PR Requirements
+- PR title should match the issue.
+- PR body must include: `Fixes #<issue-number>`
+- CI must be green; if Agent Artifacts Freshness fails, run `uv run agent-regenerate`, then commit `var/agents/...` updates.
+
+## Codex-Ready Checklist (for the issue creator)
+- [x] Clear acceptance criteria
+- [x] At least one file pointer
+- [x] Commands included
+- [x] No ambiguous "do the right thing" language

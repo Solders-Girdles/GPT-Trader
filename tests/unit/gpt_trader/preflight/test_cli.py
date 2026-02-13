@@ -96,9 +96,7 @@ class TestParsePreflightArgs:
     def test_report_target_stdout_rejects_report_path(self, tmp_path: Path) -> None:
         target_file = tmp_path / "explicit.json"
         with pytest.raises(SystemExit):
-            parse_preflight_args(
-                ["--report-target", "stdout", "--report-path", str(target_file)]
-            )
+            parse_preflight_args(["--report-target", "stdout", "--report-path", str(target_file)])
 
     def test_diagnostics_bundle_flag(self) -> None:
         parsed = parse_preflight_args(["--diagnostics-bundle"])

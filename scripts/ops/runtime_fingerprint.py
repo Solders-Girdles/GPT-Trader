@@ -19,7 +19,6 @@ from gpt_trader.app.runtime.fingerprint import (
     load_startup_config_fingerprint,
 )
 
-
 REASON_DB_NOT_FOUND = "runtime_fingerprint_events_db_missing"
 REASON_DB_READ_ERROR = "runtime_fingerprint_events_db_read_error"
 REASON_RUNTIME_START_MISSING = "runtime_fingerprint_runtime_start_missing"

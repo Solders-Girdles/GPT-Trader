@@ -22,6 +22,9 @@ from gpt_trader.features.live_trade.execution.order_event_schema import (
 from gpt_trader.features.live_trade.execution.rejection_reason import (
     normalize_rejection_reason,
 )
+from gpt_trader.features.live_trade.execution.status_codec import (
+    execution_status_for_event,
+)
 from gpt_trader.monitoring.system import LogLevel
 from gpt_trader.monitoring.system import get_logger as get_monitoring_logger
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -296,12 +299,18 @@ class OrderEventRecorder:
         submit_id: str,
     ) -> None:
         """Record trade event to event store and monitoring."""
+        order_id_str = str(getattr(order, "id", submit_id))
+        raw_status = getattr(order, "status", "SUBMITTED")
+        normalized_status = execution_status_for_event(
+            raw_status,
+            context=f"record_trade_event:{order_id_str}",
+        )
         try:
             get_monitoring_logger().log_order_status_change(
-                order_id=str(order.id),
+                order_id=order_id_str,
                 client_order_id=getattr(order, "client_order_id", submit_id),
                 from_status=None,
-                to_status=getattr(order, "status", "SUBMITTED"),
+                to_status=normalized_status,
             )
         except Exception as exc:
             logger.error(
@@ -309,7 +318,7 @@ class OrderEventRecorder:
                 error_type=type(exc).__name__,
                 error_message=str(exc),
                 operation="record_trade_event",
-                order_id=str(order.id),
+                order_id=order_id_str,
                 symbol=symbol,
             )
 
@@ -322,7 +331,7 @@ class OrderEventRecorder:
                 "side": side.value,
                 "quantity": str(trade_quantity),
                 "price": str(order.price or price or effective_price or "market"),
-                "status": getattr(order, "status", "SUBMITTED"),
+                "status": normalized_status,
             }
             self._event_store.append_trade(self._bot_id, trade_payload)
         except Exception as exc:
@@ -331,7 +340,7 @@ class OrderEventRecorder:
                 error_type=type(exc).__name__,
                 error_message=str(exc),
                 operation="record_trade_event",
-                order_id=str(order.id),
+                order_id=order_id_str,
                 symbol=symbol,
                 side=side.value,
             )

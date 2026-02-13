@@ -11,7 +11,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.app.config.profile_loader import DEFAULT_PREFLIGHT_PROFILE_NAME
 from gpt_trader.preflight.cli import _header, main
 from gpt_trader.preflight.cli_args import (
     PreflightCliArgs,
@@ -97,7 +96,7 @@ class TestParsePreflightArgs:
 
         normalized_args = _normalize_preflight_args(parser, args)
 
-        assert normalized_args.profile == DEFAULT_PREFLIGHT_PROFILE_NAME
+        assert normalized_args.profile is None
 
     def test_warn_only_flag(self) -> None:
         parsed = parse_preflight_args(["--warn-only"])

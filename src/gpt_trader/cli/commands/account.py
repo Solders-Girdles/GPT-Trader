@@ -17,11 +17,11 @@ DIAGNOSE_COMMAND_NAME = "account diagnose"
 
 def register(subparsers: Any) -> None:
     parser = subparsers.add_parser("account", help="Account utilities")
-    options.add_profile_option(parser)
+    options.add_profile_option(parser, allow_missing_default=True)
     account_subparsers = parser.add_subparsers(dest="account_command", required=True)
 
     snapshot = account_subparsers.add_parser("snapshot", help="Print an account snapshot")
-    options.add_profile_option(snapshot)
+    options.add_profile_option(snapshot, inherit_from_parent=True)
     options.add_output_options(snapshot, include_quiet=False)
     snapshot.set_defaults(handler=_handle_snapshot, subcommand="snapshot")
 

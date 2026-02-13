@@ -6,6 +6,13 @@ import sys
 from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
 
+from gpt_trader.app.config.profile_loader import (
+    DEFAULT_PREFLIGHT_PROFILE_NAME,
+    ProfileOverrideDecision,
+    get_env_profile_override,
+    resolve_profile_override,
+)
+
 from .cli_args import PreflightCliArgs, parse_preflight_args
 from .context import Colors
 from .core import PreflightCheck
@@ -30,6 +37,15 @@ def _header(profile: str) -> None:
     print(f"{Colors.RESET}")
 
 
+def _resolve_preflight_profile(args: PreflightCliArgs) -> ProfileOverrideDecision:
+    return resolve_profile_override(
+        cli_profile=args.profile,
+        file_profile=None,
+        env_profile=get_env_profile_override(),
+        default_profile=DEFAULT_PREFLIGHT_PROFILE_NAME,
+    )
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Entry-point for production preflight command."""
     args = parse_preflight_args(argv)
@@ -40,15 +56,17 @@ def _run_preflight(args: PreflightCliArgs) -> int:
     if load_dotenv is not None:
         load_dotenv()
 
+    profile_decision = _resolve_preflight_profile(args)
+
     if args.diagnostics_bundle:
         return _emit_diagnostics_bundle(args)
 
     # Set warn-only env var if CLI flag is provided
     if args.warn_only:
         os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = "1"
-    _header(args.profile)
+    _header(profile_decision.profile)
 
-    checker = PreflightCheck(verbose=args.verbose, profile=args.profile)
+    checker = PreflightCheck(verbose=args.verbose, profile=profile_decision.profile)
     check_functions: Sequence[Callable[[], bool]] = [
         checker.check_python_version,
         checker.check_dependencies,
@@ -86,8 +104,11 @@ def _run_preflight(args: PreflightCliArgs) -> int:
 
 def _emit_diagnostics_bundle(args: PreflightCliArgs) -> int:
     try:
+        profile_decision = _resolve_preflight_profile(args)
         bundle = build_diagnostics_bundle(
-            profile=args.profile, verbose=args.verbose, warn_only=args.warn_only
+            profile=profile_decision.profile,
+            verbose=args.verbose,
+            warn_only=args.warn_only,
         )
         print(json.dumps(bundle, indent=2))
         return 0

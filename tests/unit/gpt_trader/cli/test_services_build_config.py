@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from argparse import Namespace
+from pathlib import Path
 
 import pytest
 
@@ -23,14 +24,15 @@ def _make_args(**overrides: object) -> Namespace:
         "enable_order_preview": False,
         "account_telemetry_interval": None,
     }
-    defaults.setdefault("profile", DEFAULT_RUNTIME_PROFILE_NAME)
+    profile_value = overrides.pop("profile", None)
     defaults.update(overrides)
+    if profile_value is not None:
+        defaults["profile"] = profile_value
     return Namespace(**defaults)  # type: ignore[arg-type]
 
 
 def test_default_profile_applied_when_missing() -> None:
     args = _make_args()
-    delattr(args, "profile")
 
     config = services.build_config_from_args(args)
 
@@ -56,3 +58,32 @@ def test_cli_args_override_profile_settings() -> None:
 
     assert config.symbols == ["DOGE-PERP"]
     assert config.interval == 10
+
+
+def test_env_profile_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GPT_TRADER_PROFILE", "spot")
+
+    args = _make_args()
+    config = services.build_config_from_args(args)
+
+    assert config.profile == Profile.SPOT
+
+
+def test_config_file_profile_used_when_no_cli(tmp_path: Path) -> None:
+    config_path = tmp_path / "custom.yaml"
+    config_path.write_text('profile_name: "prod"\n', encoding="utf-8")
+
+    args = _make_args(config=str(config_path))
+    config = services.build_config_from_args(args)
+
+    assert config.profile == "prod"
+
+
+def test_cli_profile_overrides_config_file(tmp_path: Path) -> None:
+    config_path = tmp_path / "custom.yaml"
+    config_path.write_text('profile_name: "prod"\n', encoding="utf-8")
+
+    args = _make_args(config=str(config_path), profile="dev")
+    config = services.build_config_from_args(args)
+
+    assert config.profile == "dev"

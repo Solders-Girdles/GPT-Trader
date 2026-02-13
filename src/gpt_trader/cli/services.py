@@ -1,5 +1,6 @@
 """Helper utilities for CLI command implementations."""
 
+import warnings
 from argparse import Namespace
 from pathlib import Path
 from typing import Any
@@ -10,12 +11,15 @@ from gpt_trader.app.config import BotConfig
 from gpt_trader.app.config.profile_loader import (
     DEFAULT_RUNTIME_PROFILE_NAME,
     ProfileLoader,
+    get_env_profile_override,
+    resolve_profile_override,
 )
 from gpt_trader.app.container import (
     create_application_container,
     get_application_container,
     set_application_container,
 )
+from gpt_trader.config.types import Profile
 from gpt_trader.features.live_trade.bot import TradingBot
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -41,94 +45,45 @@ def load_config_from_yaml(path: str | Path) -> BotConfig:
     with open(path) as f:
         data = yaml.safe_load(f) or {}
 
-    return BotConfig.from_dict(data)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="Legacy profile-style YAML mapping via BotConfig.from_dict\\(\\) is deprecated.*",
+        )
+        return BotConfig.from_dict(data)
 
 
 def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
-    """
-    Build configuration from environment, profile, config file, and CLI arguments.
-    Precedence: CLI Args > Config File > Profile > Environment > Defaults
+    """Build configuration from env/profile/config/CLI using a shared precedence engine."""
 
-    Uses ProfileLoader to properly load all profile settings including:
-    - trading: symbols, interval, mode
-    - risk_management: leverage, position sizing, loss limits
-    - strategy: type, MA periods
-    - monitoring: log level, status settings
-    - execution: dry_run, mock_broker, time_in_force
-    """
-    from gpt_trader.config.types import Profile
-
-    # 1. Check for --config flag first (takes precedence over profile)
+    cli_profile = getattr(args, "profile", None)
     config_path = getattr(args, "config", None)
+    config: BotConfig
+    file_profile: str | None = None
+
     if config_path:
         config = load_config_from_yaml(config_path)
+        file_profile = _extract_profile_from_config(config)
         logger.info("Loaded config from %s", config_path)
     else:
-        # Start with Env/Defaults
         config = BotConfig.from_env()
 
-        # Load Profile if specified using ProfileLoader
-        profile_name = (
-            getattr(args, "profile", DEFAULT_RUNTIME_PROFILE_NAME) or DEFAULT_RUNTIME_PROFILE_NAME
-        )
+    profile_decision = resolve_profile_override(
+        cli_profile=cli_profile,
+        file_profile=file_profile,
+        env_profile=get_env_profile_override(),
+        default_profile=DEFAULT_RUNTIME_PROFILE_NAME,
+    )
+    logger.info(
+        "Resolved runtime profile %s from %s",
+        profile_decision.profile,
+        profile_decision.source.value,
+    )
 
-        try:
-            # Try to convert profile name to Profile enum
-            profile_enum = Profile(profile_name)
-
-            # Use ProfileLoader to load all profile settings
-            loader = ProfileLoader()
-            schema = loader.load(profile_enum)
-            profile_kwargs = loader.to_bot_config_kwargs(schema, profile_enum)
-
-            # Apply profile settings to config
-            # Risk config (nested BotRiskConfig)
-            if "risk" in profile_kwargs:
-                config.risk = profile_kwargs["risk"]
-
-            # Strategy config (nested PerpsStrategyConfig)
-            if "strategy" in profile_kwargs:
-                config.strategy = profile_kwargs["strategy"]
-
-            # Trading settings
-            if "symbols" in profile_kwargs:
-                config.symbols = profile_kwargs["symbols"]
-            if "interval" in profile_kwargs:
-                config.interval = profile_kwargs["interval"]
-
-            # Execution settings
-            if "dry_run" in profile_kwargs:
-                config.dry_run = profile_kwargs["dry_run"]
-            if "mock_broker" in profile_kwargs:
-                config.mock_broker = profile_kwargs["mock_broker"]
-            if "time_in_force" in profile_kwargs:
-                config.time_in_force = profile_kwargs["time_in_force"]
-
-            # Other settings
-            if "enable_shorts" in profile_kwargs:
-                config.enable_shorts = profile_kwargs["enable_shorts"]
-            if "reduce_only_mode" in profile_kwargs:
-                config.reduce_only_mode = profile_kwargs["reduce_only_mode"]
-            if "strategy_type" in profile_kwargs:
-                config.strategy_type = profile_kwargs["strategy_type"]
-            if "log_level" in profile_kwargs:
-                config.log_level = profile_kwargs["log_level"]
-            if "status_interval" in profile_kwargs:
-                config.status_interval = profile_kwargs["status_interval"]
-            if "status_enabled" in profile_kwargs:
-                config.status_enabled = profile_kwargs["status_enabled"]
-            if "profile" in profile_kwargs:
-                config.profile = profile_kwargs["profile"]
-
-            logger.info("Loaded profile %s with risk/strategy/monitoring settings", profile_name)
-
-        except ValueError:
-            logger.warning(
-                "Unknown profile '%s'. Use a Profile enum value or pass --config for YAML.",
-                profile_name,
-            )
-        except Exception as e:
-            logger.warning("Failed to load profile %s: %s", profile_name, e)
+    if config_path:
+        config.profile = profile_decision.profile
+    else:
+        config = _hydrate_profile_from_loader(config, profile_decision.profile)
 
     # 2. Override with CLI Args (always takes highest precedence)
     if getattr(args, "dry_run", False):
@@ -157,6 +112,75 @@ def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
         config.account_telemetry_interval = args.account_telemetry_interval
 
     return config
+
+
+def _extract_profile_from_config(config: BotConfig) -> str | None:
+    profile_value = getattr(config, "profile", None)
+    if profile_value is None:
+        return None
+    if isinstance(profile_value, Profile):
+        return profile_value.value
+    return str(profile_value)
+
+
+def _hydrate_profile_from_loader(config: BotConfig, profile_name: str) -> BotConfig:
+    try:
+        profile_enum = Profile(profile_name)
+    except ValueError:
+        logger.warning(
+            "Unknown profile '%s'. Use a Profile enum value or pass --config for YAML.",
+            profile_name,
+        )
+        profile_enum = Profile(DEFAULT_RUNTIME_PROFILE_NAME)
+    except Exception as exc:
+        logger.warning("Failed to load profile %s: %s", profile_name, exc)
+        profile_enum = Profile(DEFAULT_RUNTIME_PROFILE_NAME)
+
+    loader = ProfileLoader()
+    schema = loader.load(profile_enum)
+    profile_kwargs = loader.to_bot_config_kwargs(schema, profile_enum)
+    _apply_profile_kwargs(config, profile_kwargs)
+
+    logger.info(
+        "Loaded profile %s with risk/strategy/monitoring settings",
+        profile_enum.value,
+    )
+    return config
+
+
+def _apply_profile_kwargs(config: BotConfig, profile_kwargs: dict[str, Any]) -> None:
+    if "risk" in profile_kwargs:
+        config.risk = profile_kwargs["risk"]
+
+    if "strategy" in profile_kwargs:
+        config.strategy = profile_kwargs["strategy"]
+
+    if "symbols" in profile_kwargs:
+        config.symbols = profile_kwargs["symbols"]
+    if "interval" in profile_kwargs:
+        config.interval = profile_kwargs["interval"]
+
+    if "dry_run" in profile_kwargs:
+        config.dry_run = profile_kwargs["dry_run"]
+    if "mock_broker" in profile_kwargs:
+        config.mock_broker = profile_kwargs["mock_broker"]
+    if "time_in_force" in profile_kwargs:
+        config.time_in_force = profile_kwargs["time_in_force"]
+
+    if "enable_shorts" in profile_kwargs:
+        config.enable_shorts = profile_kwargs["enable_shorts"]
+    if "reduce_only_mode" in profile_kwargs:
+        config.reduce_only_mode = profile_kwargs["reduce_only_mode"]
+    if "strategy_type" in profile_kwargs:
+        config.strategy_type = profile_kwargs["strategy_type"]
+    if "log_level" in profile_kwargs:
+        config.log_level = profile_kwargs["log_level"]
+    if "status_interval" in profile_kwargs:
+        config.status_interval = profile_kwargs["status_interval"]
+    if "status_enabled" in profile_kwargs:
+        config.status_enabled = profile_kwargs["status_enabled"]
+    if "profile" in profile_kwargs:
+        config.profile = profile_kwargs["profile"]
 
 
 def instantiate_bot(config: BotConfig) -> TradingBot:

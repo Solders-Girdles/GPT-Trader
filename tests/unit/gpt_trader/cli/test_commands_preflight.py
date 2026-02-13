@@ -17,7 +17,7 @@ def test_preflight_registers_parser() -> None:
 
     assert "preflight" in subparsers.choices
     args = parser.parse_args(["preflight"])
-    assert args.profile == "canary"
+    assert args.profile is None
     assert args.verbose is False
     assert args.warn_only is False
 

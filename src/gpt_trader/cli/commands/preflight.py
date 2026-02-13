@@ -22,7 +22,9 @@ def register(subparsers: Any) -> None:
 
 def execute(args: Namespace) -> int:
     """Execute the preflight command by delegating to the preflight CLI."""
-    argv: list[str] = ["--profile", args.profile]
+    argv: list[str] = []
+    if getattr(args, "profile", None) is not None:
+        argv.extend(["--profile", args.profile])
     if getattr(args, "verbose", False):
         argv.append("--verbose")
     if getattr(args, "warn_only", False):

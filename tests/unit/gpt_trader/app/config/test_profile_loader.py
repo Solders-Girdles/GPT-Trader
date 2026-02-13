@@ -11,10 +11,13 @@ import pytest
 
 from gpt_trader.app.config.profile_loader import (
     ProfileLoader,
+    ProfileOverrideSource,
     ProfileSchema,
     get_env_defaults_for_profile,
+    get_env_profile_override,
     get_profile_registry_entry_by_name,
     is_dev_profile,
+    resolve_profile_override,
 )
 from gpt_trader.config.types import Profile
 
@@ -254,3 +257,68 @@ class TestProfileRegistryHelpers:
         assert entry is not None
         assert entry.profile is Profile.CANARY
         assert entry.preflight_default is True
+
+
+class TestProfileOverridePrecedence:
+    def test_cli_profile_wins(self) -> None:
+        decision = resolve_profile_override(
+            cli_profile="prod",
+            file_profile="canary",
+            env_profile="demo",
+            default_profile="dev",
+        )
+
+        assert decision.profile == "prod"
+        assert decision.source == ProfileOverrideSource.CLI
+
+    def test_file_profile_overrides_env(self) -> None:
+        decision = resolve_profile_override(
+            cli_profile=None,
+            file_profile="canary",
+            env_profile="prod",
+            default_profile="dev",
+        )
+
+        assert decision.profile == "canary"
+        assert decision.source == ProfileOverrideSource.FILE
+
+    def test_env_profile_overrides_default(self) -> None:
+        decision = resolve_profile_override(
+            cli_profile=None,
+            file_profile=None,
+            env_profile="spot",
+            default_profile="dev",
+        )
+
+        assert decision.profile == "spot"
+        assert decision.source == ProfileOverrideSource.ENV
+
+    def test_falls_back_to_default(self) -> None:
+        decision = resolve_profile_override(
+            cli_profile=None,
+            file_profile=None,
+            env_profile=None,
+            default_profile="dev",
+        )
+
+        assert decision.profile == "dev"
+        assert decision.source == ProfileOverrideSource.DEFAULT
+
+    def test_blank_values_are_ignored(self) -> None:
+        decision = resolve_profile_override(
+            cli_profile=" ",
+            file_profile="",
+            env_profile="spot",
+            default_profile="dev",
+        )
+
+        assert decision.profile == "spot"
+        assert decision.source == ProfileOverrideSource.ENV
+
+    def test_env_helper_uses_bot_profile_when_primary_is_whitespace(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("GPT_TRADER_PROFILE", "   ")
+        monkeypatch.setenv("BOT_PROFILE", " paper ")
+
+        assert get_env_profile_override() == "paper"

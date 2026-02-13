@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from gpt_trader.app.config.profile_loader import (
-    DEFAULT_PREFLIGHT_PROFILE_NAME,
     PREFLIGHT_PROFILE_CHOICES,
 )
 from gpt_trader.preflight.report import ReportTarget
@@ -17,7 +16,7 @@ PROFILE_CHOICES = PREFLIGHT_PROFILE_CHOICES
 @dataclass(frozen=True)
 class PreflightCliArgs:
     verbose: bool
-    profile: str
+    profile: str | None
     warn_only: bool
     diagnostics_bundle: bool
     report_dir: Path | None
@@ -30,7 +29,7 @@ def add_preflight_arguments(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--profile",
         "-p",
-        default=DEFAULT_PREFLIGHT_PROFILE_NAME,
+        default=None,
         choices=PROFILE_CHOICES,
         help="Trading profile to validate (default: canary)",
     )
@@ -89,7 +88,7 @@ def _normalize_preflight_args(
 
     return PreflightCliArgs(
         verbose=bool(args.verbose),
-        profile=_normalize_profile(args.profile),
+        profile=args.profile,
         warn_only=bool(args.warn_only),
         diagnostics_bundle=bool(args.diagnostics_bundle),
         report_dir=report_dir,
@@ -114,10 +113,3 @@ def _normalize_report_path(parser: argparse.ArgumentParser, value: Path | None) 
     if resolved.exists() and resolved.is_dir():
         parser.error(f"Report path must be a file, got directory: {resolved}")
     return resolved
-
-
-def _normalize_profile(value: str | None) -> str:
-    """Return the provided profile or the canary fallback when missing."""
-    if value:
-        return str(value)
-    return DEFAULT_PREFLIGHT_PROFILE_NAME

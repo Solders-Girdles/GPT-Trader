@@ -27,7 +27,7 @@ def register(subparsers: Any) -> None:
         help="Run the trading loop",
         description="Perpetuals Trading Bot",
     )
-    options.add_profile_option(parser)
+    options.add_profile_option(parser, allow_missing_default=True)
     options.add_runtime_options(parser)
     parser.add_argument(
         "--config",

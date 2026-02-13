@@ -11,7 +11,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from gpt_trader.app.config.profile_loader import DEFAULT_PREFLIGHT_PROFILE_NAME
 from gpt_trader.preflight.cli import _header, main
 from gpt_trader.preflight.cli_args import (
     PreflightCliArgs,
@@ -75,7 +74,7 @@ class TestParsePreflightArgs:
 
         assert parsed == PreflightCliArgs(
             verbose=False,
-            profile="canary",
+            profile=None,
             warn_only=False,
             diagnostics_bundle=False,
             report_dir=None,
@@ -97,7 +96,7 @@ class TestParsePreflightArgs:
 
         normalized_args = _normalize_preflight_args(parser, args)
 
-        assert normalized_args.profile == DEFAULT_PREFLIGHT_PROFILE_NAME
+        assert normalized_args.profile is None
 
     def test_warn_only_flag(self) -> None:
         parsed = parse_preflight_args(["--warn-only"])
@@ -189,6 +188,15 @@ class TestMain:
         main([])
 
         cli_mocks.preflight_class.assert_called_once_with(verbose=False, profile="canary")
+
+    def test_env_profile_override(
+        self, cli_mocks: CLIMocks, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("GPT_TRADER_PROFILE", "spot")
+
+        main([])
+
+        cli_mocks.preflight_class.assert_called_once_with(verbose=False, profile="spot")
 
     def test_runs_all_check_functions(self, cli_mocks: CLIMocks) -> None:
         """Should call all check functions."""

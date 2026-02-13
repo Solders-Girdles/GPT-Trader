@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 from argparse import Namespace
 
@@ -7,6 +8,19 @@ import pytest
 
 import gpt_trader.cli.commands.account as account_cmd
 import gpt_trader.cli.commands.treasury as treasury_cmd
+
+
+def test_account_snapshot_inherits_parent_profile() -> None:
+    parser = argparse.ArgumentParser()
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    account_cmd.register(subparsers)
+
+    parent_profile_args = parser.parse_args(["account", "--profile", "prod", "snapshot"])
+    assert parent_profile_args.profile == "prod"
+
+    snapshot_profile_args = parser.parse_args(["account", "snapshot", "--profile", "prod"])
+    assert snapshot_profile_args.profile == "prod"
 
 
 def test_account_snapshot_prints_result(monkeypatch, capsys):

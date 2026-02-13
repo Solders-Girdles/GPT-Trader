@@ -16,6 +16,14 @@ def test_direct_profile_option_has_default() -> None:
     assert args.profile == DEFAULT_RUNTIME_PROFILE_NAME
 
 
+def test_profile_option_can_allow_missing_default() -> None:
+    parser = ArgumentParser()
+    add_profile_option(parser, allow_missing_default=True)
+    args = parser.parse_args([])
+
+    assert args.profile is None
+
+
 def test_inherited_profile_option_suppresses_default() -> None:
     parser = ArgumentParser()
     add_profile_option(parser, inherit_from_parent=True)

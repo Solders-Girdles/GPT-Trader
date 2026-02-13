@@ -107,3 +107,45 @@ class TestCheckMarketDataFeedStaleness:
         assert details["timeout_attempt"] == 3
         assert details["timeout_delay_seconds"] == pytest.approx(30.0)
         assert details["timeout_capped"] is True
+
+    def test_warn_zero_preserves_crit_timeout_metadata(self) -> None:
+        from gpt_trader.monitoring.health_signals import HealthStatus, HealthThresholds
+
+        class TimestampService:
+            def __init__(self, last_update: datetime) -> None:
+                self._last_update = last_update
+
+            def get_last_ticker_timestamp(self) -> datetime:
+                return self._last_update
+
+        clock = FakeClock(start_time=1000.0)
+        thresholds = HealthThresholds(
+            market_data_staleness_seconds_warn=0.0,
+            market_data_staleness_seconds_crit=30.0,
+        )
+
+        service = TimestampService(datetime.fromtimestamp(clock.time() - 1.0, tz=timezone.utc))
+        healthy, details = check_market_data_feed_staleness(
+            service,
+            thresholds=thresholds,
+            time_provider=clock,
+        )
+
+        assert healthy is False
+        assert details["status"] == HealthStatus.WARN.value
+        assert details["timeout_attempt"] == 2
+        assert details["timeout_delay_seconds"] == pytest.approx(0.0)
+        assert details["timeout_capped"] is False
+
+        service = TimestampService(datetime.fromtimestamp(clock.time() - 35.0, tz=timezone.utc))
+        healthy, details = check_market_data_feed_staleness(
+            service,
+            thresholds=thresholds,
+            time_provider=clock,
+        )
+
+        assert healthy is False
+        assert details["status"] == HealthStatus.CRIT.value
+        assert details["timeout_attempt"] == 3
+        assert details["timeout_delay_seconds"] == pytest.approx(30.0)
+        assert details["timeout_capped"] is True

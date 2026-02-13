@@ -1061,13 +1061,20 @@ def _evaluate_monitoring_timeout_decision(
     else:
         attempt = 3
 
-    decision = evaluate_backoff_delay(
-        attempt=attempt,
-        base_delay=warn_delay,
-        max_delay=crit_delay,
-        multiplier=multiplier,
-        jitter=0.0,
-    )
+    if warn_delay == 0.0 and crit_delay > 0.0:
+        decision = (
+            BackoffDecision(attempt=attempt, delay_seconds=0.0, capped=False)
+            if attempt < 3
+            else BackoffDecision(attempt=attempt, delay_seconds=crit_delay, capped=True)
+        )
+    else:
+        decision = evaluate_backoff_delay(
+            attempt=attempt,
+            base_delay=warn_delay,
+            max_delay=crit_delay,
+            multiplier=multiplier,
+            jitter=0.0,
+        )
 
     return decision, attempt
 

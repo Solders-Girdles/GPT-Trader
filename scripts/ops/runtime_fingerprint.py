@@ -5,6 +5,7 @@ import argparse
 import json
 import sqlite3
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -22,15 +23,53 @@ try:
     )
 except ModuleNotFoundError:  # pragma: no cover
     # Allow direct script execution from a checkout without `pip install -e .`.
-    repo_root = Path(__file__).resolve().parents[2]
-    src_path = repo_root / "src"
-    if str(src_path) not in sys.path:
-        sys.path.insert(0, str(src_path))
-    from gpt_trader.app.runtime.fingerprint import (
-        StartupConfigFingerprint,
-        compare_startup_config_fingerprints,
-        load_startup_config_fingerprint,
-    )
+    # When optional package dependencies are missing, fall back to stdlib-only
+    # helpers for loading/comparing persisted fingerprint payloads.
+    try:
+        repo_root = Path(__file__).resolve().parents[2]
+        src_path = repo_root / "src"
+        if str(src_path) not in sys.path:
+            sys.path.insert(0, str(src_path))
+        from gpt_trader.app.runtime.fingerprint import (
+            StartupConfigFingerprint,
+            compare_startup_config_fingerprints,
+            load_startup_config_fingerprint,
+        )
+    except ModuleNotFoundError:  # pragma: no cover
+
+        @dataclass(frozen=True)
+        class StartupConfigFingerprint:
+            digest: str
+            payload: dict[str, Any]
+
+        def compare_startup_config_fingerprints(
+            expected: StartupConfigFingerprint | None,
+            actual: StartupConfigFingerprint | None,
+        ) -> tuple[bool, str]:
+            if expected is None:
+                return False, "expected fingerprint missing"
+            if actual is None:
+                return False, "runtime fingerprint missing"
+            if expected.digest == actual.digest:
+                return True, "ok"
+            return (
+                False,
+                f"config fingerprint mismatch: expected={expected.digest} actual={actual.digest}",
+            )
+
+        def load_startup_config_fingerprint(path: Path) -> StartupConfigFingerprint | None:
+            try:
+                with path.open("r", encoding="utf-8") as fh:
+                    data = json.load(fh)
+            except (OSError, json.JSONDecodeError):
+                return None
+
+            digest = data.get("digest")
+            payload = data.get("payload")
+            if not isinstance(digest, str) or not isinstance(payload, dict):
+                return None
+            return StartupConfigFingerprint(digest=digest, payload=payload)
+
 
 REASON_DB_NOT_FOUND = "runtime_fingerprint_events_db_missing"
 REASON_DB_READ_ERROR = "runtime_fingerprint_events_db_read_error"

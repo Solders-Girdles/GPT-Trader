@@ -12,6 +12,11 @@ import pytest
 from gpt_trader.preflight.core import PreflightCheck
 from gpt_trader.preflight.hints import DEFAULT_REMEDIATION_HINT
 from gpt_trader.preflight.report import (
+    InMemoryReportArtifactSink,
+    ReportSinkError,
+    ReportSinkResult,
+    ReportTarget,
+    StdoutReportArtifactSink,
     evaluate_preflight_status,
     format_preflight_report,
     generate_report,
@@ -168,9 +173,12 @@ class TestGenerateReport:
         checker.context.successes.append("Success")
 
         def deny_write(*_args: object, **_kwargs: object) -> Any:
-            raise PermissionError("Cannot write")
+            raise ReportSinkError("Cannot write")
 
-        monkeypatch.setattr("gpt_trader.preflight.report.write_preflight_report", deny_write)
+        monkeypatch.setattr(
+            "gpt_trader.preflight.report.FileReportArtifactSink.write",
+            deny_write,
+        )
 
         success, status = generate_report(checker)
 
@@ -180,6 +188,45 @@ class TestGenerateReport:
         captured = capsys.readouterr()
         assert "Could not save report" in captured.out
         assert not list(report_cwd.glob("preflight_report_*.json"))
+
+    def test_stdout_target_emits_report(
+        self, report_cwd: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        checker = PreflightCheck()
+        checker.context.successes.append("Success")
+
+        recorded: list[str] = []
+
+        def record_stdout_write(_self: StdoutReportArtifactSink, payload: str) -> ReportSinkResult:
+            recorded.append(payload)
+            return ReportSinkResult(description="stdout")
+
+        monkeypatch.setattr(
+            "gpt_trader.preflight.report.StdoutReportArtifactSink.write",
+            record_stdout_write,
+        )
+
+        success, status = generate_report(checker, report_target=ReportTarget.STDOUT)
+
+        assert success is True
+        assert status == "READY"
+        assert recorded
+        assert json.loads(recorded[0])["profile"] == "canary"
+        assert not list(report_cwd.glob("preflight_report_*.json"))
+
+    def test_in_memory_sink_records_payload(self, report_cwd: Path) -> None:
+        checker = PreflightCheck(profile="prod")
+        checker.context.successes.append("Success")
+        sink = InMemoryReportArtifactSink()
+
+        success, status = generate_report(checker, sink=sink)
+
+        assert success is True
+        assert status == "READY"
+        assert len(sink.payloads) == 1
+        payload = json.loads(sink.payloads[0])
+        assert payload["profile"] == "prod"
+        assert payload["status"] == "READY"
 
     def test_prints_section_header(self, report_cwd: Path, capsys: pytest.CaptureFixture) -> None:
         checker = PreflightCheck()

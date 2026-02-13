@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -22,7 +23,7 @@ from .checks import (
     simulate_dry_run,
 )
 from .context import PreflightContext
-from .report import generate_report
+from .report import ReportTarget, generate_report
 from .validation_result import PreflightResultPayload
 
 
@@ -134,6 +135,17 @@ class PreflightCheck:
         return simulate_dry_run(self)
 
     def generate_report(
-        self, *, report_dir: Path | None = None, report_path: Path | None = None
+        self,
+        *,
+        report_dir: Path | None = None,
+        report_path: Path | None = None,
+        report_target: ReportTarget = ReportTarget.FILE,
+        timestamp: datetime | None = None,
     ) -> tuple[bool, str]:
-        return generate_report(self, report_dir=report_dir, report_path=report_path)
+        return generate_report(
+            self,
+            report_dir=report_dir,
+            report_path=report_path,
+            report_target=report_target,
+            timestamp=timestamp,
+        )

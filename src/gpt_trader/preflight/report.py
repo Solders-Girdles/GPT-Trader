@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 import json
+import os
+import sys
+import tempfile
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from datetime import datetime, timezone
+from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Mapping, TypedDict
 
@@ -98,10 +104,101 @@ def report_path_for_timestamp(timestamp: datetime, *, output_dir: Path | None = 
     return output_dir / filename
 
 
-def write_preflight_report(report_path: Path, report_content: str) -> None:
-    """Persist report content to disk."""
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(report_content, encoding="utf-8")
+def _build_report_sink(
+    target: ReportTarget,
+    *,
+    timestamp: datetime,
+    report_dir: Path | None,
+    report_path: Path | None,
+) -> tuple[ReportArtifactSink, Path | None]:
+    if target == ReportTarget.FILE:
+        if report_dir is not None and report_path is not None:
+            raise ValueError("report_dir and report_path are mutually exclusive")
+        final_path = report_path or report_path_for_timestamp(timestamp, output_dir=report_dir)
+        return FileReportArtifactSink(final_path), final_path
+    if target == ReportTarget.STDOUT:
+        if report_dir is not None or report_path is not None:
+            raise ValueError("stdout target ignores report_dir/report_path")
+        return StdoutReportArtifactSink(), None
+    raise ValueError(f"Unsupported report target: {target}")
+
+
+class ReportTarget(str, Enum):
+    FILE = "file"
+    STDOUT = "stdout"
+
+
+class ReportSinkError(Exception):
+    """Indicates a failure writing a preflight report artifact."""
+
+
+@dataclass(frozen=True)
+class ReportSinkResult:
+    description: str
+    path: Path | None = None
+
+
+class ReportArtifactSink(ABC):
+    """Write-only abstraction for report artifacts (file, stdout, in-memory)."""
+
+    @abstractmethod
+    def write(self, payload: str) -> ReportSinkResult:
+        """Write the serialized report payload and return metadata."""
+
+
+class FileReportArtifactSink(ReportArtifactSink):
+    """Sink that writes JSON payloads to disk using atomic replaces."""
+
+    def __init__(self, path: Path) -> None:
+        self._path = path
+
+    def write(self, payload: str) -> ReportSinkResult:
+        directory = self._path.parent
+        tmp_path: Path | None = None
+
+        try:
+            directory.mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(
+                "w",
+                dir=directory,
+                delete=False,
+                encoding="utf-8",
+            ) as handle:
+                tmp_path = Path(handle.name)
+                handle.write(payload)
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(tmp_path, self._path)
+            return ReportSinkResult(description=str(self._path), path=self._path)
+        except OSError as exc:  # pragma: no cover - defensive guard
+            if tmp_path is not None and tmp_path.exists():
+                tmp_path.unlink(missing_ok=True)
+            raise ReportSinkError("Failed to write report") from exc
+
+
+class StdoutReportArtifactSink(ReportArtifactSink):
+    """Sink that emits JSON payloads to stdout."""
+
+    def write(self, payload: str) -> ReportSinkResult:
+        try:
+            sys.stdout.write("\n")
+            sys.stdout.write(payload)
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+        except OSError as exc:
+            raise ReportSinkError("Failed to emit report to stdout") from exc
+        return ReportSinkResult(description="stdout")
+
+
+class InMemoryReportArtifactSink(ReportArtifactSink):
+    """Sink that records emitted payloads for testing."""
+
+    def __init__(self) -> None:
+        self.payloads: list[str] = []
+
+    def write(self, payload: str) -> ReportSinkResult:
+        self.payloads.append(payload)
+        return ReportSinkResult(description="memory")
 
 
 def generate_report(
@@ -109,6 +206,9 @@ def generate_report(
     *,
     report_dir: Path | None = None,
     report_path: Path | None = None,
+    report_target: ReportTarget = ReportTarget.FILE,
+    sink: ReportArtifactSink | None = None,
+    timestamp: datetime | None = None,
 ) -> tuple[bool, str]:
     """Render terminal summary and persist JSON report."""
     ctx = checker.context
@@ -159,18 +259,27 @@ def generate_report(
         print("3. Run tests: uv run pytest tests/unit/gpt_trader")
         print("4. Verify credentials and API connectivity")
 
-    timestamp = datetime.now(timezone.utc)
-    report_payload = format_preflight_report(checker, timestamp=timestamp)
+    report_timestamp = timestamp or datetime.now(timezone.utc)
+    report_payload = format_preflight_report(checker, timestamp=report_timestamp)
     report_content = serialize_preflight_report(report_payload)
-    if report_dir is not None and report_path is not None:
-        raise ValueError("report_dir and report_path are mutually exclusive")
-    if report_path is None:
-        report_path = report_path_for_timestamp(timestamp, output_dir=report_dir)
+
+    sink_to_use = sink
+    if sink_to_use is None:
+        sink_to_use, _ = _build_report_sink(
+            report_target,
+            timestamp=report_timestamp,
+            report_dir=report_dir,
+            report_path=report_path,
+        )
 
     try:
-        write_preflight_report(report_path, report_content)
-        print(f"\n{Colors.CYAN}Report saved to: {report_path}{Colors.RESET}")
-    except Exception as exc:
+        sink_result = sink_to_use.write(report_content)
+    except ReportSinkError as exc:
         print(f"\n{Colors.YELLOW}Could not save report: {exc}{Colors.RESET}")
+    else:
+        if sink_result.path is not None:
+            print(f"\n{Colors.CYAN}Report saved to: {sink_result.path}{Colors.RESET}")
+        else:
+            print(f"\n{Colors.CYAN}Report emitted via {sink_result.description}{Colors.RESET}")
 
     return len(ctx.errors) == 0, status

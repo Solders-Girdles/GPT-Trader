@@ -7,8 +7,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-import gpt_trader.tui.widgets.config as config_widget_module
 import gpt_trader.tui.services.config_service as config_service_module
+import gpt_trader.tui.widgets.config as config_widget_module
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.runtime.fingerprint import StartupConfigFingerprint
 from gpt_trader.app.runtime.paths import RuntimePaths

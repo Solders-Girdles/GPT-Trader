@@ -256,7 +256,9 @@ def test_main_detects_fingerprint_mismatch(
     monkeypatch.setattr(runtime_fingerprint, "_parse_args", lambda: args)
 
     result = runtime_fingerprint.main()
-    output_lines = [line.strip() for line in capsys.readouterr().out.strip().splitlines() if line.strip()]
+    output_lines = [
+        line.strip() for line in capsys.readouterr().out.strip().splitlines() if line.strip()
+    ]
 
     assert result == 4
     assert any("config fingerprint mismatch" in line for line in output_lines)

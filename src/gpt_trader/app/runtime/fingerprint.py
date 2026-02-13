@@ -49,16 +49,11 @@ def compare_startup_config_fingerprints(
         return True, "ok"
     return (
         False,
-        (
-            "config fingerprint mismatch: "
-            f"expected={expected.digest} actual={actual.digest}"
-        ),
+        ("config fingerprint mismatch: " f"expected={expected.digest} actual={actual.digest}"),
     )
 
 
-def write_startup_config_fingerprint(
-    path: Path, fingerprint: StartupConfigFingerprint
-) -> None:
+def write_startup_config_fingerprint(path: Path, fingerprint: StartupConfigFingerprint) -> None:
     """Persist the fingerprint payload for later validation."""
 
     payload = {"digest": fingerprint.digest, "payload": fingerprint.payload}

@@ -9,11 +9,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from gpt_trader.app.container import get_application_container
 from gpt_trader.app.config.bot_config import BotConfig
+from gpt_trader.app.container import get_application_container
 from gpt_trader.app.runtime.fingerprint import (
-    compute_startup_config_fingerprint,
     compare_startup_config_fingerprints,
+    compute_startup_config_fingerprint,
     load_startup_config_fingerprint,
 )
 from gpt_trader.tui.events import ConfigChanged, ConfigReloadRequested

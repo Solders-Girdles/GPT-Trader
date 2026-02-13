@@ -172,10 +172,7 @@ def main() -> int:
 
     fingerprint_path = (
         args.config_fingerprint_path
-        or args.runtime_root
-        / "runtime_data"
-        / args.profile
-        / "startup_config_fingerprint.json"
+        or args.runtime_root / "runtime_data" / args.profile / "startup_config_fingerprint.json"
     )
     expected_fingerprint = load_startup_config_fingerprint(fingerprint_path)
     fingerprint_comparison = None

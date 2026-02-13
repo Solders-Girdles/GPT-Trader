@@ -7,6 +7,11 @@ from pathlib import Path
 
 import pytest
 
+from gpt_trader.app.runtime.fingerprint import (
+    StartupConfigFingerprint,
+    write_startup_config_fingerprint,
+)
+
 from scripts.ops import runtime_fingerprint
 
 
@@ -159,6 +164,7 @@ def test_main_success_does_not_emit_reason_codes(
         runtime_root=runtime_root,
         min_event_id=0,
         expected_build_sha="abc",
+        config_fingerprint_path=None,
     )
     monkeypatch.setattr(runtime_fingerprint, "_parse_args", lambda: args)
     result = runtime_fingerprint.main()
@@ -195,6 +201,7 @@ def test_main_failure_emits_reason_codes(
         runtime_root=runtime_root,
         min_event_id=100,
         expected_build_sha="def",
+        config_fingerprint_path=None,
     )
     monkeypatch.setattr(runtime_fingerprint, "_parse_args", lambda: args)
     result = runtime_fingerprint.main()
@@ -207,3 +214,50 @@ def test_main_failure_emits_reason_codes(
         output_lines[-1]
         == "reason_codes=runtime_fingerprint_event_id_not_newer,runtime_fingerprint_build_sha_mismatch"
     )
+
+
+def test_main_detects_fingerprint_mismatch(
+    tmp_path: Path,
+    capsys,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Fingerprint mismatch should produce a config reason code."""
+    runtime_root = tmp_path
+    profile = "canary"
+    db_path = runtime_root / "runtime_data" / profile / "events.db"
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    _create_events_db(db_path)
+
+    payload = {
+        "profile": profile,
+        "build_sha": "abc",
+        "config_digest": "def",
+    }
+    with sqlite3.connect(str(db_path)) as connection:
+        connection.execute(
+            "INSERT INTO events (event_type, payload) VALUES (?, ?)",
+            ("runtime_start", json.dumps(payload)),
+        )
+        connection.commit()
+
+    fingerprint_path = runtime_root / "runtime_data" / profile / "startup_config_fingerprint.json"
+    write_startup_config_fingerprint(
+        fingerprint_path,
+        StartupConfigFingerprint(digest="abc", payload={"source": "cli"}),
+    )
+
+    args = argparse.Namespace(
+        profile=profile,
+        runtime_root=runtime_root,
+        min_event_id=0,
+        expected_build_sha="abc",
+        config_fingerprint_path=None,
+    )
+    monkeypatch.setattr(runtime_fingerprint, "_parse_args", lambda: args)
+
+    result = runtime_fingerprint.main()
+    output_lines = [line.strip() for line in capsys.readouterr().out.strip().splitlines() if line.strip()]
+
+    assert result == 4
+    assert any("config fingerprint mismatch" in line for line in output_lines)
+    assert output_lines[-1].endswith(runtime_fingerprint.REASON_CONFIG_FINGERPRINT_MISMATCH)

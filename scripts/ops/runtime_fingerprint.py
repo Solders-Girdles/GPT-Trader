@@ -13,12 +13,19 @@ except ModuleNotFoundError:  # pragma: no cover
     # Allow direct script execution (e.g. `python3 scripts/ops/runtime_fingerprint.py ...`).
     import formatting  # type: ignore
 
+from gpt_trader.app.runtime.fingerprint import (
+    StartupConfigFingerprint,
+    compare_startup_config_fingerprints,
+    load_startup_config_fingerprint,
+)
+
 
 REASON_DB_NOT_FOUND = "runtime_fingerprint_events_db_missing"
 REASON_DB_READ_ERROR = "runtime_fingerprint_events_db_read_error"
 REASON_RUNTIME_START_MISSING = "runtime_fingerprint_runtime_start_missing"
 REASON_EVENT_ID_NOT_NEWER = "runtime_fingerprint_event_id_not_newer"
 REASON_BUILD_SHA_MISMATCH = "runtime_fingerprint_build_sha_mismatch"
+REASON_CONFIG_FINGERPRINT_MISMATCH = "runtime_fingerprint_config_mismatch"
 
 
 def _parse_args() -> argparse.Namespace:
@@ -31,6 +38,12 @@ def _parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("."),
         help="Repo/runtime root (default: .)",
+    )
+    parser.add_argument(
+        "--config-fingerprint-path",
+        type=Path,
+        default=None,
+        help="Path to persisted startup config fingerprint (default: runtime_data/<profile>/startup_config_fingerprint.json)",
     )
     parser.add_argument(
         "--min-event-id",
@@ -86,6 +99,7 @@ def _validate_runtime_start(
     *,
     min_event_id: int | None,
     expected_build_sha: str | None,
+    fingerprint_comparison: tuple[bool, str] | None = None,
 ) -> tuple[bool, str, tuple[str, ...]]:
     event_id = payload.get("event_id")
     reasons: list[str] = []
@@ -102,6 +116,10 @@ def _validate_runtime_start(
             reasons.append("runtime_start build_sha does not match expected")
             reason_codes.append(REASON_BUILD_SHA_MISMATCH)
 
+    if fingerprint_comparison is not None and not fingerprint_comparison[0]:
+        reasons.append(fingerprint_comparison[1])
+        reason_codes.append(REASON_CONFIG_FINGERPRINT_MISMATCH)
+
     if not reasons:
         return True, "ok", tuple()
     return False, "; ".join(reasons), tuple(reason_codes)
@@ -117,6 +135,7 @@ def _print_payload(payload: dict[str, Any]) -> None:
         "package_version",
         "python_version",
         "pid",
+        "config_digest",
     ]
     for field in fields:
         value = payload.get(field)
@@ -151,10 +170,31 @@ def main() -> int:
         _print_error("no runtime_start events", reason_codes=(REASON_RUNTIME_START_MISSING,))
         return 3
 
+    fingerprint_path = (
+        args.config_fingerprint_path
+        or args.runtime_root
+        / "runtime_data"
+        / args.profile
+        / "startup_config_fingerprint.json"
+    )
+    expected_fingerprint = load_startup_config_fingerprint(fingerprint_path)
+    fingerprint_comparison = None
+    if expected_fingerprint is not None:
+        actual_digest = payload.get("config_digest")
+        actual_fingerprint = (
+            StartupConfigFingerprint(digest=actual_digest, payload={})
+            if actual_digest is not None
+            else None
+        )
+        fingerprint_comparison = compare_startup_config_fingerprints(
+            expected_fingerprint, actual_fingerprint
+        )
+
     is_valid, reason, reason_codes = _validate_runtime_start(
         payload,
         min_event_id=args.min_event_id,
         expected_build_sha=args.expected_build_sha,
+        fingerprint_comparison=fingerprint_comparison,
     )
     if not is_valid:
         _print_error(reason, reason_codes=reason_codes)

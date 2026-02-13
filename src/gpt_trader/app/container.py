@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from gpt_trader.app.config import BotConfig
@@ -15,6 +16,11 @@ from gpt_trader.app.runtime import (
     RuntimePaths,
     RuntimeSettingsSnapshot,
     create_runtime_settings_snapshot,
+)
+from gpt_trader.app.runtime.fingerprint import (
+    StartupConfigFingerprint,
+    compute_startup_config_fingerprint,
+    write_startup_config_fingerprint,
 )
 from gpt_trader.config.types import Profile
 from gpt_trader.features.brokerages.coinbase.market_data_service import MarketDataService
@@ -53,6 +59,9 @@ class ApplicationContainer:
     def __init__(self, config: BotConfig):
         self.config = config
         self._runtime_settings_snapshot = create_runtime_settings_snapshot(config)
+        self._startup_config_fingerprint = compute_startup_config_fingerprint(
+            self._runtime_settings_snapshot
+        )
 
         # Sub-containers (lazily delegate to these for grouped dependencies)
         self._config_container = ConfigContainer(config=config)
@@ -81,6 +90,17 @@ class ApplicationContainer:
     def runtime_paths(self) -> RuntimePaths:
         """Delegate to PersistenceContainer."""
         return self._persistence.runtime_paths
+
+    @property
+    def startup_config_fingerprint(self) -> StartupConfigFingerprint:
+        """Immutable fingerprint of the startup configuration."""
+        return self._startup_config_fingerprint
+
+    def persist_startup_config_fingerprint(self) -> Path:
+        """Persist the startup configuration fingerprint for diagnostics."""
+        path = self.runtime_paths.config_fingerprint_path
+        write_startup_config_fingerprint(path, self._startup_config_fingerprint)
+        return path
 
     @property
     def runtime_settings_snapshot(self) -> RuntimeSettingsSnapshot:

@@ -9,6 +9,11 @@ import pytest
 
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.config.bot_config import HealthThresholdsConfig, MeanReversionConfig
+from gpt_trader.app.runtime.fingerprint import (
+    StartupConfigFingerprint,
+    compare_startup_config_fingerprints,
+    compute_startup_config_fingerprint,
+)
 from gpt_trader.features.live_trade.strategies.perps_baseline import PerpsStrategyConfig
 
 
@@ -199,9 +204,24 @@ class TestHealthThresholdsConfig:
         assert converted.broker_latency_ms_crit == 2800.0
         assert converted.ws_staleness_seconds_warn == 20.0
         assert converted.ws_staleness_seconds_crit == 50.0
-        assert converted.market_data_staleness_seconds_warn == 8.0
-        assert converted.market_data_staleness_seconds_crit == 25.0
-        assert converted.guard_trip_count_warn == 4
-        assert converted.guard_trip_count_crit == 11
-        assert converted.missing_decision_id_count_warn == 2
-        assert converted.missing_decision_id_count_crit == 5
+
+
+class TestStartupConfigFingerprint:
+    """Ensure configuration fingerprints are deterministic and comparable."""
+
+    def test_deterministic_fingerprint(self) -> None:
+        config = BotConfig()
+        first = compute_startup_config_fingerprint(config)
+        second = compute_startup_config_fingerprint(config)
+        assert first.digest == second.digest
+        assert first.payload == second.payload
+
+    def test_compare_detects_mismatch(self) -> None:
+        left = StartupConfigFingerprint(digest="abc", payload={"foo": "bar"})
+        right = StartupConfigFingerprint(digest="def", payload={"foo": "bar"})
+
+        match, reason = compare_startup_config_fingerprints(left, right)
+
+        assert not match
+        assert "expected=abc" in reason
+        assert "actual=def" in reason

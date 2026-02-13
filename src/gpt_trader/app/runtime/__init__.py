@@ -15,6 +15,13 @@ from gpt_trader.app.runtime.settings import (
     create_runtime_settings_snapshot,
     ensure_runtime_settings_snapshot,
 )
+from gpt_trader.app.runtime.fingerprint import (
+    StartupConfigFingerprint,
+    compute_startup_config_fingerprint,
+    compare_startup_config_fingerprints,
+    write_startup_config_fingerprint,
+    load_startup_config_fingerprint,
+)
 
 __all__ = [
     "RuntimePaths",
@@ -22,4 +29,9 @@ __all__ = [
     "RuntimeSettingsSnapshot",
     "create_runtime_settings_snapshot",
     "ensure_runtime_settings_snapshot",
+    "StartupConfigFingerprint",
+    "compute_startup_config_fingerprint",
+    "compare_startup_config_fingerprints",
+    "write_startup_config_fingerprint",
+    "load_startup_config_fingerprint",
 ]

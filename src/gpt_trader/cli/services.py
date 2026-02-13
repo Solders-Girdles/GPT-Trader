@@ -174,6 +174,10 @@ def instantiate_bot(config: BotConfig) -> TradingBot:
 
     # Create and register new container
     container = create_application_container(config)
+    try:
+        container.persist_startup_config_fingerprint()
+    except Exception as exc:  # pragma: no cover - best effort
+        logger.warning("Failed to persist startup config fingerprint: %s", exc)
     set_application_container(container)
     logger.debug("Created and registered application container")
     return container.create_bot()

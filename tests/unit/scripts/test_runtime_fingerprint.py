@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sqlite3
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -263,3 +266,24 @@ def test_main_detects_fingerprint_mismatch(
     assert result == 4
     assert any("config fingerprint mismatch" in line for line in output_lines)
     assert output_lines[-1].endswith(runtime_fingerprint.REASON_CONFIG_FINGERPRINT_MISMATCH)
+
+
+def test_direct_script_execution_without_pythonpath(tmp_path: Path) -> None:
+    repo_root = Path(__file__).resolve().parents[3]
+    script_path = repo_root / "scripts" / "ops" / "runtime_fingerprint.py"
+
+    env = dict(os.environ)
+    env.pop("PYTHONPATH", None)
+
+    result = subprocess.run(
+        [sys.executable, str(script_path), "--runtime-root", str(tmp_path)],
+        cwd=str(repo_root),
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 1
+    assert "events.db not found" in result.stdout
+    assert "ModuleNotFoundError" not in result.stderr

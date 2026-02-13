@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import sqlite3
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -13,11 +14,23 @@ except ModuleNotFoundError:  # pragma: no cover
     # Allow direct script execution (e.g. `python3 scripts/ops/runtime_fingerprint.py ...`).
     import formatting  # type: ignore
 
-from gpt_trader.app.runtime.fingerprint import (
-    StartupConfigFingerprint,
-    compare_startup_config_fingerprints,
-    load_startup_config_fingerprint,
-)
+try:
+    from gpt_trader.app.runtime.fingerprint import (
+        StartupConfigFingerprint,
+        compare_startup_config_fingerprints,
+        load_startup_config_fingerprint,
+    )
+except ModuleNotFoundError:  # pragma: no cover
+    # Allow direct script execution from a checkout without `pip install -e .`.
+    repo_root = Path(__file__).resolve().parents[2]
+    src_path = repo_root / "src"
+    if str(src_path) not in sys.path:
+        sys.path.insert(0, str(src_path))
+    from gpt_trader.app.runtime.fingerprint import (
+        StartupConfigFingerprint,
+        compare_startup_config_fingerprints,
+        load_startup_config_fingerprint,
+    )
 
 REASON_DB_NOT_FOUND = "runtime_fingerprint_events_db_missing"
 REASON_DB_READ_ERROR = "runtime_fingerprint_events_db_read_error"

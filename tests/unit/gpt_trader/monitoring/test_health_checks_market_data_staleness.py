@@ -124,3 +124,50 @@ class TestCheckMarketDataStalenessSignal:
 
         assert signal.status == HealthStatus(expected_status)
         assert signal.value == pytest.approx(age_seconds)
+
+    @pytest.mark.parametrize(
+        ("age_seconds", "expected_status"),
+        [
+            (0.0, "WARN"),
+            (0.001, "WARN"),
+            (30.0, "CRIT"),
+        ],
+    )
+    def test_market_data_warn_zero_keeps_warn_band(
+        self,
+        age_seconds: float,
+        expected_status: str,
+    ) -> None:
+        """Warn threshold of zero should still produce WARN before CRIT."""
+        from gpt_trader.features.brokerages.coinbase.market_data_service import (
+            CoinbaseTickerService,
+            Ticker,
+            TickerCache,
+        )
+        from gpt_trader.monitoring.health_checks import check_market_data_staleness_signal
+        from gpt_trader.monitoring.health_signals import HealthStatus, HealthThresholds
+
+        clock = FakeClock(start_time=1000.0)
+        cache = TickerCache()
+        cache.update(
+            Ticker(
+                symbol="BTC-USD",
+                bid=1.0,
+                ask=1.0,
+                last=1.0,
+                ts=datetime.fromtimestamp(clock.time() - age_seconds, tz=timezone.utc),
+            )
+        )
+        service = CoinbaseTickerService(symbols=["BTC-USD"], ticker_cache=cache)
+
+        thresholds = HealthThresholds(
+            market_data_staleness_seconds_warn=0.0,
+            market_data_staleness_seconds_crit=30.0,
+        )
+        signal = check_market_data_staleness_signal(
+            service,
+            thresholds=thresholds,
+            time_provider=clock,
+        )
+
+        assert signal.status == HealthStatus(expected_status)

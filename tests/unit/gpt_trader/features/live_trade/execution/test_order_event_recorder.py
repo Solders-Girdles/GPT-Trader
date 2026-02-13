@@ -149,7 +149,7 @@ class TestRecordTradeEvent:
             order_id="order-123",
             client_order_id="client-123",
             from_status=None,
-            to_status="SUBMITTED",
+            to_status="open",
         )
 
     def test_record_trade_event_appends_to_event_store(
@@ -177,6 +177,7 @@ class TestRecordTradeEvent:
         assert trade_payload["order_id"] == "order-123"
         assert trade_payload["symbol"] == "BTC-USD"
         assert trade_payload["side"] == "BUY"
+        assert trade_payload["status"] == "open"
 
     def test_record_trade_event_handles_log_exception(
         self,

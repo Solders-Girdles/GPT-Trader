@@ -25,6 +25,10 @@ from gpt_trader.features.live_trade.execution.order_event_recorder import OrderE
 from gpt_trader.features.live_trade.execution.rejection_reason import (
     normalize_rejection_reason,
 )
+from gpt_trader.features.live_trade.execution.status_codec import (
+    ExecutionStatusCodecError,
+    execution_status_for_store,
+)
 from gpt_trader.logging.correlation import order_context
 from gpt_trader.monitoring.metrics_collector import (
     record_counter,
@@ -285,21 +289,10 @@ class OrderSubmitter:
 
     @staticmethod
     def _normalize_status(status: Any) -> StoreOrderStatus:
-        value = status.value if hasattr(status, "value") else status
-        normalized = str(value).lower()
-        mapping = {
-            "pending": StoreOrderStatus.PENDING,
-            "submitted": StoreOrderStatus.OPEN,
-            "open": StoreOrderStatus.OPEN,
-            "partially_filled": StoreOrderStatus.PARTIALLY_FILLED,
-            "filled": StoreOrderStatus.FILLED,
-            "cancelled": StoreOrderStatus.CANCELLED,
-            "canceled": StoreOrderStatus.CANCELLED,
-            "rejected": StoreOrderStatus.REJECTED,
-            "expired": StoreOrderStatus.EXPIRED,
-            "failed": StoreOrderStatus.FAILED,
-        }
-        return mapping.get(normalized, StoreOrderStatus.OPEN)
+        return execution_status_for_store(
+            status,
+            context="order_submission:_normalize_status",
+        )
 
     @staticmethod
     def _normalize_tif(tif: Any) -> str:
@@ -1217,7 +1210,19 @@ class OrderSubmitter:
             status_name = status_value.value
         else:
             status_name = str(status_value or "")
-        store_status = self._normalize_status(status_value)
+        try:
+            store_status = self._normalize_status(status_value)
+        except ExecutionStatusCodecError as exc:
+            logger.error(
+                "Order submission reported unsupported status",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="order_submit",
+                stage="status_codec_error",
+                client_order_id=submit_id,
+                status=str(status_value),
+            )
+            raise
 
         # Check for Rejection
         if str(status_name).upper() in {"REJECTED", "CANCELLED", "FAILED"}:

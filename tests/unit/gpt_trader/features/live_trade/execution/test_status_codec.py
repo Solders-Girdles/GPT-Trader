@@ -22,7 +22,9 @@ from gpt_trader.persistence.orders_store import OrderStatus as StoreOrderStatus
         ("retrying", StoreOrderStatus.OPEN),
     ],
 )
-def test_execution_status_for_store_maps_variants(input_status: str, expected: StoreOrderStatus) -> None:
+def test_execution_status_for_store_maps_variants(
+    input_status: str, expected: StoreOrderStatus
+) -> None:
     assert execution_status_for_store(input_status) == expected
 
 
@@ -34,9 +36,7 @@ def test_execution_status_for_store_maps_variants(input_status: str, expected: S
         ("rejected", StoreOrderStatus.REJECTED.value),
     ],
 )
-def test_execution_status_for_event_returns_store_value(
-    input_status: str, expected: str
-) -> None:
+def test_execution_status_for_event_returns_store_value(input_status: str, expected: str) -> None:
     assert execution_status_for_event(input_status) == expected
 
 

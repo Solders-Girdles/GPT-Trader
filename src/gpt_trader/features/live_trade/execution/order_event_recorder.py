@@ -25,9 +25,6 @@ from gpt_trader.features.live_trade.execution.rejection_reason import (
 from gpt_trader.features.live_trade.execution.status_codec import (
     execution_status_for_event,
 )
-from gpt_trader.features.live_trade.execution.status_codec import (
-    execution_status_for_event,
-)
 from gpt_trader.monitoring.system import LogLevel
 from gpt_trader.monitoring.system import get_logger as get_monitoring_logger
 from gpt_trader.utilities.logging_patterns import get_logger

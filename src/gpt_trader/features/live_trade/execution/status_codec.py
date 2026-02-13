@@ -33,9 +33,7 @@ _STATUS_MAPPING: dict[str, StoreOrderStatus] = {
 def execution_status_for_store(status: Any, *, context: str | None = None) -> StoreOrderStatus:
     """Return the persistence enum for the given execution-side status."""
     raw = status.value if hasattr(status, "value") else status
-    normalized = (
-        str(raw).strip().lower().replace("-", "_") if raw is not None else ""
-    )
+    normalized = str(raw).strip().lower().replace("-", "_") if raw is not None else ""
     if not normalized:
         # Missing status defaults to "open" so idempotent writes still succeed.
         return StoreOrderStatus.OPEN

@@ -79,7 +79,7 @@ def run_health_check(check_fn: HealthCheckCallable) -> HealthCheckResult:
 
 
 def record_health_check_result(
-    health_state: "HealthState",
+    health_state: HealthState,
     name: str,
     result: HealthCheckResult | tuple[bool, dict[str, Any]] | tuple[bool, dict[str, Any] | None],
 ) -> HealthCheckResult:
@@ -90,7 +90,7 @@ def record_health_check_result(
 
 
 def register_health_check(
-    health_state: "HealthState",
+    health_state: HealthState,
     name: str,
     check_fn: HealthCheckCallable,
 ) -> HealthCheckResult:
@@ -1056,9 +1056,9 @@ def _evaluate_monitoring_timeout_decision(
     multiplier = crit_delay / warn_delay if warn_delay > 0 else 1.0
     multiplier = max(multiplier, 1.0)
 
-    if age_seconds <= warn_delay:
+    if age_seconds < warn_delay:
         attempt = 1
-    elif crit_delay > warn_delay and age_seconds <= crit_delay:
+    elif age_seconds < crit_delay:
         attempt = 2
     else:
         attempt = 3

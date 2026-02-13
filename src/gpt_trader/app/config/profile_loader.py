@@ -288,7 +288,10 @@ def resolve_profile_override(
 def get_env_profile_override() -> str | None:
     """Return a profile override from the environment, if any."""
 
-    return os.getenv("GPT_TRADER_PROFILE") or os.getenv("BOT_PROFILE")
+    primary_override = _normalize_profile_candidate(os.getenv("GPT_TRADER_PROFILE"))
+    if primary_override is not None:
+        return primary_override
+    return _normalize_profile_candidate(os.getenv("BOT_PROFILE"))
 
 
 @dataclass(frozen=True)

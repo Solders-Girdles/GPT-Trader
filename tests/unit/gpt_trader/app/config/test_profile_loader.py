@@ -14,6 +14,7 @@ from gpt_trader.app.config.profile_loader import (
     ProfileOverrideSource,
     ProfileSchema,
     get_env_defaults_for_profile,
+    get_env_profile_override,
     get_profile_registry_entry_by_name,
     is_dev_profile,
     resolve_profile_override,
@@ -313,3 +314,11 @@ class TestProfileOverridePrecedence:
 
         assert decision.profile == "spot"
         assert decision.source == ProfileOverrideSource.ENV
+
+    def test_env_helper_uses_bot_profile_when_primary_is_whitespace(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("GPT_TRADER_PROFILE", "   ")
+        monkeypatch.setenv("BOT_PROFILE", " paper ")
+
+        assert get_env_profile_override() == "paper"

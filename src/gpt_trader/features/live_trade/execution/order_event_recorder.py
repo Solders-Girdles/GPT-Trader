@@ -17,6 +17,7 @@ from gpt_trader.features.live_trade.execution.order_event_schema import (
     OrderEventSchemaError,
     OrderPreviewEvent,
     OrderRejectionEvent,
+    OrderSubmissionAttemptEvent,
 )
 from gpt_trader.features.live_trade.execution.rejection_reason import (
     normalize_rejection_reason,
@@ -212,6 +213,31 @@ class OrderEventRecorder:
         price: Decimal | None,
     ) -> None:
         """Log the order submission attempt to monitoring."""
+        try:
+            payload = OrderSubmissionAttemptEvent(
+                client_order_id=submit_id,
+                symbol=symbol,
+                side=side,
+                order_type=order_type,
+                quantity=quantity,
+                price=price,
+            ).serialize()
+        except OrderEventSchemaError as exc:  # pragma: no cover - defensive
+            logger.error(
+                "Failed to normalize order submission attempt payload",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="record_submission_attempt",
+                submit_id=submit_id,
+                symbol=symbol,
+            )
+            raise
+        emit_metric(
+            self._event_store,
+            self._bot_id,
+            payload,
+            logger=get_monitoring_logger(),
+        )
         try:
             get_monitoring_logger().log_order_submission(
                 client_order_id=submit_id,

@@ -1050,8 +1050,6 @@ def _evaluate_monitoring_timeout_decision(
 
     warn_delay = max(0.0, warn_threshold)
     crit_delay = max(warn_delay, crit_threshold)
-    if warn_delay == 0.0:
-        warn_delay = crit_delay or 1.0
 
     multiplier = crit_delay / warn_delay if warn_delay > 0 else 1.0
     multiplier = max(multiplier, 1.0)

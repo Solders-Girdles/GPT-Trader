@@ -190,7 +190,9 @@ class TestMain:
 
         cli_mocks.preflight_class.assert_called_once_with(verbose=False, profile="canary")
 
-    def test_env_profile_override(self, cli_mocks: CLIMocks, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_env_profile_override(
+        self, cli_mocks: CLIMocks, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         monkeypatch.setenv("GPT_TRADER_PROFILE", "spot")
 
         main([])

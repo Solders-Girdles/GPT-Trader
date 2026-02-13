@@ -6,16 +6,17 @@ import sys
 from collections.abc import Callable, Sequence
 from datetime import datetime, timezone
 
-from .cli_args import PreflightCliArgs, parse_preflight_args
-from .context import Colors
-from .core import PreflightCheck
-from .diagnostics_bundle import build_diagnostics_bundle
 from gpt_trader.app.config.profile_loader import (
     DEFAULT_PREFLIGHT_PROFILE_NAME,
     ProfileOverrideDecision,
     get_env_profile_override,
     resolve_profile_override,
 )
+
+from .cli_args import PreflightCliArgs, parse_preflight_args
+from .context import Colors
+from .core import PreflightCheck
+from .diagnostics_bundle import build_diagnostics_bundle
 
 load_dotenv: Callable[..., bool] | None
 try:

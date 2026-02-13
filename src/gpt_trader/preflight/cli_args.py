@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from gpt_trader.app.config.profile_loader import (
-    DEFAULT_PREFLIGHT_PROFILE_NAME,
     PREFLIGHT_PROFILE_CHOICES,
 )
 from gpt_trader.preflight.report import ReportTarget

@@ -1,6 +1,5 @@
 """Helper utilities for CLI command implementations."""
 
-import os
 from argparse import Namespace
 from pathlib import Path
 from typing import Any
@@ -14,12 +13,12 @@ from gpt_trader.app.config.profile_loader import (
     get_env_profile_override,
     resolve_profile_override,
 )
-from gpt_trader.config.types import Profile
 from gpt_trader.app.container import (
     create_application_container,
     get_application_container,
     set_application_container,
 )
+from gpt_trader.config.types import Profile
 from gpt_trader.features.live_trade.bot import TradingBot
 from gpt_trader.utilities.logging_patterns import get_logger
 

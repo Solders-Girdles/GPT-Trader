@@ -80,9 +80,7 @@ class TestCheckMarketDataFeedStaleness:
             market_data_staleness_seconds_crit=30.0,
         )
 
-        service = TimestampService(
-            datetime.fromtimestamp(clock.time() - 15.0, tz=timezone.utc)
-        )
+        service = TimestampService(datetime.fromtimestamp(clock.time() - 15.0, tz=timezone.utc))
 
         healthy, details = check_market_data_feed_staleness(
             service,
@@ -96,9 +94,7 @@ class TestCheckMarketDataFeedStaleness:
         assert details["timeout_delay_seconds"] == pytest.approx(10.0)
         assert details["timeout_capped"] is False
 
-        service = TimestampService(
-            datetime.fromtimestamp(clock.time() - 35.0, tz=timezone.utc)
-        )
+        service = TimestampService(datetime.fromtimestamp(clock.time() - 35.0, tz=timezone.utc))
 
         healthy, details = check_market_data_feed_staleness(
             service,

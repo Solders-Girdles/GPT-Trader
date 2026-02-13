@@ -40,7 +40,7 @@ T = TypeVar("T")
 
 def register(subparsers: Any) -> None:
     parser = subparsers.add_parser("orders", help="Order preview and edit tooling")
-    options.add_profile_option(parser)
+    options.add_profile_option(parser, allow_missing_default=True)
     orders_subparsers = parser.add_subparsers(dest="orders_command", required=True)
 
     preview = orders_subparsers.add_parser("preview", help="Preview a new order and exit")

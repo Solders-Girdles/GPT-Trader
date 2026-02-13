@@ -6,6 +6,7 @@ from argparse import SUPPRESS, ArgumentParser
 from pathlib import Path
 
 from gpt_trader.app.config.profile_loader import (
+    DEFAULT_RUNTIME_PROFILE_NAME,
     RUNTIME_PROFILE_CHOICES,
 )
 
@@ -57,8 +58,18 @@ RUNTIME_CONFIG_KEYS = {
 }
 
 
-def add_profile_option(parser: ArgumentParser, *, inherit_from_parent: bool = False) -> None:
-    default_profile: str | object = SUPPRESS if inherit_from_parent else None
+def add_profile_option(
+    parser: ArgumentParser,
+    *,
+    inherit_from_parent: bool = False,
+    allow_missing_default: bool = False,
+) -> None:
+    if inherit_from_parent:
+        default_profile: str | object = SUPPRESS
+    elif allow_missing_default:
+        default_profile = None
+    else:
+        default_profile = DEFAULT_RUNTIME_PROFILE_NAME
     parser.add_argument(
         "--profile",
         type=str,

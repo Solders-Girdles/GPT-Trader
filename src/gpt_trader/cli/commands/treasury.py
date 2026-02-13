@@ -22,11 +22,11 @@ _CONFIG_SKIP_KEYS = {
 
 def register(subparsers: Any) -> None:
     parser = subparsers.add_parser("treasury", help="Treasury utilities")
-    options.add_profile_option(parser)
+    options.add_profile_option(parser, allow_missing_default=True)
     treasury_subparsers = parser.add_subparsers(dest="treasury_command", required=True)
 
     convert = treasury_subparsers.add_parser("convert", help="Convert between assets")
-    options.add_profile_option(convert)
+    options.add_profile_option(convert, allow_missing_default=True)
     convert.add_argument(
         "--from",
         "--from-asset",
@@ -46,7 +46,7 @@ def register(subparsers: Any) -> None:
     convert.set_defaults(handler=_handle_convert, subcommand="convert")
 
     move = treasury_subparsers.add_parser("move", help="Move funds between portfolios")
-    options.add_profile_option(move)
+    options.add_profile_option(move, allow_missing_default=True)
     move.add_argument(
         "--from-portfolio",
         dest="from_portfolio",

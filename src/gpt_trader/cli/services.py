@@ -1,5 +1,6 @@
 """Helper utilities for CLI command implementations."""
 
+import warnings
 from argparse import Namespace
 from pathlib import Path
 from typing import Any
@@ -44,7 +45,13 @@ def load_config_from_yaml(path: str | Path) -> BotConfig:
     with open(path) as f:
         data = yaml.safe_load(f) or {}
 
-    return BotConfig.from_dict(data)
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            message="Legacy profile-style YAML mapping via BotConfig.from_dict\\(\\) is deprecated.*",
+            category=DeprecationWarning,
+        )
+        return BotConfig.from_dict(data)
 
 
 def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:

@@ -88,7 +88,7 @@ def _normalize_preflight_args(
 
     return PreflightCliArgs(
         verbose=bool(args.verbose),
-        profile=_normalize_profile(args.profile),
+        profile=args.profile,
         warn_only=bool(args.warn_only),
         diagnostics_bundle=bool(args.diagnostics_bundle),
         report_dir=report_dir,
@@ -113,10 +113,3 @@ def _normalize_report_path(parser: argparse.ArgumentParser, value: Path | None) 
     if resolved.exists() and resolved.is_dir():
         parser.error(f"Report path must be a file, got directory: {resolved}")
     return resolved
-
-
-def _normalize_profile(value: str | None) -> str:
-    """Return the provided profile or the canary fallback when missing."""
-    if value:
-        return str(value)
-    return DEFAULT_PREFLIGHT_PROFILE_NAME

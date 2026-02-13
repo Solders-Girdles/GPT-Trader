@@ -18,6 +18,7 @@ class RuntimePaths:
 
     storage_dir: Path
     event_store_root: Path
+    config_fingerprint_path: Path
 
 
 def resolve_runtime_paths(
@@ -44,7 +45,12 @@ def resolve_runtime_paths(
         event_store_root = storage_dir
 
     event_store_root.mkdir(parents=True, exist_ok=True)
-    return RuntimePaths(storage_dir=storage_dir, event_store_root=event_store_root)
+    fingerprint_path = storage_dir / "startup_config_fingerprint.json"
+    return RuntimePaths(
+        storage_dir=storage_dir,
+        event_store_root=event_store_root,
+        config_fingerprint_path=fingerprint_path,
+    )
 
 
 __all__ = ["RuntimePaths", "resolve_runtime_paths"]

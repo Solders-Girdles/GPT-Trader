@@ -24,6 +24,10 @@ from importlib import metadata
 from typing import Any
 
 from gpt_trader.app.health_server import HealthState
+from gpt_trader.app.runtime.fingerprint import (
+    compare_startup_config_fingerprints,
+    load_startup_config_fingerprint,
+)
 from gpt_trader.config.constants import HEALTH_CHECK_INTERVAL_SECONDS
 from gpt_trader.core import OrderSide, OrderType, Position, Product
 from gpt_trader.features.live_trade.degradation import DegradationState
@@ -1076,6 +1080,8 @@ class TradingEngine(BaseEngine):
         except metadata.PackageNotFoundError:
             package_version = None
 
+        container = self.context.container
+        fingerprint = container.startup_config_fingerprint if container is not None else None
         payload = {
             "timestamp": time.time(),
             "profile": str(self.context.config.profile or ""),
@@ -1084,7 +1090,46 @@ class TradingEngine(BaseEngine):
             "package_version": package_version,
             "python_version": sys.version.split()[0],
             "pid": os.getpid(),
+            "config_digest": fingerprint.digest if fingerprint is not None else None,
         }
+
+        fingerprint_path = (
+            container.runtime_paths.config_fingerprint_path if container is not None else None
+        )
+        if fingerprint_path is None:
+            logger.debug(
+                "No startup config fingerprint runtime path available",
+                operation="runtime_start",
+            )
+        else:
+            expected = load_startup_config_fingerprint(fingerprint_path)
+            if expected is not None:
+                match, reason = compare_startup_config_fingerprints(expected, fingerprint)
+                if match:
+                    logger.debug(
+                        "Startup config fingerprint validated",
+                        operation="runtime_start",
+                        config_digest=fingerprint.digest if fingerprint is not None else None,
+                    )
+                else:
+                    logger.warning(
+                        "Startup config fingerprint mismatch",
+                        operation="runtime_start",
+                        config_digest=fingerprint.digest if fingerprint is not None else None,
+                        reason=reason,
+                    )
+            elif fingerprint_path.exists():
+                logger.warning(
+                    "Startup config fingerprint file unreadable",
+                    operation="runtime_start",
+                    path=fingerprint_path,
+                )
+            else:
+                logger.debug(
+                    "No startup config fingerprint file available",
+                    operation="runtime_start",
+                    path=fingerprint_path,
+                )
         try:
             event_store.append("runtime_start", payload)
         except Exception:

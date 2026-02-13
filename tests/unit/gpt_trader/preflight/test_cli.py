@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 from dataclasses import dataclass
@@ -10,8 +11,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.app.config.profile_loader import DEFAULT_PREFLIGHT_PROFILE_NAME
 from gpt_trader.preflight.cli import _header, main
-from gpt_trader.preflight.cli_args import PreflightCliArgs, parse_preflight_args
+from gpt_trader.preflight.cli_args import (
+    PreflightCliArgs,
+    _normalize_preflight_args,
+    parse_preflight_args,
+)
 from gpt_trader.preflight.report import ReportTarget
 
 
@@ -76,6 +82,22 @@ class TestParsePreflightArgs:
             report_path=None,
             report_target=ReportTarget.FILE,
         )
+
+    def test_missing_profile_uses_canary_fallback(self) -> None:
+        parser = argparse.ArgumentParser()
+        args = argparse.Namespace(
+            verbose=False,
+            profile=None,
+            warn_only=False,
+            diagnostics_bundle=False,
+            report_dir=None,
+            report_path=None,
+            report_target=ReportTarget.FILE,
+        )
+
+        normalized_args = _normalize_preflight_args(parser, args)
+
+        assert normalized_args.profile == DEFAULT_PREFLIGHT_PROFILE_NAME
 
     def test_warn_only_flag(self) -> None:
         parsed = parse_preflight_args(["--warn-only"])

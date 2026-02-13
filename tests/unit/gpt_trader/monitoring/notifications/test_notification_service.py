@@ -98,36 +98,6 @@ class TestNotificationService:
         assert mock_backend.send.call_count == 1  # Only one call
 
     @pytest.mark.asyncio
-    async def test_notify_distinguishes_by_message(self, mock_backend) -> None:
-        service = NotificationService(dedup_window_seconds=60)
-        service.add_backend(mock_backend)
-
-        await service.notify(title="Duplicate", message="first", source="test")
-        await service.notify(title="Duplicate", message="second", source="test")
-
-        assert mock_backend.send.call_count == 2
-
-    @pytest.mark.asyncio
-    async def test_notify_distinguishes_by_context(self, mock_backend) -> None:
-        service = NotificationService(dedup_window_seconds=60)
-        service.add_backend(mock_backend)
-
-        await service.notify(
-            title="Duplicate",
-            message="same",
-            source="test",
-            context={"step": 1},
-        )
-        await service.notify(
-            title="Duplicate",
-            message="same",
-            source="test",
-            context={"step": 2},
-        )
-
-        assert mock_backend.send.call_count == 2
-
-    @pytest.mark.asyncio
     async def test_notify_deduplicates_none_and_empty_context(self, mock_backend) -> None:
         service = NotificationService(dedup_window_seconds=60)
         service.add_backend(mock_backend)
@@ -163,6 +133,54 @@ class TestNotificationService:
             message="same",
             source="test",
             metadata={},
+        )
+
+        assert mock_backend.send.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_notify_context_ignore_key(self, mock_backend) -> None:
+        service = NotificationService(
+            dedup_window_seconds=60,
+            dedup_include_context=True,
+            dedup_context_ignore_keys={"timestamp"},
+        )
+        service.add_backend(mock_backend)
+
+        await service.notify(
+            title="Context Ignore",
+            message="ignore timestamp",
+            source="test",
+            context={"timestamp": 1, "step": 1},
+        )
+        await service.notify(
+            title="Context Ignore",
+            message="ignore timestamp",
+            source="test",
+            context={"timestamp": 2, "step": 1},
+        )
+
+        assert mock_backend.send.call_count == 1
+
+    @pytest.mark.asyncio
+    async def test_notify_metadata_ignore_key(self, mock_backend) -> None:
+        service = NotificationService(
+            dedup_window_seconds=60,
+            dedup_include_metadata=True,
+            dedup_metadata_ignore_keys={"event_id"},
+        )
+        service.add_backend(mock_backend)
+
+        await service.notify(
+            title="Metadata Ignore",
+            message="ignore event id",
+            source="test",
+            metadata={"event_id": "a", "stage": "alpha"},
+        )
+        await service.notify(
+            title="Metadata Ignore",
+            message="ignore event id",
+            source="test",
+            metadata={"event_id": "b", "stage": "alpha"},
         )
 
         assert mock_backend.send.call_count == 1

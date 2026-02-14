@@ -124,8 +124,6 @@ def _resolve_preflight_checks(checker: PreflightCheck) -> Sequence[Callable[[], 
     for node in ordered_nodes:
         check = getattr(checker, node.name, None)
         if check is None:
-            raise PreflightCheckGraphError(
-                f"Preflight check implementation missing: {node.name}"
-            )
+            raise PreflightCheckGraphError(f"Preflight check implementation missing: {node.name}")
         checks.append(check)
     return tuple(checks)

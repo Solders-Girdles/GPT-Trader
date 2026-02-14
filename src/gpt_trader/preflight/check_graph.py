@@ -30,14 +30,18 @@ CORE_PREFLIGHT_CHECKS: tuple[PreflightCheckNode, ...] = (
         ),
     ),
     PreflightCheckNode("check_test_suite", dependencies=("check_dependencies",)),
-    PreflightCheckNode("check_profile_configuration", dependencies=("check_environment_variables",)),
+    PreflightCheckNode(
+        "check_profile_configuration", dependencies=("check_environment_variables",)
+    ),
     PreflightCheckNode("check_system_time", dependencies=("check_python_version",)),
     PreflightCheckNode("check_disk_space", dependencies=("check_system_time",)),
     PreflightCheckNode(
         "simulate_dry_run",
         dependencies=("check_profile_configuration", "check_risk_configuration"),
     ),
-    PreflightCheckNode("check_event_store_redaction", dependencies=("check_profile_configuration",)),
+    PreflightCheckNode(
+        "check_event_store_redaction", dependencies=("check_profile_configuration",)
+    ),
     PreflightCheckNode("check_readiness_report", dependencies=("check_event_store_redaction",)),
 )
 
@@ -71,9 +75,7 @@ def assemble_preflight_check_graph(
         details = ", ".join(
             f"{check_name} -> {dependency}" for check_name, dependency in missing_dependencies
         )
-        raise PreflightCheckGraphError(
-            f"Missing preflight check dependencies: {details}"
-        )
+        raise PreflightCheckGraphError(f"Missing preflight check dependencies: {details}")
 
     order_index = {node.name: index for index, node in enumerate(nodes)}
     in_degree = {node.name: len(node.dependencies) for node in nodes}

@@ -226,8 +226,7 @@ class TestMain:
         main([])
 
         expected_order = [
-            node.name
-            for node in assemble_preflight_check_graph(CORE_PREFLIGHT_CHECKS)
+            node.name for node in assemble_preflight_check_graph(CORE_PREFLIGHT_CHECKS)
         ]
         expected_set = set(expected_order)
         actual_order = [

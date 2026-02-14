@@ -13,6 +13,11 @@ from gpt_trader.app.config.profile_loader import (
     resolve_profile_override,
 )
 
+from .check_graph import (
+    CORE_PREFLIGHT_CHECKS,
+    PreflightCheckGraphError,
+    assemble_preflight_check_graph,
+)
 from .cli_args import PreflightCliArgs, parse_preflight_args
 from .context import Colors
 from .core import PreflightCheck
@@ -67,22 +72,18 @@ def _run_preflight(args: PreflightCliArgs) -> int:
     _header(profile_decision.profile)
 
     checker = PreflightCheck(verbose=args.verbose, profile=profile_decision.profile)
-    check_functions: Sequence[Callable[[], bool]] = [
-        checker.check_python_version,
-        checker.check_dependencies,
-        checker.check_environment_variables,
-        checker.check_api_connectivity,
-        checker.check_key_permissions,
-        checker.check_risk_configuration,
-        checker.check_pretrade_diagnostics,
-        checker.check_test_suite,
-        checker.check_profile_configuration,
-        checker.check_system_time,
-        checker.check_disk_space,
-        checker.simulate_dry_run,
-        checker.check_event_store_redaction,
-        checker.check_readiness_report,
-    ]
+    try:
+        check_functions = _resolve_preflight_checks(checker)
+    except PreflightCheckGraphError as exc:
+        checker.context.set_current_check("preflight_graph")
+        checker.log_error(str(exc))
+        checker.context.set_current_check(None)
+        checker.generate_report(
+            report_dir=args.report_dir,
+            report_path=args.report_path,
+            report_target=args.report_target,
+        )
+        return 1
 
     for check in check_functions:
         check_name = getattr(check, "__name__", type(check).__name__)
@@ -115,3 +116,14 @@ def _emit_diagnostics_bundle(args: PreflightCliArgs) -> int:
     except Exception as exc:  # pragma: no cover - defensive safeguard
         print(f"Error generating diagnostics bundle: {exc}", file=sys.stderr)
         return 1
+
+
+def _resolve_preflight_checks(checker: PreflightCheck) -> Sequence[Callable[[], bool]]:
+    ordered_nodes = assemble_preflight_check_graph(CORE_PREFLIGHT_CHECKS)
+    checks: list[Callable[[], bool]] = []
+    for node in ordered_nodes:
+        check = getattr(checker, node.name, None)
+        if check is None:
+            raise PreflightCheckGraphError(f"Preflight check implementation missing: {node.name}")
+        checks.append(check)
+    return tuple(checks)

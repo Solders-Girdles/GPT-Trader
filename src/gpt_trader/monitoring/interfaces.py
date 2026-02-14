@@ -38,6 +38,19 @@ class HealthCheckResult:
         return {"status": self.status, "details": dict(self.details)}
 
 
+@dataclass(frozen=True)
+class HealthCheckDependency:
+    """Named dependency for a health check."""
+
+    name: str
+    required: bool = True
+
+    @classmethod
+    def optional(cls, name: str) -> "HealthCheckDependency":
+        """Declare an optional dependency that can be skipped if missing."""
+        return cls(name=name, required=False)
+
+
 @dataclass
 class ResourceUsage:
     """System resource usage metrics."""

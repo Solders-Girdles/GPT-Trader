@@ -11,6 +11,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from gpt_trader.preflight.check_graph import (
+    CORE_PREFLIGHT_CHECKS,
+    assemble_preflight_check_graph,
+)
 from gpt_trader.preflight.cli import _header, main
 from gpt_trader.preflight.cli_args import (
     PreflightCliArgs,
@@ -217,6 +221,22 @@ class TestMain:
         cli_mocks.checker.simulate_dry_run.assert_called_once()
         cli_mocks.checker.check_event_store_redaction.assert_called_once()
         cli_mocks.checker.check_readiness_report.assert_called_once()
+
+    def test_runs_checks_in_graph_order(self, cli_mocks: CLIMocks) -> None:
+        main([])
+
+        expected_order = [
+            node.name
+            for node in assemble_preflight_check_graph(CORE_PREFLIGHT_CHECKS)
+        ]
+        expected_set = set(expected_order)
+        actual_order = [
+            call_name
+            for call_name, *_rest in cli_mocks.checker.method_calls
+            if call_name in expected_set
+        ]
+
+        assert actual_order == expected_order
 
     def test_handles_check_exception_gracefully(self, cli_mocks: CLIMocks) -> None:
         """Should handle exceptions from checks gracefully."""

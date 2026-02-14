@@ -106,3 +106,25 @@ def test_runtime_guard_uses_time_provider_for_cooldown():
     second_alert = guard.check({"value": 150, "units": "ms"})
     assert second_alert is not None
     assert second_alert.timestamp == provider.now_utc()
+
+
+def test_runtime_guard_cooldown_is_per_metric_key():
+    provider = ManualTimeProvider(datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC))
+    guard = RuntimeGuard(
+        GuardConfig(
+            name="latency",
+            threshold=100.0,
+            severity=AlertSeverity.ERROR,
+            cooldown_seconds=60,
+        ),
+        time_provider=provider,
+    )
+
+    first_alert = guard.check({"metric_key": "latency_p95", "latency_p95": 150, "units": "ms"})
+    assert first_alert is not None
+
+    provider.advance(timedelta(seconds=30))
+    assert guard.check({"metric_key": "latency_p95", "latency_p95": 150, "units": "ms"}) is None
+
+    second_alert = guard.check({"metric_key": "latency_p99", "latency_p99": 200, "units": "ms"})
+    assert second_alert is not None

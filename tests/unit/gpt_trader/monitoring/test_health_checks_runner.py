@@ -8,7 +8,14 @@ import pytest
 
 from gpt_trader.app.health_server import HealthState
 from gpt_trader.monitoring import health_checks
-from gpt_trader.monitoring.health_checks import HealthCheckResult, HealthCheckRunner
+from gpt_trader.monitoring.health_checks import (
+    HealthCheckCycleError,
+    HealthCheckDescriptor,
+    HealthCheckPlanner,
+    HealthCheckResult,
+    HealthCheckRunner,
+)
+from gpt_trader.monitoring.interfaces import HealthCheckDependency
 
 
 class FakeTickerCache:
@@ -240,6 +247,93 @@ class TestHealthCheckRunner:
             "custom_check",
             expected_result,
         )
+
+
+class TestHealthCheckPlanner:
+    """Tests for HealthCheckPlanner ordering and diagnostics."""
+
+    @staticmethod
+    def _make_descriptor(
+        name: str,
+        dependencies: tuple[HealthCheckDependency, ...] = (),
+    ) -> HealthCheckDescriptor:
+        def check() -> HealthCheckResult:
+            return HealthCheckResult(healthy=True, details={"name": name})
+
+        return HealthCheckDescriptor(
+            name=name,
+            mode="fast",
+            run=check,
+            dependencies=dependencies,
+        )
+
+    def test_planner_orders_by_dependencies_and_name(self) -> None:
+        checks = (
+            self._make_descriptor(
+                "alpha",
+                dependencies=(HealthCheckDependency(name="zeta"),),
+            ),
+            self._make_descriptor("beta"),
+            self._make_descriptor("zeta"),
+        )
+
+        planner = HealthCheckPlanner(checks)
+        ordered = [check.name for check in planner.build_order()]
+
+        assert ordered == ["beta", "zeta", "alpha"]
+
+    def test_planner_skips_missing_optional_dependencies(self) -> None:
+        checks = (
+            self._make_descriptor(
+                "alpha",
+                dependencies=(HealthCheckDependency.optional("missing"),),
+            ),
+        )
+
+        planner = HealthCheckPlanner(checks)
+        ordered = [check.name for check in planner.build_order()]
+
+        assert ordered == ["alpha"]
+
+    def test_planner_detects_cycles_with_diagnostics(self) -> None:
+        checks = (
+            self._make_descriptor(
+                "alpha",
+                dependencies=(HealthCheckDependency(name="beta"),),
+            ),
+            self._make_descriptor(
+                "beta",
+                dependencies=(HealthCheckDependency(name="alpha"),),
+            ),
+        )
+
+        planner = HealthCheckPlanner(checks)
+
+        with pytest.raises(HealthCheckCycleError) as exc_info:
+            planner.build_order()
+
+        error_text = str(exc_info.value)
+        assert "alpha" in error_text
+        assert "beta" in error_text
+
+    def test_runner_falls_back_to_name_order_on_plan_error(self) -> None:
+        runner = HealthCheckRunner(health_state=HealthState())
+
+        registry = (
+            self._make_descriptor(
+                "beta",
+                dependencies=(HealthCheckDependency(name="alpha"),),
+            ),
+            self._make_descriptor(
+                "alpha",
+                dependencies=(HealthCheckDependency(name="beta"),),
+            ),
+        )
+        runner._health_check_registry = MagicMock(return_value=registry)
+
+        planned = runner._planned_checks()
+
+        assert [check.name for check in planned] == ["alpha", "beta"]
 
 
 class TestHealthCheckResult:

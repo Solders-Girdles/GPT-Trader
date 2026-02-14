@@ -5,11 +5,11 @@ from __future__ import annotations
 from argparse import Namespace
 from typing import Any
 
+from gpt_trader.cli.commands.optimize.config_loader import resolve_optimize_preset_inheritance
 from gpt_trader.cli.commands.optimize.formatters import (
     COMPARISON_METRICS,
     format_comparison_text,
 )
-from gpt_trader.cli.commands.optimize.config_loader import resolve_optimize_preset_inheritance
 from gpt_trader.cli.options import add_output_options
 from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.features.optimize.persistence.storage import OptimizationStorage

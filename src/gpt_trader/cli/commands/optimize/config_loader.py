@@ -30,6 +30,268 @@ class ConfigValidationError(Exception):
 _PARAMETER_SPACE_MISSING = object()
 
 
+@dataclass(frozen=True)
+class OptimizePresetSelection:
+    """Selected optimize preset names for profile/scenario overrides."""
+
+    profile: str | None
+    scenario: str | None
+
+
+@dataclass
+class _PresetMergeReport:
+    merged: dict[str, Any]
+    missing_keys: list[str] = field(default_factory=list)
+    conflicts: list[str] = field(default_factory=list)
+
+
+_PRESET_CONTAINER_KEYS = ("presets", "base", "profiles", "scenarios")
+_EXTENDABLE_OVERRIDE_PATHS: tuple[tuple[str, ...], ...] = (
+    ("parameter_space", "overrides"),
+    ("objective", "constraints"),
+)
+
+
+def resolve_optimize_preset_inheritance(raw_config: dict[str, Any]) -> dict[str, Any]:
+    """Resolve base/profile/scenario optimize presets into a single config."""
+    preset_container = _find_preset_container(raw_config)
+    if preset_container is None:
+        return raw_config
+
+    presets = preset_container.get("presets", preset_container)
+    if not isinstance(presets, Mapping):
+        raise ConfigValidationError("optimize presets must be a mapping")
+
+    base = _require_mapping(presets.get("base"), "presets.base")
+    profiles = _ensure_mapping(presets.get("profiles"), "presets.profiles")
+    scenarios = _ensure_mapping(presets.get("scenarios"), "presets.scenarios")
+
+    # Do not inherit top-level profile/scenario selectors when presets are
+    # defined under optimize.*; selectors must come from the same container.
+    profile_raw = preset_container.get("profile")
+    scenario_raw = preset_container.get("scenario")
+    if preset_container is raw_config:
+        profile_raw = raw_config.get("profile")
+        scenario_raw = raw_config.get("scenario")
+
+    selection = OptimizePresetSelection(
+        profile=_normalize_override_name(profile_raw, "profile"),
+        scenario=_normalize_override_name(scenario_raw, "scenario"),
+    )
+
+    profile_override = _resolve_named_override(
+        profiles,
+        selection.profile,
+        label="profile preset",
+    )
+    scenario_override = _resolve_named_override(
+        scenarios,
+        selection.scenario,
+        label="scenario preset",
+    )
+
+    merged = _merge_preset_layer(
+        base,
+        _normalize_override_entry(profile_override, label=selection.profile, kind="profile"),
+        source="profile",
+        selection_name=selection.profile,
+    )
+    merged = _merge_preset_layer(
+        merged,
+        _normalize_override_entry(scenario_override, label=selection.scenario, kind="scenario"),
+        source="scenario",
+        selection_name=selection.scenario,
+    )
+
+    inline_overrides = _extract_inline_overrides(preset_container)
+    if inline_overrides:
+        merged = _merge_preset_layer(
+            merged,
+            inline_overrides,
+            source="inline",
+            selection_name=None,
+        )
+
+    return merged
+
+
+def _find_preset_container(raw_config: dict[str, Any]) -> Mapping[str, Any] | None:
+    if "optimize" in raw_config and isinstance(raw_config["optimize"], Mapping):
+        optimize_section = raw_config["optimize"]
+        if _has_preset_keys(optimize_section):
+            return optimize_section
+    if _has_preset_keys(raw_config):
+        return raw_config
+    return None
+
+
+def _has_preset_keys(candidate: Mapping[str, Any]) -> bool:
+    if "presets" in candidate:
+        return True
+    return all(key in candidate for key in ("base", "profiles", "scenarios"))
+
+
+def _normalize_override_name(raw_value: Any, label: str) -> str | None:
+    if raw_value is None:
+        return None
+    if not isinstance(raw_value, str):
+        raise ConfigValidationError(f"{label} selection must be a string")
+    normalized = raw_value.strip()
+    return normalized or None
+
+
+def _ensure_mapping(value: Any, label: str) -> dict[str, Any]:
+    if value is None:
+        return {}
+    if not isinstance(value, Mapping):
+        raise ConfigValidationError(f"{label} must be a mapping")
+    return dict(value)
+
+
+def _require_mapping(value: Any, label: str) -> dict[str, Any]:
+    if value is None:
+        raise ConfigValidationError(f"{label} is required")
+    if not isinstance(value, Mapping):
+        raise ConfigValidationError(f"{label} must be a mapping")
+    return dict(value)
+
+
+def _resolve_named_override(
+    overrides: Mapping[str, Any],
+    name: str | None,
+    *,
+    label: str,
+) -> Any:
+    if name is None:
+        return {}
+    if name not in overrides:
+        available = ", ".join(sorted(overrides.keys())) or "none"
+        raise ConfigValidationError(f"Unknown {label}: {name}. Available: {available}")
+    return overrides[name]
+
+
+def _normalize_override_entry(
+    entry: Any,
+    *,
+    label: str | None,
+    kind: str,
+) -> dict[str, Any]:
+    if entry is None:
+        return {}
+    if not isinstance(entry, Mapping):
+        name = label or "unknown"
+        raise ConfigValidationError(f"{kind} preset '{name}' overrides must be a mapping")
+    if not entry:
+        return {}
+    if "overrides" in entry:
+        overrides = entry.get("overrides")
+        if overrides is None:
+            return {}
+        if not isinstance(overrides, Mapping):
+            name = label or "unknown"
+            raise ConfigValidationError(f"{kind} preset '{name}' overrides must be a mapping")
+        return dict(overrides)
+    return dict(entry)
+
+
+def _extract_inline_overrides(container: Mapping[str, Any]) -> dict[str, Any]:
+    inline: dict[str, Any] = {}
+    for key, value in container.items():
+        if key in {"presets", "base", "profiles", "scenarios", "profile", "scenario"}:
+            continue
+        inline[key] = value
+    return inline
+
+
+def _merge_preset_layer(
+    base: dict[str, Any],
+    overrides: dict[str, Any],
+    *,
+    source: str,
+    selection_name: str | None,
+) -> dict[str, Any]:
+    if not overrides:
+        return dict(base)
+
+    report = _merge_preset_values(base, overrides, path=())
+    if report.missing_keys or report.conflicts:
+        label = _format_override_label(source, selection_name)
+        issues: list[str] = []
+        if report.missing_keys:
+            missing = ", ".join(sorted(report.missing_keys))
+            issues.append(f"unknown keys: {missing}")
+        if report.conflicts:
+            conflicts = ", ".join(sorted(report.conflicts))
+            issues.append(f"type conflicts at: {conflicts}")
+        raise ConfigValidationError(f"{label} has invalid overrides ({'; '.join(issues)})")
+
+    return report.merged
+
+
+def _merge_preset_values(
+    base: Mapping[str, Any],
+    overrides: Mapping[str, Any],
+    *,
+    path: tuple[str, ...],
+) -> _PresetMergeReport:
+    merged = dict(base)
+    missing_keys: list[str] = []
+    conflicts: list[str] = []
+
+    for key, override_value in overrides.items():
+        current_path = (*path, key)
+        if key not in base:
+            if _is_extendable_path(current_path):
+                merged[key] = override_value
+            else:
+                missing_keys.append(".".join(current_path))
+            continue
+
+        base_value = base[key]
+        if override_value is None:
+            merged[key] = None
+            continue
+
+        if base_value is None:
+            merged[key] = override_value
+            continue
+
+        if isinstance(base_value, Mapping) and isinstance(override_value, Mapping):
+            report = _merge_preset_values(base_value, override_value, path=current_path)
+            merged[key] = report.merged
+            missing_keys.extend(report.missing_keys)
+            conflicts.extend(report.conflicts)
+            continue
+
+        if isinstance(base_value, Mapping) != isinstance(override_value, Mapping):
+            conflicts.append(
+                f"{'.'.join(current_path)} (base {type(base_value).__name__}, "
+                f"override {type(override_value).__name__})"
+            )
+            continue
+
+        merged[key] = override_value
+
+    return _PresetMergeReport(
+        merged=merged,
+        missing_keys=missing_keys,
+        conflicts=conflicts,
+    )
+
+
+def _is_extendable_path(path: tuple[str, ...]) -> bool:
+    for allowed_path in _EXTENDABLE_OVERRIDE_PATHS:
+        if path[: len(allowed_path)] == allowed_path:
+            return True
+    return False
+
+
+def _format_override_label(source: str, selection_name: str | None) -> str:
+    if selection_name:
+        return f"{source.capitalize()} preset '{selection_name}'"
+    return f"{source.capitalize()} overrides"
+
+
 @dataclass
 class BacktestSettings:
     """Backtest configuration settings."""
@@ -144,6 +406,7 @@ def parse_config(raw_config: dict[str, Any]) -> OptimizeCliConfig:
     Raises:
         ConfigValidationError: If configuration is invalid
     """
+    raw_config = resolve_optimize_preset_inheritance(raw_config)
     # Parse study settings
     study_raw = raw_config.get("study", {})
     if not study_raw.get("name"):

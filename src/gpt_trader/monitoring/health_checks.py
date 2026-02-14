@@ -102,10 +102,7 @@ class HealthCheckPlanner:
         dependency_graph, missing_required = self._build_dependency_graph()
         if missing_required:
             raise HealthCheckDependencyError(
-                {
-                    name: tuple(sorted(missing))
-                    for name, missing in sorted(missing_required.items())
-                }
+                {name: tuple(sorted(missing)) for name, missing in sorted(missing_required.items())}
             )
 
         ordered_names = self._topological_sort(dependency_graph)
@@ -114,9 +111,7 @@ class HealthCheckPlanner:
     def _build_dependency_graph(
         self,
     ) -> tuple[dict[str, set[str]], dict[str, list[str]]]:
-        dependency_graph: dict[str, set[str]] = {
-            name: set() for name in self._checks_by_name
-        }
+        dependency_graph: dict[str, set[str]] = {name: set() for name in self._checks_by_name}
         missing_required: dict[str, list[str]] = {}
 
         for check in self._checks_by_name.values():

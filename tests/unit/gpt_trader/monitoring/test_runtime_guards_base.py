@@ -120,18 +120,11 @@ def test_runtime_guard_cooldown_is_per_metric_key():
         time_provider=provider,
     )
 
-    first_alert = guard.check(
-        {"metric_key": "latency_p95", "latency_p95": 150, "units": "ms"}
-    )
+    first_alert = guard.check({"metric_key": "latency_p95", "latency_p95": 150, "units": "ms"})
     assert first_alert is not None
 
     provider.advance(timedelta(seconds=30))
-    assert (
-        guard.check({"metric_key": "latency_p95", "latency_p95": 150, "units": "ms"})
-        is None
-    )
+    assert guard.check({"metric_key": "latency_p95", "latency_p95": 150, "units": "ms"}) is None
 
-    second_alert = guard.check(
-        {"metric_key": "latency_p99", "latency_p99": 200, "units": "ms"}
-    )
+    second_alert = guard.check({"metric_key": "latency_p99", "latency_p99": 200, "units": "ms"})
     assert second_alert is not None

@@ -69,6 +69,7 @@ class RuntimeGuard:
         self.status: GuardStatus = GuardStatus.HEALTHY if config.enabled else GuardStatus.DISABLED
         self.last_check: datetime = self._now()
         self.last_alert: datetime | None = None
+        self._last_alert_key: str | None = None
         self.breach_count: int = 0
         self.alerts: list[Alert] = []
 
@@ -78,9 +79,12 @@ class RuntimeGuard:
         if not self.config.enabled:
             return None
 
+        cooldown_key = self._cooldown_key(context)
         if self.last_alert:
             elapsed = (now - self.last_alert).total_seconds()
-            if elapsed < self.config.cooldown_seconds:
+            if elapsed < self.config.cooldown_seconds and (
+                cooldown_key is None or cooldown_key == self._last_alert_key
+            ):
                 return None
 
         is_breached, message = self._evaluate(context)
@@ -97,6 +101,7 @@ class RuntimeGuard:
             )
             self.alerts.append(alert)
             self.last_alert = now
+            self._last_alert_key = cooldown_key
             self.last_check = now
             return alert
 
@@ -117,6 +122,12 @@ class RuntimeGuard:
 
     def _now(self) -> datetime:
         return self._time_provider.now_utc()
+
+    def _cooldown_key(self, context: dict[str, Any]) -> str | None:
+        key = context.get("cooldown_key")
+        if isinstance(key, str) and key:
+            return key
+        return None
 
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
         """Default evaluation logic based on threshold comparisons."""

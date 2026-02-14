@@ -53,6 +53,19 @@ def test_cooldown_prevents_alerts_until_elapsed() -> None:
     assert second_alert is not None
 
 
+def test_new_opportunity_id_bypasses_cooldown() -> None:
+    clock = FakeClock(start_datetime=datetime(2025, 1, 1))
+    guard = _create_guard(cooldown_seconds=60, time_provider=clock)
+
+    first_alert = guard.check({"no_candidate_streak": 5, "opportunity_id": "opp_a"})
+    assert first_alert is not None
+
+    clock.advance(10)
+    second_alert = guard.check({"no_candidate_streak": 6, "opportunity_id": "opp_b"})
+    assert second_alert is not None
+    assert "opp_b" in second_alert.message
+
+
 def test_zero_threshold_override_is_honored() -> None:
     guard = _create_guard(threshold=5)
     alert = guard.check({"no_candidate_streak": 1, "threshold_override": 0})

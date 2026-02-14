@@ -34,6 +34,13 @@ async def test_quantity_zero_emits_gate_event(engine) -> None:
     payload = events[-1].get("data", {})
     assert payload.get("gate") == "sizing"
     assert payload.get("reason") == "quantity_zero"
+    seed_key = payload.get("seed_key")
+    seed_title = payload.get("seed_title")
+    assert isinstance(seed_key, str)
+    assert seed_key.startswith("trade-gate-blocked-sizing-")
+    assert isinstance(seed_title, str)
+    assert seed_title.startswith("Trade gate blocked: sizing [")
+    assert seed_title.endswith("]")
 
 
 def test_calculate_order_quantity_with_strategy_config(engine):

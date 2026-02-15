@@ -100,6 +100,71 @@ def _validate_objective_name(raw_name: str | None) -> str:
     return name
 
 
+def _select_optimize_config(raw_config: dict[str, Any]) -> dict[str, Any]:
+    if "optimize" not in raw_config:
+        return raw_config
+
+    optimize_raw = raw_config.get("optimize")
+    if optimize_raw is None:
+        return {}
+    if not isinstance(optimize_raw, dict):
+        raise ConfigValidationError("optimize must be a mapping")
+
+    presets_raw = optimize_raw.get("presets")
+    if presets_raw is None:
+        return optimize_raw
+    if not isinstance(presets_raw, dict):
+        raise ConfigValidationError("optimize.presets must be a mapping")
+    if not presets_raw:
+        raise ConfigValidationError("optimize.presets must not be empty")
+
+    preset_name = optimize_raw.get("preset")
+    if preset_name is None:
+        if len(presets_raw) == 1:
+            preset_name = next(iter(presets_raw))
+        else:
+            raise ConfigValidationError(
+                "optimize.preset is required when multiple optimize presets are defined"
+            )
+    if not isinstance(preset_name, str):
+        raise ConfigValidationError("optimize.preset must be a string")
+    if preset_name not in presets_raw:
+        available = ", ".join(sorted(presets_raw))
+        raise ConfigValidationError(
+            f"Unknown optimize preset: {preset_name}. Available: {available}"
+        )
+
+    preset_config = presets_raw[preset_name]
+    if not isinstance(preset_config, dict):
+        raise ConfigValidationError(
+            f"optimize.presets.{preset_name} must be a mapping"
+        )
+    return preset_config
+
+
+def _parse_parameter_overrides(parameter_space_raw: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    overrides_raw = parameter_space_raw.get("overrides")
+    if overrides_raw is None:
+        return {}
+    if not isinstance(overrides_raw, dict):
+        raise ConfigValidationError("parameter_space.overrides must be a mapping")
+
+    overrides: dict[str, dict[str, Any]] = {}
+    for name, override_value in overrides_raw.items():
+        if not isinstance(name, str):
+            raise ConfigValidationError("parameter_space.overrides keys must be strings")
+        if override_value is None:
+            overrides[name] = {}
+            continue
+        if not isinstance(override_value, dict):
+            raise ConfigValidationError(
+                f"parameter_space.overrides.{name} must be a mapping"
+            )
+        overrides[name] = override_value
+
+    return overrides
+
+
 def load_config_file(config_path: Path) -> dict[str, Any]:
     """
     Load and parse a YAML configuration file.
@@ -141,6 +206,10 @@ def parse_config(raw_config: dict[str, Any]) -> OptimizeCliConfig:
     Raises:
         ConfigValidationError: If configuration is invalid
     """
+    raw_config = _select_optimize_config(raw_config)
+    if not isinstance(raw_config, dict):
+        raise ConfigValidationError("Configuration must be a dictionary")
+
     # Parse study settings
     study_raw = raw_config.get("study", {})
     if not study_raw.get("name"):
@@ -209,9 +278,11 @@ def parse_config(raw_config: dict[str, Any]) -> OptimizeCliConfig:
             )
 
     # Parse parameter space
-    param_space_raw = raw_config.get("parameter_space", {})
+    param_space_raw = raw_config.get("parameter_space") or {}
+    if not isinstance(param_space_raw, dict):
+        raise ConfigValidationError("parameter_space must be a mapping")
     include_groups = _normalize_parameter_groups(param_space_raw.get("include_groups"))
-    parameter_overrides = param_space_raw.get("overrides", {})
+    parameter_overrides = _parse_parameter_overrides(param_space_raw)
 
     return OptimizeCliConfig(
         study=study,

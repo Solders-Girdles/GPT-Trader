@@ -80,6 +80,53 @@ def test_parse_config_full():
     assert config.backtest.granularity == "ONE_HOUR"
 
 
+def test_parse_config_uses_optimize_preset_without_root_inheritance():
+    raw = {
+        "study": {"name": "root"},
+        "objective": {"preset": "sharpe"},
+        "parameter_space": {"include_groups": ["risk"]},
+        "optimize": {
+            "preset": "fast",
+            "presets": {
+                "fast": {
+                    "study": {"name": "fast_study"},
+                    "objective": {"preset": "sortino"},
+                    "parameter_space": {"include_groups": ["strategy"]},
+                }
+            },
+        },
+    }
+
+    config = parse_config(raw)
+
+    assert config.study.name == "fast_study"
+    assert config.objective_name == "sortino"
+    assert config.include_parameter_groups == ["strategy"]
+
+
+def test_parse_config_optimize_preset_requires_selection_for_multiple():
+    raw = {
+        "optimize": {
+            "presets": {
+                "fast": {"study": {"name": "fast"}},
+                "slow": {"study": {"name": "slow"}},
+            }
+        }
+    }
+
+    with pytest.raises(ConfigValidationError, match="optimize.preset is required"):
+        parse_config(raw)
+
+
+def test_parse_config_invalid_parameter_override_type():
+    raw = {
+        "study": {"name": "override_test"},
+        "parameter_space": {"overrides": {"short_ma_period": 0}},
+    }
+
+    with pytest.raises(ConfigValidationError, match="parameter_space.overrides.short_ma_period"):
+        parse_config(raw)
+
 def test_parse_config_missing_study_name():
     with pytest.raises(ConfigValidationError, match="study.name is required"):
         parse_config({"study": {}})

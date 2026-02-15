@@ -72,3 +72,32 @@ def test_zero_threshold_override_is_honored() -> None:
 
     assert alert is not None
     assert "threshold: 0" in alert.message
+
+
+def test_cooldown_resets_after_recovery() -> None:
+    clock = FakeClock(start_datetime=datetime(2025, 1, 1))
+    guard = _create_guard(threshold=2, cooldown_seconds=60, time_provider=clock)
+
+    first_alert = guard.check({"no_candidate_streak": 3, "opportunity_id": "opp_a"})
+    assert first_alert is not None
+
+    clock.advance(5)
+    assert guard.check({"no_candidate_streak": 0, "opportunity_id": "opp_a"}) is None
+
+    clock.advance(1)
+    second_alert = guard.check({"no_candidate_streak": 3, "opportunity_id": "opp_a"})
+    assert second_alert is not None
+
+
+def test_unevaluable_input_preserves_cooldown() -> None:
+    clock = FakeClock(start_datetime=datetime(2025, 1, 1))
+    guard = _create_guard(threshold=2, cooldown_seconds=60, time_provider=clock)
+
+    first_alert = guard.check({"no_candidate_streak": 3, "opportunity_id": "opp_a"})
+    assert first_alert is not None
+
+    clock.advance(10)
+    assert guard.check({"opportunity_id": "opp_a"}) is None
+
+    clock.advance(1)
+    assert guard.check({"no_candidate_streak": 4, "opportunity_id": "opp_a"}) is None

@@ -8,6 +8,7 @@ from typing import Any
 
 import yaml
 
+from gpt_trader.cli.commands.optimize.config_loader import resolve_optimize_preset_inheritance
 from gpt_trader.cli.commands.optimize.registry import categorize_parameters_by_group
 from gpt_trader.cli.response import CliErrorCode, CliResponse
 from gpt_trader.features.optimize.persistence.storage import OptimizationStorage
@@ -153,6 +154,7 @@ def execute(args: Namespace) -> CliResponse | int:
                 )
             logger.error(f"Invalid YAML in base config: {e}")
             return 1
+        base_config = resolve_optimize_preset_inheritance(base_config)
 
     # Build output configuration
     output_config = _build_output_config(

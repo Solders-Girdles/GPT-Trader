@@ -70,6 +70,7 @@ class RuntimeGuard:
         self.last_check: datetime = self._now()
         self.last_alert: datetime | None = None
         self._last_alert_key: str | None = None
+        self._last_alert_by_key: dict[str, datetime] = {}
         self.breach_count: int = 0
         self.alerts: list[Alert] = []
 
@@ -80,12 +81,17 @@ class RuntimeGuard:
             return None
 
         cooldown_key = self._cooldown_key(context)
-        if self.last_alert:
-            elapsed = (now - self.last_alert).total_seconds()
-            if elapsed < self.config.cooldown_seconds and (
-                cooldown_key is None or cooldown_key == self._last_alert_key
-            ):
-                return None
+        if cooldown_key is None:
+            if self.last_alert:
+                elapsed = (now - self.last_alert).total_seconds()
+                if elapsed < self.config.cooldown_seconds:
+                    return None
+        else:
+            last_alert_for_key = self._last_alert_by_key.get(cooldown_key)
+            if last_alert_for_key is not None:
+                elapsed = (now - last_alert_for_key).total_seconds()
+                if elapsed < self.config.cooldown_seconds:
+                    return None
 
         is_breached, message = self._evaluate(context)
 
@@ -102,6 +108,8 @@ class RuntimeGuard:
             self.alerts.append(alert)
             self.last_alert = now
             self._last_alert_key = cooldown_key
+            if cooldown_key is not None:
+                self._last_alert_by_key[cooldown_key] = now
             self.last_check = now
             return alert
 

@@ -106,3 +106,30 @@ def test_runtime_guard_uses_time_provider_for_cooldown():
     second_alert = guard.check({"value": 150, "units": "ms"})
     assert second_alert is not None
     assert second_alert.timestamp == provider.now_utc()
+
+
+def test_runtime_guard_applies_cooldown_per_key():
+    provider = ManualTimeProvider(datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC))
+    guard = RuntimeGuard(
+        GuardConfig(
+            name="launcher_starvation",
+            threshold=1.0,
+            severity=AlertSeverity.ERROR,
+            cooldown_seconds=60,
+        ),
+        time_provider=provider,
+    )
+
+    alert_a1 = guard.check({"value": 2, "cooldown_key": "opp_a"})
+    assert alert_a1 is not None
+
+    provider.advance(timedelta(seconds=20))
+    alert_b1 = guard.check({"value": 2, "cooldown_key": "opp_b"})
+    assert alert_b1 is not None
+
+    provider.advance(timedelta(seconds=20))
+    assert guard.check({"value": 2, "cooldown_key": "opp_a"}) is None
+
+    provider.advance(timedelta(seconds=21))
+    alert_a2 = guard.check({"value": 2, "cooldown_key": "opp_a"})
+    assert alert_a2 is not None

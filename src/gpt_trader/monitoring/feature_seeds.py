@@ -39,8 +39,8 @@ def build_feature_seed(
 ) -> FeatureSeed:
     """Build a deterministic seed key and collision-resistant title.
 
-    The suffix is derived from a hash of the title and signature, which keeps
-    titles unique even when upstream systems merge on normalized titles.
+    The suffix is derived from a hash of the title and signature, and is
+    appended as a plain token so it survives merged-title normalization.
     """
 
     base_title = title.strip() or "feature"
@@ -53,5 +53,5 @@ def build_feature_seed(
     suffix = digest[:suffix_length]
     return FeatureSeed(
         key=f"{normalized}-{suffix}",
-        title=f"{base_title} [{suffix}]",
+        title=f"{base_title} seed-{suffix}",
     )

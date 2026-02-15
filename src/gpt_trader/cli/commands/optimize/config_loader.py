@@ -209,9 +209,9 @@ def parse_config(raw_config: dict[str, Any]) -> OptimizeCliConfig:
             )
 
     # Parse parameter space
-    if "parameter_space" in raw_config:
-        param_space_raw = raw_config["parameter_space"]
-    else:
+    # Preserve falsy non-mapping values for validation.
+    param_space_raw = raw_config.get("parameter_space")
+    if "parameter_space" not in raw_config:
         param_space_raw = {}
     if not isinstance(param_space_raw, dict):
         raise ConfigValidationError("parameter_space must be a mapping")

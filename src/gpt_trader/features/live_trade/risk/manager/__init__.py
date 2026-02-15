@@ -448,14 +448,14 @@ class LiveRiskManager:
         if self._start_of_day_equity is None:
             self._start_of_day_equity = equity
             self._save_state()
-            return False
+            return self._daily_pnl_triggered
 
         if not self.config:
-            return False
+            return self._daily_pnl_triggered
 
         daily_loss_limit = getattr(self.config, "daily_loss_limit_pct", None)
         if not daily_loss_limit:
-            return False
+            return self._daily_pnl_triggered
 
         daily_pnl = equity - self._start_of_day_equity
         if self._start_of_day_equity > 0:
@@ -469,7 +469,7 @@ class LiveRiskManager:
                 self.set_reduce_only_mode(True, reason="daily_loss_limit_breached")
                 self._save_state()
                 return True
-        return False
+        return self._daily_pnl_triggered
 
     def check_mark_staleness(self, symbol: str) -> bool:
         """

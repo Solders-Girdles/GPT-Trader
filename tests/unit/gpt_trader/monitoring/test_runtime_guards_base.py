@@ -108,6 +108,30 @@ def test_runtime_guard_uses_time_provider_for_cooldown():
     assert second_alert.timestamp == provider.now_utc()
 
 
+def test_runtime_guard_preserves_cooldown_when_input_not_evaluable():
+    provider = ManualTimeProvider(datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC))
+    guard = RuntimeGuard(
+        GuardConfig(
+            name="latency",
+            threshold=100.0,
+            severity=AlertSeverity.ERROR,
+            cooldown_seconds=60,
+        ),
+        time_provider=provider,
+    )
+
+    first_alert = guard.check({"value": 150, "units": "ms"})
+    assert first_alert is not None
+    assert guard.status is GuardStatus.BREACHED
+
+    provider.advance(timedelta(seconds=10))
+    assert guard.check({"value": "not-a-number"}) is None
+    assert guard.status is GuardStatus.BREACHED
+
+    provider.advance(timedelta(seconds=10))
+    assert guard.check({"value": 150, "units": "ms"}) is None
+
+
 def test_runtime_guard_cooldown_is_per_metric_key():
     provider = ManualTimeProvider(datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC))
     guard = RuntimeGuard(

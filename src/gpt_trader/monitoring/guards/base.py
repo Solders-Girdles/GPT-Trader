@@ -70,6 +70,7 @@ class RuntimeGuard:
         self.last_check: datetime = self._now()
         self.last_alert: datetime | None = None
         self._last_alerts_by_key: dict[str, datetime] = {}
+        self._last_evaluation_evaluable: bool = True
         self.breach_count: int = 0
         self.alerts: list[Alert] = []
 
@@ -86,7 +87,12 @@ class RuntimeGuard:
             if elapsed < self.config.cooldown_seconds:
                 return None
 
+        self._last_evaluation_evaluable = True
         is_breached, message = self._evaluate(context)
+
+        if not self._last_evaluation_evaluable:
+            self.last_check = now
+            return None
 
         if is_breached:
             self.status = GuardStatus.BREACHED
@@ -156,6 +162,7 @@ class RuntimeGuard:
 
         value = self._coerce_decimal(raw_value)
         if value is None:
+            self._last_evaluation_evaluable = False
             return False, ""
 
         threshold_sources = (
@@ -167,6 +174,7 @@ class RuntimeGuard:
         threshold_raw = next((item for item in threshold_sources if item is not None), None)
         threshold = self._coerce_decimal(threshold_raw)
         if threshold is None:
+            self._last_evaluation_evaluable = False
             return False, ""
 
         comparison = str(context.get("comparison", context.get("operator", "gt"))).lower()

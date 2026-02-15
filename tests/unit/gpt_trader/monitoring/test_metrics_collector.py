@@ -10,8 +10,11 @@ from gpt_trader.monitoring.metrics_collector import (
     record_counter,
     record_gauge,
     record_histogram,
+    record_trade_blocked,
+    record_trade_executed,
     reset_all,
 )
+from gpt_trader.monitoring.metrics_exporter import format_prometheus
 
 
 @pytest.fixture(autouse=True)
@@ -87,6 +90,18 @@ class TestCounters:
         collector = get_metrics_collector()
         # Should work without labels (dict key is just the name)
         assert collector.counters["old_style_counter"] == 6
+
+    def test_trade_counters_exported_via_prometheus_output(self):
+        """Test trade counters appear in Prometheus output."""
+        record_trade_executed()
+        record_trade_executed()
+        record_trade_blocked()
+
+        collector = get_metrics_collector()
+        output = format_prometheus(collector.get_metrics_summary())
+
+        assert "gpt_trader_trades_executed_total 2" in output
+        assert "gpt_trader_trades_blocked_total 1" in output
 
 
 class TestGauges:

@@ -80,7 +80,6 @@ def test_parse_config_full():
     assert config.symbols == ["BTC-USD", "ETH-USD"]
     assert config.backtest.granularity == "ONE_HOUR"
 
-
 def test_resolve_optimize_preset_inheritance_merges_precedence():
     raw = {
         "presets": {
@@ -198,6 +197,14 @@ def test_resolve_optimize_preset_inheritance_type_conflict():
     with pytest.raises(ConfigValidationError, match="type conflicts at: parameter_space"):
         resolve_optimize_preset_inheritance(raw)
 
+def test_parse_config_invalid_parameter_override_type():
+    raw = {
+        "study": {"name": "override_test"},
+        "parameter_space": {"overrides": {"short_ma_period": 0}},
+    }
+
+    with pytest.raises(ConfigValidationError, match="parameter_space.overrides.short_ma_period"):
+        parse_config(raw)
 
 def test_parse_config_missing_study_name():
     with pytest.raises(ConfigValidationError, match="study.name is required"):

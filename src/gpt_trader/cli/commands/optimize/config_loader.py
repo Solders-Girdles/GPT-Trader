@@ -22,8 +22,6 @@ from gpt_trader.cli.commands.optimize.registry import (
 from gpt_trader.features.optimize.parameter_space.builder import ParameterSpaceBuilder
 from gpt_trader.features.optimize.types import OptimizationConfig, ParameterSpace
 
-_MISSING = object()
-
 
 class ConfigValidationError(Exception):
     """Raised when configuration is invalid."""
@@ -211,12 +209,13 @@ def parse_config(raw_config: dict[str, Any]) -> OptimizeCliConfig:
             )
 
     # Parse parameter space
-    # Preserve falsy non-mapping values for validation.
-    param_space_raw = raw_config.get("parameter_space", _MISSING)
-    if param_space_raw is _MISSING:
+    # Use key presence to avoid masking falsy non-mapping values.
+    if "parameter_space" in raw_config:
+        param_space_raw = raw_config["parameter_space"]
+        if not isinstance(param_space_raw, dict):
+            raise ConfigValidationError("parameter_space must be a mapping")
+    else:
         param_space_raw = {}
-    if not isinstance(param_space_raw, dict):
-        raise ConfigValidationError("parameter_space must be a mapping")
     include_groups = _normalize_parameter_groups(param_space_raw.get("include_groups"))
     parameter_overrides = param_space_raw.get("overrides", {})
 

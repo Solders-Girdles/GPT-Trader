@@ -37,9 +37,9 @@ async def test_quantity_zero_emits_gate_event(engine) -> None:
     seed_key = payload.get("seed_key")
     seed_title = payload.get("seed_title")
     assert isinstance(seed_key, str)
-    assert seed_key.startswith("trade-gate-blocked-sizing-")
+    assert seed_key.startswith("trade-gate-blocked-sizing-quantity-zero-")
     assert isinstance(seed_title, str)
-    assert seed_title.startswith("Trade gate blocked: sizing seed-")
+    assert seed_title.startswith("Trade gate blocked: sizing - quantity_zero seed-")
     assert seed_title.split("seed-")[-1] == seed_key.rsplit("-", 1)[-1]
 
 

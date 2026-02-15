@@ -85,7 +85,7 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
 )
 from gpt_trader.logging.correlation import correlation_context
 from gpt_trader.monitoring.alert_types import AlertSeverity
-from gpt_trader.monitoring.feature_seeds import build_feature_seed
+from gpt_trader.monitoring.feature_seeds import build_feature_seed, summarize_seed_reason
 from gpt_trader.monitoring.health_checks import HealthCheckRunner
 from gpt_trader.monitoring.heartbeat import HeartbeatService
 from gpt_trader.monitoring.metrics_collector import record_histogram, record_trade_blocked
@@ -2145,8 +2145,12 @@ class TradingEngine(BaseEngine):
             payload["params"] = params
         if decision_id is not None:
             payload["decision_id"] = str(decision_id)
+        reason_label = summarize_seed_reason(reason)
+        seed_title = f"Trade gate blocked: {gate}"
+        if reason_label:
+            seed_title = f"{seed_title} - {reason_label}"
         seed = build_feature_seed(
-            title=f"Trade gate blocked: {gate}",
+            title=seed_title,
             signature={
                 "gate": gate,
                 "reason": reason,

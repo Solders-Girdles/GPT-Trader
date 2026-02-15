@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from gpt_trader.monitoring.feature_seeds import build_feature_seed
+from gpt_trader.monitoring.feature_seeds import build_feature_seed, summarize_seed_reason
 
 
 def test_build_feature_seed_is_deterministic() -> None:
@@ -55,3 +55,16 @@ def test_build_feature_seed_enforces_suffix_length_bounds() -> None:
 
     suffix = seed.key.rsplit("-", 1)[-1]
     assert len(suffix) == 4
+
+
+def test_summarize_seed_reason_accepts_simple_codes() -> None:
+    assert summarize_seed_reason("quantity_zero") == "quantity_zero"
+    assert summarize_seed_reason("paused:mark_staleness") == "paused:mark_staleness"
+    assert summarize_seed_reason("RISK_MANAGER_UNAVAILABLE") == "risk_manager_unavailable"
+
+
+def test_summarize_seed_reason_rejects_noisy_values() -> None:
+    assert summarize_seed_reason(None) is None
+    assert summarize_seed_reason("") is None
+    assert summarize_seed_reason("reason with spaces") is None
+    assert summarize_seed_reason("details=price:123.45") is None

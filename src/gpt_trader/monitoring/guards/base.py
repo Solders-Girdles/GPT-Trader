@@ -87,6 +87,7 @@ class RuntimeGuard:
 
         if not self._last_evaluation_evaluable:
             self.last_check = now
+            # Keep cooldown state intact when inputs are not evaluable.
             return None
 
         if not is_breached:

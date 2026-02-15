@@ -129,6 +129,7 @@ def test_runtime_guard_preserves_cooldown_when_input_not_evaluable():
     assert guard.check({"value": "not-a-number", "cooldown_key": "secondary"}) is None
     assert guard.status is GuardStatus.BREACHED
     assert guard.last_alert == first_alert_timestamp
+    assert guard._last_alerts_by_key == {"primary": first_alert_timestamp}
 
     provider.advance(timedelta(seconds=10))
     assert guard.check({"value": 150, "units": "ms", "cooldown_key": "primary"}) is None

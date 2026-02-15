@@ -125,6 +125,10 @@ class RuntimeGuard:
         except RuleError:
             return None
 
+    def _unevaluable(self) -> tuple[bool, str]:
+        self._last_evaluation_evaluable = False
+        return False, ""
+
     def _now(self) -> datetime:
         return self._time_provider.now_utc()
 
@@ -162,8 +166,7 @@ class RuntimeGuard:
 
         value = self._coerce_decimal(raw_value)
         if value is None:
-            self._last_evaluation_evaluable = False
-            return False, ""
+            return self._unevaluable()
 
         threshold_sources = (
             context.get("threshold_override"),
@@ -174,8 +177,7 @@ class RuntimeGuard:
         threshold_raw = next((item for item in threshold_sources if item is not None), None)
         threshold = self._coerce_decimal(threshold_raw)
         if threshold is None:
-            self._last_evaluation_evaluable = False
-            return False, ""
+            return self._unevaluable()
 
         comparison = str(context.get("comparison", context.get("operator", "gt"))).lower()
         comparisons: dict[str, tuple[str, Any, bool]] = {

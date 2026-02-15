@@ -27,6 +27,9 @@ class ConfigValidationError(Exception):
     """Raised when configuration is invalid."""
 
 
+_PARAMETER_SPACE_MISSING = object()
+
+
 @dataclass
 class BacktestSettings:
     """Backtest configuration settings."""
@@ -209,13 +212,12 @@ def parse_config(raw_config: dict[str, Any]) -> OptimizeCliConfig:
             )
 
     # Parse parameter space
-    # Use key presence to avoid masking falsy non-mapping values.
-    if "parameter_space" in raw_config:
-        param_space_raw = raw_config["parameter_space"]
-        if not isinstance(param_space_raw, Mapping):
-            raise ConfigValidationError("parameter_space must be a mapping")
-    else:
+    # Use a sentinel to avoid masking falsy non-mapping values.
+    param_space_raw = raw_config.get("parameter_space", _PARAMETER_SPACE_MISSING)
+    if param_space_raw is _PARAMETER_SPACE_MISSING:
         param_space_raw = {}
+    elif not isinstance(param_space_raw, Mapping):
+        raise ConfigValidationError("parameter_space must be a mapping")
     include_groups = _normalize_parameter_groups(param_space_raw.get("include_groups"))
     parameter_overrides = param_space_raw.get("overrides", {})
 

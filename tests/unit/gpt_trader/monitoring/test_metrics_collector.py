@@ -97,9 +97,10 @@ class TestCounters:
         record_trade_executed()
         record_trade_blocked()
 
-        collector = get_metrics_collector()
-        output = format_prometheus(collector.get_metrics_summary())
+        output = format_prometheus(get_metrics_collector().get_metrics_summary())
 
+        assert "# TYPE gpt_trader_trades_executed_total counter" in output
+        assert "# TYPE gpt_trader_trades_blocked_total counter" in output
         assert "gpt_trader_trades_executed_total 2" in output
         assert "gpt_trader_trades_blocked_total 1" in output
 

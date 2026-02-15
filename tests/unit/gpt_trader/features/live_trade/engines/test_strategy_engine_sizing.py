@@ -39,8 +39,8 @@ async def test_quantity_zero_emits_gate_event(engine) -> None:
     assert isinstance(seed_key, str)
     assert seed_key.startswith("trade-gate-blocked-sizing-")
     assert isinstance(seed_title, str)
-    assert seed_title.startswith("Trade gate blocked: sizing [")
-    assert seed_title.endswith("]")
+    assert seed_title.startswith("Trade gate blocked: sizing seed-")
+    assert seed_title.split("seed-")[-1] == seed_key.rsplit("-", 1)[-1]
 
 
 def test_calculate_order_quantity_with_strategy_config(engine):

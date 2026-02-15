@@ -5,11 +5,15 @@ from __future__ import annotations
 import pytest
 
 from gpt_trader.monitoring.metrics_collector import (
+    TRADE_BLOCKED_COUNTER,
+    TRADE_EXECUTED_COUNTER,
     format_metric_key,
     get_metrics_collector,
     record_counter,
     record_gauge,
     record_histogram,
+    record_trade_blocked,
+    record_trade_executed,
     reset_all,
 )
 
@@ -87,6 +91,24 @@ class TestCounters:
         collector = get_metrics_collector()
         # Should work without labels (dict key is just the name)
         assert collector.counters["old_style_counter"] == 6
+
+
+class TestTradeCounters:
+    """Tests for trade-specific counter naming and increments."""
+
+    def test_trade_counter_names_are_stable(self):
+        """Test that trade counter keys remain stable."""
+        assert TRADE_EXECUTED_COUNTER == "gpt_trader_trades_executed_total"
+        assert TRADE_BLOCKED_COUNTER == "gpt_trader_trades_blocked_total"
+
+    def test_record_trade_counters_increment(self):
+        """Test trade counter helpers increment expected keys."""
+        record_trade_executed()
+        record_trade_blocked()
+
+        collector = get_metrics_collector()
+        assert collector.counters["gpt_trader_trades_executed_total"] == 1
+        assert collector.counters["gpt_trader_trades_blocked_total"] == 1
 
 
 class TestGauges:

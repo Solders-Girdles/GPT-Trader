@@ -136,9 +136,7 @@ def _select_optimize_config(raw_config: dict[str, Any]) -> dict[str, Any]:
 
     preset_config = presets_raw[preset_name]
     if not isinstance(preset_config, dict):
-        raise ConfigValidationError(
-            f"optimize.presets.{preset_name} must be a mapping"
-        )
+        raise ConfigValidationError(f"optimize.presets.{preset_name} must be a mapping")
     return preset_config
 
 
@@ -157,9 +155,7 @@ def _parse_parameter_overrides(parameter_space_raw: dict[str, Any]) -> dict[str,
             overrides[name] = {}
             continue
         if not isinstance(override_value, dict):
-            raise ConfigValidationError(
-                f"parameter_space.overrides.{name} must be a mapping"
-            )
+            raise ConfigValidationError(f"parameter_space.overrides.{name} must be a mapping")
         overrides[name] = override_value
 
     return overrides

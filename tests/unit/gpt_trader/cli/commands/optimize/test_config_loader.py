@@ -206,6 +206,7 @@ def test_parse_config_invalid_parameter_override_type():
     with pytest.raises(ConfigValidationError, match="parameter_space.overrides.short_ma_period"):
         parse_config(raw)
 
+
 def test_parse_config_missing_study_name():
     with pytest.raises(ConfigValidationError, match="study.name is required"):
         parse_config({"study": {}})

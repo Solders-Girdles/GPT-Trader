@@ -461,6 +461,10 @@ class LiveRiskManager:
         if self._start_of_day_equity > 0:
             loss_pct = -daily_pnl / self._start_of_day_equity
             if loss_pct > Decimal(str(daily_loss_limit)):
+                if self._daily_pnl_triggered:
+                    if not self._reduce_only_mode:
+                        self.set_reduce_only_mode(True, reason="daily_loss_limit_breached")
+                    return False
                 self._daily_pnl_triggered = True
                 self.set_reduce_only_mode(True, reason="daily_loss_limit_breached")
                 self._save_state()

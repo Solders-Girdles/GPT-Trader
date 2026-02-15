@@ -75,6 +75,18 @@ class TestTrackDailyPnl:
         assert manager._reduce_only_mode is True
         assert manager._reduce_only_reason == "daily_loss_limit_breached"
 
+    def test_repeat_loss_breach_does_not_retrigger(self) -> None:
+        """Should avoid repeated triggers after initial breach."""
+        config = MockConfig(daily_loss_limit_pct=Decimal("0.05"))
+        manager = LiveRiskManager(config=config)
+        manager._start_of_day_equity = Decimal("10000")
+
+        assert manager.track_daily_pnl(Decimal("9000"), {}) is True
+        assert manager.track_daily_pnl(Decimal("8500"), {}) is False
+
+        assert manager._daily_pnl_triggered is True
+        assert manager._reduce_only_mode is True
+
     def test_profit_does_not_trigger(self) -> None:
         """Should not trigger on profit."""
         config = MockConfig(daily_loss_limit_pct=Decimal("0.05"))

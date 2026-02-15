@@ -123,10 +123,12 @@ def test_runtime_guard_preserves_cooldown_when_input_not_evaluable():
     first_alert = guard.check({"value": 150, "units": "ms"})
     assert first_alert is not None
     assert guard.status is GuardStatus.BREACHED
+    first_alert_timestamp = first_alert.timestamp
 
     provider.advance(timedelta(seconds=10))
     assert guard.check({"value": "not-a-number"}) is None
     assert guard.status is GuardStatus.BREACHED
+    assert guard.last_alert == first_alert_timestamp
 
     provider.advance(timedelta(seconds=10))
     assert guard.check({"value": 150, "units": "ms"}) is None

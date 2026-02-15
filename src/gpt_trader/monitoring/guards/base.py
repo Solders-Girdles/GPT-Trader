@@ -82,39 +82,46 @@ class RuntimeGuard:
 
         cooldown_key = self._resolve_cooldown_key(context)
         last_alert = self._last_alerts_by_key.get(cooldown_key)
-        if last_alert:
-            elapsed = (now - last_alert).total_seconds()
-            if elapsed < self.config.cooldown_seconds:
-                return None
-
         self._last_evaluation_evaluable = True
         is_breached, message = self._evaluate(context)
 
         if not self._last_evaluation_evaluable:
             self.last_check = now
+            # Keep cooldown state intact when inputs are not evaluable.
             return None
 
-        if is_breached:
-            self.status = GuardStatus.BREACHED
-            self.breach_count += 1
-            alert = Alert(
-                timestamp=now,
-                guard_name=self.config.name,
-                severity=self.config.severity,
-                message=message,
-                context=dict(context),
-            )
-            self.alerts.append(alert)
-            self.last_alert = now
-            self._last_alerts_by_key[cooldown_key] = now
+        if not is_breached:
+            # Preserve cooldown when the input is not evaluable (for example,
+            # malformed context), but clear cooldown once an evaluable recovery
+            # signal arrives so new breaches can alert immediately.
+            if self.status == GuardStatus.BREACHED:
+                self.status = GuardStatus.WARNING
             self.last_check = now
-            return alert
+            if last_alert is not None:
+                self._last_alerts_by_key.pop(cooldown_key, None)
+            return None
 
-        if self.status == GuardStatus.BREACHED:
-            self.status = GuardStatus.WARNING
+        if last_alert:
+            elapsed = (now - last_alert).total_seconds()
+            if elapsed < self.config.cooldown_seconds:
+                self.status = GuardStatus.BREACHED
+                self.last_check = now
+                return None
 
+        self.status = GuardStatus.BREACHED
+        self.breach_count += 1
+        alert = Alert(
+            timestamp=now,
+            guard_name=self.config.name,
+            severity=self.config.severity,
+            message=message,
+            context=dict(context),
+        )
+        self.alerts.append(alert)
+        self.last_alert = now
+        self._last_alerts_by_key[cooldown_key] = now
         self.last_check = now
-        return None
+        return alert
 
     # ------------------------------------------------------------------
     # Protected helpers

@@ -86,8 +86,16 @@ def test_summarize_seed_reason_accepts_simple_codes() -> None:
     assert summarize_seed_reason("RISK_MANAGER_UNAVAILABLE") == "risk_manager_unavailable"
 
 
+def test_summarize_seed_reason_normalizes_ops_style_reason() -> None:
+    assert (
+        summarize_seed_reason("ops: decision_id probe (quantity_override=0)")
+        == "ops:decision_id_probe"
+    )
+    assert summarize_seed_reason("paused: mark_staleness") == "paused:mark_staleness"
+
+
 def test_summarize_seed_reason_rejects_noisy_values() -> None:
     assert summarize_seed_reason(None) is None
     assert summarize_seed_reason("") is None
     assert summarize_seed_reason("reason with spaces") is None
-    assert summarize_seed_reason("details=price:123.45") is None
+    assert summarize_seed_reason("123.45") is None

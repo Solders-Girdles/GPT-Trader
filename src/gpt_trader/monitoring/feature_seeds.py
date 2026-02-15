@@ -11,6 +11,8 @@ from typing import Any, Mapping
 
 _SLUG_PATTERN = re.compile(r"[^a-z0-9]+")
 _SEED_REASON_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_:\\-]{0,63}$")
+_SEED_REASON_STRIP_PATTERN = re.compile(r"[\(\[\{].*?[\)\]\}]+")
+_SEED_REASON_MAX_TOKENS = 6
 _DEFAULT_SUFFIX_LENGTH = 8
 _SEED_PREFIX_TRANSLATION = {
     "a": "g",
@@ -65,7 +67,39 @@ def summarize_seed_reason(reason: str | None) -> str | None:
     if not reason_text:
         return None
     if not _SEED_REASON_PATTERN.match(reason_text):
-        return None
+        if not re.search(r"[A-Za-z]", reason_text):
+            return None
+        if not any(marker in reason_text for marker in (":", "_", "-")) and re.search(
+            r"\s", reason_text
+        ):
+            return None
+        normalized = reason_text.lower()
+        normalized = _SEED_REASON_STRIP_PATTERN.sub(" ", normalized)
+        normalized = re.sub(r"[^a-z0-9_:\\-]+", "_", normalized)
+        normalized = re.sub(r"_+", "_", normalized).strip("_")
+        normalized = re.sub(r":_+", ":", normalized)
+        normalized = re.sub(r"_+:", ":", normalized)
+        token_count = 0
+        segments: list[str] = []
+        for segment in normalized.split(":"):
+            if token_count >= _SEED_REASON_MAX_TOKENS:
+                break
+            tokens: list[str] = []
+            for token in re.split(r"[_-]+", segment):
+                if not token or not re.search(r"[a-z]", token):
+                    continue
+                tokens.append(token)
+                token_count += 1
+                if token_count >= _SEED_REASON_MAX_TOKENS:
+                    break
+            if tokens:
+                segments.append("_".join(tokens))
+        if not segments:
+            return None
+        candidate = ":".join(segments).strip("_:-")
+        if not candidate or not _SEED_REASON_PATTERN.match(candidate):
+            return None
+        return candidate
     return reason_text.lower()
 
 

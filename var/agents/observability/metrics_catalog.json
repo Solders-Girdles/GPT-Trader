@@ -69,7 +69,7 @@
       ],
       "locations": [
         {
-          "line": 103,
+          "line": 95,
           "path": "src/gpt_trader/features/live_trade/execution/broker_executor.py"
         }
       ],
@@ -99,7 +99,7 @@
       ],
       "locations": [
         {
-          "line": 1445,
+          "line": 1491,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],
@@ -190,7 +190,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 662,
+          "line": 680,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -223,11 +223,11 @@
           "path": "src/gpt_trader/features/live_trade/guard_errors.py"
         },
         {
-          "line": 67,
+          "line": 68,
           "path": "src/gpt_trader/monitoring/guards/manager.py"
         },
         {
-          "line": 72,
+          "line": 73,
           "path": "src/gpt_trader/monitoring/guards/manager.py"
         }
       ],
@@ -257,7 +257,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 672,
+          "line": 665,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -273,7 +273,7 @@
       ],
       "locations": [
         {
-          "line": 200,
+          "line": 204,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -290,7 +290,7 @@
       ],
       "locations": [
         {
-          "line": 174,
+          "line": 178,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -305,7 +305,7 @@
       ],
       "locations": [
         {
-          "line": 1782,
+          "line": 1929,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],
@@ -357,11 +357,11 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 344,
+          "line": 544,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         },
         {
-          "line": 369,
+          "line": 569,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -376,7 +376,7 @@
       ],
       "locations": [
         {
-          "line": 339,
+          "line": 539,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -389,7 +389,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 414,
+          "line": 614,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -484,7 +484,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1045,
+          "line": 1076,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -497,7 +497,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1056,
+          "line": 1087,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -510,7 +510,20 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1052,
+          "line": 1109,
+          "path": "src/gpt_trader/monitoring/status_reporter.py"
+        }
+      ],
+      "name": "gpt_trader_ws_heartbeat_lag_seconds",
+      "types": [
+        "histogram"
+      ]
+    },
+    {
+      "label_keys": [],
+      "locations": [
+        {
+          "line": 1083,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -523,7 +536,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1069,
+          "line": 1100,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -536,7 +549,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1073,
+          "line": 1104,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -549,7 +562,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1065,
+          "line": 1096,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -562,7 +575,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1061,
+          "line": 1092,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -575,7 +588,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1048,
+          "line": 1079,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -588,7 +601,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1057,
+          "line": 1088,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],

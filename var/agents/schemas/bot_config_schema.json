@@ -19,7 +19,7 @@
     "health_thresholds": {
       "type": "string",
       "description": "Type: <class 'gpt_trader.app.config.bot_config.HealthThresholdsConfig'>",
-      "default": "HealthThresholdsConfig(order_error_rate_warn=0.05, order_error_rate_crit=0.15, order_retry_rate_warn=0.1, order_retry_rate_crit=0.25, broker_latency_ms_warn=1000.0, broker_latency_ms_crit=3000.0, ws_staleness_seconds_warn=30.0, ws_staleness_seconds_crit=60.0, guard_trip_count_warn=3, guard_trip_count_crit=10, missing_decision_id_count_warn=1, missing_decision_id_count_crit=3)"
+      "default": "HealthThresholdsConfig(order_error_rate_warn=0.05, order_error_rate_crit=0.15, order_retry_rate_warn=0.1, order_retry_rate_crit=0.25, broker_latency_ms_warn=1000.0, broker_latency_ms_crit=3000.0, ws_staleness_seconds_warn=30.0, ws_staleness_seconds_crit=60.0, market_data_staleness_seconds_warn=10.0, market_data_staleness_seconds_crit=30.0, guard_trip_count_warn=3, guard_trip_count_crit=10, missing_decision_id_count_warn=1, missing_decision_id_count_crit=3)"
     },
     "regime_config": {},
     "ensemble_config": {},
@@ -88,7 +88,7 @@
     },
     "order_submission_retries_enabled": {
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "account_telemetry_interval": {
       "type": "integer",
@@ -97,7 +97,7 @@
     },
     "broker_calls_use_dedicated_executor": {
       "type": "boolean",
-      "default": false
+      "default": true
     },
     "log_level": {
       "type": "string",

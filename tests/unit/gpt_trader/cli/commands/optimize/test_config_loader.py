@@ -95,6 +95,17 @@ def test_parse_config_invalid_parameter_group():
         parse_config(raw)
 
 
+@pytest.mark.parametrize("parameter_space", ["", [], 0])
+def test_parse_config_invalid_parameter_space_type(parameter_space):
+    raw = {
+        "study": {"name": "param_space_type"},
+        "parameter_space": parameter_space,
+    }
+
+    with pytest.raises(ConfigValidationError, match="parameter_space must be a mapping"):
+        parse_config(raw)
+
+
 @pytest.mark.parametrize(
     ("overrides", "expected_trials", "expected_objective", "expected_symbols"),
     [

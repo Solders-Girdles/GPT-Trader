@@ -196,12 +196,12 @@ class LauncherStarvationGuard(RuntimeGuard):
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
         streak_raw = context.get("no_candidate_streak")
         if streak_raw is None:
-            return False, ""
+            return self._unevaluable()
 
         try:
             streak_value = int(streak_raw)
         except (TypeError, ValueError):
-            return False, ""
+            return self._unevaluable()
 
         threshold_override = context.get("threshold_override")
         if threshold_override is None:

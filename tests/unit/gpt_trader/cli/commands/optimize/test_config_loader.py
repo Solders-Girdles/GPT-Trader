@@ -16,6 +16,7 @@ from gpt_trader.cli.commands.optimize.config_loader import (
     load_config_file,
     merge_cli_overrides,
     parse_config,
+    resolve_optimize_preset_inheritance,
 )
 from gpt_trader.cli.commands.optimize.registry import list_objective_names
 
@@ -78,6 +79,134 @@ def test_parse_config_full():
     assert config.objective_name == "risk_averse"
     assert config.symbols == ["BTC-USD", "ETH-USD"]
     assert config.backtest.granularity == "ONE_HOUR"
+
+
+def test_resolve_optimize_preset_inheritance_merges_precedence():
+    raw = {
+        "presets": {
+            "base": {
+                "study": {"name": "base", "trials": 100},
+                "objective": {"preset": "sharpe"},
+            },
+            "profiles": {
+                "dev": {
+                    "study": {"trials": 200},
+                    "objective": {"preset": "sortino"},
+                }
+            },
+            "scenarios": {"fast": {"study": {"trials": 25}}},
+        },
+        "profile": "dev",
+        "scenario": "fast",
+    }
+
+    resolved = resolve_optimize_preset_inheritance(raw)
+
+    assert resolved["study"]["name"] == "base"
+    assert resolved["study"]["trials"] == 25
+    assert resolved["objective"]["preset"] == "sortino"
+
+
+def test_resolve_optimize_preset_inheritance_ignores_root_profile_for_optimize_container():
+    raw = {
+        "profile": "root_profile",
+        "optimize": {
+            "presets": {
+                "base": {"study": {"name": "base", "trials": 100}},
+                "profiles": {
+                    "root_profile": {"study": {"trials": 1}},
+                    "optimize_profile": {"study": {"trials": 25}},
+                },
+            },
+            "profile": "optimize_profile",
+        },
+    }
+
+    resolved = resolve_optimize_preset_inheritance(raw)
+
+    assert resolved["study"]["trials"] == 25
+
+
+def test_resolve_optimize_preset_inheritance_rejects_falsy_non_mapping_override():
+    raw = {
+        "presets": {
+            "base": {"study": {"name": "base", "trials": 100}},
+            "profiles": {"broken": []},
+        },
+        "profile": "broken",
+    }
+
+    with pytest.raises(
+        ConfigValidationError,
+        match="profile preset 'broken' overrides must be a mapping",
+    ):
+        resolve_optimize_preset_inheritance(raw)
+
+
+def test_resolve_optimize_preset_inheritance_keeps_empty_overrides():
+    raw = {
+        "presets": {
+            "base": {"study": {"name": "base", "trials": 100}},
+            "scenarios": {"empty": {"study": {}}},
+        },
+        "scenario": "empty",
+    }
+
+    resolved = resolve_optimize_preset_inheritance(raw)
+
+    assert resolved["study"]["name"] == "base"
+    assert resolved["study"]["trials"] == 100
+
+
+def test_resolve_optimize_preset_inheritance_preserves_explicit_nulls():
+    raw = {
+        "presets": {
+            "base": {"objective": {"preset": "sharpe"}},
+            "scenarios": {"nulls": {"objective": {"preset": None}}},
+        },
+        "scenario": "nulls",
+    }
+
+    resolved = resolve_optimize_preset_inheritance(raw)
+
+    assert "objective" in resolved
+    assert resolved["objective"]["preset"] is None
+
+
+def test_resolve_optimize_preset_inheritance_unknown_override_key():
+    raw = {
+        "presets": {
+            "base": {"study": {"name": "base", "trials": 100}},
+            "scenarios": {"broken": {"study": {"trialz": 10}}},
+        },
+        "scenario": "broken",
+    }
+
+    with pytest.raises(ConfigValidationError, match="unknown keys: study\\.trialz"):
+        resolve_optimize_preset_inheritance(raw)
+
+
+def test_resolve_optimize_preset_inheritance_type_conflict():
+    raw = {
+        "presets": {
+            "base": {"parameter_space": {"include_groups": ["strategy"]}},
+            "scenarios": {"broken": {"parameter_space": ["strategy"]}},
+        },
+        "scenario": "broken",
+    }
+
+    with pytest.raises(ConfigValidationError, match="type conflicts at: parameter_space"):
+        resolve_optimize_preset_inheritance(raw)
+
+
+def test_parse_config_invalid_parameter_override_type():
+    raw = {
+        "study": {"name": "override_test"},
+        "parameter_space": {"overrides": {"short_ma_period": 0}},
+    }
+
+    with pytest.raises(ConfigValidationError, match="parameter_space.overrides.short_ma_period"):
+        parse_config(raw)
 
 
 def test_parse_config_missing_study_name():

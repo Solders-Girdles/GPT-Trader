@@ -5,6 +5,7 @@ from __future__ import annotations
 from argparse import Namespace
 from typing import Any
 
+from gpt_trader.cli.commands.optimize.config_loader import resolve_optimize_preset_inheritance
 from gpt_trader.cli.commands.optimize.formatters import (
     COMPARISON_METRICS,
     format_comparison_text,
@@ -79,6 +80,7 @@ def execute(args: Namespace) -> CliResponse | int:
             logger.error(f"Run not found: {run_id}")
             return 1
         run_data = run.to_dict()
+        run_data["config"] = resolve_optimize_preset_inheritance(run_data.get("config", {}))
         run_summary = {
             "run_id": run_data["run_id"],
             "study_name": run_data["study_name"],

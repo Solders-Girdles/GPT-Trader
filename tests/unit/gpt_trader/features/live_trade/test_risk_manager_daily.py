@@ -62,6 +62,19 @@ class TestTrackDailyPnl:
         assert result is False
         assert manager._daily_pnl_triggered is False
 
+    def test_loss_at_limit_triggers(self) -> None:
+        """Should trigger when loss meets the limit."""
+        config = MockConfig(daily_loss_limit_pct=Decimal("0.05"))
+        manager = LiveRiskManager(config=config)
+        manager._start_of_day_equity = Decimal("10000")
+
+        result = manager.track_daily_pnl(Decimal("9500"), {})  # 5% loss
+
+        assert result is True
+        assert manager._daily_pnl_triggered is True
+        assert manager._reduce_only_mode is True
+        assert manager._reduce_only_reason == "daily_loss_limit_breached"
+
     def test_loss_exceeds_limit_triggers(self) -> None:
         """Should trigger when loss exceeds limit."""
         config = MockConfig(daily_loss_limit_pct=Decimal("0.05"))

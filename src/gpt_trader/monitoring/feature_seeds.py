@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Mapping
 
 _SLUG_PATTERN = re.compile(r"[^a-z0-9]+")
+_SEED_REASON_PATTERN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_:\\-]{0,63}$")
 _DEFAULT_SUFFIX_LENGTH = 8
 
 
@@ -29,6 +30,18 @@ def _slugify(value: str) -> str:
 def _hash_signature(signature: Mapping[str, Any]) -> str:
     payload = json.dumps(signature, sort_keys=True, default=str, separators=(",", ":"))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def summarize_seed_reason(reason: str | None) -> str | None:
+    """Return a low-noise reason label suitable for seed titles."""
+    if reason is None:
+        return None
+    reason_text = str(reason).strip()
+    if not reason_text:
+        return None
+    if not _SEED_REASON_PATTERN.match(reason_text):
+        return None
+    return reason_text.lower()
 
 
 def build_feature_seed(

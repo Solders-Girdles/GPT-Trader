@@ -187,6 +187,12 @@ class DrawdownGuard(RuntimeGuard):
 class LauncherStarvationGuard(RuntimeGuard):
     """Monitor repeated launcher no-candidate streaks."""
 
+    def _resolve_cooldown_key(self, context: dict[str, Any]) -> str:
+        opportunity_id = context.get("opportunity_id")
+        if isinstance(opportunity_id, str) and opportunity_id:
+            return opportunity_id
+        return super()._resolve_cooldown_key(context)
+
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
         streak_raw = context.get("no_candidate_streak")
         if streak_raw is None:

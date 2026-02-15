@@ -128,3 +128,30 @@ def test_runtime_guard_cooldown_is_per_metric_key():
 
     second_alert = guard.check({"metric_key": "latency_p99", "latency_p99": 200, "units": "ms"})
     assert second_alert is not None
+
+
+def test_runtime_guard_cooldown_is_per_explicit_cooldown_key():
+    provider = ManualTimeProvider(datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC))
+    guard = RuntimeGuard(
+        GuardConfig(
+            name="launcher_starvation",
+            threshold=1.0,
+            severity=AlertSeverity.ERROR,
+            cooldown_seconds=60,
+        ),
+        time_provider=provider,
+    )
+
+    first_alert = guard.check({"value": 2, "cooldown_key": "opp_a"})
+    assert first_alert is not None
+
+    provider.advance(timedelta(seconds=20))
+    second_alert = guard.check({"value": 2, "cooldown_key": "opp_b"})
+    assert second_alert is not None
+
+    provider.advance(timedelta(seconds=20))
+    assert guard.check({"value": 2, "cooldown_key": "opp_a"}) is None
+
+    provider.advance(timedelta(seconds=21))
+    third_alert = guard.check({"value": 2, "cooldown_key": "opp_a"})
+    assert third_alert is not None

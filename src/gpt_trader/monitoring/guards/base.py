@@ -69,8 +69,7 @@ class RuntimeGuard:
         self.status: GuardStatus = GuardStatus.HEALTHY if config.enabled else GuardStatus.DISABLED
         self.last_check: datetime = self._now()
         self.last_alert: datetime | None = None
-        self._last_alert_key: str | None = None
-        self._last_alert_by_key: dict[str, datetime] = {}
+        self._last_alerts_by_key: dict[str, datetime] = {}
         self.breach_count: int = 0
         self.alerts: list[Alert] = []
 
@@ -80,18 +79,12 @@ class RuntimeGuard:
         if not self.config.enabled:
             return None
 
-        cooldown_key = self._cooldown_key(context)
-        if cooldown_key is None:
-            if self.last_alert:
-                elapsed = (now - self.last_alert).total_seconds()
-                if elapsed < self.config.cooldown_seconds:
-                    return None
-        else:
-            last_alert_for_key = self._last_alert_by_key.get(cooldown_key)
-            if last_alert_for_key is not None:
-                elapsed = (now - last_alert_for_key).total_seconds()
-                if elapsed < self.config.cooldown_seconds:
-                    return None
+        cooldown_key = self._resolve_cooldown_key(context)
+        last_alert = self._last_alerts_by_key.get(cooldown_key)
+        if last_alert:
+            elapsed = (now - last_alert).total_seconds()
+            if elapsed < self.config.cooldown_seconds:
+                return None
 
         is_breached, message = self._evaluate(context)
 
@@ -107,9 +100,7 @@ class RuntimeGuard:
             )
             self.alerts.append(alert)
             self.last_alert = now
-            self._last_alert_key = cooldown_key
-            if cooldown_key is not None:
-                self._last_alert_by_key[cooldown_key] = now
+            self._last_alerts_by_key[cooldown_key] = now
             self.last_check = now
             return alert
 
@@ -131,11 +122,16 @@ class RuntimeGuard:
     def _now(self) -> datetime:
         return self._time_provider.now_utc()
 
-    def _cooldown_key(self, context: dict[str, Any]) -> str | None:
-        key = context.get("cooldown_key")
-        if isinstance(key, str) and key:
-            return key
-        return None
+    def _resolve_cooldown_key(self, context: dict[str, Any]) -> str:
+        cooldown_key = context.get("cooldown_key")
+        if isinstance(cooldown_key, str) and cooldown_key:
+            return cooldown_key
+
+        metric_key = context.get("metric_key")
+        if isinstance(metric_key, str) and metric_key:
+            return metric_key
+
+        return self.config.name
 
     def _evaluate(self, context: dict[str, Any]) -> tuple[bool, str]:
         """Default evaluation logic based on threshold comparisons."""

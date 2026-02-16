@@ -201,9 +201,7 @@ def test_once_persists_reds_for_auto_restart(
     assert restart_calls == [1]
 
 
-def test_once_green_resets_persisted_reds(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
+def test_once_green_resets_persisted_reds(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     restart_calls: list[int] = []
 
     def _restart_canary(**_: object) -> int:

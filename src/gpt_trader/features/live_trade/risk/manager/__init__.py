@@ -443,7 +443,7 @@ class LiveRiskManager:
         Track daily PnL and check if loss limit is breached.
 
         Returns:
-            True if daily loss limit was triggered, False otherwise.
+            True if daily loss limit is currently breached, False otherwise.
         """
         if self._start_of_day_equity is None:
             self._start_of_day_equity = equity
@@ -454,7 +454,7 @@ class LiveRiskManager:
             return self._daily_pnl_triggered
 
         daily_loss_limit = getattr(self.config, "daily_loss_limit_pct", None)
-        if not daily_loss_limit:
+        if daily_loss_limit is None:
             return self._daily_pnl_triggered
 
         daily_pnl = equity - self._start_of_day_equity
@@ -465,6 +465,7 @@ class LiveRiskManager:
                 self.set_reduce_only_mode(True, reason="daily_loss_limit_breached")
                 self._save_state()
                 return True
+            return False
         return self._daily_pnl_triggered
 
     def check_mark_staleness(self, symbol: str) -> bool:

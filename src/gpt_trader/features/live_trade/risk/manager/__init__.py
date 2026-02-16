@@ -454,6 +454,10 @@ class LiveRiskManager:
             return self._daily_pnl_triggered
 
         daily_loss_limit = getattr(self.config, "daily_loss_limit_pct", None)
+        if isinstance(daily_loss_limit, bool):
+            return self._daily_pnl_triggered
+        if isinstance(daily_loss_limit, str) and not daily_loss_limit.strip():
+            return self._daily_pnl_triggered
         if not daily_loss_limit:
             return self._daily_pnl_triggered
 

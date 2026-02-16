@@ -159,3 +159,95 @@ def test_once_exit_codes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
 
     monkeypatch.setattr(canary_watchdog.liveness_check, "check_liveness", _red)
     assert canary_watchdog.main() == 1
+
+
+def test_once_persists_reds_for_auto_restart(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    def _red(
+        *_: object, **__: object
+    ) -> tuple[list[canary_watchdog.liveness_check.EventAge], bool]:
+        rows = [_make_event("heartbeat", 600)]
+        return rows, False
+
+    restart_calls: list[int] = []
+
+    def _restart_canary(**_: object) -> int:
+        restart_calls.append(1)
+        return 0
+
+    args = argparse.Namespace(
+        profile="canary",
+        runtime_root=tmp_path,
+        event_type=None,
+        max_age_seconds=300,
+        poll_seconds=60,
+        restart_after_reds=2,
+        restart_cooldown_seconds=900,
+        auto_restart=True,
+        once=True,
+    )
+
+    monkeypatch.setattr(canary_watchdog.liveness_check, "check_liveness", _red)
+    monkeypatch.setattr(canary_watchdog.canary_process, "restart_canary", _restart_canary)
+    monkeypatch.setattr(canary_watchdog, "_parse_args", lambda: args)
+
+    monkeypatch.setattr(canary_watchdog, "_now", lambda: 100.0)
+    assert canary_watchdog.main() == 1
+    assert restart_calls == []
+
+    monkeypatch.setattr(canary_watchdog, "_now", lambda: 200.0)
+    assert canary_watchdog.main() == 1
+    assert restart_calls == [1]
+
+
+def test_once_green_resets_persisted_reds(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    restart_calls: list[int] = []
+
+    def _restart_canary(**_: object) -> int:
+        restart_calls.append(1)
+        return 0
+
+    args = argparse.Namespace(
+        profile="canary",
+        runtime_root=tmp_path,
+        event_type=None,
+        max_age_seconds=300,
+        poll_seconds=60,
+        restart_after_reds=2,
+        restart_cooldown_seconds=900,
+        auto_restart=True,
+        once=True,
+    )
+
+    monkeypatch.setattr(canary_watchdog.canary_process, "restart_canary", _restart_canary)
+    monkeypatch.setattr(canary_watchdog, "_parse_args", lambda: args)
+
+    def _set_liveness(is_green: bool, age: int) -> None:
+        def _check(
+            *_: object, **__: object
+        ) -> tuple[list[canary_watchdog.liveness_check.EventAge], bool]:
+            rows = [_make_event("heartbeat", age)]
+            return rows, is_green
+
+        monkeypatch.setattr(canary_watchdog.liveness_check, "check_liveness", _check)
+
+    _set_liveness(False, 600)
+    monkeypatch.setattr(canary_watchdog, "_now", lambda: 100.0)
+    assert canary_watchdog.main() == 1
+
+    _set_liveness(True, 10)
+    monkeypatch.setattr(canary_watchdog, "_now", lambda: 160.0)
+    assert canary_watchdog.main() == 0
+
+    _set_liveness(False, 600)
+    monkeypatch.setattr(canary_watchdog, "_now", lambda: 220.0)
+    assert canary_watchdog.main() == 1
+    assert restart_calls == []
+
+    _set_liveness(False, 600)
+    monkeypatch.setattr(canary_watchdog, "_now", lambda: 280.0)
+    assert canary_watchdog.main() == 1
+    assert restart_calls == [1]

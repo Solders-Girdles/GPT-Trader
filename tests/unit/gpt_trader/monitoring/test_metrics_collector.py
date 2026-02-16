@@ -99,13 +99,11 @@ class TestCounters:
 
         output = format_prometheus(get_metrics_collector().get_metrics_summary())
         output_lines = output.splitlines()
-        metric_lines = [line for line in output_lines if line and not line.startswith("#")]
-        metrics = dict(line.split(" ", 1) for line in metric_lines)
 
         assert "# TYPE gpt_trader_trades_executed_total counter" in output_lines
         assert "# TYPE gpt_trader_trades_blocked_total counter" in output_lines
-        assert metrics["gpt_trader_trades_executed_total"] == "2"
-        assert metrics["gpt_trader_trades_blocked_total"] == "1"
+        assert "gpt_trader_trades_executed_total 2" in output_lines
+        assert "gpt_trader_trades_blocked_total 1" in output_lines
 
 
 class TestGauges:

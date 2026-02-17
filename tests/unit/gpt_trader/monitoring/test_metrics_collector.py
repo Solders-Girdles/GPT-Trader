@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 
 from gpt_trader.monitoring.metrics_collector import (
+    TRADE_BLOCKED_COUNTER,
+    TRADE_EXECUTED_COUNTER,
     format_metric_key,
     get_metrics_collector,
     record_counter,
@@ -103,6 +105,26 @@ class TestCounters:
         assert "# TYPE gpt_trader_trades_executed_total counter" in output_lines
         assert "# TYPE gpt_trader_trades_blocked_total counter" in output_lines
         assert "gpt_trader_trades_executed_total 2" in output_lines
+        assert "gpt_trader_trades_blocked_total 1" in output_lines
+
+
+class TestTradeCounters:
+    """Tests for trade-specific counter naming and increments."""
+
+    def test_trade_counter_names_are_stable(self):
+        """Test that trade counter keys remain stable."""
+        assert TRADE_EXECUTED_COUNTER == "gpt_trader_trades_executed_total"
+        assert TRADE_BLOCKED_COUNTER == "gpt_trader_trades_blocked_total"
+
+    def test_record_trade_counters_increment(self):
+        """Test trade counter helpers increment exported counter metrics."""
+        record_trade_executed()
+        record_trade_blocked()
+
+        output = format_prometheus(get_metrics_collector().get_metrics_summary())
+        output_lines = output.splitlines()
+
+        assert "gpt_trader_trades_executed_total 1" in output_lines
         assert "gpt_trader_trades_blocked_total 1" in output_lines
 
 

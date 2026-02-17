@@ -117,13 +117,15 @@ class TestTradeCounters:
         assert TRADE_BLOCKED_COUNTER == "gpt_trader_trades_blocked_total"
 
     def test_record_trade_counters_increment(self):
-        """Test trade counter helpers increment expected keys."""
+        """Test trade counter helpers increment exported counter metrics."""
         record_trade_executed()
         record_trade_blocked()
 
-        collector = get_metrics_collector()
-        assert collector.counters["gpt_trader_trades_executed_total"] == 1
-        assert collector.counters["gpt_trader_trades_blocked_total"] == 1
+        output = format_prometheus(get_metrics_collector().get_metrics_summary())
+        output_lines = output.splitlines()
+
+        assert "gpt_trader_trades_executed_total 1" in output_lines
+        assert "gpt_trader_trades_blocked_total 1" in output_lines
 
 
 class TestGauges:

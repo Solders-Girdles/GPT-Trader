@@ -27,7 +27,7 @@
       "cleanup_orders",
       "collateral_update"
     ],
-    "total_events": 133
+    "total_events": 135
   },
   "usage": {
     "correlation": "Use correlation_id field to trace requests across logs",

@@ -114,7 +114,7 @@ def _load_state(state_path: Path) -> WatchdogState:
 
     try:
         payload = json.loads(raw)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, UnicodeDecodeError):
         return WatchdogState()
 
     if not isinstance(payload, dict):

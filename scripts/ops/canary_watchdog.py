@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sqlite3
 import sys
 import time
@@ -15,6 +16,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.ops import canary_process, liveness_check  # noqa: E402
+
+STATE_SCHEMA_VERSION = 1
 
 
 @dataclass
@@ -87,6 +90,63 @@ def _parse_args() -> argparse.Namespace:
 
 def _now() -> float:
     return time.time()
+
+
+def _default_state_path(runtime_root: Path, profile: str) -> Path:
+    return runtime_root / "runtime_data" / profile / "watchdog_state.json"
+
+
+def _coerce_int(value: object, *, default: int = 0) -> int:
+    try:
+        coerced = int(value)
+    except (TypeError, ValueError):
+        return default
+    return max(default, coerced)
+
+
+def _load_state(state_path: Path) -> WatchdogState:
+    try:
+        raw = state_path.read_text()
+    except FileNotFoundError:
+        return WatchdogState()
+    except OSError:
+        return WatchdogState()
+
+    try:
+        payload = json.loads(raw)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return WatchdogState()
+
+    if not isinstance(payload, dict):
+        return WatchdogState()
+
+    schema_version = payload.get("schema_version")
+    if schema_version not in (None, STATE_SCHEMA_VERSION):
+        return WatchdogState()
+
+    consecutive_reds = _coerce_int(payload.get("consecutive_reds", 0))
+    last_restart_ts = payload.get("last_restart_ts")
+    if not isinstance(last_restart_ts, (int, float)) or last_restart_ts <= 0:
+        last_restart_ts = None
+    return WatchdogState(
+        consecutive_reds=consecutive_reds,
+        last_restart_ts=float(last_restart_ts) if last_restart_ts is not None else None,
+    )
+
+
+def _save_state(state_path: Path, state: WatchdogState) -> None:
+    payload = {
+        "schema_version": STATE_SCHEMA_VERSION,
+        "consecutive_reds": state.consecutive_reds,
+        "last_restart_ts": state.last_restart_ts,
+    }
+    try:
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+        temp_path = state_path.with_suffix(".tmp")
+        temp_path.write_text(json.dumps(payload, separators=(",", ":"), sort_keys=True))
+        temp_path.replace(state_path)
+    except OSError as exc:
+        print(f"watchdog_state=ERROR error={exc}", file=sys.stderr)
 
 
 def _format_event_ages(rows: Iterable[liveness_check.EventAge]) -> str:
@@ -170,6 +230,7 @@ def _poll_and_print(
     restart_after_reds: int,
     restart_cooldown_seconds: int,
     state: WatchdogState,
+    state_path: Path | None = None,
 ) -> tuple[bool, bool]:
     try:
         outcome = _poll_once(
@@ -184,8 +245,12 @@ def _poll_and_print(
         )
     except (FileNotFoundError, sqlite3.Error) as exc:
         print(f"liveness=ERROR error={exc}")
+        if state_path is not None:
+            _save_state(state_path, state)
         return False, True
 
+    if state_path is not None:
+        _save_state(state_path, state)
     print(outcome.status_line)
     return outcome.is_green, outcome.restart_failed
 
@@ -194,7 +259,8 @@ def main() -> int:
     args = _parse_args()
     event_types = args.event_type or list(liveness_check.DEFAULT_EVENT_TYPES)
     runtime_root = args.runtime_root.resolve()
-    state = WatchdogState()
+    state_path = _default_state_path(runtime_root, args.profile) if args.auto_restart else None
+    state = _load_state(state_path) if state_path is not None else WatchdogState()
 
     if args.once:
         is_green, failed = _poll_and_print(
@@ -206,6 +272,7 @@ def main() -> int:
             restart_after_reds=args.restart_after_reds,
             restart_cooldown_seconds=args.restart_cooldown_seconds,
             state=state,
+            state_path=state_path,
         )
         if failed:
             return 2
@@ -221,6 +288,7 @@ def main() -> int:
             restart_after_reds=args.restart_after_reds,
             restart_cooldown_seconds=args.restart_cooldown_seconds,
             state=state,
+            state_path=state_path,
         )
         if failed:
             return 2

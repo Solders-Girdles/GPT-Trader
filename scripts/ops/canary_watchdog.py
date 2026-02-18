@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sqlite3
 import sys
 import time
@@ -15,6 +16,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.ops import canary_process, liveness_check  # noqa: E402
+
+STATE_FILE_NAME = "watchdog_state.json"
 
 
 @dataclass
@@ -87,6 +90,64 @@ def _parse_args() -> argparse.Namespace:
 
 def _now() -> float:
     return time.time()
+
+
+def _state_path(runtime_root: Path, profile: str) -> Path:
+    return runtime_root / "runtime_data" / profile / STATE_FILE_NAME
+
+
+def _load_state(state_path: Path) -> WatchdogState:
+    try:
+        payload = state_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return WatchdogState()
+    except (OSError, UnicodeDecodeError):
+        return WatchdogState()
+
+    try:
+        raw_state = json.loads(payload)
+    except json.JSONDecodeError:
+        return WatchdogState()
+
+    if not isinstance(raw_state, dict):
+        return WatchdogState()
+
+    consecutive_reds_raw = raw_state.get("consecutive_reds", 0)
+    last_restart_ts_raw = raw_state.get("last_restart_ts")
+
+    try:
+        consecutive_reds = int(consecutive_reds_raw)
+    except (TypeError, ValueError):
+        consecutive_reds = 0
+    if consecutive_reds < 0:
+        consecutive_reds = 0
+
+    last_restart_ts: float | None
+    if last_restart_ts_raw is None:
+        last_restart_ts = None
+    else:
+        try:
+            last_restart_ts = float(last_restart_ts_raw)
+        except (TypeError, ValueError):
+            last_restart_ts = None
+
+    return WatchdogState(
+        consecutive_reds=consecutive_reds,
+        last_restart_ts=last_restart_ts,
+    )
+
+
+def _save_state(state_path: Path, state: WatchdogState) -> None:
+    payload = {
+        "consecutive_reds": state.consecutive_reds,
+        "last_restart_ts": state.last_restart_ts,
+        "updated_at": _now(),
+    }
+    try:
+        state_path.parent.mkdir(parents=True, exist_ok=True)
+        state_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+    except OSError:
+        return
 
 
 def _format_event_ages(rows: Iterable[liveness_check.EventAge]) -> str:
@@ -194,7 +255,8 @@ def main() -> int:
     args = _parse_args()
     event_types = args.event_type or list(liveness_check.DEFAULT_EVENT_TYPES)
     runtime_root = args.runtime_root.resolve()
-    state = WatchdogState()
+    state_path = _state_path(runtime_root, args.profile)
+    state = _load_state(state_path)
 
     if args.once:
         is_green, failed = _poll_and_print(
@@ -207,6 +269,7 @@ def main() -> int:
             restart_cooldown_seconds=args.restart_cooldown_seconds,
             state=state,
         )
+        _save_state(state_path, state)
         if failed:
             return 2
         return 0 if is_green else 1
@@ -222,6 +285,7 @@ def main() -> int:
             restart_cooldown_seconds=args.restart_cooldown_seconds,
             state=state,
         )
+        _save_state(state_path, state)
         if failed:
             return 2
         time.sleep(args.poll_seconds)

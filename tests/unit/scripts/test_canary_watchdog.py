@@ -159,3 +159,13 @@ def test_once_exit_codes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
 
     monkeypatch.setattr(canary_watchdog.liveness_check, "check_liveness", _red)
     assert canary_watchdog.main() == 1
+
+
+def test_load_state_handles_non_utf8(tmp_path: Path) -> None:
+    state_path = canary_watchdog._state_path(tmp_path, "canary")
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_bytes(b"\xff\xfe\xfa\xfb")
+
+    state = canary_watchdog._load_state(state_path)
+
+    assert state == canary_watchdog.WatchdogState()

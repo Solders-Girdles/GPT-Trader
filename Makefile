@@ -77,7 +77,7 @@ test-guardrails:
 
 ci-required:
 	$(MAKE) lint
-	uv run ruff check scripts/ops scripts/backtest_runner.py scripts/perps_dashboard.py scripts/monitoring/export_metrics.py scripts/monitoring/canary_reduce_only_test.py scripts/monitoring/manage_logs.py scripts/production_preflight.py scripts/readiness_window.py scripts/test_api_connectivity.py scripts/test_paper_broker.py
+	uv run ruff check scripts/ops scripts/backtest_runner.py scripts/perps_dashboard.py scripts/monitoring/export_metrics.py scripts/monitoring/canary_reduce_only_test.py scripts/monitoring/manage_logs.py scripts/production_preflight.py scripts/readiness_window.py
 	@if grep -rn -E "(from|import)\\s+gpt_trader\\.orchestration" src tests scripts --include="*.py"; then \
 		echo "::error::gpt_trader.orchestration was removed in v3.0"; \
 		echo "Use canonical paths: app.*, features.live_trade.*, features.brokerages.*"; \

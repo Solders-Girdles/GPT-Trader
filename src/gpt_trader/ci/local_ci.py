@@ -199,8 +199,6 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
                 "scripts/monitoring/manage_logs.py",
                 "scripts/production_preflight.py",
                 "scripts/readiness_window.py",
-                "scripts/test_api_connectivity.py",
-                "scripts/test_paper_broker.py",
             ],
         ),
         PlannedStep(

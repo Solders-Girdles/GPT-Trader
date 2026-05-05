@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-Test script for HybridPaperBroker.
-Verifies real market data fetching and simulated order execution.
-"""
+"""HybridPaperBroker market-data and simulated-order smoke probe."""
 
 from __future__ import annotations
 
@@ -14,7 +11,7 @@ from decimal import Decimal
 from pathlib import Path
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 from gpt_trader.features.brokerages.coinbase.auth import create_cdp_jwt_auth
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
@@ -28,7 +25,7 @@ from gpt_trader.features.brokerages.paper import HybridPaperBroker
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="HybridPaperBroker connectivity test.",
+        description="HybridPaperBroker smoke probe.",
     )
     parser.add_argument(
         "--credentials-file",
@@ -54,11 +51,11 @@ def _resolve_credentials(
     return creds
 
 
-def test_paper_broker() -> None:
-    """Test the HybridPaperBroker with real market data."""
+def run_hybrid_paper_broker_smoke() -> None:
+    """Probe HybridPaperBroker with real market data."""
     args = _parse_args()
     print("=" * 60)
-    print("HybridPaperBroker Test")
+    print("HybridPaperBroker Smoke Probe")
     print("=" * 60)
 
     # 1. Load credentials
@@ -121,11 +118,11 @@ def test_paper_broker() -> None:
 
     # Summary
     print("\n" + "=" * 60)
-    print("PAPER BROKER TEST PASSED")
+    print("PAPER BROKER SMOKE PASSED")
     print("=" * 60)
     status = broker.get_status()
     print(f"\nStatus: {json.dumps(status, indent=2)}")
 
 
 if __name__ == "__main__":
-    test_paper_broker()
+    run_hybrid_paper_broker_smoke()

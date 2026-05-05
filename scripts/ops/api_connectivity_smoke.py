@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-API Connectivity Test Script.
-Tests connection to Coinbase API using resolved CDP credentials.
-"""
+"""Coinbase API connectivity smoke probe."""
 
 from __future__ import annotations
 
@@ -12,7 +9,7 @@ import sys
 from pathlib import Path
 
 # Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 
 from gpt_trader.features.brokerages.coinbase.auth import create_cdp_jwt_auth
 from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
@@ -25,7 +22,7 @@ from gpt_trader.features.brokerages.coinbase.credentials import (
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="GPT-Trader Coinbase API connectivity test.",
+        description="GPT-Trader Coinbase API connectivity smoke probe.",
     )
     parser.add_argument(
         "--credentials-file",
@@ -51,11 +48,11 @@ def _resolve_credentials(
     return creds
 
 
-def test_connectivity() -> None:
-    """Test API connectivity with the CDP key."""
+def run_connectivity_smoke() -> None:
+    """Probe API connectivity with the resolved CDP key."""
     args = _parse_args()
     print("=" * 60)
-    print("GPT-Trader API Connectivity Test")
+    print("GPT-Trader API Connectivity Smoke Probe")
     print("=" * 60)
 
     # 1. Load credentials
@@ -127,7 +124,7 @@ def test_connectivity() -> None:
 
     # Summary
     print("\n" + "=" * 60)
-    print("CONNECTIVITY TEST PASSED")
+    print("CONNECTIVITY SMOKE PASSED")
     print("=" * 60)
     print("\nYour API key is working! You can proceed with paper trading setup.")
     print("\nNext steps:")
@@ -137,4 +134,4 @@ def test_connectivity() -> None:
 
 
 if __name__ == "__main__":
-    test_connectivity()
+    run_connectivity_smoke()

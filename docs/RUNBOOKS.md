@@ -139,7 +139,7 @@ gpt-trader account snapshot --profile prod
 sqlite3 runtime_data/prod/orders.db "select status, count(*) from orders group by status;"
 
 # 3. Verify symbol is tradeable
-uv run python scripts/list_products.py
+uv run python scripts/ops/product_catalog_probe.py
 
 # 4. Check Coinbase status
 curl -s https://status.coinbase.com/api/v2/status.json | jq '.status'

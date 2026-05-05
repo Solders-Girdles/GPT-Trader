@@ -342,8 +342,8 @@
     {
       "code_paths": [
         "scripts/monitoring/canary_reduce_only_test.py",
-        "scripts/test_api_connectivity.py",
-        "scripts/test_paper_broker.py",
+        "scripts/ops/api_connectivity_smoke.py",
+        "scripts/ops/hybrid_paper_broker_smoke.py",
         "src/gpt_trader/cli/commands/optimize/run.py",
         "src/gpt_trader/features/brokerages/coinbase/credentials.py"
       ],
@@ -354,13 +354,13 @@
           "reader": "os.getenv"
         },
         {
-          "line": 32,
-          "path": "scripts/test_api_connectivity.py",
+          "line": 29,
+          "path": "scripts/ops/api_connectivity_smoke.py",
           "reader": "os.getenv"
         },
         {
-          "line": 35,
-          "path": "scripts/test_paper_broker.py",
+          "line": 32,
+          "path": "scripts/ops/hybrid_paper_broker_smoke.py",
           "reader": "os.getenv"
         },
         {

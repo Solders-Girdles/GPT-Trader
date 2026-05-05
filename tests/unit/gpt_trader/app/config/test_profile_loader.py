@@ -89,6 +89,15 @@ monitoring:
                 assert schema is not None
                 assert schema.profile_name == profile.value
 
+    def test_observe_profile_is_read_only_live_data_shape(self) -> None:
+        schema = ProfileLoader().load(Profile.OBSERVE)
+
+        assert schema.profile_name == "observe"
+        assert schema.execution.dry_run is True
+        assert schema.execution.mock_broker is False
+        assert schema.risk.max_position_size == Decimal("0")
+        assert schema.risk.position_fraction == Decimal("0.0")
+
     def test_logs_payload_on_yaml_parse_error(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
@@ -242,6 +251,7 @@ class TestProfileRegistryHelpers:
             ("DEV", True),
             ("paper", True),
             ("test", True),
+            ("observe", False),
             ("prod", False),
             ("canary", False),
             ("not-real", False),

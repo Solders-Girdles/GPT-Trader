@@ -60,6 +60,8 @@ uv run gpt-trader tui --mode live  # Live trading
 | Profile | Broker | Use Case |
 |---------|--------|----------|
 | `dev` | DeterministicBroker (mock) | Local development |
+| `paper` | Mock execution | Real-data strategy checks without exchange orders |
+| `observe` | Real data, execution blocked | Read-only market/account observation |
 | `canary` | Real (tiny limits) | Production validation only after readiness review |
 | `prod` | Real | Legacy live profile; do not treat as approval for unrestricted production use |
 
@@ -73,7 +75,7 @@ cp config/environments/.env.template .env
 
 Key variables:
 - `COINBASE_CREDENTIALS_FILE` or `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY` - JWT credentials
-- `--profile` (CLI) - Trading profile (`dev`/`canary`/`prod`)
+- `--profile` (CLI) - Trading profile (`dev`/`paper`/`observe`/`canary`/`prod`)
 
 See [config/environments/.env.template](config/environments/.env.template) for minimal operator defaults and
 [var/agents/configuration/environment_variables.md](var/agents/configuration/environment_variables.md) for the full, code-derived inventory.

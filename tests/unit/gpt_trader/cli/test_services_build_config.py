@@ -38,6 +38,7 @@ def test_default_profile_applied_when_missing() -> None:
 
     assert config.profile == Profile.DEV
     assert config.profile.value == DEFAULT_RUNTIME_PROFILE_NAME
+    assert config.environment == "development"
 
 
 def test_profile_overrides_environment(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -87,3 +88,24 @@ def test_cli_profile_overrides_config_file(tmp_path: Path) -> None:
     config = services.build_config_from_args(args)
 
     assert config.profile == "dev"
+
+
+def test_load_profile_config_builds_observe_profile() -> None:
+    config = services.load_profile_config(Profile.OBSERVE)
+
+    assert config.profile == Profile.OBSERVE
+    assert config.environment == "development"
+    assert config.dry_run is True
+    assert config.mock_broker is False
+    assert config.symbols == ["BTC-USD", "ETH-USD"]
+
+
+def test_load_profile_config_rejects_unknown_profile() -> None:
+    with pytest.raises(ValueError, match="Unknown profile"):
+        services.load_profile_config("not-a-profile")
+
+
+def test_load_profile_config_accepts_case_insensitive_name() -> None:
+    config = services.load_profile_config("OBSERVE")
+
+    assert config.profile == Profile.OBSERVE

@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-05-05
 ---
 
 The **Terminal User Interface (TUI)** is the primary monitoring and control interface for GPT-Trader. Built with [Textual](https://textual.textualize.io/), it provides real-time visibility into the bot's state, account metrics, and trading activities directly from your terminal.
@@ -14,7 +14,7 @@ Launch via the CLI entry point (preferred for env/logging setup):
 ```bash
 uv run gpt-trader tui                 # Mode selector
 uv run gpt-trader tui --mode demo     # Skip selection with a preset scenario
-uv run gpt-trader tui --mode live     # Uses config/profiles/prod.yaml
+uv run gpt-trader tui --mode live     # Uses the prod profile
 ```
 
 Need the trading loop wired to a specific profile? The `run` command remains supported:

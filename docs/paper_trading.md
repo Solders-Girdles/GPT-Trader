@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-24
+last-updated: 2026-05-05
 consolidates:
   - PAPER_TRADING_IMPLEMENTATION.md
   - PAPER_ENGINE_DECOUPLING.md
@@ -47,9 +47,10 @@ uv run gpt-trader run --profile paper --dev-fast
 
 ```python
 from gpt_trader.app.container import ApplicationContainer
-from gpt_trader.cli.services import load_config_from_yaml
+from gpt_trader.cli.services import load_profile_config
+from gpt_trader.config.types import Profile
 
-config = load_config_from_yaml("config/profiles/paper.yaml")
+config = load_profile_config(Profile.PAPER)
 bot = ApplicationContainer(config).create_bot()
 ```
 

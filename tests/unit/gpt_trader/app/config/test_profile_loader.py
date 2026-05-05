@@ -89,6 +89,13 @@ monitoring:
                 assert schema is not None
                 assert schema.profile_name == profile.value
 
+    def test_profile_yaml_files_are_registered_profiles(self) -> None:
+        """Every profile YAML should map to a first-class Profile enum value."""
+        profile_files = {path.name for path in Path("config/profiles").glob("*.yaml")}
+        registered_profile_files = {f"{profile.value}.yaml" for profile in Profile}
+
+        assert profile_files <= registered_profile_files
+
     def test_observe_profile_is_read_only_live_data_shape(self) -> None:
         schema = ProfileLoader().load(Profile.OBSERVE)
 

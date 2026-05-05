@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-30
+last-updated: 2026-05-03
 ---
 
 All docs under `docs/` must be reachable from this index (directly or via other linked docs).
@@ -25,6 +25,7 @@ When adding a new doc, link it below in the best-fit section.
 | [Entrypoints](architecture/ENTRYPOINTS.md) | CLI, TUI, preflight, and live bot wiring |
 | [Production Guide](production.md) | Deployment, rollout, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
+| [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) | AI-assisted trading autonomy, product, venue, approval, and audit gates |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [TUI Guide](TUI_GUIDE.md) | Launching and operating the terminal UI |
 | [TUI Style Guide](TUI_STYLE_GUIDE.md) | Visual standards for TUI components |
@@ -50,6 +51,7 @@ When adding a new doc, link it below in the best-fit section.
 ### Trading Operations
 - [Production Deployment](production.md) - Deployment, monitoring, rollback, emergencies
 - [Readiness Checklist](READINESS.md) - Paper/live gate criteria and evidence
+- [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) - Gates before AI-assisted execution migration
 - [Reliability Guide](RELIABILITY.md) - Degradation matrix, config defaults, chaos harness
 - [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards
 - [Alert Runbooks](RUNBOOKS.md) - Incident response procedures by alert type

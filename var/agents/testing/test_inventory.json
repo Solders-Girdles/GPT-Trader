@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6501,
+    "total_tests": 6502,
     "total_files": 766,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6336,
+    "unit": 6337,
     "asyncio": 372,
     "parametrize": 169,
     "endpoints": 83,
@@ -2992,8 +2992,17 @@
         "class": "TestProfileLoader"
       },
       {
-        "name": "TestProfileLoader::test_observe_profile_is_read_only_live_data_shape",
+        "name": "TestProfileLoader::test_profile_yaml_files_are_registered_profiles",
         "line": 92,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Every profile YAML should map to a first-class Profile enum value.",
+        "class": "TestProfileLoader"
+      },
+      {
+        "name": "TestProfileLoader::test_observe_profile_is_read_only_live_data_shape",
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -3002,7 +3011,7 @@
       },
       {
         "name": "TestProfileLoader::test_logs_payload_on_yaml_parse_error",
-        "line": 101,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -3011,7 +3020,7 @@
       },
       {
         "name": "TestProfileLoader::test_logs_payload_when_profile_missing",
-        "line": 127,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -3020,7 +3029,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_minimal",
-        "line": 149,
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -3029,7 +3038,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_full",
-        "line": 161,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -3038,7 +3047,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_uses_trading_execution_when_top_level_execution_missing",
-        "line": 214,
+        "line": 221,
         "markers": [
           "unit"
         ],
@@ -3047,7 +3056,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_get_env_defaults_for_unknown_profile_uses_prod_defaults",
-        "line": 241,
+        "line": 248,
         "markers": [
           "unit"
         ],
@@ -3056,7 +3065,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_is_dev_profile",
-        "line": 261,
+        "line": 268,
         "markers": [
           "parametrize",
           "unit"
@@ -3066,7 +3075,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_registry_lookup_is_case_insensitive",
-        "line": 264,
+        "line": 271,
         "markers": [
           "unit"
         ],
@@ -3075,7 +3084,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_cli_profile_wins",
-        "line": 273,
+        "line": 280,
         "markers": [
           "unit"
         ],
@@ -3084,7 +3093,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_file_profile_overrides_env",
-        "line": 284,
+        "line": 291,
         "markers": [
           "unit"
         ],
@@ -3093,7 +3102,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_env_profile_overrides_default",
-        "line": 295,
+        "line": 302,
         "markers": [
           "unit"
         ],
@@ -3102,7 +3111,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_falls_back_to_default",
-        "line": 306,
+        "line": 313,
         "markers": [
           "unit"
         ],
@@ -3111,7 +3120,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_blank_values_are_ignored",
-        "line": 317,
+        "line": 324,
         "markers": [
           "unit"
         ],
@@ -3120,7 +3129,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_env_helper_uses_bot_profile_when_primary_is_whitespace",
-        "line": 328,
+        "line": 335,
         "markers": [
           "unit"
         ],

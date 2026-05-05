@@ -19,7 +19,9 @@ last-updated: 2026-01-24
 
 ## Current State
 
-GPT-Trader is a production-ready Coinbase Advanced Trade trading system supporting **spot** and **CFM futures** trading. INTX perpetuals code paths remain compiled and testable but require international account access.
+GPT-Trader is a Coinbase Advanced Trade oriented trading system with implemented **spot**, **CFM futures**, and gated **INTX perpetuals** paths. Treat these as implementation capabilities, not as blanket approval for live automation.
+
+For broader migration, the canonical planning gate is [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md). New AI-assisted execution work should start from `human_approved_execution`, broker-neutral trade records, explicit risk budgets, and verified venue/API/account capability.
 
 > 📘 **Trust reminder:** Confirm key details against current source + generated inventories (`var/agents/**`) before acting on them.
 
@@ -27,9 +29,9 @@ GPT-Trader is a production-ready Coinbase Advanced Trade trading system supporti
 
 | Environment | Products | Authentication | API Version | WebSocket | Use Case |
 |------------|----------|----------------|-------------|-----------|----------|
-| **Production (spot)** | Spot (BTC-USD, ETH-USD, …) | JWT (CDP key) | Advanced v3 | Real-time | Live spot trading |
-| **Production (CFM)** | US Futures (BTC, ETH, SOL, etc.) | CDP (JWT) | Advanced v3 | Real-time | Regulated US futures |
-| **Production (INTX)** | Perpetuals (international) | CDP (JWT) + `COINBASE_ENABLE_INTX_PERPS=1` | Advanced v3 | Real-time | Requires INTX account |
+| **Spot** | Spot (BTC-USD, ETH-USD, ...) | JWT (CDP key) | Advanced v3 | Real-time | Implemented; requires profile/readiness gate before live use |
+| **CFM** | US Futures (BTC, ETH, SOL, etc.) | CDP (JWT) | Advanced v3 | Real-time | Implemented/gated; verify account and risk constraints |
+| **INTX** | Perpetuals (international) | CDP (JWT) + `COINBASE_ENABLE_INTX_PERPS=1` | Advanced v3 | Real-time | Implemented/gated; requires eligible-region account |
 | **Paper** | All products | — | — | — | Simulated via `PERPS_PAPER=1` |
 
 ### Derivatives Access Summary

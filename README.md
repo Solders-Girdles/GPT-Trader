@@ -1,6 +1,6 @@
 # GPT-Trader
 
-A production-ready Coinbase trading system built collaboratively with AI coding assistants.
+A Coinbase-oriented trading system under active cleanup and migration planning.
 
 [![CI](https://github.com/Solders-Girdles/GPT-Trader/actions/workflows/ci.yml/badge.svg)](https://github.com/Solders-Girdles/GPT-Trader/actions/workflows/ci.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
@@ -9,15 +9,18 @@ A production-ready Coinbase trading system built collaboratively with AI coding 
 
 ## Overview
 
-GPT-Trader is a Coinbase trading bot featuring a Terminal User Interface, vertical slice architecture, and comprehensive risk management. The name reflects how AI assistants (Claude, GPT, Gemini) collaborate in developing this codebase—the trading strategies themselves use technical analysis, not LLM inference.
+GPT-Trader is a Coinbase-oriented trading system featuring a Terminal User Interface, vertical slice architecture, and risk management. The name reflects how AI assistants collaborate in developing this codebase; current trading strategies use technical analysis and rule-based decisioning, not LLM inference.
+
+The repo is being re-centered around a pre-migration decision framework before any broader execution migration. Treat existing live profiles and broker-specific paths as implementation assets that need explicit readiness, venue-capability, approval, and audit gates before expansion.
 
 ### Trading Capabilities
 
 | Mode | Status | Description |
 |------|--------|-------------|
-| **Spot Trading** | Active | BTC-USD, ETH-USD, and top-10 USD pairs |
-| **CFM Futures** | Available | US-regulated futures via Coinbase Financial Markets |
-| **INTX Perpetuals** | Code Ready | Requires international INTX account access |
+| **Spot Trading** | Implemented | Coinbase spot paths exist; use only with explicit profile and readiness gates |
+| **CFM Futures** | Implemented/gated | US-regulated futures paths exist; require account, product, and risk-gate verification |
+| **INTX Perpetuals** | Implemented/gated | International derivatives paths exist; require eligible-region/account verification |
+| **AI-assisted execution** | Planning | Target starts at human-approved execution, not autonomous order submission |
 
 ## Quick Start
 
@@ -57,8 +60,8 @@ uv run gpt-trader tui --mode live  # Live trading
 | Profile | Broker | Use Case |
 |---------|--------|----------|
 | `dev` | DeterministicBroker (mock) | Local development |
-| `canary` | Real (tiny limits) | Production validation |
-| `prod` | Real | Full production trading |
+| `canary` | Real (tiny limits) | Production validation only after readiness review |
+| `prod` | Real | Legacy live profile; do not treat as approval for unrestricted production use |
 
 ### Environment Setup
 
@@ -173,6 +176,7 @@ uv run agent-risk       # Query risk configuration
 | Document | Purpose |
 |----------|---------|
 | [Architecture](docs/ARCHITECTURE.md) | System design and vertical slices |
+| [Pre-Migration Decision Framework](docs/PRE_MIGRATION_DECISION_FRAMEWORK.md) | Autonomy, product, venue, approval, and audit gates |
 | [Reliability](docs/RELIABILITY.md) | Guard stack, degradation, chaos testing |
 | [Monitoring](docs/MONITORING_PLAYBOOK.md) | Metrics, alerting, dashboards |
 | [Production](docs/production.md) | Deployment and operations |

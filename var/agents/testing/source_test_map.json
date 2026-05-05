@@ -352,7 +352,8 @@
       "tests/unit/gpt_trader/cli/test_services_build_config.py",
       "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives.py",
-      "tests/unit/gpt_trader/features/live_trade/test_symbols_normalization.py"
+      "tests/unit/gpt_trader/features/live_trade/test_symbols_normalization.py",
+      "tests/unit/gpt_trader/tui/services/test_mode_service.py"
     ],
     "gpt_trader.core": [
       "tests/contract/test_coinbase_api_contract.py",
@@ -4307,6 +4308,7 @@
     ],
     "tests/unit/gpt_trader/tui/services/test_mode_service.py": [
       "gpt_trader.cli.services",
+      "gpt_trader.config.types",
       "gpt_trader.tui.services.mode_service"
     ],
     "tests/unit/gpt_trader/tui/services/test_mode_service_preferences.py": [

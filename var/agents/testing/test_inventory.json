@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6497,
+    "total_tests": 6501,
     "total_files": 766,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6332,
+    "unit": 6336,
     "asyncio": 372,
     "parametrize": 169,
     "endpoints": 83,
@@ -2992,8 +2992,17 @@
         "class": "TestProfileLoader"
       },
       {
-        "name": "TestProfileLoader::test_logs_payload_on_yaml_parse_error",
+        "name": "TestProfileLoader::test_observe_profile_is_read_only_live_data_shape",
         "line": 92,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestProfileLoader"
+      },
+      {
+        "name": "TestProfileLoader::test_logs_payload_on_yaml_parse_error",
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -3002,7 +3011,7 @@
       },
       {
         "name": "TestProfileLoader::test_logs_payload_when_profile_missing",
-        "line": 118,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -3011,7 +3020,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_minimal",
-        "line": 140,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -3020,7 +3029,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_full",
-        "line": 152,
+        "line": 161,
         "markers": [
           "unit"
         ],
@@ -3029,7 +3038,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_uses_trading_execution_when_top_level_execution_missing",
-        "line": 205,
+        "line": 214,
         "markers": [
           "unit"
         ],
@@ -3038,7 +3047,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_get_env_defaults_for_unknown_profile_uses_prod_defaults",
-        "line": 232,
+        "line": 241,
         "markers": [
           "unit"
         ],
@@ -3047,7 +3056,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_is_dev_profile",
-        "line": 251,
+        "line": 261,
         "markers": [
           "parametrize",
           "unit"
@@ -3057,7 +3066,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_registry_lookup_is_case_insensitive",
-        "line": 254,
+        "line": 264,
         "markers": [
           "unit"
         ],
@@ -3066,7 +3075,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_cli_profile_wins",
-        "line": 263,
+        "line": 273,
         "markers": [
           "unit"
         ],
@@ -3075,7 +3084,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_file_profile_overrides_env",
-        "line": 274,
+        "line": 284,
         "markers": [
           "unit"
         ],
@@ -3084,7 +3093,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_env_profile_overrides_default",
-        "line": 285,
+        "line": 295,
         "markers": [
           "unit"
         ],
@@ -3093,7 +3102,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_falls_back_to_default",
-        "line": 296,
+        "line": 306,
         "markers": [
           "unit"
         ],
@@ -3102,7 +3111,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_blank_values_are_ignored",
-        "line": 307,
+        "line": 317,
         "markers": [
           "unit"
         ],
@@ -3111,7 +3120,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_env_helper_uses_bot_profile_when_primary_is_whitespace",
-        "line": 318,
+        "line": 328,
         "markers": [
           "unit"
         ],
@@ -3167,7 +3176,7 @@
       },
       {
         "name": "TestProfileMapping::test_all_profiles_return_config",
-        "line": 97,
+        "line": 105,
         "markers": [
           "parametrize",
           "unit"
@@ -3177,7 +3186,7 @@
       },
       {
         "name": "TestLoadProfile::test_load_profile_returns_schema",
-        "line": 109,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -3186,7 +3195,7 @@
       },
       {
         "name": "TestLoadProfile::test_load_all_profiles",
-        "line": 117,
+        "line": 125,
         "markers": [
           "parametrize",
           "unit"
@@ -9615,7 +9624,7 @@
       },
       {
         "name": "test_profile_overrides_environment",
-        "line": 43,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -9623,7 +9632,7 @@
       },
       {
         "name": "test_cli_args_override_profile_settings",
-        "line": 54,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -9631,7 +9640,7 @@
       },
       {
         "name": "test_env_profile_override",
-        "line": 63,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -9639,7 +9648,7 @@
       },
       {
         "name": "test_config_file_profile_used_when_no_cli",
-        "line": 72,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -9647,7 +9656,31 @@
       },
       {
         "name": "test_cli_profile_overrides_config_file",
-        "line": 82,
+        "line": 83,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_profile_config_builds_observe_profile",
+        "line": 93,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_profile_config_rejects_unknown_profile",
+        "line": 103,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_profile_config_accepts_case_insensitive_name",
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -45797,7 +45830,7 @@
     "tests/unit/gpt_trader/tui/services/test_mode_service.py": [
       {
         "name": "TestModeService::test_init_sets_app_and_scenario",
-        "line": 16,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -45806,7 +45839,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_demo",
-        "line": 24,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -45815,7 +45848,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_read_only",
-        "line": 36,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -45824,7 +45857,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_live",
-        "line": 49,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -45833,7 +45866,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_paper_default",
-        "line": 63,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -45842,7 +45875,7 @@
       },
       {
         "name": "TestModeService::test_create_bot_delegates_to_function",
-        "line": 77,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -45851,7 +45884,7 @@
       },
       {
         "name": "TestModeService::test_show_live_warning_pushes_modal",
-        "line": 87,
+        "line": 88,
         "markers": [
           "asyncio",
           "unit"
@@ -45861,7 +45894,7 @@
       },
       {
         "name": "TestModeService::test_notify_mode_changed_posts_event",
-        "line": 101,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -45870,7 +45903,7 @@
       },
       {
         "name": "TestCreateBotForMode::test_demo_mode_creates_demo_bot",
-        "line": 117,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -45879,7 +45912,7 @@
       },
       {
         "name": "TestCreateBotForMode::test_unknown_mode_raises_error",
-        "line": 122,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -45888,7 +45921,7 @@
       },
       {
         "name": "TestCreateBotForMode::test_paper_mode_loads_paper_config",
-        "line": 126,
+        "line": 127,
         "markers": [
           "unit"
         ],

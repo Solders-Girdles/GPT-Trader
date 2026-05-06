@@ -181,7 +181,7 @@ uv run agent-risk       # Query risk configuration
 | [Pre-Migration Decision Framework](docs/PRE_MIGRATION_DECISION_FRAMEWORK.md) | Autonomy, product, venue, approval, and audit gates |
 | [Reliability](docs/RELIABILITY.md) | Guard stack, degradation, chaos testing |
 | [Monitoring](docs/MONITORING_PLAYBOOK.md) | Metrics, alerting, dashboards |
-| [Production](docs/production.md) | Deployment and operations |
+| [Live Operations](docs/production.md) | Readiness-gated live operations and rollback |
 | [Contributing](CONTRIBUTING.md) | Development workflow |
 | [TUI Style Guide](docs/TUI_STYLE_GUIDE.md) | Terminal UI conventions |
 

@@ -2,10 +2,10 @@
 
 ---
 status: current
-last-updated: 2026-01-31
+last-updated: 2026-05-06
 ---
 
-These guidelines cover contributions to the spot-first `gpt_trader` stack. Older
+These guidelines cover contributions to the readiness-gated `gpt_trader` stack. Older
 guides from the pre-DI era were removed from the tree; use git history if you
 need to review historical practices.
 

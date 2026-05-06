@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-05-03
+last-updated: 2026-05-06
 ---
 
 All docs under `docs/` must be reachable from this index (directly or via other linked docs).
@@ -23,7 +23,7 @@ When adding a new doc, link it below in the best-fit section.
 | [Architecture Boundaries](architecture/BOUNDARIES.md) | Layer ownership and dependency direction |
 | [Ownership Map](architecture/OWNERSHIP.md) | Module ownership map and boundaries |
 | [Entrypoints](architecture/ENTRYPOINTS.md) | CLI, TUI, preflight, and live bot wiring |
-| [Production Guide](production.md) | Deployment, rollout, and emergency procedures |
+| [Live Operations Guide](production.md) | Readiness-gated live operations, rollback, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
 | [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) | AI-assisted trading autonomy, product, venue, approval, and audit gates |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
@@ -49,7 +49,7 @@ When adding a new doc, link it below in the best-fit section.
 - [Core Seams](architecture/SEAMS.md) - Canonical boundaries for Strategy/Execution/Data/Config
 
 ### Trading Operations
-- [Production Deployment](production.md) - Deployment, monitoring, rollback, emergencies
+- [Live Operations](production.md) - Readiness-gated live operations, monitoring, rollback, emergencies
 - [Readiness Checklist](READINESS.md) - Paper/live gate criteria and evidence
 - [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) - Gates before AI-assisted execution migration
 - [Reliability Guide](RELIABILITY.md) - Degradation matrix, config defaults, chaos harness
@@ -82,8 +82,9 @@ When adding a new doc, link it below in the best-fit section.
 | Profile | Environment | Use Case |
 |---------|-------------|----------|
 | **dev** | Mock broker | Development and testing |
-| **canary** | Production | Ultra-safe validation (tiny positions) |
-| **prod** | Production | Full trading capabilities |
+| **canary** | Live validation | Ultra-safe validation after readiness review |
+| **observe** | Real data, blocked execution | Account and market observation |
+| **prod** | Live operation | Legacy live profile requiring explicit approval |
 
 ### Environment Setup
 - [Environment Template](../config/environments/.env.template) - Minimal operator config (safe defaults)

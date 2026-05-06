@@ -1,7 +1,7 @@
 """
 Backtest runner that produces a readiness evidence artifact.
 
-This script runs a production-style strategy over historical candles and writes:
+This script runs a readiness-gated strategy over historical candles and writes:
 - JSON: runtime_data/<profile>/reports/backtest_<run_id>.json
 - Text: runtime_data/<profile>/reports/backtest_<run_id>.txt
 """

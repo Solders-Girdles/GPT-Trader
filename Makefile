@@ -77,7 +77,7 @@ test-guardrails:
 
 ci-required:
 	$(MAKE) lint
-	uv run ruff check scripts/ops scripts/backtest_runner.py scripts/perps_dashboard.py scripts/monitoring/export_metrics.py scripts/monitoring/canary_reduce_only_test.py scripts/monitoring/manage_logs.py scripts/production_preflight.py scripts/readiness_window.py
+	uv run ruff check scripts/ops scripts/analysis/backtest_runner.py scripts/monitoring scripts/production_preflight.py
 	@if grep -rn -E "(from|import)\\s+gpt_trader\\.orchestration" src tests scripts --include="*.py"; then \
 		echo "::error::gpt_trader.orchestration was removed in v3.0"; \
 		echo "Use canonical paths: app.*, features.live_trade.*, features.brokerages.*"; \
@@ -127,7 +127,7 @@ test-snapshots:
 	uv run pytest -q -n 0 tests/unit/gpt_trader/tui/test_snapshots_*.py
 
 backtest:
-	uv run python scripts/backtest_runner.py \
+	uv run python scripts/analysis/backtest_runner.py \
 		--profile $(BACKTEST_PROFILE) \
 		--symbol $(BACKTEST_SYMBOL) \
 		--granularity $(BACKTEST_GRANULARITY) \
@@ -136,7 +136,7 @@ backtest:
 		$(BACKTEST_EXTRA_ARGS)
 
 backtest-quick:
-	uv run python scripts/backtest_runner.py \
+	uv run python scripts/analysis/backtest_runner.py \
 		--profile $(BACKTEST_PROFILE) \
 		--symbol $(BACKTEST_SYMBOL) \
 		--granularity $(BACKTEST_GRANULARITY) \
@@ -146,7 +146,7 @@ backtest-quick:
 		$(BACKTEST_EXTRA_ARGS)
 
 backtest-walk-forward:
-	uv run python scripts/backtest_runner.py \
+	uv run python scripts/analysis/backtest_runner.py \
 		--profile $(BACKTEST_PROFILE) \
 		--symbol $(BACKTEST_SYMBOL) \
 		--granularity $(BACKTEST_GRANULARITY) \
@@ -158,7 +158,7 @@ backtest-walk-forward:
 		$(BACKTEST_EXTRA_ARGS)
 
 backtest-walk-forward-quick:
-	uv run python scripts/backtest_runner.py \
+	uv run python scripts/analysis/backtest_runner.py \
 		--profile $(BACKTEST_PROFILE) \
 		--symbol $(BACKTEST_SYMBOL) \
 		--granularity $(BACKTEST_GRANULARITY) \
@@ -239,7 +239,7 @@ ops-controls-smoke:
 	uv run python scripts/ops/controls_smoke.py
 
 readiness-window:
-	uv run python scripts/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)
+	uv run python scripts/ops/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)
 
 cov:
 	uv run pytest -m "not slow and not performance" -q \

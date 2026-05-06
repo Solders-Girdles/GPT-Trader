@@ -6,7 +6,7 @@ Surfaces Coinbase Trader metrics emitted via EventStore and health.json.
 Uses 'rich' library for a professional TUI.
 
 Usage:
-  python scripts/perps_dashboard.py --profile dev --refresh 1 --window-min 5
+  python scripts/monitoring/perps_dashboard.py --profile dev --refresh 1 --window-min 5
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_PATH = REPO_ROOT / "src"
 if str(SRC_PATH) not in sys.path:
     sys.path.append(str(SRC_PATH))

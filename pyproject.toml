@@ -94,8 +94,6 @@ target-version = "py312"
 src = ["src"]
 extend-exclude = [
     "data",
-    "scripts/pickle_scanner.py",
-    "scripts/pickle_to_joblib.py",
     "archived",
     "demos",
     "scripts",

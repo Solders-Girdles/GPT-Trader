@@ -1,4 +1,4 @@
-"""Tests for scripts/ci/check_legacy_patterns.py."""
+"""Tests for the repository pattern scanner."""
 
 from __future__ import annotations
 

@@ -32,7 +32,7 @@ automation is added.
 | Canonical entrypoints | Make CLI, TUI, preflight, scripts, and profiles point to one maintained path per workflow. | [Script taxonomy](../scripts/README.md) documents script directories and root exceptions. | Audit remaining Makefile targets against the taxonomy and remove or redirect retired command surfaces. |
 | Profile truth | Keep runtime profiles tied to explicit `Profile` values and readiness gates. | `ProfileLoader` is the profile gate; unregistered profile configs were removed. | Review docs and tests for language that treats `canary` or `prod` as sufficient live-trading approval. |
 | Compatibility shims | Collapse old aliases and fallback shapes that keep obsolete behavior alive. | `docs/DEPRECATIONS.md` lists active legacy inventory. | Pick one shim, prove internal usage, then classify it as remove, keep, or deprecate with a target. |
-| Test truth | Delete or modernize tests that protect behavior the project no longer wants. | Legacy-test triage tooling is active and CI-checked. | Review the current triage candidates and close one delete/modernize decision at a time. |
+| Test truth | Delete or modernize tests that protect behavior the project no longer wants. | Legacy-test triage tooling is active, CI-checked, and has no current untriaged candidates. | Re-run triage after future test moves or compatibility-shim removals. |
 | Generated artifacts | Keep `var/agents/**` aligned with source truth without making every pass noisy. | `agent-regenerate --verify` is the current guardrail. | Tighten docs around when regeneration is required and when verify-only is enough. |
 | Product and execution scope | Keep venue/API/account capability ahead of execution-path expansion. | Human-approved execution is the first AI-assisted target; broker-neutral records are canonical. | Inventory execution paths that could bypass human approval or readiness evidence. |
 
@@ -45,19 +45,14 @@ These are candidates for the next small cleanup passes:
      generated-artifact, or retired.
    - Remove targets that only preserve historical names without running useful work.
 
-2. **Legacy test triage closeout**
-   - Run `uv run python scripts/maintenance/test_legacy_triage.py --check`.
-   - For each review-only candidate, decide whether it should be modernized,
-     marked, or left as normal coverage.
-
-3. **Deprecation inventory pass**
+2. **Deprecation inventory pass**
    - Start with one bounded item from [Deprecations](DEPRECATIONS.md).
    - Suggested order: TUI guard shape normalization, `EventStore` aliases, then
      `RiskConfig.daily_loss_limit`.
    - Leave `BotConfig.from_dict` profile mapping until profile migration decisions
      are clearer.
 
-4. **Live-operation language audit**
+3. **Live-operation language audit**
    - Search docs for claims that `canary`, `prod`, futures, perps, or spot support
      imply automated execution approval.
    - Reframe those claims around readiness evidence and human-approved execution.
@@ -86,6 +81,8 @@ These should not be handled as drive-by cleanup:
 - Rehomed analysis, monitoring, and readiness scripts under the script taxonomy.
 - Documented script directories and root exceptions in `scripts/README.md`.
 - Pruned stale cleanup surfaces from `pyproject.toml` and the Makefile.
+- Closed review-only legacy-test triage false positives; triage now reports no
+  untriaged candidates.
 
 ## Verification Bundle
 

@@ -8,15 +8,10 @@
       "default": 5,
       "description": "Maximum allowed leverage multiplier"
     },
-    "daily_loss_limit": {
-      "type": "string",
-      "format": "decimal",
-      "description": "Maximum daily loss in quote currency",
-      "default": "100"
-    },
     "daily_loss_limit_pct": {
       "type": "number",
-      "default": 0.05
+      "default": 0.05,
+      "description": "Maximum daily loss as a fraction of equity"
     },
     "max_exposure_pct": {
       "type": "number",

@@ -82,7 +82,6 @@ class ObjectiveSpec:
 DEFAULT_PARAMETER_GROUPS = ("strategy", "risk")
 LEGACY_RISK_FALLBACK_PARAMETER_NAMES = frozenset(
     {
-        "daily_loss_limit",
         "daily_loss_limit_pct",
         "dry_run_equity_usd",
         "max_drawdown_pct",
@@ -91,6 +90,7 @@ LEGACY_RISK_FALLBACK_PARAMETER_NAMES = frozenset(
         "trailing_stop_pct",
     }
 )
+REMOVED_PARAMETER_NAMES = frozenset({"daily_loss_limit"})
 
 
 STRATEGY_GROUP = ParameterGroupSpec(
@@ -223,6 +223,8 @@ def categorize_parameters_by_group(
     grouped: dict[str, dict[str, Any]] = {name: {} for name in PARAMETER_GROUP_REGISTRY}
 
     for param_name, value in parameters.items():
+        if param_name in REMOVED_PARAMETER_NAMES:
+            continue
         group = _parameter_to_group.get(param_name)
         if group:
             target = group.name

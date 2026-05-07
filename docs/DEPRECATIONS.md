@@ -23,7 +23,6 @@ Classification of legacy shims/fallbacks and compatibility keepers.
 | Item | Location | Owner | Status | Notes |
 |------|----------|-------|--------|-------|
 | `BotConfig.from_dict` legacy profile-style YAML mapping | `src/gpt_trader/app/config/bot_config.py` | Core Config | deprecate | Emits `DeprecationWarning`; target removal in v4.0. |
-| `RiskConfig.daily_loss_limit` (absolute dollars) | `src/gpt_trader/features/live_trade/risk/config.py` | Risk | evaluate | Legacy absolute-dollar limit; prefer `daily_loss_limit_pct`. |
 
 ### Configuration (Remove after v4.0)
 
@@ -59,6 +58,7 @@ Before removing any deprecated item:
 | `Alert.id` / `Alert.timestamp` aliases | Unreleased | Use `alert_id` / `created_at`. |
 | `CoinbaseRestServiceBase` alias | Unreleased | Use `CoinbaseRestServiceCore`. |
 | `daily_loss_limit` in profile schema | Unreleased | Use `daily_loss_limit_pct`. |
+| `RiskConfig.daily_loss_limit` (absolute dollars) | Unreleased | Use `RiskConfig.daily_loss_limit_pct` / `RISK_DAILY_LOSS_LIMIT_PCT`. |
 | Perps strategy compat aliases (`short_ma`/`long_ma` props, `StrategyConfig`) | Unreleased | Use `PerpsStrategyConfig` and `short_ma_period`/`long_ma_period`. |
 | CLI fallback for unknown profile YAML | Unreleased | Use a `Profile` enum value or `--config`. |
 | Legacy risk templates | Unreleased | Removed from tree; use git history for reference. |

@@ -109,7 +109,7 @@ def check_environment_variables(checker: PreflightCheck) -> bool:
 
     risk_vars = {
         "RISK_MAX_LEVERAGE": (1, 10),
-        "RISK_DAILY_LOSS_LIMIT": (10, 10000),
+        "RISK_DAILY_LOSS_LIMIT_PCT": (0.0, 0.20),
         "RISK_MAX_POSITION_PCT_PER_SYMBOL": (0.01, 0.5),
     }
 

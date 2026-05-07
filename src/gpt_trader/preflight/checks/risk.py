@@ -16,10 +16,7 @@ def check_risk_configuration(checker: PreflightCheck) -> bool:
 
         config = RiskConfig.from_env()
 
-        # Validate daily_loss_limit_pct (percentage-based, preferred)
-        # Fall back to daily_loss_limit (absolute) if pct not configured
         has_pct_limit = config.daily_loss_limit_pct > 0
-        has_abs_limit = config.daily_loss_limit > 0
 
         checks: list[tuple[str, object, Callable[[Any], bool]]] = [
             ("Max leverage", config.max_leverage, lambda x: 1 <= x <= 10),
@@ -28,7 +25,7 @@ def check_risk_configuration(checker: PreflightCheck) -> bool:
             ("Slippage guard", config.slippage_guard_bps, lambda x: 10 <= x <= 100),
         ]
 
-        # Add daily loss limit check (prefer pct, fall back to absolute)
+        # Add daily loss limit check.
         if has_pct_limit:
             checks.append(
                 (
@@ -37,8 +34,6 @@ def check_risk_configuration(checker: PreflightCheck) -> bool:
                     lambda x: 0 < x <= 0.20,  # 0-20% is reasonable
                 )
             )
-        elif has_abs_limit:
-            checks.append(("Daily loss limit ($)", config.daily_loss_limit, lambda x: x > 0))
         else:
             checker.log_warning(
                 "No daily loss limit configured - consider setting RISK_DAILY_LOSS_LIMIT_PCT"

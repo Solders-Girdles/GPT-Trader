@@ -34,6 +34,7 @@ last-updated: 2026-01-23
 - `RiskConfig.from_env` now funnels through a `RiskConfigModel` Pydantic schema, using `RuntimeSettings.snapshot_env` to keep defaults and aliases in lockstep with runtime settings.
 - Environment parsing raises `EnvVarError` with the offending var and logs the failure; JSON inputs emit precise `ValidationError`s when mappings or percentages are malformed.
 - Regression tests snapshot the env key list, cover legacy aliases, and assert percentage bounds; operator docs now describe the stricter validation guarantees.
+- **BREAKING**: Removed the absolute-dollar `RiskConfig.daily_loss_limit` / `RISK_DAILY_LOSS_LIMIT` knob; use `daily_loss_limit_pct` / `RISK_DAILY_LOSS_LIMIT_PCT`.
 
 ### Naming Alignment: `qty` → `quantity`
 - Core brokerage interfaces now expose `quantity` exclusively; legacy `qty` aliases have been removed across serializers and dataclasses.

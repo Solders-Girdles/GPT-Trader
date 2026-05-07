@@ -24,6 +24,7 @@ last-updated: 2026-01-23
 - Removed the legacy `config/tui_preferences.json` fallback; TUI preferences now read/write only the runtime path (or `GPT_TRADER_TUI_PREFERENCES_PATH`).
 - Dropped legacy status class aliases (`good`/`bad`/`risk-status-*`) and Log widget CSS; widgets now use canonical `status-*` classes.
 - TUI validation events now use `FieldValidationError` directly (the `ValidationError` alias was removed).
+- TUI risk state now accepts guard data only through `RiskStatus.guards`; the legacy `active_guards` fallback and `StatusReporter.update_risk(active_guards=...)` shim were removed.
 
 ### LiveExecutionEngine Removal
 - **BREAKING**: Removed `LiveExecutionEngine` and its container factory; use `TradingEngine.submit_order()` and guard-stack helpers instead.

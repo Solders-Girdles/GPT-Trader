@@ -37115,7 +37115,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_healthy_status",
-        "line": 312,
+        "line": 302,
         "markers": [
           "asyncio",
           "unit"
@@ -37125,7 +37125,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_recent_error",
-        "line": 327,
+        "line": 317,
         "markers": [
           "unit"
         ],
@@ -37134,7 +37134,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_stale_prices",
-        "line": 339,
+        "line": 329,
         "markers": [
           "unit"
         ],

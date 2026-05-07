@@ -1,7 +1,7 @@
 .PHONY: dev-up dev-down lint fmt fmt-check lint-fix lint-fmt-fix typecheck docs-audit tui-css-check test-guardrails ci-required test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
 	readiness-window agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
-	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
-	agent-regenerate agent-verify agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
+	agent-naming agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
+	agent-regenerate agent-verify canary-liveness canary-liveness-check canary-daily canary-decision-traces \
 	canary-decision-trace-probe canary-runtime-info canary-stop canary-start \
 	canary-restart canary-status canary-watchdog canary-watchdog-once ops-controls-smoke \
 	test-triage test-triage-check test-unit test-property test-contract test-real-api test-integration test-integration-fast \
@@ -289,9 +289,6 @@ agent-risk:
 agent-naming:
 	uv run agent-naming
 
-agent-health:
-	$(MAKE) agent-health-full
-
 agent-health-fast:
 	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced COINBASE_ENABLE_INTX_PERPS=0 \
 	RISK_MAX_LEVERAGE=3 RISK_DAILY_LOSS_LIMIT=100 RISK_MAX_POSITION_PCT_PER_SYMBOL=0.10 \
@@ -322,7 +319,3 @@ agent-regenerate:
 
 agent-verify:
 	uv run agent-regenerate --verify
-
-agent-docs-links:
-	uv run python scripts/maintenance/docs_link_audit.py
-	uv run python scripts/maintenance/docs_reachability_check.py

@@ -21,14 +21,12 @@ make agent-map          # Dependency summary
 make agent-tests        # Test inventory to stdout
 make agent-risk         # Risk config docs
 make agent-naming       # Naming scan
-make agent-health       # Alias for agent-health-full
 make agent-health-fast  # Quick health report (skips tests; runs preflight/config)
 make agent-health-fast AGENT_HEALTH_FAST_QUALITY_CHECKS=none # CI: skip lint/format/types
 make agent-health-full  # Full health report (explicit envs + JSON/text output)
 make agent-chaos-smoke  # Short chaos stress test (exports JSON, enforces thresholds)
 make agent-chaos-week   # 7-day chaos stress test (exports JSON, enforces thresholds)
 make agent-regenerate   # Regenerate var/agents context
-make agent-docs-links   # Docs link audit
 ```
 
 Chaos smoke defaults cap fees at 4.5% (7-day baseline ~4.34%) and drawdown at 10% to flag churn regressions

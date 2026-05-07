@@ -5,7 +5,7 @@ Generated: 1970-01-01T00:00:00+00:00
 ## Event Store
 | ID | Label | Path |
 |----|-------|------|
-| event_store | EventStore.events | `src/gpt_trader/persistence/event_store.py` |
+| event_store | EventStore.list_events | `src/gpt_trader/persistence/event_store.py` |
 
 ## Historical Loader
 | ID | Label | Path |

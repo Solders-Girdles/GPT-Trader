@@ -4,7 +4,6 @@ Event persistence layer with optional SQLite durability.
 
 from __future__ import annotations
 
-import warnings
 from collections import deque
 from pathlib import Path
 from typing import Any
@@ -21,8 +20,6 @@ class EventStore:
     Modes:
     - In-memory (root=None): Pure deque storage, identical to legacy behavior
     - Persistent (root provided): Write-through to SQLite with bounded cache
-
-    The `events` property always returns a list for backward compatibility.
     """
 
     def __init__(
@@ -54,33 +51,6 @@ class EventStore:
     def root(self) -> Path | None:
         """Storage root directory."""
         return self._root
-
-    @property
-    def path(self) -> Path | None:
-        """Legacy path property for backward compatibility."""
-        warnings.warn(
-            "EventStore.path is deprecated; use EventStore.root and store SQLite data in events.db.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        if self._root:
-            return self._root / "events.jsonl"
-        return None
-
-    @property
-    def events(self) -> list[dict[str, Any]]:
-        """
-        Direct access to events list.
-
-        Returns a list copy of the internal deque for backward compatibility
-        with tests that use store.events[0], len(store.events), etc.
-        """
-        warnings.warn(
-            "EventStore.events is deprecated; use EventStore.list_events().",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return list(self._events)
 
     def list_events(self, count: int | None = None) -> list[dict[str, Any]]:
         """Return a snapshot of events.

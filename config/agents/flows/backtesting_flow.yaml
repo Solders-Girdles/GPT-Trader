@@ -14,7 +14,7 @@ clusters:
   label: Metrics + Output
 nodes:
 - id: event_store
-  label: EventStore.events
+  label: EventStore.list_events
   type: source
   path: src/gpt_trader/persistence/event_store.py
   cluster: event_store

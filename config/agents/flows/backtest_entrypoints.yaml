@@ -78,8 +78,8 @@ nodes:
   type: loader
   path: src/gpt_trader/features/research/backtesting/data_loader.py
   cluster: research
-- id: event_store_events
-  label: EventStore.events
+- id: event_store_list_events
+  label: EventStore.list_events
   type: source
   path: src/gpt_trader/persistence/event_store.py
   cluster: research
@@ -259,7 +259,7 @@ edges:
 - from: backtest_simulator_run
   to: historical_loader
   label: load history
-- from: event_store_events
+- from: event_store_list_events
   to: historical_loader
   label: source events
 - from: historical_loader

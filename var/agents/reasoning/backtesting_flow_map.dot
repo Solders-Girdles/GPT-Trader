@@ -3,7 +3,7 @@ digraph BacktestingFlow {
   subgraph cluster_event_store {
     label="Event Store";
     style=rounded;
-    "event_store" [shape=box, label="EventStore.events\nsrc/gpt_trader/persistence/event_store.py"];
+    "event_store" [shape=box, label="EventStore.list_events\nsrc/gpt_trader/persistence/event_store.py"];
   }
   subgraph cluster_loader {
     label="Historical Loader";

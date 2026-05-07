@@ -32,7 +32,7 @@ Generated: 1970-01-01T00:00:00+00:00
 |----|-------|------|
 | backtest_simulator_run | BacktestSimulator.run | `src/gpt_trader/features/research/backtesting/simulator.py` |
 | historical_loader | HistoricalDataLoader.load_symbol | `src/gpt_trader/features/research/backtesting/data_loader.py` |
-| event_store_events | EventStore.events | `src/gpt_trader/persistence/event_store.py` |
+| event_store_list_events | EventStore.list_events | `src/gpt_trader/persistence/event_store.py` |
 
 ## Intelligence Backtesting
 | ID | Label | Path |
@@ -93,7 +93,7 @@ Generated: 1970-01-01T00:00:00+00:00
 | golden_path_demo | golden_path_validate | validate decisions |
 | golden_path_demo | golden_path_report | generate report |
 | backtest_simulator_run | historical_loader | load history |
-| event_store_events | historical_loader | source events |
+| event_store_list_events | historical_loader | source events |
 | historical_loader | backtest_simulator_run | data points |
 | backtest_simulator_run | research_backtest_result | result |
 | research_backtest_result | performance_metrics | compute metrics |

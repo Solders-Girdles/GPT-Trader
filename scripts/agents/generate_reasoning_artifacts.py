@@ -961,7 +961,7 @@ BACKTEST_FLOW_CLUSTERS = [
 BACKTEST_FLOW_NODES = [
     {
         "id": "event_store",
-        "label": "EventStore.events",
+        "label": "EventStore.list_events",
         "type": "source",
         "path": "src/gpt_trader/persistence/event_store.py",
         "cluster": "event_store",
@@ -1329,8 +1329,8 @@ BACKTEST_ENTRYPOINTS_NODES = [
         "cluster": "research",
     },
     {
-        "id": "event_store_events",
-        "label": "EventStore.events",
+        "id": "event_store_list_events",
+        "label": "EventStore.list_events",
         "type": "source",
         "path": "src/gpt_trader/persistence/event_store.py",
         "cluster": "research",
@@ -1600,7 +1600,7 @@ BACKTEST_ENTRYPOINTS_EDGES = [
         "label": "load history",
     },
     {
-        "from": "event_store_events",
+        "from": "event_store_list_events",
         "to": "historical_loader",
         "label": "source events",
     },

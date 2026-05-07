@@ -23,7 +23,6 @@ Classification of legacy shims/fallbacks and compatibility keepers.
 | Item | Location | Owner | Status | Notes |
 |------|----------|-------|--------|-------|
 | `BotConfig.from_dict` legacy profile-style YAML mapping | `src/gpt_trader/app/config/bot_config.py` | Core Config | deprecate | Emits `DeprecationWarning`; target removal in v4.0. |
-| `EventStore.events` list + `EventStore.path` JSONL alias | `src/gpt_trader/persistence/event_store.py` | Persistence | deprecate | Internal call sites now use `list_events()`/`root`; legacy properties emit deprecation warnings. |
 | `RiskConfig.daily_loss_limit` (absolute dollars) | `src/gpt_trader/features/live_trade/risk/config.py` | Risk | evaluate | Legacy absolute-dollar limit; prefer `daily_loss_limit_pct`. |
 
 ### Configuration (Remove after v4.0)
@@ -67,6 +66,7 @@ Before removing any deprecated item:
 | Module-level `secrets_manager` helpers | Unreleased | Use `ApplicationContainer.secrets_manager` or instantiate `SecretsManager`. |
 | Data module singletons (`store_data`/`fetch_data` functions) | Unreleased | Use `DataService` and its instance methods. |
 | Yahoo data source stub (`DataSource.YAHOO`, `download_from_yahoo`) | Unreleased | Use `DataSource.COINBASE` and `download_from_coinbase`. |
+| `EventStore.events` list + `EventStore.path` JSONL alias | Unreleased | Use `EventStore.list_events()` for reads and `EventStore.root` for the storage root. |
 | TUI legacy preferences fallback (`config/tui_preferences.json`) | Unreleased | Use runtime preferences path or `GPT_TRADER_TUI_PREFERENCES_PATH` |
 | TUI legacy status CSS aliases (`good`/`bad`/`risk-status-*`) | Unreleased | Use `status-ok`, `status-warning`, `status-critical` |
 | TUI validation `ValidationError` alias | Unreleased | Use `FieldValidationError` |

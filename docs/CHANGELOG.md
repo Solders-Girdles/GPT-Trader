@@ -66,5 +66,8 @@ last-updated: 2026-01-23
 ### Monitoring Alert Cleanup
 - Removed legacy `Alert.id` and `Alert.timestamp` aliases; use `alert_id` and `created_at`.
 
+### Persistence Cleanup
+- Removed `EventStore.events` and `EventStore.path`; use `list_events()` for event reads and `root` for the storage root. The paper stress test now counts persisted SQLite events through `list_events()`.
+
 ### Docs Cleanup
 - Removed legacy risk templates from the tree; use git history for reference.

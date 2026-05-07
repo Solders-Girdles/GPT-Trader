@@ -7,8 +7,12 @@ last-updated: 2026-01-24
 
 ## Purpose
 
-This checklist defines the minimum bar for moving from paper trading to live trading.
-Each pillar has measurable evidence so the decision is objective, repeatable, and auditable.
+This checklist defines the minimum evidence bar for a human-approved decision to
+run a live profile. It does not itself authorize live execution; live runs follow
+the gates in [Live Operations](production.md) and the
+[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md).
+Each pillar produces measurable evidence so the approval decision is objective,
+repeatable, and auditable.
 
 ## How to use
 
@@ -88,8 +92,8 @@ Thresholds (adjust per strategy):
 - Out-of-sample Sharpe >= 0.7
 - Profit factor >= 1.2
 - Max drawdown <= 10%
-- Phase B (Canary live): Backtest gate pass is sufficient; walk-forward results may lag (see notes).
-- Phase C (Prod live): Walk-forward pass_count >= 3/6 (or >= 3 windows with positive total_return).
+- Phase B (Canary-eligible): Backtest gate pass is sufficient; walk-forward results may lag (see notes).
+- Phase C (Prod-eligible): Walk-forward pass_count >= 3/6 (or >= 3 windows with positive total_return).
 
 Checklist:
 - [x] Evidence path(s): `runtime_data/canary/reports/sweep_2h_trend_window_real_20260117_012209/tw64_thr0p01_cd3/backtest_20260117_012222.json`, `runtime_data/canary/reports/sweep_2h_trend_window_real_20260117_012209/tw64_thr0p01_cd3/backtest_20260117_012222.txt`, `runtime_data/canary/reports/walk_forward_20260117_071033/summary.md`, `runtime_data/canary/reports/walk_forward_20260117_080009/summary.md`, `runtime_data/canary/reports/guard_parity_20260124_041125.json`
@@ -209,11 +213,15 @@ Checklist:
 - [ ] Evidence path(s): `preflight_report_20260117_210033.json`
 - [ ] Notes: Canary preflight passes the Event store redaction (security) check; findings (if any) are logged with event_id/event_type/path only, never payload values.
 
-## Phase-gated milestones
+## Phase-gated evidence milestones
+
+These phases describe the evidence required to support a human-approved decision
+to run the corresponding profile. Reaching a phase does not by itself enable live
+execution.
 
 - Phase A (Paper-ready): pillars 1-5 pass, plus full observability coverage.
-- Phase B (Canary live): Phase A + no critical alerts in multi-day paper run, guard thresholds tuned.
-- Phase C (Prod live): Phase B + stability across regime changes (sideways/trending/high-vol).
+- Phase B (Canary-eligible): Phase A + no critical alerts in multi-day paper run, guard thresholds tuned. Approval still required before any canary run.
+- Phase C (Prod-eligible): Phase B + stability across regime changes (sideways/trending/high-vol). Approval still required before any prod run.
 
 Checklist:
 - [ ] Phase A complete

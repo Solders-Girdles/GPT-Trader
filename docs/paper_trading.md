@@ -103,25 +103,28 @@ broker.set_mark("BTC-PERP", Decimal("50000"))
 # Set container._broker = broker before calling container.create_bot()
 ```
 
-## Transition to Live Trading
+## Readiness Evidence Inputs
 
-### Validation Steps
-1. Run paper trading for minimum 1 week
-2. Achieve consistent profitability
-3. Verify risk metrics stay within limits
-4. Review all error logs
+Paper trading produces evidence that feeds the readiness checklist; it does not
+itself authorize live execution. Live profiles only run after the gates in
+[Live Operations](production.md) and the
+[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) have been
+satisfied with explicit human approval.
 
-### Migration Process
+### What paper runs should produce
+1. Multi-day paper sessions with daily reports archived
+2. Strategy/risk metrics measured against the readiness pillars
+3. Reviewed error and guard logs
+
+### Dry-run validation of profile wiring
 ```bash
-# Step 1: Canary testing (tiny real positions)
+# Validate canary profile settings without exchange orders
 uv run gpt-trader run --profile canary --dry-run
-
-# Step 2: Limited live trading
-uv run gpt-trader run --profile canary
-
-# Step 3: Full production
-uv run gpt-trader run --profile prod
 ```
+
+For any live profile run, follow the gate sequence in
+[Live Operations](production.md#live-gate-sequence). Do not promote past
+`--dry-run` without recorded approval.
 
 ## Performance Metrics
 

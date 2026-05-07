@@ -98,7 +98,7 @@ uv run python - <<'PY'
 from gpt_trader.cli.services import load_profile_config
 from gpt_trader.config.types import Profile
 
-config = load_profile_config(Profile.PROD)
+config = load_profile_config(Profile.CANARY)  # or the profile of the affected run
 print(config.risk)
 PY
 ```
@@ -138,12 +138,12 @@ An order that passed risk validation failed to execute on the broker.
 #### Diagnostic Steps
 
 ```bash
-# 1. Check account balances
+# 1. Check account balances (use the profile of the affected run)
 # Via CLI:
-gpt-trader account snapshot --profile prod
+gpt-trader account snapshot --profile <profile>
 
 # 2. Check order history
-sqlite3 runtime_data/prod/orders.db "select status, count(*) from orders group by status;"
+sqlite3 runtime_data/<profile>/orders.db "select status, count(*) from orders group by status;"
 
 # 3. Verify symbol is tradeable
 uv run python scripts/ops/product_catalog_probe.py
@@ -352,16 +352,19 @@ cat status.json | jq '.positions' > positions_at_stop.json
 
 ### Position Recovery After Crash
 
-If the bot crashes with open positions:
+This procedure assumes the crashed run was an already-approved monitored live
+session. Restart is an operator decision, not an automatic step.
 
 1. **Check positions**: `cat status.json | jq '.positions'`
-2. **Verify with broker**: `gpt-trader account snapshot --profile prod`
-3. **Decide action**:
-   - If in profit or small loss: Let bot resume management
-   - If significant loss or risk: Consider manual closure
-4. **Restart bot**: `systemctl start gpt-trader`
+2. **Verify with broker**: `gpt-trader account snapshot --profile <profile>`
+3. **Operator decision** (record in the incident log):
+   - Reconcile bot-recorded vs broker-reported state.
+   - Decide whether to close positions manually or hand them back to a restarted bot.
+   - If unclear, default to manual closure or reduce-only.
+4. **Restart bot only after the decision is recorded**: `systemctl start gpt-trader`
 
-The bot's EventStore will attempt to rehydrate state, but manual verification is recommended after any crash.
+The bot's EventStore will attempt to rehydrate state, but manual verification is
+required after any crash before resuming automated execution.
 
 ---
 

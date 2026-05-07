@@ -322,11 +322,15 @@ After editing any `.tcss` module file:
 python scripts/build_tui_css.py
 ```
 
-### Derivatives Gate
+### Derivatives Capability Gates
 
-**CFM Futures** (US-regulated): Available for approved US futures accounts. Enable via `TRADING_MODES=cfm` (or `spot,cfm`) and `CFM_ENABLED=1`; uses CDP authentication and CFM endpoints (`cfm_balance_summary`, `cfm_positions`, etc.).
+These are capability gates over implementation surfaces; they are not approval to
+trade derivatives. A live derivatives run still requires venue/account
+verification and the gates in [Live Operations](production.md).
 
-**INTX Perpetuals**: Require international INTX account access. Enable via `COINBASE_ENABLE_INTX_PERPS=1`. Code paths stay compiled for future use.
+**CFM Futures** (US-regulated): Adapter available for approved US futures accounts. Enable via `TRADING_MODES=cfm` (or `spot,cfm`) and `CFM_ENABLED=1`; uses CDP authentication and CFM endpoints (`cfm_balance_summary`, `cfm_positions`, etc.).
+
+**INTX Perpetuals**: Adapter requires international INTX account access. Enable via `COINBASE_ENABLE_INTX_PERPS=1`. Code paths stay compiled but live execution is gated on account access and approval.
 
 ### Feature Slice Reference
 
@@ -494,19 +498,24 @@ Override order followed when building a `BotConfig`:
 
 The readiness gate and CLI preflight scripts consume the same registry so that `PREFLIGHT_PROFILE`, `READINESS_REPORT_DIR`, and `runtime_data/<profile>` artifacts stay aligned with whatever the CLI is currently driving.
 
-## What's Actually Working
+## Implementation Status
 
-### ✅ Fully Operational
-- Coinbase spot trading via Advanced Trade (REST/WebSocket); dev profile defaults to the deterministic broker stub and can be pointed at live APIs with `SPOT_FORCE_LIVE=1`
+This section describes which surfaces are implemented in the codebase.
+Implemented does not mean approved to run live — live execution still follows
+the gates in [Live Operations](production.md) and the
+[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md).
+
+### ✅ Implemented Surfaces
+- Coinbase spot adapters via Advanced Trade (REST/WebSocket); dev profile defaults to the deterministic broker stub and can be pointed at live APIs with `SPOT_FORCE_LIVE=1`
 - Order placement/management through the `TradingEngine` guard stack (`_validate_and_place_order` -> `OrderSubmitter` -> `BrokerExecutor`)
 - Account telemetry snapshots and cycle metrics persisted for monitoring
 - Runtime safety rails: daily loss guard, liquidation buffer enforcement, mark staleness detection, volatility circuit breaker, correlation checks
 - Active test suite (`uv run pytest --collect-only` to verify)
 
-### ⚠️ Partially Working / Future Activation
-- Perpetual futures execution: code paths compile and tests run, but live trading remains disabled without INTX
+### ⚠️ Partially Implemented / Capability-Gated
+- Perpetual futures adapters: code paths compile and tests run; INTX account access and approval are required before live execution
 - Advanced WebSocket user-event handling: baseline support exists; enrichment/backfill still in progress
-- Durable restart state (OrdersStore/EventStore) needs production hardening
+- Durable restart state (OrdersStore/EventStore) needs hardening before live reliance
 
 ### ❌ Not Yet Implemented
 - Funding rate accrual in deterministic broker stub
@@ -514,6 +523,10 @@ The readiness gate and CLI preflight scripts consume the same registry so that `
 - Partial fill handling in mock (market fills remain immediate)
 
 ## Trading Profiles
+
+The snippets below are illustrative config snapshots, not approval. Live
+profiles (`canary`, `prod`) only run after the gates in
+[Live Operations](production.md) are satisfied with recorded human approval.
 
 ### Development Profile
 ```yaml

@@ -81,12 +81,19 @@ When adding a new doc, link it below in the best-fit section.
 - [Strategy Profile Diff](STRATEGY_PROFILE_DIFF.md) - Compare baseline strategy settings against runtime profile values
 
 ### Trading Profiles
-| Profile | Environment | Use Case |
-|---------|-------------|----------|
+
+Profiles are config snapshots, not execution approval. Live profiles
+(`canary`, `prod`) only run after the gates in
+[Live Operations](production.md) and the
+[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) are
+satisfied with recorded human approval.
+
+| Profile | Broker / data | Role |
+|---------|---------------|------|
 | **dev** | Mock broker | Development and testing |
-| **canary** | Live validation | Ultra-safe validation after readiness review |
 | **observe** | Real data, blocked execution | Account and market observation |
-| **prod** | Live operation | Legacy live profile requiring explicit approval |
+| **canary** | Live broker, tightly capped | Legacy live-validation asset; runs require recorded approval |
+| **prod** | Live broker | Legacy live-operation asset; runs require explicit approval and monitoring |
 
 ### Environment Setup
 - [Environment Template](../config/environments/.env.template) - Minimal operator config (safe defaults)
@@ -105,16 +112,20 @@ When adding a new doc, link it below in the best-fit section.
 
 ### Spot vs Perpetuals
 
+These flags are capability selectors, not approval. Enabling a flag exposes the
+relevant adapter; live execution still requires the gates in
+[Live Operations](production.md) and venue/account verification.
+
 | Mode | Products | Authentication | Flag |
 |------|----------|----------------|------|
-| **Spot (default)** | BTC-USD, ETH-USD, etc. | JWT (CDP key) | `TRADING_MODES=spot` |
+| **Spot (default capability)** | BTC-USD, ETH-USD, etc. | JWT (CDP key) | `TRADING_MODES=spot` |
 | **CFM futures (US)** | US futures contracts (expiry-coded symbols) | JWT (CDP key) | `TRADING_MODES=cfm` + `CFM_ENABLED=1` |
 | **INTX perps** | BTC-PERP, ETH-PERP | JWT (CDP key) | `COINBASE_ENABLE_INTX_PERPS=1` |
 
-**Note:** Sandbox does not support futures/perps. Bot defaults to spot-only trading.
+**Note:** Sandbox does not support futures/perps. Default capability is spot only.
 
 ### Current Focus
-- **Primary**: Coinbase spot trading (perps code future-ready)
+- **Primary implementation:** Coinbase spot adapters (perps code paths compile but require INTX access and approval)
 - **Architecture**: Vertical slice design under `src/gpt_trader/`
 - **Testing**: `uv run pytest`
 

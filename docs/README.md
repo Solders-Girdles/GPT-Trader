@@ -23,6 +23,7 @@ When adding a new doc, link it below in the best-fit section.
 | [Architecture Boundaries](architecture/BOUNDARIES.md) | Layer ownership and dependency direction |
 | [Ownership Map](architecture/OWNERSHIP.md) | Module ownership map and boundaries |
 | [Entrypoints](architecture/ENTRYPOINTS.md) | CLI, TUI, preflight, and live bot wiring |
+| [Core Cleanup Roadmap](CORE_CLEANUP_ROADMAP.md) | Cleanup lanes, decision backlog, and verification bundle |
 | [Live Operations Guide](production.md) | Readiness-gated live operations, rollback, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
 | [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) | AI-assisted trading autonomy, product, venue, approval, and audit gates |
@@ -61,6 +62,7 @@ When adding a new doc, link it below in the best-fit section.
 - [Coinbase Integration](COINBASE.md) - Configuration + internal entrypoints
 
 ### Development
+- [Core Cleanup Roadmap](CORE_CLEANUP_ROADMAP.md) - Cleanup lanes, ready queue, decision backlog
 - [Test Hygiene Policy](test_hygiene.md) - Line limits, allowlist policy, and splitting guidance
 - [Development Guidelines](DEVELOPMENT_GUIDELINES.md) - Standards for contributing
 - [Feature Slice Scaffolding](DEVELOPMENT_GUIDELINES.md#slice-scaffolding) - Bootstrap new slices

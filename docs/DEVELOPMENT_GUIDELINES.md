@@ -34,7 +34,9 @@ need to review historical practices.
   the slice (`tests/unit/gpt_trader/features/<slice>/`).
 - Use `--dry-run` for previews; the scaffold tool refuses overwrites by design.
 - Keep slice names snake_case, prefer explicit imports, and avoid cross-slice
-  dependencies (see `src/gpt_trader/scripts/README.md`).
+  dependencies.
+- Use the [script taxonomy](../scripts/README.md) when adding or moving repo
+  tooling under `scripts/`.
 
 ## Where to Change Things
 

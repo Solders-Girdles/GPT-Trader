@@ -175,6 +175,10 @@
       "type": "integer",
       "default": 120
     },
+    "mark_staleness_threshold_seconds": {
+      "type": "number",
+      "default": 30.0
+    },
     "mark_staleness_allow_reduce_only": {
       "type": "boolean",
       "default": true

@@ -28,6 +28,8 @@ make agent-health-full  # Full health report (explicit envs + JSON/text output)
 make agent-chaos-smoke  # Short chaos stress test (exports JSON, enforces thresholds)
 make agent-chaos-week   # 7-day chaos stress test (exports JSON, enforces thresholds)
 make agent-regenerate   # Regenerate var/agents context
+make agent-artifacts-validate # Validate committed var/agents context
+make agent-artifacts-package  # Build and verify the upload bundle
 make agent-docs-links   # Docs link audit
 ```
 
@@ -51,9 +53,26 @@ uv run agent-naming
 uv run agent-health
 uv run agent-regenerate
 uv run agent-regenerate --only testing
+uv run agent-artifacts validate
+uv run agent-artifacts package
+uv run agent-artifacts verify-package
 ```
 
 Naming defaults are loaded from `config/agents/naming_patterns.yaml`.
+
+## Artifact Publication
+
+`.github/workflows/agent-artifacts-refresh.yml` is the scheduled publication
+workflow for generated agent context. It regenerates `var/agents/**`, validates
+the generated tree against `var/agents/index.json`, packages the tree as
+`agent-artifacts.tar.gz`, uploads the package and manifest, verifies the
+downloaded package, and publishes changed files to
+`automation/agent-artifacts-refresh`.
+
+The workflow does not require GitHub Actions to create pull requests. If the
+repository setting blocks Actions-created PRs, the workflow still succeeds and
+leaves the validated package plus the updated automation branch as the
+publication outputs.
 
 ## Reference Docs
 

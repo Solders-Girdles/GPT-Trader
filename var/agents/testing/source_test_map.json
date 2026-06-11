@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 690,
+    "tests_scanned": 692,
     "source_modules": 367,
     "unresolved_modules": 3
   },
@@ -434,6 +434,8 @@
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_time_windows.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/tui/test_app_bootstrap_snapshot.py"
     ],
     "gpt_trader.core.account": [
@@ -1235,11 +1237,13 @@
     ],
     "gpt_trader.features.trade_ideas": [
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
     ],
@@ -3756,6 +3760,10 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_audit.py": [
       "gpt_trader.features.trade_ideas"
     ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.trade_ideas"
+    ],
     "tests/unit/gpt_trader/features/trade_ideas/test_budget.py": [
       "gpt_trader.features.trade_ideas"
     ],
@@ -3769,6 +3777,10 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py": [
+      "gpt_trader.core",
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_store.py": [

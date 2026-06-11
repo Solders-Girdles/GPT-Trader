@@ -14,6 +14,10 @@ from gpt_trader.features.trade_ideas.audit import (
     TradeIdeaAuditLog,
     new_event_id,
 )
+from gpt_trader.features.trade_ideas.baseline import (
+    BaselineProposer,
+    BaselineProposerConfig,
+)
 from gpt_trader.features.trade_ideas.budget import (
     DEFAULT_RISK_BUDGET,
     BudgetIntegrityError,
@@ -38,10 +42,16 @@ from gpt_trader.features.trade_ideas.models import (
     TradeIdea,
 )
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
+from gpt_trader.features.trade_ideas.proposer import Proposer
 from gpt_trader.features.trade_ideas.service import (
     TradeIdeaService,
     TradeIdeaView,
     UnknownTradeIdeaError,
+)
+from gpt_trader.features.trade_ideas.snapshot import (
+    MarketSnapshot,
+    SnapshotIntegrityError,
+    SymbolSeries,
 )
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
 from gpt_trader.features.trade_ideas.workflow import (
@@ -62,6 +72,8 @@ __all__ = [
     "AuditEvent",
     "AuditIntegrityError",
     "AutonomyMode",
+    "BaselineProposer",
+    "BaselineProposerConfig",
     "BrokerTicket",
     "BudgetIntegrityError",
     "BudgetLogEntry",
@@ -69,12 +81,16 @@ __all__ = [
     "ConfidenceLabel",
     "EntryZone",
     "InvalidTransitionError",
+    "MarketSnapshot",
     "MaxLoss",
     "PolicyViolationError",
     "ProductType",
+    "Proposer",
     "RiskBudget",
     "RiskBudgetLog",
     "SizingRecommendation",
+    "SnapshotIntegrityError",
+    "SymbolSeries",
     "TicketStatus",
     "TicketVenue",
     "TimeHorizon",

@@ -27,6 +27,7 @@ When adding a new doc, link it below in the best-fit section.
 | [Live Operations Guide](production.md) | Readiness-gated live operations, rollback, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
 | [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) | AI-assisted trading autonomy, product, venue, approval, and audit gates |
+| [Operating Rubric](OPERATING_RUBRIC.md) | Staged capabilities and graduation evidence for the autonomous entity |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [TUI Guide](TUI_GUIDE.md) | Launching and operating the terminal UI |
 | [TUI Style Guide](TUI_STYLE_GUIDE.md) | Visual standards for TUI components |

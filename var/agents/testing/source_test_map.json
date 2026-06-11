@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 686,
+    "tests_scanned": 690,
     "source_modules": 367,
     "unresolved_modules": 3
   },
@@ -1235,8 +1235,12 @@
     ],
     "gpt_trader.features.trade_ideas": [
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
     ],
     "gpt_trader.logging.correlation": [
@@ -3752,10 +3756,22 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_audit.py": [
       "gpt_trader.features.trade_ideas"
     ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_budget.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
     "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py": [
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_models.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_policy.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_store.py": [
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py": [

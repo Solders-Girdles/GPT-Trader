@@ -1,0 +1,164 @@
+"""Versioned, renegotiable risk budget for trade-idea workflows.
+
+The budget is the lever-handover mechanism from the accepted direction: limits
+are explicit data that agents can propose changes to through the same audited
+workflow as everything else. They are never silently removed — each version is
+appended to its own log with the actor and rationale that produced it.
+
+Seeded defaults reflect the owner's accepted risk philosophy
+(docs/OPERATING_RUBRIC.md): principal is fully at risk, so per-idea and daily
+caps are aggressive; realized gains are not principal, so a gain-retention
+floor defends a share of peak gains once the account is above its
+high-water mark.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import dataclass
+from datetime import datetime
+from decimal import Decimal
+from pathlib import Path
+from typing import Any
+
+from gpt_trader.errors import ValidationError
+from gpt_trader.features.trade_ideas.audit import ActorType
+
+
+class BudgetIntegrityError(ValidationError):
+    """Raised when a budget append would break version sequencing."""
+
+
+@dataclass(frozen=True, slots=True)
+class RiskBudget:
+    """One immutable version of the risk budget."""
+
+    version: int
+    max_loss_per_idea_pct: Decimal
+    max_daily_loss_pct: Decimal
+    max_open_notional_pct: Decimal
+    max_concurrent_approved_tickets: int
+    max_review_latency_hours: int
+    sizing_capped_by_budget: bool
+    gain_retention_floor_pct: Decimal
+    allow_futures_leverage: bool
+    allow_naked_shorts: bool
+    reason: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "version": self.version,
+            "max_loss_per_idea_pct": str(self.max_loss_per_idea_pct),
+            "max_daily_loss_pct": str(self.max_daily_loss_pct),
+            "max_open_notional_pct": str(self.max_open_notional_pct),
+            "max_concurrent_approved_tickets": self.max_concurrent_approved_tickets,
+            "max_review_latency_hours": self.max_review_latency_hours,
+            "sizing_capped_by_budget": self.sizing_capped_by_budget,
+            "gain_retention_floor_pct": str(self.gain_retention_floor_pct),
+            "allow_futures_leverage": self.allow_futures_leverage,
+            "allow_naked_shorts": self.allow_naked_shorts,
+            "reason": self.reason,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> RiskBudget:
+        return cls(
+            version=int(payload["version"]),
+            max_loss_per_idea_pct=Decimal(payload["max_loss_per_idea_pct"]),
+            max_daily_loss_pct=Decimal(payload["max_daily_loss_pct"]),
+            max_open_notional_pct=Decimal(payload["max_open_notional_pct"]),
+            max_concurrent_approved_tickets=int(payload["max_concurrent_approved_tickets"]),
+            max_review_latency_hours=int(payload["max_review_latency_hours"]),
+            sizing_capped_by_budget=bool(payload["sizing_capped_by_budget"]),
+            gain_retention_floor_pct=Decimal(payload["gain_retention_floor_pct"]),
+            allow_futures_leverage=bool(payload["allow_futures_leverage"]),
+            allow_naked_shorts=bool(payload["allow_naked_shorts"]),
+            reason=payload.get("reason", ""),
+        )
+
+
+DEFAULT_RISK_BUDGET = RiskBudget(
+    version=1,
+    max_loss_per_idea_pct=Decimal("5"),
+    max_daily_loss_pct=Decimal("10"),
+    max_open_notional_pct=Decimal("100"),
+    max_concurrent_approved_tickets=5,
+    max_review_latency_hours=72,
+    sizing_capped_by_budget=True,
+    gain_retention_floor_pct=Decimal("50"),
+    allow_futures_leverage=False,
+    allow_naked_shorts=False,
+    reason=(
+        "Seeded aggressive defaults accepted 2026-06-11: principal fully at risk, "
+        "gain-retention floor defends 50% of peak gains above the high-water mark"
+    ),
+)
+
+
+@dataclass(frozen=True, slots=True)
+class BudgetLogEntry:
+    """One appended budget version plus the actor and time that produced it."""
+
+    timestamp: datetime
+    actor_type: ActorType
+    actor_id: str
+    budget: RiskBudget
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "timestamp": self.timestamp.isoformat(),
+            "actor_type": self.actor_type.value,
+            "actor_id": self.actor_id,
+            "budget": self.budget.to_dict(),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> BudgetLogEntry:
+        return cls(
+            timestamp=datetime.fromisoformat(payload["timestamp"]),
+            actor_type=ActorType(payload["actor_type"]),
+            actor_id=payload["actor_id"],
+            budget=RiskBudget.from_dict(payload["budget"]),
+        )
+
+
+class RiskBudgetLog:
+    """Append-only JSONL log of budget versions; the last entry is current."""
+
+    def __init__(self, path: Path) -> None:
+        self._path = path
+
+    @property
+    def path(self) -> Path:
+        return self._path
+
+    def append(self, entry: BudgetLogEntry) -> None:
+        current = self.current()
+        expected_version = 1 if current is None else current.version + 1
+        if entry.budget.version != expected_version:
+            raise BudgetIntegrityError(
+                f"Budget version must be {expected_version}, got {entry.budget.version}",
+                field="version",
+                value=entry.budget.version,
+            )
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        line = json.dumps(entry.to_dict(), sort_keys=True, separators=(",", ":"))
+        with self._path.open("a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+
+    def history(self) -> list[BudgetLogEntry]:
+        if not self._path.exists():
+            return []
+        entries: list[BudgetLogEntry] = []
+        with self._path.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if line:
+                    entries.append(BudgetLogEntry.from_dict(json.loads(line)))
+        return entries
+
+    def current(self) -> RiskBudget | None:
+        entries = self.history()
+        if not entries:
+            return None
+        return entries[-1].budget

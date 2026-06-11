@@ -14,6 +14,13 @@ from gpt_trader.features.trade_ideas.audit import (
     TradeIdeaAuditLog,
     new_event_id,
 )
+from gpt_trader.features.trade_ideas.budget import (
+    DEFAULT_RISK_BUDGET,
+    BudgetIntegrityError,
+    BudgetLogEntry,
+    RiskBudget,
+    RiskBudgetLog,
+)
 from gpt_trader.features.trade_ideas.eligibility import evaluate_eligibility, is_eligible
 from gpt_trader.features.trade_ideas.models import (
     AutonomyMode,
@@ -30,6 +37,13 @@ from gpt_trader.features.trade_ideas.models import (
     TradeDirection,
     TradeIdea,
 )
+from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
+from gpt_trader.features.trade_ideas.service import (
+    TradeIdeaService,
+    TradeIdeaView,
+    UnknownTradeIdeaError,
+)
+from gpt_trader.features.trade_ideas.store import TradeIdeaStore
 from gpt_trader.features.trade_ideas.workflow import (
     ALLOWED_TRANSITIONS,
     TERMINAL_STATES,
@@ -40,19 +54,26 @@ from gpt_trader.features.trade_ideas.workflow import (
 
 __all__ = [
     "ALLOWED_TRANSITIONS",
+    "DEFAULT_RISK_BUDGET",
     "TERMINAL_STATES",
     "ActorType",
+    "ApprovalPolicy",
     "AuditAction",
     "AuditEvent",
     "AuditIntegrityError",
     "AutonomyMode",
     "BrokerTicket",
+    "BudgetIntegrityError",
+    "BudgetLogEntry",
     "Confidence",
     "ConfidenceLabel",
     "EntryZone",
     "InvalidTransitionError",
     "MaxLoss",
+    "PolicyViolationError",
     "ProductType",
+    "RiskBudget",
+    "RiskBudgetLog",
     "SizingRecommendation",
     "TicketStatus",
     "TicketVenue",
@@ -60,7 +81,11 @@ __all__ = [
     "TradeDirection",
     "TradeIdea",
     "TradeIdeaAuditLog",
+    "TradeIdeaService",
     "TradeIdeaState",
+    "TradeIdeaStore",
+    "TradeIdeaView",
+    "UnknownTradeIdeaError",
     "evaluate_eligibility",
     "is_eligible",
     "new_event_id",

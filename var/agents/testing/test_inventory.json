@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6513,
-    "total_files": 766,
+    "total_tests": 6544,
+    "total_files": 770,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6348,
+    "unit": 6379,
     "asyncio": 372,
     "parametrize": 173,
     "endpoints": 83,
@@ -520,8 +520,12 @@
       "tests/unit/gpt_trader/features/strategy_tools/test_strategy_enhancements_edges.py",
       "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
     ],
     "fixtures": [
@@ -31476,6 +31480,56 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_budget.py": [
+      {
+        "name": "test_seeded_defaults_reflect_accepted_risk_philosophy",
+        "line": 33,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_budget_round_trip",
+        "line": 42,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_log_has_no_current_budget",
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_append_and_current",
+        "line": 54,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_versions_must_be_contiguous",
+        "line": 61,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_renegotiated_budget_becomes_current",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py": [
       {
         "name": "test_fully_specified_idea_is_eligible",
@@ -31602,6 +31656,212 @@
       {
         "name": "test_optional_value_objects_round_trip_when_empty",
         "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_policy.py": [
+      {
+        "name": "test_eligible_idea_with_human_approver_passes",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_ai_actor_cannot_approve_in_human_approved_mode",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_research_only_mode_blocks_all_approvals",
+        "line": 47,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_ineligible_idea_cannot_be_approved",
+        "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_max_loss_above_budget_cap_is_refused",
+        "line": 61,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_percent_cannot_be_verified",
+        "line": 71,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_concurrent_approved_cap_is_enforced",
+        "line": 79,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_stale_idea_cannot_be_approved",
+        "line": 88,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_budget_changes_require_human_below_bounded_autonomy",
+        "line": 102,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_bounded_autonomy_lets_agents_change_budgets",
+        "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service.py": [
+      {
+        "name": "test_propose_creates_proposed_view",
+        "line": 31,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_full_lifecycle_to_fill",
+        "line": 39,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_changes_loop_keeps_every_record_version",
+        "line": 57,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approval_refused_for_budget_violation",
+        "line": 71,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_unknown_decision_id_is_an_error",
+        "line": 84,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_list_views_filters_by_state",
+        "line": 89,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_budget_seeds_defaults_on_first_use",
+        "line": 102,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_human_can_renegotiate_budget",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_agent_budget_change_refused_in_current_mode",
+        "line": 116,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_expire_is_a_system_action",
+        "line": 127,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_store.py": [
+      {
+        "name": "test_save_and_load_latest",
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_decision_returns_none",
+        "line": 24,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_every_version_stays_retrievable_by_hash",
+        "line": 29,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_list_decision_ids_sorted",
+        "line": 40,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_store_lists_nothing",
+        "line": 47,
         "markers": [
           "unit"
         ],

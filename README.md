@@ -1,6 +1,6 @@
 # GPT-Trader
 
-A production-ready Coinbase trading system built collaboratively with AI coding assistants.
+A Coinbase-oriented trading system under active cleanup and migration planning.
 
 [![CI](https://github.com/Solders-Girdles/GPT-Trader/actions/workflows/ci.yml/badge.svg)](https://github.com/Solders-Girdles/GPT-Trader/actions/workflows/ci.yml)
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
@@ -9,15 +9,20 @@ A production-ready Coinbase trading system built collaboratively with AI coding 
 
 ## Overview
 
-GPT-Trader is a Coinbase trading bot featuring a Terminal User Interface, vertical slice architecture, and comprehensive risk management. The name reflects how AI assistants (Claude, GPT, Gemini) collaborate in developing this codebase—the trading strategies themselves use technical analysis, not LLM inference.
+GPT-Trader is a Coinbase-oriented trading system featuring a Terminal User Interface, vertical slice architecture, and risk management. The name reflects how AI assistants collaborate in developing this codebase; current trading strategies use technical analysis and rule-based decisioning, not LLM inference.
+
+**Direction:** the long-term goal is an autonomous trading entity — a bot that observes markets, does its own research, and manages funds inside machine-enforced limits. The accepted path runs through staged autonomy: AI-produced trade-idea records with human approval first, then bounded autonomy per strategy envelope once the risk, audit, and kill-switch rails have a track record. Scope is Coinbase only (spot + CFM futures); INTX perpetuals code is frozen. See [Pre-Migration Decision Framework](docs/PRE_MIGRATION_DECISION_FRAMEWORK.md) for the accepted decision record.
+
+Treat existing live profiles and broker-specific paths as implementation assets that need explicit readiness, venue-capability, approval, and audit gates before expansion.
 
 ### Trading Capabilities
 
 | Mode | Status | Description |
 |------|--------|-------------|
-| **Spot Trading** | Active | BTC-USD, ETH-USD, and top-10 USD pairs |
-| **CFM Futures** | Available | US-regulated futures via Coinbase Financial Markets |
-| **INTX Perpetuals** | Code Ready | Requires international INTX account access |
+| **Spot Trading** | Implemented | Coinbase spot paths exist; use only with explicit profile and readiness gates |
+| **CFM Futures** | Implemented/gated | US-regulated futures paths exist; require account, product, and risk-gate verification |
+| **INTX Perpetuals** | Frozen | International derivatives paths exist but receive no new work; removed opportunistically |
+| **AI-assisted execution** | Planning | Human-approved execution first; bounded autonomy is the accepted destination |
 
 ## Quick Start
 
@@ -57,8 +62,10 @@ uv run gpt-trader tui --mode live  # Live trading
 | Profile | Broker | Use Case |
 |---------|--------|----------|
 | `dev` | DeterministicBroker (mock) | Local development |
-| `canary` | Real (tiny limits) | Production validation |
-| `prod` | Real | Full production trading |
+| `paper` | Mock execution | Real-data strategy checks without exchange orders |
+| `observe` | Real data, execution blocked | Read-only market/account observation |
+| `canary` | Real (tiny limits) | Production validation only after readiness review |
+| `prod` | Real | Legacy live profile; do not treat as approval for unrestricted production use |
 
 ### Environment Setup
 
@@ -70,7 +77,7 @@ cp config/environments/.env.template .env
 
 Key variables:
 - `COINBASE_CREDENTIALS_FILE` or `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY` - JWT credentials
-- `--profile` (CLI) - Trading profile (`dev`/`canary`/`prod`)
+- `--profile` (CLI) - Trading profile (`dev`/`paper`/`observe`/`canary`/`prod`)
 
 See [config/environments/.env.template](config/environments/.env.template) for minimal operator defaults and
 [var/agents/configuration/environment_variables.md](var/agents/configuration/environment_variables.md) for the full, code-derived inventory.
@@ -173,9 +180,10 @@ uv run agent-risk       # Query risk configuration
 | Document | Purpose |
 |----------|---------|
 | [Architecture](docs/ARCHITECTURE.md) | System design and vertical slices |
+| [Pre-Migration Decision Framework](docs/PRE_MIGRATION_DECISION_FRAMEWORK.md) | Autonomy, product, venue, approval, and audit gates |
 | [Reliability](docs/RELIABILITY.md) | Guard stack, degradation, chaos testing |
 | [Monitoring](docs/MONITORING_PLAYBOOK.md) | Metrics, alerting, dashboards |
-| [Production](docs/production.md) | Deployment and operations |
+| [Live Operations](docs/production.md) | Readiness-gated live operations and rollback |
 | [Contributing](CONTRIBUTING.md) | Development workflow |
 | [TUI Style Guide](docs/TUI_STYLE_GUIDE.md) | Terminal UI conventions |
 

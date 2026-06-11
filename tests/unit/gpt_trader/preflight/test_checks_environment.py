@@ -162,7 +162,7 @@ class TestCheckEnvironmentVariables:
         env = {
             "BROKER": "coinbase",
             "RISK_MAX_LEVERAGE": "5",  # Within 1-10
-            "RISK_DAILY_LOSS_LIMIT": "500",  # Within 10-10000
+            "RISK_DAILY_LOSS_LIMIT_PCT": "0.05",  # Within 0.0-0.20
             "RISK_MAX_POSITION_PCT_PER_SYMBOL": "0.1",  # Within 0.01-0.5
         }
 

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6502,
-    "total_files": 767,
+    "total_tests": 6483,
+    "total_files": 762,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6337,
+    "unit": 6318,
     "asyncio": 372,
     "parametrize": 169,
     "endpoints": 83,
@@ -504,11 +504,6 @@
       "tests/unit/gpt_trader/features/optimize/test_optimization_types.py",
       "tests/unit/gpt_trader/features/optimize/test_walk_forward.py",
       "tests/unit/gpt_trader/features/optimize/test_walk_forward_helpers.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_data_loader_edges.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_metrics_edges.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_edges.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_order_lifecycle.py",
-      "tests/unit/gpt_trader/features/research/test_research_import.py",
       "tests/unit/gpt_trader/features/strategy_dev/config/test_registry.py",
       "tests/unit/gpt_trader/features/strategy_dev/config/test_strategy_profile.py",
       "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
@@ -2995,8 +2990,26 @@
         "class": "TestProfileLoader"
       },
       {
-        "name": "TestProfileLoader::test_logs_payload_on_yaml_parse_error",
+        "name": "TestProfileLoader::test_profile_yaml_files_are_registered_profiles",
         "line": 92,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Every profile YAML should map to a first-class Profile enum value.",
+        "class": "TestProfileLoader"
+      },
+      {
+        "name": "TestProfileLoader::test_observe_profile_is_read_only_live_data_shape",
+        "line": 99,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestProfileLoader"
+      },
+      {
+        "name": "TestProfileLoader::test_logs_payload_on_yaml_parse_error",
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -3005,7 +3018,7 @@
       },
       {
         "name": "TestProfileLoader::test_logs_payload_when_profile_missing",
-        "line": 118,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -3014,7 +3027,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_minimal",
-        "line": 140,
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -3023,7 +3036,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_full",
-        "line": 152,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -3032,7 +3045,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_uses_trading_execution_when_top_level_execution_missing",
-        "line": 205,
+        "line": 221,
         "markers": [
           "unit"
         ],
@@ -3041,7 +3054,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_get_env_defaults_for_unknown_profile_uses_prod_defaults",
-        "line": 232,
+        "line": 248,
         "markers": [
           "unit"
         ],
@@ -3050,7 +3063,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_is_dev_profile",
-        "line": 251,
+        "line": 268,
         "markers": [
           "parametrize",
           "unit"
@@ -3060,7 +3073,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_registry_lookup_is_case_insensitive",
-        "line": 254,
+        "line": 271,
         "markers": [
           "unit"
         ],
@@ -3069,7 +3082,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_cli_profile_wins",
-        "line": 263,
+        "line": 280,
         "markers": [
           "unit"
         ],
@@ -3078,7 +3091,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_file_profile_overrides_env",
-        "line": 274,
+        "line": 291,
         "markers": [
           "unit"
         ],
@@ -3087,7 +3100,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_env_profile_overrides_default",
-        "line": 285,
+        "line": 302,
         "markers": [
           "unit"
         ],
@@ -3096,7 +3109,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_falls_back_to_default",
-        "line": 296,
+        "line": 313,
         "markers": [
           "unit"
         ],
@@ -3105,7 +3118,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_blank_values_are_ignored",
-        "line": 307,
+        "line": 324,
         "markers": [
           "unit"
         ],
@@ -3114,7 +3127,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_env_helper_uses_bot_profile_when_primary_is_whitespace",
-        "line": 318,
+        "line": 335,
         "markers": [
           "unit"
         ],
@@ -3170,7 +3183,7 @@
       },
       {
         "name": "TestProfileMapping::test_all_profiles_return_config",
-        "line": 97,
+        "line": 105,
         "markers": [
           "parametrize",
           "unit"
@@ -3180,7 +3193,7 @@
       },
       {
         "name": "TestLoadProfile::test_load_profile_returns_schema",
-        "line": 109,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -3189,7 +3202,7 @@
       },
       {
         "name": "TestLoadProfile::test_load_all_profiles",
-        "line": 117,
+        "line": 125,
         "markers": [
           "parametrize",
           "unit"
@@ -9618,7 +9631,7 @@
       },
       {
         "name": "test_profile_overrides_environment",
-        "line": 43,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -9626,7 +9639,7 @@
       },
       {
         "name": "test_cli_args_override_profile_settings",
-        "line": 54,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -9634,7 +9647,7 @@
       },
       {
         "name": "test_env_profile_override",
-        "line": 63,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -9642,7 +9655,7 @@
       },
       {
         "name": "test_config_file_profile_used_when_no_cli",
-        "line": 72,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -9650,7 +9663,31 @@
       },
       {
         "name": "test_cli_profile_overrides_config_file",
-        "line": 82,
+        "line": 83,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_profile_config_builds_observe_profile",
+        "line": 93,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_profile_config_rejects_unknown_profile",
+        "line": 103,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_profile_config_accepts_case_insensitive_name",
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -15213,7 +15250,7 @@
         "docstring": ""
       },
       {
-        "name": "test_resolve_supports_legacy_env_vars",
+        "name": "test_resolve_ignores_legacy_env_vars",
         "line": 47,
         "markers": [
           "unit"
@@ -15221,16 +15258,8 @@
         "docstring": ""
       },
       {
-        "name": "test_resolve_blocks_on_mixed_env_vars",
-        "line": 59,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
         "name": "test_resolve_uses_credentials_file",
-        "line": 71,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -15238,7 +15267,7 @@
       },
       {
         "name": "test_resolve_blocks_on_file_env_mismatch",
-        "line": 95,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -15246,15 +15275,15 @@
       },
       {
         "name": "test_resolve_invalid_credentials_file_falls_back_to_env",
-        "line": 115,
+        "line": 101,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_resolve_mixed_env_allowed_when_override_set",
-        "line": 131,
+        "name": "test_resolve_file_env_mismatch_allowed_when_override_set",
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -27030,7 +27059,7 @@
       },
       {
         "name": "test_riskconfig_from_json_type_normalization",
-        "line": 22,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -27038,7 +27067,7 @@
       },
       {
         "name": "test_riskconfig_from_yaml_type_normalization",
-        "line": 50,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -30363,205 +30392,6 @@
         ],
         "docstring": "Test creating an invalid window result with errors.",
         "class": "TestWindowResult"
-      }
-    ],
-    "tests/unit/gpt_trader/features/research/backtesting/test_data_loader_edges.py": [
-      {
-        "name": "test_load_symbol_filters_invalid_and_truncates",
-        "line": 24,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_load_symbol_include_gates_and_market_data",
-        "line": 61,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_build_depth_snapshot_valid_and_invalid",
-        "line": 107,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_historical_data_point_has_market_data",
-        "line": 118,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_load_all_symbols_returns_all_symbols",
-        "line": 151,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_load_symbol_uses_filtered_query",
-        "line": 182,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "load_symbol must call list_events_by_symbol, not list_events."
-      },
-      {
-        "name": "test_load_all_symbols_single_list_events_call",
-        "line": 215,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Regression: load_all_symbols must call list_events exactly once (no N+1)."
-      }
-    ],
-    "tests/unit/gpt_trader/features/research/backtesting/test_metrics_edges.py": [
-      {
-        "name": "test_from_result_with_empty_equity_curve_returns_zeroed_metrics",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculate_drawdown_reports_max_and_duration",
-        "line": 45,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculate_trade_pnls_pairs_and_skips_mismatches",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculate_profit_factor_edges",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/research/backtesting/test_simulator_edges.py": [
-      {
-        "name": "test_run_empty_data_points_returns_defaults",
-        "line": 46,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_calculate_fill_price_uses_spread_slippage",
-        "line": 55,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_run_buy_then_hold_closes_at_end",
-        "line": 73,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_tiered_fees_default",
-        "line": 102,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_funding_accrual_and_settlement",
-        "line": 143,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/research/backtesting/test_simulator_order_lifecycle.py": [
-      {
-        "name": "test_pending_order_fills_after_delay",
-        "line": 40,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_cancel_pending_order_on_close",
-        "line": 87,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/research/test_research_import.py": [
-      {
-        "name": "TestResearchModuleImport::test_all_exports_importable",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Verify all __all__ exports are importable.",
-        "class": "TestResearchModuleImport"
-      },
-      {
-        "name": "TestResearchModuleImport::test_module_has_docstring",
-        "line": 25,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Verify module has documentation.",
-        "class": "TestResearchModuleImport"
-      },
-      {
-        "name": "TestHistoricalDataPoint::test_data_point_is_class",
-        "line": 36,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Verify HistoricalDataPoint is defined.",
-        "class": "TestHistoricalDataPoint"
-      },
-      {
-        "name": "TestBacktestSimulator::test_simulator_is_class",
-        "line": 44,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Verify BacktestSimulator is defined.",
-        "class": "TestBacktestSimulator"
-      },
-      {
-        "name": "TestPerformanceMetrics::test_metrics_is_class",
-        "line": 52,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Verify PerformanceMetrics is defined.",
-        "class": "TestPerformanceMetrics"
       }
     ],
     "tests/unit/gpt_trader/features/strategy_dev/config/test_registry.py": [
@@ -37076,7 +36906,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_healthy_status",
-        "line": 312,
+        "line": 302,
         "markers": [
           "asyncio",
           "unit"
@@ -37086,7 +36916,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_recent_error",
-        "line": 327,
+        "line": 317,
         "markers": [
           "unit"
         ],
@@ -37095,7 +36925,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_stale_prices",
-        "line": 339,
+        "line": 329,
         "markers": [
           "unit"
         ],
@@ -38785,7 +38615,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_risk.py": [
       {
         "name": "TestCheckRiskConfiguration::test_passes_with_valid_config",
-        "line": 52,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -38794,7 +38624,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_with_unsafe_leverage",
-        "line": 61,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -38803,16 +38633,16 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_when_no_daily_loss_limit_configured",
-        "line": 70,
+        "line": 68,
         "markers": [
           "unit"
         ],
-        "docstring": "Should warn when neither pct nor absolute daily loss limit is configured.",
+        "docstring": "Should warn when the daily loss limit pct is not configured.",
         "class": "TestCheckRiskConfiguration"
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_with_low_liquidation_buffer",
-        "line": 81,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -38821,7 +38651,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_with_excessive_position_size",
-        "line": 89,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -38830,7 +38660,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_with_slippage_guard_out_of_range",
-        "line": 97,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -38839,7 +38669,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_when_kill_switch_enabled",
-        "line": 105,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -38848,7 +38678,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_when_reduce_only_mode",
-        "line": 114,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -38857,7 +38687,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_on_high_daily_loss_limit",
-        "line": 123,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -38866,7 +38696,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_warns_on_aggressive_leverage",
-        "line": 132,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -38875,7 +38705,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_fails_on_exception",
-        "line": 141,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -38884,7 +38714,7 @@
       },
       {
         "name": "TestCheckRiskConfiguration::test_prints_section_header",
-        "line": 150,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -45800,7 +45630,7 @@
     "tests/unit/gpt_trader/tui/services/test_mode_service.py": [
       {
         "name": "TestModeService::test_init_sets_app_and_scenario",
-        "line": 16,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -45809,7 +45639,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_demo",
-        "line": 24,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -45818,7 +45648,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_read_only",
-        "line": 36,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -45827,7 +45657,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_live",
-        "line": 49,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -45836,7 +45666,7 @@
       },
       {
         "name": "TestModeService::test_detect_bot_mode_paper_default",
-        "line": 63,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -45845,7 +45675,7 @@
       },
       {
         "name": "TestModeService::test_create_bot_delegates_to_function",
-        "line": 77,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -45854,7 +45684,7 @@
       },
       {
         "name": "TestModeService::test_show_live_warning_pushes_modal",
-        "line": 87,
+        "line": 88,
         "markers": [
           "asyncio",
           "unit"
@@ -45864,7 +45694,7 @@
       },
       {
         "name": "TestModeService::test_notify_mode_changed_posts_event",
-        "line": 101,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -45873,7 +45703,7 @@
       },
       {
         "name": "TestCreateBotForMode::test_demo_mode_creates_demo_bot",
-        "line": 117,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -45882,7 +45712,7 @@
       },
       {
         "name": "TestCreateBotForMode::test_unknown_mode_raises_error",
-        "line": 122,
+        "line": 123,
         "markers": [
           "unit"
         ],
@@ -45891,7 +45721,7 @@
       },
       {
         "name": "TestCreateBotForMode::test_paper_mode_loads_paper_config",
-        "line": 126,
+        "line": 127,
         "markers": [
           "unit"
         ],

@@ -969,7 +969,6 @@ class StatusReporter:
         reduce_only: bool,
         reduce_reason: str,
         guards: list[GuardStatus | dict[str, Any]] | None = None,
-        active_guards: list[str] | None = None,
     ) -> None:
         """Update risk status."""
         self._status.risk.max_leverage = max_leverage
@@ -1003,8 +1002,6 @@ class StatusReporter:
                 else:
                     normalized.append(GuardStatus(name=str(guard)))
             self._status.risk.guards = normalized
-        elif active_guards is not None:
-            self._status.risk.guards = [GuardStatus(name=str(name)) for name in active_guards]
 
     def update_system(
         self, latency: float, connection: str, rate_limit: str, memory: str, cpu: str

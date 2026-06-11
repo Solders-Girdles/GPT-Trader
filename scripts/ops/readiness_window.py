@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Report readiness-window timing from runtime event storage."""
+
 from __future__ import annotations
 
 import argparse

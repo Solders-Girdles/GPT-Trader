@@ -44,24 +44,10 @@ def test_resolve_falls_back_to_cdp_env_vars(monkeypatch) -> None:
     assert "COINBASE_CDP_API_KEY" in creds.source
 
 
-def test_resolve_supports_legacy_env_vars(monkeypatch) -> None:
+def test_resolve_ignores_legacy_env_vars(monkeypatch) -> None:
     _clear_coinbase_credential_env(monkeypatch)
     monkeypatch.setenv("COINBASE_API_KEY_NAME", "organizations/legacy/apiKeys/xyz")
     monkeypatch.setenv("COINBASE_PRIVATE_KEY", "-----BEGIN EC PRIVATE KEY-----\nlegacy\n")
-
-    creds = resolve_coinbase_credentials()
-
-    assert creds is not None
-    assert creds.key_name == "organizations/legacy/apiKeys/xyz"
-    assert creds.source.endswith("COINBASE_API_KEY_NAME+COINBASE_PRIVATE_KEY")
-
-
-def test_resolve_blocks_on_mixed_env_vars(monkeypatch) -> None:
-    _clear_coinbase_credential_env(monkeypatch)
-    monkeypatch.setenv("COINBASE_API_KEY_NAME", "organizations/old/apiKeys/old")
-    monkeypatch.setenv("COINBASE_PRIVATE_KEY", "-----BEGIN EC PRIVATE KEY-----\nold\n")
-    monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/new/apiKeys/new")
-    monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", "-----BEGIN EC PRIVATE KEY-----\nnew\n")
 
     creds = resolve_coinbase_credentials()
 
@@ -128,16 +114,24 @@ def test_resolve_invalid_credentials_file_falls_back_to_env(tmp_path, monkeypatc
     assert any("COINBASE_CREDENTIALS_FILE" in w for w in creds.warnings)
 
 
-def test_resolve_mixed_env_allowed_when_override_set(monkeypatch) -> None:
+def test_resolve_file_env_mismatch_allowed_when_override_set(tmp_path, monkeypatch) -> None:
     _clear_coinbase_credential_env(monkeypatch)
-    monkeypatch.setenv("COINBASE_API_KEY_NAME", "organizations/old/apiKeys/old")
-    monkeypatch.setenv("COINBASE_PRIVATE_KEY", "-----BEGIN EC PRIVATE KEY-----\nold\n")
-    monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/new/apiKeys/new")
-    monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", "-----BEGIN EC PRIVATE KEY-----\nnew\n")
+    key_path = Path(tmp_path) / "coinbase.json"
+    key_path.write_text(
+        json.dumps(
+            {
+                "name": "organizations/file/apiKeys/file1",
+                "privateKey": "-----BEGIN EC PRIVATE KEY-----\nfile\n",
+            }
+        )
+    )
+    monkeypatch.setenv("COINBASE_CREDENTIALS_FILE", str(key_path))
+    monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/env/apiKeys/env1")
+    monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", "-----BEGIN EC PRIVATE KEY-----\nenv\n")
     monkeypatch.setenv("COINBASE_ALLOW_AMBIGUOUS_CREDENTIALS", "1")
 
     creds = resolve_coinbase_credentials()
 
     assert creds is not None
-    assert creds.key_name == "organizations/new/apiKeys/new"
-    assert any("COINBASE_CDP_API_KEY" in w and "COINBASE_API_KEY_NAME" in w for w in creds.warnings)
+    assert creds.key_name == "organizations/file/apiKeys/file1"
+    assert any("refusing to resolve ambiguous credentials" in w for w in creds.warnings)

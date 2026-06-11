@@ -1,9 +1,9 @@
 {
   "env_template_path": "config/environments/.env.template",
   "summary": {
-    "code_only": 137,
+    "code_only": 136,
     "template_only": 0,
-    "total": 178
+    "total": 175
   },
   "variables": [
     {
@@ -106,7 +106,7 @@
       ],
       "code_references": [
         {
-          "line": 166,
+          "line": 163,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "os.getenv"
         }
@@ -128,7 +128,7 @@
           "reader": "parse_int_env"
         },
         {
-          "line": 162,
+          "line": 159,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "os.getenv"
         }
@@ -144,7 +144,7 @@
       ],
       "code_references": [
         {
-          "line": 167,
+          "line": 164,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "os.getenv"
         }
@@ -160,7 +160,7 @@
       ],
       "code_references": [
         {
-          "line": 164,
+          "line": 161,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "os.getenv"
         }
@@ -192,7 +192,7 @@
       ],
       "code_references": [
         {
-          "line": 55,
+          "line": 54,
           "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
           "reader": "os.getenv"
         }
@@ -201,52 +201,6 @@
       "name": "COINBASE_ALLOW_AMBIGUOUS_CREDENTIALS",
       "template_default": "",
       "template_references": []
-    },
-    {
-      "code_paths": [
-        "src/gpt_trader/cli/commands/optimize/run.py",
-        "src/gpt_trader/features/brokerages/coinbase/auth.py",
-        "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-        "src/gpt_trader/tui/services/credential_validator.py"
-      ],
-      "code_references": [
-        {
-          "line": 351,
-          "path": "src/gpt_trader/cli/commands/optimize/run.py",
-          "reader": "os.environ.get"
-        },
-        {
-          "line": 111,
-          "path": "src/gpt_trader/features/brokerages/coinbase/auth.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 65,
-          "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 76,
-          "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 301,
-          "path": "src/gpt_trader/tui/services/credential_validator.py",
-          "reader": "os.getenv"
-        }
-      ],
-      "in_env_template": true,
-      "name": "COINBASE_API_KEY_NAME",
-      "template_default": "",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": true,
-          "default": "",
-          "line": 51
-        }
-      ]
     },
     {
       "code_paths": [
@@ -278,17 +232,12 @@
       ],
       "code_references": [
         {
-          "line": 64,
+          "line": 63,
           "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
           "reader": "os.getenv"
         },
         {
-          "line": 75,
-          "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 300,
+          "line": 299,
           "path": "src/gpt_trader/tui/services/credential_validator.py",
           "reader": "os.getenv"
         }
@@ -312,17 +261,12 @@
       ],
       "code_references": [
         {
-          "line": 69,
+          "line": 67,
           "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
           "reader": "os.getenv"
         },
         {
-          "line": 77,
-          "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 306,
+          "line": 303,
           "path": "src/gpt_trader/tui/services/credential_validator.py",
           "reader": "os.getenv"
         }
@@ -342,9 +286,8 @@
     {
       "code_paths": [
         "scripts/monitoring/canary_reduce_only_test.py",
-        "scripts/test_api_connectivity.py",
-        "scripts/test_paper_broker.py",
-        "src/gpt_trader/cli/commands/optimize/run.py",
+        "scripts/ops/api_connectivity_smoke.py",
+        "scripts/ops/hybrid_paper_broker_smoke.py",
         "src/gpt_trader/features/brokerages/coinbase/credentials.py"
       ],
       "code_references": [
@@ -354,22 +297,17 @@
           "reader": "os.getenv"
         },
         {
+          "line": 29,
+          "path": "scripts/ops/api_connectivity_smoke.py",
+          "reader": "os.getenv"
+        },
+        {
           "line": 32,
-          "path": "scripts/test_api_connectivity.py",
+          "path": "scripts/ops/hybrid_paper_broker_smoke.py",
           "reader": "os.getenv"
         },
         {
-          "line": 35,
-          "path": "scripts/test_paper_broker.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 341,
-          "path": "src/gpt_trader/cli/commands/optimize/run.py",
-          "reader": "os.environ.get"
-        },
-        {
-          "line": 107,
+          "line": 86,
           "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
           "reader": "os.getenv"
         }
@@ -514,58 +452,12 @@
     },
     {
       "code_paths": [
-        "src/gpt_trader/cli/commands/optimize/run.py",
-        "src/gpt_trader/features/brokerages/coinbase/auth.py",
         "src/gpt_trader/features/brokerages/coinbase/credentials.py",
         "src/gpt_trader/tui/services/credential_validator.py"
       ],
       "code_references": [
         {
-          "line": 353,
-          "path": "src/gpt_trader/cli/commands/optimize/run.py",
-          "reader": "os.environ.get"
-        },
-        {
-          "line": 112,
-          "path": "src/gpt_trader/features/brokerages/coinbase/auth.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 70,
-          "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 78,
-          "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 307,
-          "path": "src/gpt_trader/tui/services/credential_validator.py",
-          "reader": "os.getenv"
-        }
-      ],
-      "in_env_template": true,
-      "name": "COINBASE_PRIVATE_KEY",
-      "template_default": "",
-      "template_references": [
-        {
-          "comment": "",
-          "commented_out": true,
-          "default": "",
-          "line": 52
-        }
-      ]
-    },
-    {
-      "code_paths": [
-        "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-        "src/gpt_trader/tui/services/credential_validator.py"
-      ],
-      "code_references": [
-        {
-          "line": 63,
+          "line": 62,
           "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
           "reader": "os.getenv"
         },
@@ -594,12 +486,12 @@
       ],
       "code_references": [
         {
-          "line": 68,
+          "line": 66,
           "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
           "reader": "os.getenv"
         },
         {
-          "line": 305,
+          "line": 302,
           "path": "src/gpt_trader/tui/services/credential_validator.py",
           "reader": "os.getenv"
         }
@@ -865,15 +757,9 @@
     },
     {
       "code_paths": [
-        "src/gpt_trader/features/brokerages/coinbase/auth.py",
         "src/gpt_trader/security/secrets_manager.py"
       ],
       "code_references": [
-        {
-          "line": 114,
-          "path": "src/gpt_trader/features/brokerages/coinbase/auth.py",
-          "reader": "os.getenv"
-        },
         {
           "line": 86,
           "path": "src/gpt_trader/security/secrets_manager.py",
@@ -939,7 +825,7 @@
           "comment": "Optional override; if unset, uses GPT_TRADER_RUNTIME_ROOT",
           "commented_out": true,
           "default": "",
-          "line": 78
+          "line": 75
         }
       ]
     },
@@ -1138,7 +1024,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 90
+          "line": 87
         }
       ]
     },
@@ -1225,7 +1111,7 @@
           "comment": "",
           "commented_out": false,
           "default": "8080",
-          "line": 84
+          "line": 81
         }
       ]
     },
@@ -1264,7 +1150,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 83
+          "line": 80
         }
       ]
     },
@@ -1383,7 +1269,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 85
+          "line": 82
         }
       ]
     },
@@ -1670,7 +1556,7 @@
           "comment": "",
           "commented_out": false,
           "default": ".",
-          "line": 77
+          "line": 74
         }
       ]
     },
@@ -2141,7 +2027,7 @@
           "comment": "",
           "commented_out": false,
           "default": "60",
-          "line": 57
+          "line": 54
         }
       ]
     },
@@ -2242,7 +2128,7 @@
           "comment": "",
           "commented_out": false,
           "default": "1",
-          "line": 66
+          "line": 63
         }
       ]
     },
@@ -2553,7 +2439,7 @@
       ],
       "code_references": [
         {
-          "line": 169,
+          "line": 166,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2569,7 +2455,7 @@
       ],
       "code_references": [
         {
-          "line": 172,
+          "line": 169,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2585,7 +2471,7 @@
       ],
       "code_references": [
         {
-          "line": 170,
+          "line": 167,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2601,7 +2487,7 @@
       ],
       "code_references": [
         {
-          "line": 186,
+          "line": 183,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2617,7 +2503,7 @@
       ],
       "code_references": [
         {
-          "line": 185,
+          "line": 182,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2645,22 +2531,6 @@
     },
     {
       "code_paths": [
-        "src/gpt_trader/features/live_trade/risk/config.py"
-      ],
-      "code_references": [
-        {
-          "line": 153,
-          "path": "src/gpt_trader/features/live_trade/risk/config.py",
-          "reader": "_get_env"
-        }
-      ],
-      "in_env_template": false,
-      "name": "RISK_DAILY_LOSS_LIMIT",
-      "template_default": "",
-      "template_references": []
-    },
-    {
-      "code_paths": [
         "src/gpt_trader/app/config/bot_config.py",
         "src/gpt_trader/features/live_trade/risk/config.py"
       ],
@@ -2671,7 +2541,7 @@
           "reader": "_risk_float"
         },
         {
-          "line": 154,
+          "line": 151,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2684,7 +2554,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0.05",
-          "line": 70
+          "line": 67
         }
       ]
     },
@@ -2694,7 +2564,7 @@
       ],
       "code_references": [
         {
-          "line": 159,
+          "line": 156,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2707,7 +2577,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 71
+          "line": 68
         }
       ]
     },
@@ -2717,7 +2587,7 @@
       ],
       "code_references": [
         {
-          "line": 177,
+          "line": 174,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2733,7 +2603,7 @@
       ],
       "code_references": [
         {
-          "line": 173,
+          "line": 170,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2749,7 +2619,7 @@
       ],
       "code_references": [
         {
-          "line": 175,
+          "line": 172,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2765,7 +2635,7 @@
       ],
       "code_references": [
         {
-          "line": 155,
+          "line": 152,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2778,7 +2648,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0.30",
-          "line": 68
+          "line": 65
         }
       ]
     },
@@ -2794,7 +2664,7 @@
           "reader": "_risk_int"
         },
         {
-          "line": 152,
+          "line": 150,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2807,7 +2677,7 @@
           "comment": "",
           "commented_out": false,
           "default": "3",
-          "line": 67
+          "line": 64
         }
       ]
     },
@@ -2823,7 +2693,7 @@
           "reader": "os.getenv"
         },
         {
-          "line": 156,
+          "line": 153,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2836,7 +2706,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0.10",
-          "line": 69
+          "line": 66
         }
       ]
     },
@@ -2862,7 +2732,7 @@
       ],
       "code_references": [
         {
-          "line": 157,
+          "line": 154,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2878,7 +2748,7 @@
       ],
       "code_references": [
         {
-          "line": 184,
+          "line": 181,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2900,7 +2770,7 @@
           "reader": "parse_bool_env"
         },
         {
-          "line": 160,
+          "line": 157,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2913,7 +2783,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 72
+          "line": 69
         }
       ]
     },
@@ -2923,7 +2793,7 @@
       ],
       "code_references": [
         {
-          "line": 179,
+          "line": 176,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2939,7 +2809,7 @@
       ],
       "code_references": [
         {
-          "line": 158,
+          "line": 155,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -2955,7 +2825,7 @@
       ],
       "code_references": [
         {
-          "line": 180,
+          "line": 177,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -3020,7 +2890,7 @@
       ],
       "code_references": [
         {
-          "line": 187,
+          "line": 184,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         },
@@ -3041,7 +2911,7 @@
       ],
       "code_references": [
         {
-          "line": 182,
+          "line": 179,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -3057,7 +2927,7 @@
       ],
       "code_references": [
         {
-          "line": 189,
+          "line": 186,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -3073,7 +2943,7 @@
       ],
       "code_references": [
         {
-          "line": 191,
+          "line": 188,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -3089,7 +2959,7 @@
       ],
       "code_references": [
         {
-          "line": 190,
+          "line": 187,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -3105,7 +2975,7 @@
       ],
       "code_references": [
         {
-          "line": 192,
+          "line": 189,
           "path": "src/gpt_trader/features/live_trade/risk/config.py",
           "reader": "_get_env"
         }
@@ -3166,7 +3036,7 @@
           "comment": "",
           "commented_out": false,
           "default": "1",
-          "line": 58
+          "line": 55
         }
       ]
     },
@@ -3189,7 +3059,7 @@
           "comment": "",
           "commented_out": false,
           "default": "var/data/status.json",
-          "line": 59
+          "line": 56
         }
       ]
     },
@@ -3212,7 +3082,7 @@
           "comment": "",
           "commented_out": false,
           "default": "60",
-          "line": 60
+          "line": 57
         }
       ]
     },
@@ -3315,7 +3185,7 @@
           "comment": "",
           "commented_out": false,
           "default": "http://localhost:8200",
-          "line": 91
+          "line": 88
         }
       ]
     },
@@ -3338,7 +3208,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 92
+          "line": 89
         }
       ]
     },
@@ -3361,7 +3231,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 61
+          "line": 58
         }
       ]
     }

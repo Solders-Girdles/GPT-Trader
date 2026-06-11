@@ -38,10 +38,11 @@ FIELD_DOCS = {
         "max": 10,
         "applies_to": "all",
     },
-    "daily_loss_limit": {
-        "description": "Maximum daily loss in quote currency",
-        "type": "decimal",
-        "unit": "USD",
+    "daily_loss_limit_pct": {
+        "description": "Maximum daily loss as a fraction of equity",
+        "type": "float",
+        "min": 0.0,
+        "max": 1.0,
         "applies_to": "all",
     },
     "max_exposure_pct": {

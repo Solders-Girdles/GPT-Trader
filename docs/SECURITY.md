@@ -27,9 +27,9 @@ Advanced Trade / CDP JWT:
 - `COINBASE_CREDENTIALS_FILE` (JSON file with `name` + `privateKey`), or
 - `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY`, or
 - `COINBASE_PROD_CDP_API_KEY` + `COINBASE_PROD_CDP_PRIVATE_KEY`
-- Legacy fallback: `COINBASE_API_KEY_NAME` + `COINBASE_PRIVATE_KEY`
 
-Legacy Exchange keys are not used by the current runtime; use JWT credentials above.
+Legacy keys (Exchange keys and the retired `COINBASE_API_KEY_NAME` /
+`COINBASE_PRIVATE_KEY` env vars) are not accepted; use CDP JWT credentials above.
 
 ### Secrets and encryption
 
@@ -43,15 +43,18 @@ Legacy Exchange keys are not used by the current runtime; use JWT credentials ab
 
 ## Preflight Security Checks
 
-Run production preflight to validate credentials, key permissions, and API connectivity:
+Run preflight to gather security evidence (credential validity, key permissions,
+API connectivity). Preflight produces evidence; it is not authorization to run a
+live profile — see [Live Operations](production.md) for the full gate sequence.
 
 ```bash
 uv run python scripts/production_preflight.py --profile canary
 ```
 
 Preflight checks live in `src/gpt_trader/preflight/checks/` and verify JWT generation,
-permissions, and portfolio readiness before live trading. Use `--warn-only` or
-`GPT_TRADER_PREFLIGHT_WARN_ONLY=1` to downgrade failures to warnings.
+permissions, and portfolio readiness. Use `--warn-only` or
+`GPT_TRADER_PREFLIGHT_WARN_ONLY=1` to downgrade failures to warnings for diagnostic
+runs only — a warn-only run does not satisfy the live readiness gate.
 
 ### Event store redaction scan
 

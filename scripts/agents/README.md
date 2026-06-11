@@ -21,7 +21,6 @@ make agent-map          # Dependency summary
 make agent-tests        # Test inventory to stdout
 make agent-risk         # Risk config docs
 make agent-naming       # Naming scan
-make agent-health       # Alias for agent-health-full
 make agent-health-fast  # Quick health report (skips tests; runs preflight/config)
 make agent-health-fast AGENT_HEALTH_FAST_QUALITY_CHECKS=none # CI: skip lint/format/types
 make agent-health-full  # Full health report (explicit envs + JSON/text output)

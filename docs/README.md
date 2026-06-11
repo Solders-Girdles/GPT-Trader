@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-30
+last-updated: 2026-05-06
 ---
 
 All docs under `docs/` must be reachable from this index (directly or via other linked docs).
@@ -23,8 +23,10 @@ When adding a new doc, link it below in the best-fit section.
 | [Architecture Boundaries](architecture/BOUNDARIES.md) | Layer ownership and dependency direction |
 | [Ownership Map](architecture/OWNERSHIP.md) | Module ownership map and boundaries |
 | [Entrypoints](architecture/ENTRYPOINTS.md) | CLI, TUI, preflight, and live bot wiring |
-| [Production Guide](production.md) | Deployment, rollout, and emergency procedures |
+| [Core Cleanup Roadmap](CORE_CLEANUP_ROADMAP.md) | Cleanup lanes, decision backlog, and verification bundle |
+| [Live Operations Guide](production.md) | Readiness-gated live operations, rollback, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
+| [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) | AI-assisted trading autonomy, product, venue, approval, and audit gates |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [TUI Guide](TUI_GUIDE.md) | Launching and operating the terminal UI |
 | [TUI Style Guide](TUI_STYLE_GUIDE.md) | Visual standards for TUI components |
@@ -48,8 +50,9 @@ When adding a new doc, link it below in the best-fit section.
 - [Core Seams](architecture/SEAMS.md) - Canonical boundaries for Strategy/Execution/Data/Config
 
 ### Trading Operations
-- [Production Deployment](production.md) - Deployment, monitoring, rollback, emergencies
+- [Live Operations](production.md) - Readiness-gated live operations, monitoring, rollback, emergencies
 - [Readiness Checklist](READINESS.md) - Paper/live gate criteria and evidence
+- [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) - Gates before AI-assisted execution migration
 - [Reliability Guide](RELIABILITY.md) - Degradation matrix, config defaults, chaos harness
 - [Monitoring Playbook](MONITORING_PLAYBOOK.md) - Metrics, alerting, and dashboards
 - [Alert Runbooks](RUNBOOKS.md) - Incident response procedures by alert type
@@ -59,6 +62,7 @@ When adding a new doc, link it below in the best-fit section.
 - [Coinbase Integration](COINBASE.md) - Configuration + internal entrypoints
 
 ### Development
+- [Core Cleanup Roadmap](CORE_CLEANUP_ROADMAP.md) - Cleanup lanes, ready queue, decision backlog
 - [Test Hygiene Policy](test_hygiene.md) - Line limits, allowlist policy, and splitting guidance
 - [Development Guidelines](DEVELOPMENT_GUIDELINES.md) - Standards for contributing
 - [Feature Slice Scaffolding](DEVELOPMENT_GUIDELINES.md#slice-scaffolding) - Bootstrap new slices
@@ -77,11 +81,19 @@ When adding a new doc, link it below in the best-fit section.
 - [Strategy Profile Diff](STRATEGY_PROFILE_DIFF.md) - Compare baseline strategy settings against runtime profile values
 
 ### Trading Profiles
-| Profile | Environment | Use Case |
-|---------|-------------|----------|
+
+Profiles are config snapshots, not execution approval. Live profiles
+(`canary`, `prod`) only run after the gates in
+[Live Operations](production.md) and the
+[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) are
+satisfied with recorded human approval.
+
+| Profile | Broker / data | Role |
+|---------|---------------|------|
 | **dev** | Mock broker | Development and testing |
-| **canary** | Production | Ultra-safe validation (tiny positions) |
-| **prod** | Production | Full trading capabilities |
+| **observe** | Real data, blocked execution | Account and market observation |
+| **canary** | Live broker, tightly capped | Legacy live-validation asset; runs require recorded approval |
+| **prod** | Live broker | Legacy live-operation asset; runs require explicit approval and monitoring |
 
 ### Environment Setup
 - [Environment Template](../config/environments/.env.template) - Minimal operator config (safe defaults)
@@ -100,16 +112,20 @@ When adding a new doc, link it below in the best-fit section.
 
 ### Spot vs Perpetuals
 
+These flags are capability selectors, not approval. Enabling a flag exposes the
+relevant adapter; live execution still requires the gates in
+[Live Operations](production.md) and venue/account verification.
+
 | Mode | Products | Authentication | Flag |
 |------|----------|----------------|------|
-| **Spot (default)** | BTC-USD, ETH-USD, etc. | JWT (CDP key) | `TRADING_MODES=spot` |
+| **Spot (default capability)** | BTC-USD, ETH-USD, etc. | JWT (CDP key) | `TRADING_MODES=spot` |
 | **CFM futures (US)** | US futures contracts (expiry-coded symbols) | JWT (CDP key) | `TRADING_MODES=cfm` + `CFM_ENABLED=1` |
 | **INTX perps** | BTC-PERP, ETH-PERP | JWT (CDP key) | `COINBASE_ENABLE_INTX_PERPS=1` |
 
-**Note:** Sandbox does not support futures/perps. Bot defaults to spot-only trading.
+**Note:** Sandbox does not support futures/perps. Default capability is spot only.
 
 ### Current Focus
-- **Primary**: Coinbase spot trading (perps code future-ready)
+- **Primary implementation:** Coinbase spot adapters (perps code paths compile but require INTX access and approval)
 - **Architecture**: Vertical slice design under `src/gpt_trader/`
 - **Testing**: `uv run pytest`
 

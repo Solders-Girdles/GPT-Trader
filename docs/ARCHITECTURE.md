@@ -53,7 +53,8 @@ src/gpt_trader/features/
 ├── live_trade/          # Production trading engine
 ├── optimize/            # Parameter optimisation experiments
 ├── strategy_dev/        # Strategy development lab
-└── strategy_tools/      # Shared helpers for strategy slices
+├── strategy_tools/      # Shared helpers for strategy slices
+└── trade_ideas/         # Broker-neutral trade-idea records, workflow, audit log
 ```
 
 Additional cross-cutting packages now live at the top level. These intentionally span feature slices:

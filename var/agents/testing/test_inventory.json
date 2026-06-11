@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6483,
-    "total_files": 762,
+    "total_tests": 6513,
+    "total_files": 766,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6318,
+    "unit": 6348,
     "asyncio": 372,
-    "parametrize": 169,
+    "parametrize": 173,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -518,7 +518,11 @@
       "tests/unit/gpt_trader/features/strategy_tools/test_market_condition_filters_edges.py",
       "tests/unit/gpt_trader/features/strategy_tools/test_risk_guards_edges.py",
       "tests/unit/gpt_trader/features/strategy_tools/test_strategy_enhancements_edges.py",
-      "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py"
+      "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
     ],
     "fixtures": [
       "tests/unit/gpt_trader/fixtures/test_failure_injection.py"
@@ -31412,6 +31416,258 @@
         ],
         "docstring": "Verify create_standard_risk_guards is callable.",
         "class": "TestFactoryFunctions"
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_audit.py": [
+      {
+        "name": "test_append_and_read_round_trip",
+        "line": 62,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_is_one_json_object_per_line",
+        "line": 72,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_current_state_tracks_latest_event",
+        "line": 92,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_append_rejects_stale_before_state",
+        "line": 112,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_append_rejects_illegal_transition",
+        "line": 121,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_rejected_append_leaves_log_untouched",
+        "line": 140,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_read_events_filters_by_decision",
+        "line": 152,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py": [
+      {
+        "name": "test_fully_specified_idea_is_eligible",
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_invalidation_is_rejected",
+        "line": 22,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_max_loss_is_rejected",
+        "line": 31,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_partial_max_loss_is_accepted",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_data_sources_is_rejected",
+        "line": 45,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_expiry_is_rejected",
+        "line": 51,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_entry_zone_is_rejected",
+        "line": 57,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_trigger_only_entry_zone_is_accepted",
+        "line": 63,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_multiple_gaps_report_every_reason",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_models.py": [
+      {
+        "name": "test_round_trip_preserves_record",
+        "line": 16,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_to_dict_serializes_decimals_as_strings",
+        "line": 22,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_dict_restores_decimal_types",
+        "line": 30,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_broker_ticket_defaults_to_no_venue",
+        "line": 38,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_hash_is_stable",
+        "line": 44,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_hash_changes_when_content_changes",
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_optional_value_objects_round_trip_when_empty",
+        "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py": [
+      {
+        "name": "test_creation_must_start_proposed",
+        "line": 14,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_creation_in_any_other_state_is_rejected",
+        "line": 22,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_allowed_transitions",
+        "line": 42,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_blocked_transitions",
+        "line": 56,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_execution_requires_prior_approval",
+        "line": 61,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_terminal_states_allow_no_transitions",
+        "line": 72,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_expected_terminal_states",
+        "line": 78,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/fixtures/test_failure_injection.py": [

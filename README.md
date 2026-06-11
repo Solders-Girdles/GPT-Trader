@@ -95,7 +95,8 @@ src/gpt_trader/
 │   ├── intelligence/     # Strategy intelligence, Kelly sizing
 │   ├── live_trade/       # Production trading engine & risk
 │   ├── optimize/         # Parameter optimization
-│   └── strategy_tools/   # Shared strategy helpers
+│   ├── strategy_tools/   # Shared strategy helpers
+│   └── trade_ideas/      # Broker-neutral trade-idea records + audit trail
 ├── monitoring/           # Runtime guards, metrics, telemetry
 ├── persistence/          # Event/order persistence
 ├── security/             # Secrets management, input sanitization

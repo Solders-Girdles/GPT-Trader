@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 682,
-    "source_modules": 366,
+    "tests_scanned": 686,
+    "source_modules": 367,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1232,6 +1232,12 @@
     ],
     "gpt_trader.features.strategy_tools.guards": [
       "tests/unit/gpt_trader/features/strategy_tools/test_risk_guards_edges.py"
+    ],
+    "gpt_trader.features.trade_ideas": [
+      "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
     ],
     "gpt_trader.logging.correlation": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
@@ -3743,6 +3749,18 @@
     "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py": [
       "gpt_trader.features.strategy_tools"
     ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_audit.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_models.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
     "tests/unit/gpt_trader/logging/test_correlation.py": [
       "gpt_trader.logging.correlation"
     ],
@@ -4972,6 +4990,7 @@
     "gpt_trader.features.strategy_tools.enhancements": "src/gpt_trader/features/strategy_tools/enhancements.py",
     "gpt_trader.features.strategy_tools.filters": "src/gpt_trader/features/strategy_tools/filters.py",
     "gpt_trader.features.strategy_tools.guards": "src/gpt_trader/features/strategy_tools/guards.py",
+    "gpt_trader.features.trade_ideas": "src/gpt_trader/features/trade_ideas/__init__.py",
     "gpt_trader.logging.correlation": "src/gpt_trader/logging/correlation.py",
     "gpt_trader.logging.json_formatter": "src/gpt_trader/logging/json_formatter.py",
     "gpt_trader.logging.runtime_helpers": "src/gpt_trader/logging/runtime_helpers.py",

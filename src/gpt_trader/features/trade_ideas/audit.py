@@ -1,0 +1,156 @@
+"""Append-only JSONL audit log for trade-idea workflow events.
+
+Implements the audit contract from docs/PRE_MIGRATION_DECISION_FRAMEWORK.md:
+every state change is a new event pinned to a hash of the record version it
+acted on. Events are never rewritten or deleted; the current workflow state of
+an idea is always derived from its latest event.
+
+Never write secrets, API keys, session tokens, or account credentials into
+event fields.
+"""
+
+from __future__ import annotations
+
+import json
+import uuid
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from pathlib import Path
+from typing import Any
+
+from gpt_trader.errors import ValidationError
+from gpt_trader.features.trade_ideas.workflow import TradeIdeaState, validate_transition
+
+
+class ActorType(str, Enum):
+    AI = "ai"
+    HUMAN = "human"
+    SYSTEM = "system"
+    VENUE = "venue"
+
+
+class AuditAction(str, Enum):
+    PROPOSED = "proposed"
+    CHANGED = "changed"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    SUBMITTED = "submitted"
+    FILLED = "filled"
+    CANCELLED = "cancelled"
+    EXPIRED = "expired"
+
+
+class AuditIntegrityError(ValidationError):
+    """Raised when an append would break audit-log sequencing or integrity."""
+
+
+def new_event_id() -> str:
+    return f"evt-{uuid.uuid4().hex}"
+
+
+@dataclass(frozen=True, slots=True)
+class AuditEvent:
+    event_id: str
+    timestamp: datetime
+    decision_id: str
+    actor_type: ActorType
+    actor_id: str
+    action: AuditAction
+    before_state: TradeIdeaState | None
+    after_state: TradeIdeaState
+    reason: str
+    record_hash: str
+    evidence: tuple[str, ...] = ()
+    venue: str = ""
+    external_order_id: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "event_id": self.event_id,
+            "timestamp": self.timestamp.isoformat(),
+            "decision_id": self.decision_id,
+            "actor_type": self.actor_type.value,
+            "actor_id": self.actor_id,
+            "action": self.action.value,
+            "before_state": self.before_state.value if self.before_state else None,
+            "after_state": self.after_state.value,
+            "reason": self.reason,
+            "record_hash": self.record_hash,
+            "evidence": list(self.evidence),
+            "venue": self.venue,
+            "external_order_id": self.external_order_id,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> AuditEvent:
+        raw_before = payload.get("before_state")
+        return cls(
+            event_id=payload["event_id"],
+            timestamp=datetime.fromisoformat(payload["timestamp"]),
+            decision_id=payload["decision_id"],
+            actor_type=ActorType(payload["actor_type"]),
+            actor_id=payload["actor_id"],
+            action=AuditAction(payload["action"]),
+            before_state=TradeIdeaState(raw_before) if raw_before else None,
+            after_state=TradeIdeaState(payload["after_state"]),
+            reason=payload.get("reason", ""),
+            record_hash=payload["record_hash"],
+            evidence=tuple(payload.get("evidence", ())),
+            venue=payload.get("venue", ""),
+            external_order_id=payload.get("external_order_id", ""),
+        )
+
+
+class TradeIdeaAuditLog:
+    """Append-only JSONL audit log, one event object per line.
+
+    Appends are validated against the state machine and against the last
+    recorded state for the same decision, so an out-of-order or conflicting
+    event cannot silently corrupt workflow history.
+    """
+
+    def __init__(self, path: Path) -> None:
+        self._path = path
+
+    @property
+    def path(self) -> Path:
+        return self._path
+
+    def append(self, event: AuditEvent) -> None:
+        last_state = self.current_state(event.decision_id)
+        if event.before_state != last_state:
+            recorded = last_state.value if last_state else "none"
+            claimed = event.before_state.value if event.before_state else "none"
+            raise AuditIntegrityError(
+                f"Audit event for '{event.decision_id}' claims before_state "
+                f"'{claimed}' but the log records '{recorded}'",
+                field="before_state",
+                value=claimed,
+            )
+        validate_transition(event.before_state, event.after_state)
+
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        line = json.dumps(event.to_dict(), sort_keys=True, separators=(",", ":"))
+        with self._path.open("a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+
+    def read_events(self, decision_id: str | None = None) -> list[AuditEvent]:
+        if not self._path.exists():
+            return []
+        events: list[AuditEvent] = []
+        with self._path.open("r", encoding="utf-8") as handle:
+            for line in handle:
+                line = line.strip()
+                if not line:
+                    continue
+                event = AuditEvent.from_dict(json.loads(line))
+                if decision_id is None or event.decision_id == decision_id:
+                    events.append(event)
+        return events
+
+    def current_state(self, decision_id: str) -> TradeIdeaState | None:
+        events = self.read_events(decision_id)
+        if not events:
+            return None
+        return events[-1].after_state

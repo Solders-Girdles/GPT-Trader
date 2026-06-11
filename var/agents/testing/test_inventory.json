@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6544,
-    "total_files": 770,
+    "total_tests": 6560,
+    "total_files": 772,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6379,
+    "unit": 6395,
     "asyncio": 372,
-    "parametrize": 173,
+    "parametrize": 174,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -520,11 +520,13 @@
       "tests/unit/gpt_trader/features/strategy_tools/test_strategy_enhancements_edges.py",
       "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
     ],
@@ -31480,6 +31482,97 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py": [
+      {
+        "name": "test_satisfies_proposer_protocol",
+        "line": 52,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fresh_golden_cross_produces_long_idea",
+        "line": 56,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_idea_records_are_complete_and_pinned",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_flat_market_produces_nothing",
+        "line": 77,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_downtrend_produces_nothing",
+        "line": 81,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_stale_crossover_outside_lookback_produces_nothing",
+        "line": 85,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_insufficient_history_produces_nothing",
+        "line": 91,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_identical_snapshots_produce_identical_records",
+        "line": 97,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_volume_confirmation_raises_confidence",
+        "line": 107,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_multi_symbol_snapshot_only_signals_where_warranted",
+        "line": 119,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_decision_ids_are_distinct_per_symbol",
+        "line": 132,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/trade_ideas/test_budget.py": [
       {
         "name": "test_seeded_defaults_reflect_accepted_risk_philosophy",
@@ -31820,6 +31913,48 @@
       {
         "name": "test_expire_is_a_system_action",
         "line": 127,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py": [
+      {
+        "name": "test_valid_snapshot_construction",
+        "line": 30,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_candle_at_or_after_as_of_is_rejected",
+        "line": 44,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_unordered_candles_are_rejected",
+        "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_duplicate_symbols_are_rejected",
+        "line": 64,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_empty_series_has_no_last_close",
+        "line": 71,
         "markers": [
           "unit"
         ],

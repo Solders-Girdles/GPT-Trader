@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6478,
-    "total_files": 761,
+    "total_tests": 6483,
+    "total_files": 762,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6313,
+    "unit": 6318,
     "asyncio": 372,
     "parametrize": 169,
     "endpoints": 83,
@@ -679,6 +679,9 @@
       "tests/unit/gpt_trader/security/test_ip_allowlist_validation.py",
       "tests/unit/gpt_trader/security/test_request_validator.py",
       "tests/unit/gpt_trader/security/test_request_validator_limits.py"
+    ],
+    "test_agent_artifacts.py": [
+      "tests/unit/scripts/test_agent_artifacts.py"
     ],
     "test_agent_health_ci_input.py": [
       "tests/unit/scripts/test_agent_health_ci_input.py"
@@ -58367,6 +58370,48 @@
         ],
         "docstring": "",
         "class": "TestRegexValidator"
+      }
+    ],
+    "tests/unit/scripts/test_agent_artifacts.py": [
+      {
+        "name": "test_validate_agent_artifacts_accepts_complete_tree",
+        "line": 138,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_agent_artifacts_reports_missing_indexed_file",
+        "line": 148,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_validate_agent_artifacts_reports_empty_source",
+        "line": 157,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_package_and_verify_agent_artifacts",
+        "line": 166,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_agent_artifact_package_rejects_unsafe_path",
+        "line": 187,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/scripts/test_agent_health_ci_input.py": [

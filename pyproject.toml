@@ -93,9 +93,6 @@ line-length = 100
 target-version = "py312"
 src = ["src"]
 extend-exclude = [
-    "data",
-    "archived",
-    "demos",
     "scripts",
 ]
 

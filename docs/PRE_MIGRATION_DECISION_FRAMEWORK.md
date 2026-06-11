@@ -1,10 +1,30 @@
 # Pre-Migration Decision Framework
 
 ---
-status: draft
-last-updated: 2026-05-03
+status: current
+last-updated: 2026-06-11
 scope: AI-assisted trade research and execution migration
 ---
+
+## Accepted Direction (2026-06-11)
+
+The project owner accepted the following direction. Where this section conflicts
+with the exploratory tables below, this section wins.
+
+- **Destination:** an autonomous trading entity — a bot that observes markets,
+  does its own research, and manages funds inside machine-enforced limits
+  (`bounded_autonomy`).
+- **Path:** `human_approved_execution` is the required validation phase, not the
+  end state. The AI side must first produce complete trade-idea records (thesis,
+  entry, invalidation, max loss, sizing) that a human approves. Autonomy is
+  granted per strategy envelope only after the approval-phase track record,
+  risk budgets, kill switches, and audit logs exist.
+- **Scope:** Coinbase only (spot + CFM futures). Options, Robinhood, and other
+  venues are out of scope until the Coinbase lane works end to end.
+- **INTX perpetuals:** frozen — no new work or tests; remove INTX-only surfaces
+  opportunistically when they block other work.
+- **Existing TA bot:** remains a gated implementation asset; do not expand its
+  autonomous execution surface ahead of the ladder above.
 
 ## Purpose
 
@@ -262,14 +282,14 @@ Do not migrate the existing bot into this shape until every item is complete:
 
 ## Initial Decision Record
 
-| Decision | Recommended Default | Status |
+| Decision | Accepted Value | Status |
 | --- | --- | --- |
-| Autonomy mode | `human_approved_execution` | Pending acceptance |
-| Primary product universe | Regulated futures and options research | Pending acceptance |
-| API canary lane | Coinbase CFM or crypto futures only after verification | Pending acceptance |
-| Robinhood role | Manual derivatives ticket venue | Pending acceptance |
-| Internal architecture | Broker-neutral trade idea, risk, approval, and audit records | Pending acceptance |
-| Existing spot bot | Do not migrate as unrestricted autonomous spot execution | Pending acceptance |
+| Autonomy mode | `human_approved_execution` now; `bounded_autonomy` is the accepted destination | Accepted 2026-06-11 |
+| Primary product universe | Coinbase spot + CFM futures research | Accepted 2026-06-11 |
+| API canary lane | Coinbase CFM only after account/product verification | Accepted 2026-06-11 |
+| Robinhood role | Out of scope | Accepted 2026-06-11 |
+| Internal architecture | Broker-neutral trade idea, risk, approval, and audit records | Accepted 2026-06-11 |
+| Existing spot bot | Do not migrate as unrestricted autonomous spot execution | Accepted 2026-06-11 |
 
 Once this table is accepted and the trigger checklist is filled, migration work
 can start with schemas and audit persistence before any execution adapter change.

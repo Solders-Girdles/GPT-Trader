@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-05-07
+last-updated: 2026-06-11
 ---
 
 This roadmap tracks cleanup work that prepares GPT-Trader for larger rebuilds.
@@ -56,10 +56,20 @@ These should not be handled as drive-by cleanup:
 
 | Topic | Decision Needed |
 |-------|-----------------|
-| Coinbase legacy credential support | Keep indefinitely, deprecate, or split UI detection from runtime acceptance. |
 | `prod` and `canary` profile meaning | Whether they remain live-operation assets or become labels under a newer approval ladder. |
 | Event JSONL compatibility | Whether JSONL remains an accepted fallback or becomes import-only historical data. |
-| Perps/futures execution paths | Which paths are retained as gated adapters before broader AI-assisted execution work. |
+
+### Decided (2026-06-11)
+
+See [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md)
+"Accepted Direction" for the full record.
+
+| Topic | Decision |
+|-------|----------|
+| Coinbase legacy credential support | Removed. CDP JWT credentials only; TUI keeps format detection solely to reject legacy keys with guidance. |
+| Perps/futures execution paths | CFM futures retained as the gated API lane. INTX perpetuals frozen: no new work or tests; remove INTX-only surfaces opportunistically. |
+| Product/venue scope | Coinbase only (spot + CFM). Options, Robinhood, and other venues out of scope. |
+| Destination | Autonomous trading entity (`bounded_autonomy`) reached through a human-approved-execution validation phase. |
 
 ## Recent Cleanup Baseline
 
@@ -80,6 +90,13 @@ These should not be handled as drive-by cleanup:
 - Removed `EventStore.events` and `EventStore.path` compatibility aliases.
 - Removed absolute-dollar `RiskConfig.daily_loss_limit` /
   `RISK_DAILY_LOSS_LIMIT` compatibility.
+- Removed the archived-scripts and examples directories, the placeholder
+  slice-scripts package, and the stale root `ISSUE.md`.
+- Removed the unused `features/research` backtesting slice (duplicate of the
+  canonical `backtesting/` engine) and its `backtesting_flow_map` artifact.
+- Removed legacy Coinbase credential env vars
+  (`COINBASE_API_KEY_NAME`/`COINBASE_PRIVATE_KEY`) and the unused `get_auth()`
+  factory; CDP JWT credentials only.
 
 ## Verification Bundle
 

@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6479,
+    "total_tests": 6478,
     "total_files": 761,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6314,
+    "unit": 6313,
     "asyncio": 372,
     "parametrize": 169,
     "endpoints": 83,
@@ -15247,7 +15247,7 @@
         "docstring": ""
       },
       {
-        "name": "test_resolve_supports_legacy_env_vars",
+        "name": "test_resolve_ignores_legacy_env_vars",
         "line": 47,
         "markers": [
           "unit"
@@ -15255,16 +15255,8 @@
         "docstring": ""
       },
       {
-        "name": "test_resolve_blocks_on_mixed_env_vars",
-        "line": 59,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
         "name": "test_resolve_uses_credentials_file",
-        "line": 71,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -15272,7 +15264,7 @@
       },
       {
         "name": "test_resolve_blocks_on_file_env_mismatch",
-        "line": 95,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -15280,15 +15272,15 @@
       },
       {
         "name": "test_resolve_invalid_credentials_file_falls_back_to_env",
-        "line": 115,
+        "line": 101,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_resolve_mixed_env_allowed_when_override_set",
-        "line": 131,
+        "name": "test_resolve_file_env_mismatch_allowed_when_override_set",
+        "line": 117,
         "markers": [
           "unit"
         ],

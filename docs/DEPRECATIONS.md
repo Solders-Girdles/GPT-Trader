@@ -51,6 +51,8 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| Legacy credential env vars (`COINBASE_API_KEY_NAME` / `COINBASE_PRIVATE_KEY`) | Unreleased | Use `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY` or `COINBASE_CREDENTIALS_FILE`. |
+| `get_auth()` env-based auth factory | Unreleased | Use `resolve_coinbase_credentials()` + `SimpleAuth`. |
 | `BotConfig` flat compat accessors (`short_ma`, `long_ma`, etc.) | Unreleased | Use nested config: `config.strategy.*` and `config.risk.*`. |
 | `gpt_trader.logging.orchestration_helpers` | Unreleased | Use `gpt_trader.logging.runtime_helpers`. |
 | `StatusReporter.update_interval` + `StatusReporter.get_status_dict()` | Unreleased | Use `file_write_interval` + `get_status()`. |

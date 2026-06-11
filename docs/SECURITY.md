@@ -27,9 +27,9 @@ Advanced Trade / CDP JWT:
 - `COINBASE_CREDENTIALS_FILE` (JSON file with `name` + `privateKey`), or
 - `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY`, or
 - `COINBASE_PROD_CDP_API_KEY` + `COINBASE_PROD_CDP_PRIVATE_KEY`
-- Legacy fallback: `COINBASE_API_KEY_NAME` + `COINBASE_PRIVATE_KEY`
 
-Legacy Exchange keys are not used by the current runtime; use JWT credentials above.
+Legacy keys (Exchange keys and the retired `COINBASE_API_KEY_NAME` /
+`COINBASE_PRIVATE_KEY` env vars) are not accepted; use CDP JWT credentials above.
 
 ### Secrets and encryption
 

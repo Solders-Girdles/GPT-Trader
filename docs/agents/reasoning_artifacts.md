@@ -41,12 +41,6 @@ paths are missing.
 - Generator: `scripts/agents/generate_reasoning_artifacts.py`
 - Use case: Trace REST polling + WebSocket streaming inputs into strategy decisions, risk staleness, and EventStore persistence.
 
-## Backtesting Flow Map
-
-- Generated outputs: `var/agents/reasoning/backtesting_flow_map.json`, `var/agents/reasoning/backtesting_flow_map.md`, `var/agents/reasoning/backtesting_flow_map.dot`
-- Generator: `scripts/agents/generate_reasoning_artifacts.py`
-- Use case: Trace EventStore historical data into backtest simulations and performance metrics.
-
 ## Backtest Reporting Flow Map
 
 - Generated outputs: `var/agents/reasoning/backtest_reporting_flow_map.json`, `var/agents/reasoning/backtest_reporting_flow_map.md`, `var/agents/reasoning/backtest_reporting_flow_map.dot`

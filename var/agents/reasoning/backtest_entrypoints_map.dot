@@ -25,13 +25,6 @@ digraph BacktestEntrypoints {
     "simulated_broker_engine" [shape=box, label="SimulatedBroker\nsrc/gpt_trader/backtesting/simulation/broker.py"];
     "backtest_guarded_executor" [shape=box, label="BacktestGuardedExecutor.submit_order\nsrc/gpt_trader/backtesting/engine/guarded_execution.py"];
   }
-  subgraph cluster_research {
-    label="Research Backtesting";
-    style=rounded;
-    "backtest_simulator_run" [shape=box, label="BacktestSimulator.run\nsrc/gpt_trader/features/research/backtesting/simulator.py"];
-    "historical_loader" [shape=box, label="HistoricalDataLoader.load_symbol\nsrc/gpt_trader/features/research/backtesting/data_loader.py"];
-    "event_store_list_events" [shape=box, label="EventStore.list_events\nsrc/gpt_trader/persistence/event_store.py"];
-  }
   subgraph cluster_intelligence {
     label="Intelligence Backtesting";
     style=rounded;
@@ -58,8 +51,6 @@ digraph BacktestEntrypoints {
     label="Outputs";
     style=rounded;
     "engine_backtest_result" [shape=box, label="BacktestResult\nsrc/gpt_trader/backtesting/types.py"];
-    "research_backtest_result" [shape=box, label="BacktestResult\nsrc/gpt_trader/features/research/backtesting/simulator.py"];
-    "performance_metrics" [shape=box, label="PerformanceMetrics.from_result\nsrc/gpt_trader/features/research/backtesting/metrics.py"];
     "ensemble_backtest_result" [shape=box, label="EnsembleBacktestResult\nsrc/gpt_trader/features/intelligence/backtesting/backtest_adapter.py"];
     "ensemble_backtest_summary" [shape=box, label="EnsembleBacktestResult.summary\nsrc/gpt_trader/features/intelligence/backtesting/backtest_adapter.py"];
     "regime_history" [shape=box, label="RegimeHistory\nsrc/gpt_trader/features/intelligence/backtesting/batch_regime.py"];
@@ -87,11 +78,6 @@ digraph BacktestEntrypoints {
   "golden_path_demo" -> "decision_logger_log" [label="log decisions"];
   "golden_path_demo" -> "golden_path_validate" [label="validate decisions"];
   "golden_path_demo" -> "golden_path_report" [label="generate report"];
-  "backtest_simulator_run" -> "historical_loader" [label="load history"];
-  "event_store_list_events" -> "historical_loader" [label="source events"];
-  "historical_loader" -> "backtest_simulator_run" [label="data points"];
-  "backtest_simulator_run" -> "research_backtest_result" [label="result"];
-  "research_backtest_result" -> "performance_metrics" [label="compute metrics"];
   "ensemble_backtest_process" -> "ensemble_backtest_results" [label="record decisions"];
   "ensemble_backtest_results" -> "regime_history" [label="build histories"];
   "ensemble_backtest_results" -> "ensemble_backtest_result" [label="summary"];

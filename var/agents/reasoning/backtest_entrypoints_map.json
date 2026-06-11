@@ -19,10 +19,6 @@
       "label": "Backtesting Engine"
     },
     {
-      "id": "research",
-      "label": "Research Backtesting"
-    },
-    {
       "id": "intelligence",
       "label": "Intelligence Backtesting"
     },
@@ -105,27 +101,6 @@
       "type": "output",
       "path": "src/gpt_trader/backtesting/types.py",
       "cluster": "output"
-    },
-    {
-      "id": "backtest_simulator_run",
-      "label": "BacktestSimulator.run",
-      "type": "entrypoint",
-      "path": "src/gpt_trader/features/research/backtesting/simulator.py",
-      "cluster": "research"
-    },
-    {
-      "id": "historical_loader",
-      "label": "HistoricalDataLoader.load_symbol",
-      "type": "loader",
-      "path": "src/gpt_trader/features/research/backtesting/data_loader.py",
-      "cluster": "research"
-    },
-    {
-      "id": "event_store_list_events",
-      "label": "EventStore.list_events",
-      "type": "source",
-      "path": "src/gpt_trader/persistence/event_store.py",
-      "cluster": "research"
     },
     {
       "id": "ensemble_backtest_process",
@@ -224,20 +199,6 @@
       "type": "entrypoint",
       "path": "src/gpt_trader/backtesting/chaos/scenarios.py",
       "cluster": "validation"
-    },
-    {
-      "id": "research_backtest_result",
-      "label": "BacktestResult",
-      "type": "output",
-      "path": "src/gpt_trader/features/research/backtesting/simulator.py",
-      "cluster": "output"
-    },
-    {
-      "id": "performance_metrics",
-      "label": "PerformanceMetrics.from_result",
-      "type": "metrics",
-      "path": "src/gpt_trader/features/research/backtesting/metrics.py",
-      "cluster": "output"
     },
     {
       "id": "ensemble_backtest_result",
@@ -384,31 +345,6 @@
       "from": "golden_path_demo",
       "to": "golden_path_report",
       "label": "generate report"
-    },
-    {
-      "from": "backtest_simulator_run",
-      "to": "historical_loader",
-      "label": "load history"
-    },
-    {
-      "from": "event_store_list_events",
-      "to": "historical_loader",
-      "label": "source events"
-    },
-    {
-      "from": "historical_loader",
-      "to": "backtest_simulator_run",
-      "label": "data points"
-    },
-    {
-      "from": "backtest_simulator_run",
-      "to": "research_backtest_result",
-      "label": "result"
-    },
-    {
-      "from": "research_backtest_result",
-      "to": "performance_metrics",
-      "label": "compute metrics"
     },
     {
       "from": "ensemble_backtest_process",

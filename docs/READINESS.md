@@ -83,7 +83,7 @@ What good looks like: no look-ahead bias, stable parameters, and walk-forward ev
 consistent risk-adjusted performance.
 
 Evidence:
-- Backtest report (see `src/gpt_trader/backtesting/` + `var/agents/reasoning/backtesting_flow_map.md`)
+- Backtest report (see `src/gpt_trader/backtesting/` + `var/agents/reasoning/backtest_entrypoints_map.md`)
 - Out-of-sample/holdout report
 - Validation report for guard parity
 

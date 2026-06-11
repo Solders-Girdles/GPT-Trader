@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 687,
-    "source_modules": 371,
+    "tests_scanned": 682,
+    "source_modules": 366,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -210,8 +210,7 @@
       "tests/property/test_fee_invariants_tiers.py",
       "tests/property/test_fee_invariants_volume_tracking.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py",
-      "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_volume.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_edges.py"
+      "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_volume.py"
     ],
     "gpt_trader.backtesting.simulation.fill_model": [
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
@@ -249,8 +248,7 @@
       "tests/unit/gpt_trader/features/optimize/objectives/test_single_exposure_and_timing_objectives.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_single_return_objectives.py",
       "tests/unit/gpt_trader/features/optimize/objectives/test_single_risk_objectives.py",
-      "tests/unit/gpt_trader/features/optimize/objectives/test_single_trade_quality_objectives.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_edges.py"
+      "tests/unit/gpt_trader/features/optimize/objectives/test_single_trade_quality_objectives.py"
     ],
     "gpt_trader.backtesting.validation.decision_logger": [
       "tests/unit/gpt_trader/backtesting/test_guarded_backtest_flow.py",
@@ -449,9 +447,6 @@
     "gpt_trader.core.math.rolling": [
       "tests/unit/gpt_trader/core/math/test_rolling.py"
     ],
-    "gpt_trader.core.trading": [
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_order_lifecycle.py"
-    ],
     "gpt_trader.errors": [
       "tests/unit/gpt_trader/errors/test_base_specific_errors.py",
       "tests/unit/gpt_trader/errors/test_base_trading_and_hierarchy.py",
@@ -600,8 +595,7 @@
     "gpt_trader.features.brokerages.coinbase.market_data_features": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_models.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py",
-      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_market_data.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_data_loader_edges.py"
+      "tests/unit/gpt_trader/features/live_trade/engines/test_telemetry_health_market_data.py"
     ],
     "gpt_trader.features.brokerages.coinbase.market_data_service": [
       "tests/contract/test_coinbase_api_contract.py",
@@ -1129,9 +1123,7 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_signals.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_strategies.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py",
-      "tests/unit/gpt_trader/features/optimize/runner/test_batch_runner.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_edges.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_order_lifecycle.py"
+      "tests/unit/gpt_trader/features/optimize/runner/test_batch_runner.py"
     ],
     "gpt_trader.features.live_trade.strategies.regime_switcher": [
       "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py"
@@ -1201,22 +1193,6 @@
     "gpt_trader.features.optimize.walk_forward": [
       "tests/unit/gpt_trader/features/optimize/test_walk_forward.py",
       "tests/unit/gpt_trader/features/optimize/test_walk_forward_helpers.py"
-    ],
-    "gpt_trader.features.research": [
-      "tests/unit/gpt_trader/features/research/test_research_import.py"
-    ],
-    "gpt_trader.features.research.backtesting.data_loader": [
-      "tests/unit/gpt_trader/features/research/backtesting/test_data_loader_edges.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_edges.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_order_lifecycle.py"
-    ],
-    "gpt_trader.features.research.backtesting.metrics": [
-      "tests/unit/gpt_trader/features/research/backtesting/test_metrics_edges.py"
-    ],
-    "gpt_trader.features.research.backtesting.simulator": [
-      "tests/unit/gpt_trader/features/research/backtesting/test_metrics_edges.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_edges.py",
-      "tests/unit/gpt_trader/features/research/backtesting/test_simulator_order_lifecycle.py"
     ],
     "gpt_trader.features.strategy_dev.config.diff": [
       "tests/unit/gpt_trader/features/strategy_dev/config/test_strategy_profile.py"
@@ -3720,30 +3696,6 @@
     "tests/unit/gpt_trader/features/optimize/test_walk_forward_helpers.py": [
       "gpt_trader.features.optimize.walk_forward"
     ],
-    "tests/unit/gpt_trader/features/research/backtesting/test_data_loader_edges.py": [
-      "gpt_trader.features.brokerages.coinbase.market_data_features",
-      "gpt_trader.features.research.backtesting.data_loader"
-    ],
-    "tests/unit/gpt_trader/features/research/backtesting/test_metrics_edges.py": [
-      "gpt_trader.features.research.backtesting.metrics",
-      "gpt_trader.features.research.backtesting.simulator"
-    ],
-    "tests/unit/gpt_trader/features/research/backtesting/test_simulator_edges.py": [
-      "gpt_trader.backtesting.simulation.fee_calculator",
-      "gpt_trader.backtesting.types",
-      "gpt_trader.features.live_trade.strategies.perps_baseline.strategy",
-      "gpt_trader.features.research.backtesting.data_loader",
-      "gpt_trader.features.research.backtesting.simulator"
-    ],
-    "tests/unit/gpt_trader/features/research/backtesting/test_simulator_order_lifecycle.py": [
-      "gpt_trader.core.trading",
-      "gpt_trader.features.live_trade.strategies.perps_baseline.strategy",
-      "gpt_trader.features.research.backtesting.data_loader",
-      "gpt_trader.features.research.backtesting.simulator"
-    ],
-    "tests/unit/gpt_trader/features/research/test_research_import.py": [
-      "gpt_trader.features.research"
-    ],
     "tests/unit/gpt_trader/features/strategy_dev/config/test_registry.py": [
       "gpt_trader.features.strategy_dev.config.registry",
       "gpt_trader.features.strategy_dev.config.strategy_profile"
@@ -4886,7 +4838,6 @@
     "gpt_trader.core.account": "src/gpt_trader/core/account.py",
     "gpt_trader.core.math.incremental": "src/gpt_trader/core/math/incremental.py",
     "gpt_trader.core.math.rolling": "src/gpt_trader/core/math/rolling.py",
-    "gpt_trader.core.trading": "src/gpt_trader/core/trading.py",
     "gpt_trader.errors": "src/gpt_trader/errors/__init__.py",
     "gpt_trader.errors.error_patterns": "src/gpt_trader/errors/error_patterns.py",
     "gpt_trader.errors.handler": "src/gpt_trader/errors/handler.py",
@@ -5010,10 +4961,6 @@
     "gpt_trader.features.optimize.study.manager": "src/gpt_trader/features/optimize/study/manager.py",
     "gpt_trader.features.optimize.types": "src/gpt_trader/features/optimize/types.py",
     "gpt_trader.features.optimize.walk_forward": "src/gpt_trader/features/optimize/walk_forward.py",
-    "gpt_trader.features.research": "src/gpt_trader/features/research/__init__.py",
-    "gpt_trader.features.research.backtesting.data_loader": "src/gpt_trader/features/research/backtesting/data_loader.py",
-    "gpt_trader.features.research.backtesting.metrics": "src/gpt_trader/features/research/backtesting/metrics.py",
-    "gpt_trader.features.research.backtesting.simulator": "src/gpt_trader/features/research/backtesting/simulator.py",
     "gpt_trader.features.strategy_dev.config.diff": "src/gpt_trader/features/strategy_dev/config/diff.py",
     "gpt_trader.features.strategy_dev.config.registry": "src/gpt_trader/features/strategy_dev/config/registry.py",
     "gpt_trader.features.strategy_dev.config.strategy_profile": "src/gpt_trader/features/strategy_dev/config/strategy_profile.py",

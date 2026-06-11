@@ -52,7 +52,6 @@ src/gpt_trader/features/
 │   └── sizing/          # Kelly criterion position sizing
 ├── live_trade/          # Production trading engine
 ├── optimize/            # Parameter optimisation experiments
-├── research/            # Research and evaluation (wrapping backtesting tools)
 ├── strategy_dev/        # Strategy development lab
 └── strategy_tools/      # Shared helpers for strategy slices
 ```
@@ -71,8 +70,7 @@ src/gpt_trader/
 └── validation/          # Declarative validators and decorators
 ```
 
-> **Note:** `src/gpt_trader/backtesting/` is the canonical backtesting framework. `features/research/` hosts
-> research workflows and adapters that build on top of the backtesting package.
+> **Note:** `src/gpt_trader/backtesting/` is the canonical backtesting framework.
 
 ### High-Level Flow
 

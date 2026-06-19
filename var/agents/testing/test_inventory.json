@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6590,
+    "total_tests": 6592,
     "total_files": 775,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6425,
-    "asyncio": 372,
+    "unit": 6427,
+    "asyncio": 373,
     "parametrize": 174,
     "endpoints": 83,
     "property": 82,
@@ -16228,8 +16228,16 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_order.py": [
       {
-        "name": "TestSpecsServiceCalculateSafePositionSize::test_calculate_safe_position_size_normal_case",
+        "name": "test_price_validated_order_types_are_constant_membership_set",
         "line": 13,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Price validation order types use a reusable constant set."
+      },
+      {
+        "name": "TestSpecsServiceCalculateSafePositionSize::test_calculate_safe_position_size_normal_case",
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -16238,7 +16246,7 @@
       },
       {
         "name": "TestSpecsServiceCalculateSafePositionSize::test_calculate_safe_position_size_below_min_size",
-        "line": 31,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -16247,7 +16255,7 @@
       },
       {
         "name": "TestSpecsServiceCalculateSafePositionSize::test_calculate_safe_position_size_below_min_notional",
-        "line": 49,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -16256,7 +16264,7 @@
       },
       {
         "name": "TestSpecsServiceCalculateSafePositionSize::test_calculate_safe_position_size_above_max_size",
-        "line": 68,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -16265,7 +16273,7 @@
       },
       {
         "name": "TestSpecsServiceCalculateSafePositionSize::test_calculate_safe_position_size_cannot_meet_min_notional",
-        "line": 86,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -16274,7 +16282,7 @@
       },
       {
         "name": "TestSpecsServiceValidateOrder::test_validate_order_market_order",
-        "line": 108,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -16283,7 +16291,7 @@
       },
       {
         "name": "TestSpecsServiceValidateOrder::test_validate_order_limit_order_valid",
-        "line": 125,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -16292,7 +16300,7 @@
       },
       {
         "name": "TestSpecsServiceValidateOrder::test_validate_order_size_too_small",
-        "line": 143,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -16301,7 +16309,7 @@
       },
       {
         "name": "TestSpecsServiceValidateOrder::test_validate_order_size_too_large",
-        "line": 159,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -16310,7 +16318,7 @@
       },
       {
         "name": "TestSpecsServiceValidateOrder::test_validate_order_notional_too_small",
-        "line": 175,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -16319,7 +16327,7 @@
       },
       {
         "name": "TestSpecsServiceValidateOrder::test_validate_order_price_quantization",
-        "line": 193,
+        "line": 202,
         "markers": [
           "unit"
         ],
@@ -34370,7 +34378,7 @@
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py": [
       {
         "name": "TestConsoleNotificationBackend::test_name_property",
-        "line": 20,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -34379,7 +34387,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_is_enabled_property",
-        "line": 24,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -34388,7 +34396,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_send_prints_to_console",
-        "line": 32,
+        "line": 34,
         "markers": [
           "asyncio",
           "unit"
@@ -34398,7 +34406,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_send_filters_by_severity",
-        "line": 49,
+        "line": 51,
         "markers": [
           "asyncio",
           "unit"
@@ -34408,7 +34416,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_test_connection_always_true",
-        "line": 64,
+        "line": 66,
         "markers": [
           "asyncio",
           "unit"
@@ -34418,7 +34426,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_name_property",
-        "line": 73,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -34427,7 +34435,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_send_writes_to_file",
-        "line": 78,
+        "line": 80,
         "markers": [
           "asyncio",
           "unit"
@@ -34437,7 +34445,17 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_checks_writability",
-        "line": 100,
+        "line": 102,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestFileNotificationBackend"
+      },
+      {
+        "name": "TestFileNotificationBackend::test_test_connection_offloads_file_check_to_thread",
+        "line": 114,
         "markers": [
           "asyncio",
           "unit"
@@ -34447,7 +34465,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_fails_for_invalid_path",
-        "line": 112,
+        "line": 138,
         "markers": [
           "asyncio",
           "unit"

@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 695,
-    "source_modules": 367,
+    "source_modules": 368,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1425,6 +1425,9 @@
       "tests/unit/gpt_trader/monitoring/test_health_checks.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_collector.py",
       "tests/unit/gpt_trader/monitoring/test_metrics_exporter.py"
+    ],
+    "gpt_trader.monitoring.notifications": [
+      "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py"
     ],
     "gpt_trader.monitoring.notifications.backends": [
       "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py",
@@ -3916,6 +3919,7 @@
     ],
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py": [
       "gpt_trader.monitoring.alert_types",
+      "gpt_trader.monitoring.notifications",
       "gpt_trader.monitoring.notifications.backends"
     ],
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_edges.py": [
@@ -5067,6 +5071,7 @@
     "gpt_trader.monitoring.interfaces": "src/gpt_trader/monitoring/interfaces.py",
     "gpt_trader.monitoring.metrics_collector": "src/gpt_trader/monitoring/metrics_collector.py",
     "gpt_trader.monitoring.metrics_exporter": "src/gpt_trader/monitoring/metrics_exporter.py",
+    "gpt_trader.monitoring.notifications": "src/gpt_trader/monitoring/notifications/__init__.py",
     "gpt_trader.monitoring.notifications.backends": "src/gpt_trader/monitoring/notifications/backends.py",
     "gpt_trader.monitoring.notifications.service": "src/gpt_trader/monitoring/notifications/service.py",
     "gpt_trader.monitoring.profiling": "src/gpt_trader/monitoring/profiling.py",

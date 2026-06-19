@@ -299,6 +299,10 @@ def score_trade_idea(
             candle,
             levels,
             allow_favorable_exit=candle is not entry_candle,
+            allow_adverse_exit=(
+                candle is not entry_candle
+                or not _entry_candle_proves_prefill_stop(idea.direction, candle, levels)
+            ),
         )
         if outcome_price is None:
             continue
@@ -536,24 +540,38 @@ def _candle_ends_by_expiry(
     return candle.ts + candle_duration <= expires_at
 
 
+def _entry_candle_proves_prefill_stop(
+    direction: TradeDirection,
+    candle: Candle,
+    levels: ScoringLevels,
+) -> bool:
+    entry_price = levels.entry_midpoint
+    if direction is TradeDirection.LONG:
+        return candle.open == candle.low and candle.open <= levels.stop < entry_price
+    if direction is TradeDirection.SHORT:
+        return candle.open == candle.high and candle.open >= levels.stop > entry_price
+    return False
+
+
 def _bar_outcome_price(
     direction: TradeDirection,
     candle: Candle,
     levels: ScoringLevels,
     *,
     allow_favorable_exit: bool = True,
+    allow_adverse_exit: bool = True,
 ) -> tuple[ReplayOutcome, Decimal] | None:
     # A single OHLC bar cannot reveal intrabar ordering. Score stops before
     # targets when both are touched in the same bar so calibration stays
     # conservative and never overstates replay quality.
     if direction is TradeDirection.LONG:
-        if candle.low <= levels.stop:
+        if allow_adverse_exit and candle.low <= levels.stop:
             return ReplayOutcome.STOP_HIT, levels.stop
         if allow_favorable_exit and candle.high >= levels.target:
             return ReplayOutcome.TARGET_HIT, levels.target
         return None
 
-    if candle.high >= levels.stop:
+    if allow_adverse_exit and candle.high >= levels.stop:
         return ReplayOutcome.STOP_HIT, levels.stop
     if allow_favorable_exit and candle.low <= levels.target:
         return ReplayOutcome.TARGET_HIT, levels.target

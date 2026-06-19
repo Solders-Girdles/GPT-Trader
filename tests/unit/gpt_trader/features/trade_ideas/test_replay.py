@@ -127,6 +127,68 @@ def test_score_trade_idea_defers_target_hit_on_entry_candle() -> None:
     assert result.exit_price == Decimal("104")
 
 
+def test_score_trade_idea_defers_prefill_long_stop_on_entry_candle() -> None:
+    result = score_trade_idea(
+        scoreable_idea(),
+        as_of=AS_OF,
+        future_candles=(
+            candle(0, open_="94", high="102", low="94", close="101"),
+            candle(1, high="106", low="101", close="104"),
+        ),
+    )
+
+    assert result.outcome is ReplayOutcome.TIMED_OUT
+    assert result.entry_time == AS_OF
+    assert result.exit_time == AS_OF + timedelta(hours=1)
+    assert result.exit_price == Decimal("104")
+
+
+def test_score_trade_idea_defers_prefill_short_stop_on_entry_candle() -> None:
+    result = score_trade_idea(
+        scoreable_idea(
+            direction=TradeDirection.SHORT,
+            invalidation="Close above 106",
+            target_exit="Take profit at 95 or exit at expiry",
+        ),
+        as_of=AS_OF,
+        future_candles=(
+            candle(0, open_="107", high="107", low="100", close="101"),
+            candle(1, high="101", low="97", close="98"),
+        ),
+    )
+
+    assert result.outcome is ReplayOutcome.TIMED_OUT
+    assert result.entry_time == AS_OF
+    assert result.exit_time == AS_OF + timedelta(hours=1)
+    assert result.exit_price == Decimal("98")
+
+
+def test_score_trade_idea_keeps_long_entry_candle_stop_when_not_pinned_to_open() -> None:
+    result = score_trade_idea(
+        scoreable_idea(),
+        as_of=AS_OF,
+        future_candles=(candle(0, open_="94", high="102", low="93", close="101"),),
+    )
+
+    assert result.outcome is ReplayOutcome.STOP_HIT
+    assert result.exit_price == Decimal("95")
+
+
+def test_score_trade_idea_keeps_short_entry_candle_stop_when_not_pinned_to_open() -> None:
+    result = score_trade_idea(
+        scoreable_idea(
+            direction=TradeDirection.SHORT,
+            invalidation="Close above 106",
+            target_exit="Take profit at 95 or exit at expiry",
+        ),
+        as_of=AS_OF,
+        future_candles=(candle(0, open_="107", high="108", low="100", close="101"),),
+    )
+
+    assert result.outcome is ReplayOutcome.STOP_HIT
+    assert result.exit_price == Decimal("106")
+
+
 def test_score_trade_idea_records_short_target_hit() -> None:
     result = score_trade_idea(
         scoreable_idea(

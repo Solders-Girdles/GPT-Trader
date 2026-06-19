@@ -182,6 +182,15 @@ class ReplayReport:
 LevelExtractor = Callable[[TradeIdea], ScoringLevels]
 
 _NUMBER_RE = re.compile(r"(?<![\w.])-?\d[\d,]*(?:\.\d+)?")
+_NON_PRICE_QUANTITY_SUFFIX_RE = re.compile(
+    rf"\s*(?:[-/]\s*{_NUMBER_RE.pattern}\s*)?(?:"
+    r"%|"
+    r"[Rr]\b|"
+    r"-(?:bar|bars|candle|candles|day|days|hour|hours|minute|minutes|week|weeks|month|months)\b|"
+    r"(?:bar|bars|candle|candles|trading\s+day|trading\s+days|day|days|hour|hours|minute|minutes|week|weeks|month|months)\b"
+    r")",
+    re.IGNORECASE,
+)
 _DIRECT_STOP_RE = re.compile(
     rf"\b(?:close|price|stop|invalid(?:ation|ated)?|break|move|trade)\w*\s+"
     rf"(?:below|under|beneath|above|over)\s+({_NUMBER_RE.pattern})",
@@ -404,7 +413,7 @@ def _extract_stop_level(
     direction: TradeDirection,
     entry_midpoint: Decimal,
 ) -> Decimal:
-    candidates = _numbers(text)
+    candidates = _price_level_numbers(text)
     if not candidates:
         raise ReplayScoringError(
             f"Trade idea '{decision_id}' invalidation has no numeric level",
@@ -428,7 +437,7 @@ def _extract_target_level(
     direction: TradeDirection,
     entry_midpoint: Decimal,
 ) -> Decimal:
-    candidates = _numbers_without_reward_multiples(text)
+    candidates = _price_level_numbers(text)
     if not candidates:
         raise ReplayScoringError(
             f"Trade idea '{decision_id}' target_exit has no numeric level",
@@ -469,32 +478,24 @@ def _nearest_directional_level(
     return min(directional_candidates, key=lambda value: abs(value - entry_midpoint))
 
 
-def _numbers(text: str) -> tuple[Decimal, ...]:
-    return tuple(Decimal(match.group().replace(",", "")) for match in _NUMBER_RE.finditer(text))
-
-
-def _first_number_after_stop_trigger(text: str) -> Decimal | None:
-    match = _DIRECT_STOP_RE.search(text)
-    if match is None:
-        return None
-    return Decimal(match.group(1).replace(",", ""))
-
-
-def _numbers_without_reward_multiples(text: str) -> tuple[Decimal, ...]:
+def _price_level_numbers(text: str) -> tuple[Decimal, ...]:
     values: list[Decimal] = []
     for match in _NUMBER_RE.finditer(text):
-        if _is_reward_multiple(text, match.end()) or _is_percentage_quantity(text, match.end()):
+        if _is_non_price_quantity(text, match.end()):
             continue
         values.append(Decimal(match.group().replace(",", "")))
     return tuple(values)
 
 
-def _is_reward_multiple(text: str, number_end: int) -> bool:
-    return re.match(r"\s*[Rr]\b", text[number_end:]) is not None
+def _first_number_after_stop_trigger(text: str) -> Decimal | None:
+    match = _DIRECT_STOP_RE.search(text)
+    if match is None or _is_non_price_quantity(text, match.end(1)):
+        return None
+    return Decimal(match.group(1).replace(",", ""))
 
 
-def _is_percentage_quantity(text: str, number_end: int) -> bool:
-    return re.match(r"\s*%", text[number_end:]) is not None
+def _is_non_price_quantity(text: str, number_end: int) -> bool:
+    return _NON_PRICE_QUANTITY_SUFFIX_RE.match(text[number_end:]) is not None
 
 
 def _validate_level_order(idea: TradeIdea, levels: ScoringLevels) -> None:

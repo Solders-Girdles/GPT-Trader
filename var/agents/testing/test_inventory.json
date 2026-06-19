@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6586,
+    "total_tests": 6590,
     "total_files": 775,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6421,
+    "unit": 6425,
     "asyncio": 372,
     "parametrize": 174,
     "endpoints": 83,
@@ -31998,6 +31998,38 @@
       {
         "name": "test_extract_numeric_scoring_levels_ignores_percentage_quantity_targets",
         "line": 125,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_ignores_indicator_lookback_before_stop",
+        "line": 135,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_ignores_duration_before_target",
+        "line": 145,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_ignores_duration_range_before_target",
+        "line": 155,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_ignores_indicator_pair_before_stop",
+        "line": 165,
         "markers": [
           "unit"
         ],

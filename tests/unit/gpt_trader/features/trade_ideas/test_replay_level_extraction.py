@@ -130,3 +130,43 @@ def test_extract_numeric_scoring_levels_ignores_percentage_quantity_targets() ->
     )
 
     assert extract_numeric_scoring_levels(idea).target == Decimal("20")
+
+
+def test_extract_numeric_scoring_levels_ignores_indicator_lookback_before_stop() -> None:
+    idea = scoreable_idea(
+        entry_zone=EntryZone(lower=Decimal("59"), upper=Decimal("61")),
+        invalidation="Close below the 50-bar average (40)",
+        target_exit="Take profit at 75 or exit at expiry",
+    )
+
+    assert extract_numeric_scoring_levels(idea).stop == Decimal("40")
+
+
+def test_extract_numeric_scoring_levels_ignores_duration_before_target() -> None:
+    idea = scoreable_idea(
+        entry_zone=EntryZone(lower=Decimal("8"), upper=Decimal("10")),
+        invalidation="Close below 7",
+        target_exit="Take profit at 12 or exit after 10 trading days",
+    )
+
+    assert extract_numeric_scoring_levels(idea).target == Decimal("12")
+
+
+def test_extract_numeric_scoring_levels_ignores_duration_range_before_target() -> None:
+    idea = scoreable_idea(
+        entry_zone=EntryZone(lower=Decimal("8"), upper=Decimal("10")),
+        invalidation="Close below 7",
+        target_exit="Take profit at 12 or exit after 10-20 trading days",
+    )
+
+    assert extract_numeric_scoring_levels(idea).target == Decimal("12")
+
+
+def test_extract_numeric_scoring_levels_ignores_indicator_pair_before_stop() -> None:
+    idea = scoreable_idea(
+        entry_zone=EntryZone(lower=Decimal("59"), upper=Decimal("61")),
+        invalidation="Close below the 50/200-day average (40)",
+        target_exit="Take profit at 75 or exit at expiry",
+    )
+
+    assert extract_numeric_scoring_levels(idea).stop == Decimal("40")

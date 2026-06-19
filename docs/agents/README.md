@@ -31,3 +31,16 @@ Most inventories are generated via:
 uv run agent-regenerate
 uv run agent-regenerate --only testing
 ```
+
+Validate the generated tree and its upload package before publishing:
+
+```bash
+uv run agent-artifacts validate
+uv run agent-artifacts package
+uv run agent-artifacts verify-package
+```
+
+The scheduled **Agent Artifacts Refresh** workflow regenerates `var/agents/**`,
+validates the expected files and content, uploads a packaged artifact bundle,
+downloads that bundle in a second job, and publishes changed generated files to
+the `automation/agent-artifacts-refresh` branch.

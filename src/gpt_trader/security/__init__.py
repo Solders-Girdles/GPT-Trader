@@ -13,7 +13,6 @@ Environment Variables
 - ``COINBASE_CREDENTIALS_FILE``: Path to CDP JSON key file (preferred)
 - ``COINBASE_CDP_API_KEY``: CDP key name (organizations/.../apiKeys/...)
 - ``COINBASE_CDP_PRIVATE_KEY``: CDP private key PEM
-- ``COINBASE_API_KEY_NAME`` / ``COINBASE_PRIVATE_KEY``: Legacy fallback
 
 Security Best Practices
 -----------------------

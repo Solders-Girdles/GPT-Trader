@@ -56,15 +56,14 @@ It exists to make changes safer and to help agents route work to the right place
 ### Backtesting engine (canonical)
 - **Dirs:** `src/gpt_trader/backtesting/`
 - **What lives here:** canonical backtesting engine
-- **When you touch this:** run backtesting + research unit tests
+- **When you touch this:** run backtesting unit tests
   - `uv run pytest tests/unit -q`
 
-### Research + optimization
+### Optimization
 - **Dirs:**
-  - `src/gpt_trader/features/research/`
   - `src/gpt_trader/features/optimize/`
   - `src/gpt_trader/features/strategy_tools/`
-- **What lives here:** research workflows, artifacts, optimization pipelines
+- **What lives here:** optimization pipelines and shared strategy helpers
 - **When you touch this:** run unit tests
   - `uv run pytest tests/unit -q`
 

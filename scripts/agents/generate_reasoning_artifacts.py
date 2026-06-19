@@ -950,128 +950,6 @@ MARKET_DATA_FLOW_EDGES = [
     },
 ]
 
-BACKTEST_FLOW_CLUSTERS = [
-    {"id": "event_store", "label": "Event Store"},
-    {"id": "loader", "label": "Historical Loader"},
-    {"id": "simulation", "label": "Backtest Simulation"},
-    {"id": "strategy", "label": "Strategy"},
-    {"id": "metrics", "label": "Metrics + Output"},
-]
-
-BACKTEST_FLOW_NODES = [
-    {
-        "id": "event_store",
-        "label": "EventStore.events",
-        "type": "source",
-        "path": "src/gpt_trader/persistence/event_store.py",
-        "cluster": "event_store",
-    },
-    {
-        "id": "data_loader",
-        "label": "HistoricalDataLoader.load_symbol",
-        "type": "loader",
-        "path": "src/gpt_trader/features/research/backtesting/data_loader.py",
-        "cluster": "loader",
-    },
-    {
-        "id": "data_result",
-        "label": "DataLoadResult",
-        "type": "data",
-        "path": "src/gpt_trader/features/research/backtesting/data_loader.py",
-        "cluster": "loader",
-    },
-    {
-        "id": "data_point",
-        "label": "HistoricalDataPoint",
-        "type": "data",
-        "path": "src/gpt_trader/features/research/backtesting/data_loader.py",
-        "cluster": "loader",
-    },
-    {
-        "id": "backtest_simulator",
-        "label": "BacktestSimulator.run",
-        "type": "simulation",
-        "path": "src/gpt_trader/features/research/backtesting/simulator.py",
-        "cluster": "simulation",
-    },
-    {
-        "id": "market_data_context",
-        "label": "MarketDataContext",
-        "type": "strategy_input",
-        "path": "src/gpt_trader/features/live_trade/strategies/base.py",
-        "cluster": "strategy",
-    },
-    {
-        "id": "strategy_decide",
-        "label": "Strategy.decide",
-        "type": "strategy",
-        "path": "src/gpt_trader/features/live_trade/strategies/base.py",
-        "cluster": "strategy",
-    },
-    {
-        "id": "backtest_result",
-        "label": "BacktestResult",
-        "type": "output",
-        "path": "src/gpt_trader/features/research/backtesting/simulator.py",
-        "cluster": "metrics",
-    },
-    {
-        "id": "performance_metrics",
-        "label": "PerformanceMetrics.from_result",
-        "type": "metrics",
-        "path": "src/gpt_trader/features/research/backtesting/metrics.py",
-        "cluster": "metrics",
-    },
-]
-
-BACKTEST_FLOW_EDGES = [
-    {
-        "from": "event_store",
-        "to": "data_loader",
-        "label": "load events",
-    },
-    {
-        "from": "data_loader",
-        "to": "data_result",
-        "label": "build result",
-    },
-    {
-        "from": "data_result",
-        "to": "data_point",
-        "label": "points list",
-    },
-    {
-        "from": "data_point",
-        "to": "backtest_simulator",
-        "label": "data_points",
-    },
-    {
-        "from": "backtest_simulator",
-        "to": "market_data_context",
-        "label": "build market data",
-    },
-    {
-        "from": "market_data_context",
-        "to": "strategy_decide",
-        "label": "strategy input",
-    },
-    {
-        "from": "strategy_decide",
-        "to": "backtest_simulator",
-        "label": "decision",
-    },
-    {
-        "from": "backtest_simulator",
-        "to": "backtest_result",
-        "label": "result",
-    },
-    {
-        "from": "backtest_result",
-        "to": "performance_metrics",
-        "label": "compute metrics",
-    },
-]
-
 BACKTEST_REPORTING_FLOW_CLUSTERS = [
     {"id": "broker", "label": "Simulation Broker"},
     {"id": "metrics", "label": "Metrics"},
@@ -1237,7 +1115,6 @@ BACKTEST_ENTRYPOINTS_CLUSTERS = [
     {"id": "scripts", "label": "Script Entrypoints"},
     {"id": "library", "label": "Library Entrypoints"},
     {"id": "engine", "label": "Backtesting Engine"},
-    {"id": "research", "label": "Research Backtesting"},
     {"id": "intelligence", "label": "Intelligence Backtesting"},
     {"id": "validation", "label": "Validation + Chaos"},
     {"id": "output", "label": "Outputs"},
@@ -1313,27 +1190,6 @@ BACKTEST_ENTRYPOINTS_NODES = [
         "type": "output",
         "path": "src/gpt_trader/backtesting/types.py",
         "cluster": "output",
-    },
-    {
-        "id": "backtest_simulator_run",
-        "label": "BacktestSimulator.run",
-        "type": "entrypoint",
-        "path": "src/gpt_trader/features/research/backtesting/simulator.py",
-        "cluster": "research",
-    },
-    {
-        "id": "historical_loader",
-        "label": "HistoricalDataLoader.load_symbol",
-        "type": "loader",
-        "path": "src/gpt_trader/features/research/backtesting/data_loader.py",
-        "cluster": "research",
-    },
-    {
-        "id": "event_store_events",
-        "label": "EventStore.events",
-        "type": "source",
-        "path": "src/gpt_trader/persistence/event_store.py",
-        "cluster": "research",
     },
     {
         "id": "ensemble_backtest_process",
@@ -1432,20 +1288,6 @@ BACKTEST_ENTRYPOINTS_NODES = [
         "type": "entrypoint",
         "path": "src/gpt_trader/backtesting/chaos/scenarios.py",
         "cluster": "validation",
-    },
-    {
-        "id": "research_backtest_result",
-        "label": "BacktestResult",
-        "type": "output",
-        "path": "src/gpt_trader/features/research/backtesting/simulator.py",
-        "cluster": "output",
-    },
-    {
-        "id": "performance_metrics",
-        "label": "PerformanceMetrics.from_result",
-        "type": "metrics",
-        "path": "src/gpt_trader/features/research/backtesting/metrics.py",
-        "cluster": "output",
     },
     {
         "id": "ensemble_backtest_result",
@@ -1593,31 +1435,6 @@ BACKTEST_ENTRYPOINTS_EDGES = [
         "from": "golden_path_demo",
         "to": "golden_path_report",
         "label": "generate report",
-    },
-    {
-        "from": "backtest_simulator_run",
-        "to": "historical_loader",
-        "label": "load history",
-    },
-    {
-        "from": "event_store_events",
-        "to": "historical_loader",
-        "label": "source events",
-    },
-    {
-        "from": "historical_loader",
-        "to": "backtest_simulator_run",
-        "label": "data points",
-    },
-    {
-        "from": "backtest_simulator_run",
-        "to": "research_backtest_result",
-        "label": "result",
-    },
-    {
-        "from": "research_backtest_result",
-        "to": "performance_metrics",
-        "label": "compute metrics",
     },
     {
         "from": "ensemble_backtest_process",
@@ -2416,71 +2233,6 @@ def build_market_data_flow_dot(flow_map: dict[str, Any]) -> list[str]:
     return lines
 
 
-def build_backtesting_flow_map() -> dict[str, Any]:
-    return {
-        "artifact": "backtesting_flow_map",
-        "description": "Backtesting data flow map (EventStore → loader → simulator → metrics).",
-        "clusters": BACKTEST_FLOW_CLUSTERS,
-        "nodes": BACKTEST_FLOW_NODES,
-        "edges": BACKTEST_FLOW_EDGES,
-        "notes": [
-            "HistoricalDataLoader reconstructs market state from EventStore events.",
-            "BacktestSimulator replays HistoricalDataPoint sequences into strategy decisions.",
-            "PerformanceMetrics summarizes outcomes from BacktestResult.",
-        ],
-    }
-
-
-def build_backtesting_flow_markdown(flow_map: dict[str, Any]) -> str:
-    lines = [
-        "# Backtesting Flow Map",
-        "",
-        f"Generated: {flow_map['generated_at']}",
-        "",
-    ]
-
-    cluster_index = {cluster["id"]: cluster for cluster in flow_map["clusters"]}
-    for cluster_id in [cluster["id"] for cluster in flow_map["clusters"]]:
-        cluster = cluster_index[cluster_id]
-        lines.append(f"## {cluster['label']}")
-        lines.append("| ID | Label | Path |")
-        lines.append("|----|-------|------|")
-        for node in flow_map["nodes"]:
-            if node["cluster"] == cluster_id:
-                lines.append(f"| {node['id']} | {node['label']} | `{node['path']}` |")
-        lines.append("")
-
-    lines.extend(["## Edges", "| From | To | Description |", "|------|----|-------------|"])
-    for edge in flow_map["edges"]:
-        lines.append(f"| {edge['from']} | {edge['to']} | {edge['label']} |")
-
-    lines.append("")
-    lines.append("## Notes")
-    for note in flow_map.get("notes", []):
-        lines.append(f"- {note}")
-
-    return "\n".join(lines) + "\n"
-
-
-def build_backtesting_flow_dot(flow_map: dict[str, Any]) -> list[str]:
-    lines = ["digraph BacktestingFlow {", "  rankdir=LR;"]
-    for cluster in flow_map["clusters"]:
-        lines.append(f"  subgraph cluster_{cluster['id']} {{")
-        lines.append(f'    label="{cluster["label"]}";')
-        lines.append("    style=rounded;")
-        for node in flow_map["nodes"]:
-            if node["cluster"] != cluster["id"]:
-                continue
-            label = f"{node['label']}\\n{node['path']}"
-            lines.append(f'    "{node["id"]}" [shape=box, label="{label}"]; ')
-        lines.append("  }")
-
-    for edge in flow_map["edges"]:
-        lines.append(f'  "{edge["from"]}" -> "{edge["to"]}" [label="{edge["label"]}"];')
-    lines.append("}")
-    return lines
-
-
 def build_backtest_reporting_flow_map() -> dict[str, Any]:
     return {
         "artifact": "backtest_reporting_flow_map",
@@ -2997,20 +2749,6 @@ def generate(
     _write_markdown(market_data_md, build_market_data_flow_markdown(market_data_map))
     _write_dot(market_data_dot, build_market_data_flow_dot(market_data_map))
 
-    backtest_map = _load_flow(
-        "backtesting_flow.yaml",
-        artifact="backtesting_flow_map",
-        required_keys=("artifact", "description", "clusters", "nodes", "edges"),
-        fallback=build_backtesting_flow_map(),
-    )
-    backtest_json = output_dir / "backtesting_flow_map.json"
-    backtest_md = output_dir / "backtesting_flow_map.md"
-    backtest_dot = output_dir / "backtesting_flow_map.dot"
-
-    _write_json(backtest_json, backtest_map)
-    _write_markdown(backtest_md, build_backtesting_flow_markdown(backtest_map))
-    _write_dot(backtest_dot, build_backtesting_flow_dot(backtest_map))
-
     backtest_reporting_map = _load_flow(
         "backtest_reporting_flow.yaml",
         artifact="backtest_reporting_flow_map",
@@ -3102,9 +2840,6 @@ def generate(
         "market_data_flow_map.json": market_data_json,
         "market_data_flow_map.md": market_data_md,
         "market_data_flow_map.dot": market_data_dot,
-        "backtesting_flow_map.json": backtest_json,
-        "backtesting_flow_map.md": backtest_md,
-        "backtesting_flow_map.dot": backtest_dot,
         "backtest_reporting_flow_map.json": backtest_reporting_json,
         "backtest_reporting_flow_map.md": backtest_reporting_md,
         "backtest_reporting_flow_map.dot": backtest_reporting_dot,

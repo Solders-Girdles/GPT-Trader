@@ -96,31 +96,6 @@ class SimpleAuth(CoinbaseAuth):
         return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
 
-def get_auth() -> SimpleAuth:
-    """Get authentication from environment variables.
-
-    Returns:
-        SimpleAuth configured with credentials from environment.
-
-    Raises:
-        EnvironmentError: If credentials are missing in production mode.
-            Set ENV=development or ENV=test to use test fallback credentials.
-    """
-    import os
-
-    name = os.getenv("COINBASE_API_KEY_NAME")
-    key = os.getenv("COINBASE_PRIVATE_KEY")
-    if not name or not key:
-        env_mode = os.getenv("ENV", "").lower()
-        if env_mode in ("development", "test", "testing"):
-            return SimpleAuth("test", "test_key")
-        raise OSError(
-            "Missing COINBASE_API_KEY_NAME or COINBASE_PRIVATE_KEY. "
-            "Set these environment variables or use ENV=development for test mode."
-        )
-    return SimpleAuth(name, key)
-
-
 def create_cdp_jwt_auth(api_key: str, private_key: str) -> CDPJWTAuth:
     """Factory function to create a CDP JWT auth instance."""
     return CDPJWTAuth(api_key, private_key)

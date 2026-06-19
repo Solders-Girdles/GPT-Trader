@@ -94,8 +94,7 @@ def create_brokerage(
         if not creds:
             raise ValueError(
                 "Coinbase Credentials not found. Set COINBASE_CREDENTIALS_FILE to a JSON key file, "
-                "or set COINBASE_CDP_API_KEY + COINBASE_CDP_PRIVATE_KEY "
-                "(legacy: COINBASE_API_KEY_NAME + COINBASE_PRIVATE_KEY)."
+                "or set COINBASE_CDP_API_KEY + COINBASE_CDP_PRIVATE_KEY."
             )
 
         for warning in creds.warnings:

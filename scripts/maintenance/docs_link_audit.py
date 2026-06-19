@@ -106,6 +106,7 @@ def should_check_repo_paths(source: Path, *, root: Path) -> bool:
 
     excluded_dirs = {
         docs_root / "adr",
+        docs_root / "specs",
     }
     for excluded_dir in excluded_dirs:
         try:

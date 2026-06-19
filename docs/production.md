@@ -1,8 +1,8 @@
-# Production Deployment Guide
+# Live Readiness and Gated Operations Guide
 
 ---
 status: current
-last-updated: 2026-01-24
+last-updated: 2026-05-06
 consolidates:
   - PRODUCTION_LAUNCH_CHECKLIST.md
   - PRODUCTION_DEPLOYMENT_RUNBOOK.md
@@ -10,207 +10,201 @@ consolidates:
   - PRODUCTION_READINESS_IMPLEMENTATION.md
 ---
 
-## Overview
+## Scope
 
-This guide consolidates all production deployment documentation for GPT-Trader with a **spot-first** posture. CFM futures (US) are opt-in via `TRADING_MODES=cfm` + `CFM_ENABLED=1`. INTX perpetuals remain dormant until Coinbase grants INTX access and `COINBASE_ENABLE_INTX_PERPS=1` is set.
+This guide keeps the historical `production.md` path for link stability, but it
+is not an approval to run unrestricted live automation. It describes the gates
+and operator steps required before using live profiles or broker adapters.
 
-## Pre-Launch Checklist
+Execution work should follow the
+[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md). Treat
+the existing `canary` and `prod` profiles as legacy live-operation assets:
+useful for validation, but not proof that a product, account, or autonomy level
+is ready.
 
-### System Requirements
-- [ ] Python 3.12+ installed
-- [ ] uv package manager installed
-- [ ] Git repository cloned
-- [ ] Environment variables configured (.env)
+## Operating Posture
 
-### API Configuration
-- [ ] CDP JWT credentials available for spot trading (required)
-- [ ] INTX/CDP credentials created **only if** derivatives are enabled
-- [ ] WebSocket connectivity verified
-- [ ] Rate limits understood
+- Start with `dev`, `paper`, or `observe` unless a live-operation gate has been
+  explicitly passed.
+- Use `human_approved_execution` as the first live execution tier.
+- Verify product, account, venue/API, risk, and audit-log capability before
+  enabling any new live lane.
+- Keep broker-neutral decision and risk evidence canonical; broker-specific
+  order tickets are downstream artifacts.
+- Prefer `canary` for live validation and reserve `prod` for an explicitly
+  approved, monitored live run.
 
-### Risk Settings
-- [ ] Daily loss limits configured
-- [ ] Leverage caps set appropriately (applies when derivatives enabled)
-- [ ] Reduce-only mode tested
-- [ ] Circuit breakers enabled
+## Readiness Checklist
 
-## Deployment Steps
+### System
 
-### 1. Environment Preparation
+- [ ] Python 3.12+ and `uv` installed.
+- [ ] Dependencies synced with `uv sync --all-extras --dev`.
+- [ ] `.env` created from `config/environments/.env.template`.
+- [ ] Working tree clean or local work preserved on a labeled branch.
+
+### Venue And Product
+
+- [ ] Coinbase CDP JWT credentials available for the selected lane.
+- [ ] Product universe selected and supported by API/account capability.
+- [ ] CFM futures enabled only after account/product verification.
+- [ ] INTX perpetuals enabled only after eligible-region/account verification.
+- [ ] Unsupported products remain research-only or ticket-draft only.
+
+### Risk And Approval
+
+- [ ] Daily loss limits and position caps reviewed.
+- [ ] Reduce-only mode tested.
+- [ ] Kill switch behavior understood.
+- [ ] Human approval workflow selected for live submissions.
+- [ ] Audit output location and retention confirmed.
+
+## Validation Commands
+
 ```bash
-# Clone repository
-git clone https://github.com/your-org/GPT-Trader.git
-cd GPT-Trader
+# Full local quality gate for PR-like confidence
+uv run local-ci
 
-# Install dependencies
-uv sync
+# Faster loop while editing
+uv run local-ci --profile quick
 
-# Configure environment
-cp config/environments/.env.template .env
-# Edit `.env` with production spot values (set COINBASE_ENABLE_INTX_PERPS=0 unless INTX approved)
-```
-
-### 2. Pre-flight Validation
-```bash
-# Run comprehensive checks (env, credentials, risk toggles)
+# Profile and live-readiness diagnostics
 uv run python scripts/production_preflight.py --profile canary
+uv run python scripts/production_preflight.py --profile prod --warn-only
 
-# Smoke test the trading loop
+# Safe bot startup/shutdown baseline
 uv run gpt-trader run --profile dev --dev-fast
 
-# Inspect streaming telemetry via TUI
-uv run gpt-trader tui                  # Mode selector
-uv run gpt-trader run --profile dev --tui  # Attach TUI to dev profile (optional)
+# Operator surface
+uv run gpt-trader tui
+uv run gpt-trader account snapshot --profile observe
 ```
 
-### 3. Canary Deployment
+## Live Gate Sequence
+
+### Gate 1: Observe
+
+Use `observe` when you need real data and account visibility without execution.
+
 ```bash
-# Start with canary profile (ultra-safe)
+uv run gpt-trader tui --mode read_only
+uv run gpt-trader account snapshot --profile observe
+```
+
+Exit criteria:
+
+- Account snapshot works.
+- Market data freshness is acceptable.
+- No order submission path is enabled.
+
+### Gate 2: Canary Dry Run
+
+Use `canary --dry-run` to validate profile settings and runtime behavior without
+exchange orders.
+
+```bash
 uv run gpt-trader run --profile canary --dry-run
-
-# Monitor for 24 hours
-# Check logs: tail -f ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log
-
-# If successful, enable live spot trading
-uv run gpt-trader run --profile canary
 ```
 
-### 4. Production Rollout
+Exit criteria:
+
+- Preflight report is current.
+- Runtime logs and status output are clean.
+- Risk guards produce expected decisions.
+- Operator can stop the process and inspect state.
+
+### Gate 3: Human-Approved Canary
+
+Use canary only after the decision framework has recorded product scope,
+approval policy, risk budget, and audit expectations.
+
 ```bash
-# Gradual scaling approach (spot)
-uv run gpt-trader run --profile prod --dry-run             # Validate config under prod settings
-uv run gpt-trader run --profile prod --reduce-only         # Warm start with exits only
-uv run gpt-trader run --profile prod                       # Full trading once stable
+uv run gpt-trader run --profile canary --reduce-only
 ```
 
-## Phased Rollout Plan
+Exit criteria:
 
-### Phase 1: Canary Testing (Days 1-3)
-- Ultra-conservative settings
-- 0.01 BTC max positions
-- $10 daily loss limit
-- 14:00-15:00 UTC window only
+- Every submitted order has a corresponding approval and audit trail.
+- Reduce-only behavior is verified before any position-increasing flow.
+- Daily loss and exposure limits match the active lane.
 
-### Phase 2: Limited Production (Days 4-7)
-- Increase position sizes to 0.1 BTC
-- Expand trading window to 8 hours
-- Monitor performance metrics
+### Gate 4: Approved Live Profile
 
-### Phase 3: Full Production (Day 8+)
-- Full position sizing
-- 24/7 operation
-- All strategies enabled
+The `prod` profile is a live-operation profile, not a default destination. Use it
+only after canary evidence supports the same product lane and autonomy tier.
 
-### Optional: Enabling INTX Perpetuals
-- Confirm Coinbase has approved INTX access for the account
-- Set `COINBASE_ENABLE_INTX_PERPS=1` and configure CDP keys in `.env`
-- Re-run pre-flight checks to validate derivatives connectivity
-- Increase leverage caps and risk tolerances cautiously
+```bash
+uv run gpt-trader run --profile prod --dry-run
+uv run gpt-trader run --profile prod --reduce-only
+```
 
-## Production Readiness Requirements
-
-### Technical Requirements
-- ✅ 100% pass rate on required spot test suite (`uv run pytest -q`)
-- ✅ WebSocket reconnection logic
-- ✅ Rate limiting implementation
-- ✅ Error handling and recovery
-- ✅ Comprehensive logging
-
-### Operational Requirements
-- ✅ Monitoring dashboards configured (TUI)
-- ✅ Alert thresholds defined
-- ✅ Incident response procedures
-- ✅ Rollback plan documented
-
-### Security Requirements
-- ✅ API keys in environment variables only
-- ✅ No secrets in code or logs
-- ✅ Audit logging enabled
-- ✅ Access controls configured
+Do not remove `--dry-run` or `--reduce-only` unless the current run has explicit
+approval and monitoring coverage.
 
 ## Monitoring
 
-### Key Metrics
-- Position count and sizes
-- Daily PnL tracking
-- Error rates and types
-- WebSocket connection status
-- API rate limit usage
+Use the [Monitoring Playbook](MONITORING_PLAYBOOK.md) and
+[Observability Reference](OBSERVABILITY.md) for metric names and dashboards.
 
-### Alert Thresholds
-- Daily loss > 1% - WARNING
-- Daily loss > 2% - CRITICAL (halt trading)
-- Error rate > 10% - WARNING
-- WebSocket disconnected > 5 min - CRITICAL
+Key signals:
 
-## Rollback Procedure
+- Position count and exposure.
+- Daily realized and unrealized PnL.
+- Order rejection and retry rates.
+- Guard trip counts.
+- WebSocket and market-data staleness.
+- API latency and rate-limit behavior.
 
-If issues arise:
+Suggested live thresholds:
+
+| Signal | Warning | Critical |
+|--------|---------|----------|
+| Daily loss | > configured warning budget | hard stop at configured daily limit |
+| Order error rate | > 10% | > 15% |
+| WebSocket staleness | > 30s | > 60s |
+| Broker latency p95 | > 1000 ms | > 3000 ms |
+
+## Rollback
+
+If live behavior is not explainable or expected:
+
 ```bash
-# 1. Enable reduce-only mode immediately
+# 1. Force reduce-only behavior
 export RISK_REDUCE_ONLY_MODE=1
 
-# 2. Close all positions
-export RISK_REDUCE_ONLY_MODE=1
-# Submit market exits via Coinbase UI or CLI previews while reduce-only is active.
-
-# 3. Stop the bot
+# 2. Stop new automation
 pkill -f gpt-trader
 
-# 4. Review logs and diagnose
+# 3. Inspect current account and orders
+uv run gpt-trader account snapshot --profile observe
+sqlite3 runtime_data/prod/orders.db "select status, count(*) from orders group by status;"
+
+# 4. Review recent errors
 tail -n 1000 ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log | grep ERROR
 ```
 
-## Emergency Procedures
+Use the broker UI or explicitly approved CLI previews for manual exits. Do not
+assume the bot can safely recover an unknown state without human review.
 
-### Emergency Kill Switch
+## Emergency Stop
+
 ```bash
-# STOP ALL TRADING IMMEDIATELY
 export RISK_KILL_SWITCH_ENABLED=1
+export RISK_REDUCE_ONLY_MODE=1
 pkill -f gpt-trader
 ```
 
-### Close All Positions
-```bash
-# Enable reduce-only mode
-export RISK_REDUCE_ONLY_MODE=1
+After emergency stop:
 
-# Submit market exits via CLI
-uv run gpt-trader orders preview \
-  --symbol BTC-USD --side sell --type market --quantity CURRENT_SIZE
-```
-
-### Common Issues
-
-**Excessive Losses**
-1. Check if daily loss guard tripped (`daily_loss_limit_reached`)
-2. Review recent fills in logs
-3. Reduce position sizes or halt trading
-
-**API Authentication Failures**
-1. Run preflight: `uv run python scripts/production_preflight.py --profile canary`
-2. Check API key permissions
-3. Verify system time sync
-
-**Connection Problems**
-1. Check network: `ping api.coinbase.com`
-2. Check status: https://status.coinbase.com/
-3. Switch to REST-only: `export PERPS_ENABLE_STREAMING=0`
-
-### Recovery After Emergency
-1. Assess situation and document incident
-2. Close or manage positions
-3. Root cause analysis (review logs)
-4. Implement fixes
-5. Restart with paper trading first
-6. Move to canary profile
-7. Monitor closely for 24 hours
+1. Verify positions directly with the broker.
+2. Save current status, logs, and order database snapshots.
+3. Record root cause and affected product lane.
+4. Restart only from `observe` or `canary --dry-run`.
 
 ## Golden Rules
 
-1. Never disable safety features in production
-2. Always test changes in paper mode first
-3. Start small and scale gradually
-4. Monitor closely for first 24 hours after any change
-5. Document all incidents and changes
-6. When in doubt, reduce risk or stop trading
+1. Existing code paths are not approval to trade.
+2. Product coverage is constrained by verified venue/API/account capability.
+3. Live order submission starts with human approval.
+4. A run without audit evidence does not count as readiness evidence.
+5. Unknown state means stop, observe, and reconcile before continuing.

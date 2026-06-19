@@ -53,6 +53,16 @@ def load_config_from_yaml(path: str | Path) -> BotConfig:
         return BotConfig.from_dict(data)
 
 
+def load_profile_config(profile: Profile | str) -> BotConfig:
+    """Build a BotConfig for a first-class runtime profile."""
+    profile_enum = _coerce_profile(profile)
+    loader = ProfileLoader()
+    schema = loader.load(profile_enum)
+    profile_kwargs = loader.to_bot_config_kwargs(schema, profile_enum)
+    logger.info("Loaded runtime profile %s from profile loader", profile_enum.value)
+    return BotConfig(**profile_kwargs)
+
+
 def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
     """Build configuration from env/profile/config/CLI using a shared precedence engine."""
 
@@ -123,9 +133,18 @@ def _extract_profile_from_config(config: BotConfig) -> str | None:
     return str(profile_value)
 
 
+def _coerce_profile(profile: Profile | str) -> Profile:
+    if isinstance(profile, Profile):
+        return profile
+    try:
+        return Profile(str(profile).lower())
+    except ValueError as exc:
+        raise ValueError(f"Unknown profile: {profile}") from exc
+
+
 def _hydrate_profile_from_loader(config: BotConfig, profile_name: str) -> BotConfig:
     try:
-        profile_enum = Profile(profile_name)
+        profile_enum = _coerce_profile(profile_name)
     except ValueError:
         logger.warning(
             "Unknown profile '%s'. Use a Profile enum value or pass --config for YAML.",
@@ -181,6 +200,8 @@ def _apply_profile_kwargs(config: BotConfig, profile_kwargs: dict[str, Any]) -> 
         config.status_enabled = profile_kwargs["status_enabled"]
     if "profile" in profile_kwargs:
         config.profile = profile_kwargs["profile"]
+    if "environment" in profile_kwargs:
+        config.environment = profile_kwargs["environment"]
 
 
 def instantiate_bot(config: BotConfig) -> TradingBot:

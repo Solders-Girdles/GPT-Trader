@@ -2,12 +2,13 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-05-06
 ---
 
-The spot-first GPT-Trader architecture layers risk controls across configuration,
-pre-trade validation, runtime guards, and the `LiveRiskManager`. This guide
-highlights the active components and how they work together.
+GPT-Trader layers risk controls across configuration, pre-trade validation,
+runtime guards, and the `LiveRiskManager`. Treat these controls as readiness
+gates for each product lane, not as blanket approval for live automation. This
+guide highlights the active components and how they work together.
 
 ## Configuration Sources
 

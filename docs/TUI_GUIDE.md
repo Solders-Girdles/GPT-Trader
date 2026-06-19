@@ -2,10 +2,10 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-05-05
 ---
 
-The **Terminal User Interface (TUI)** is the primary monitoring and control interface for GPT-Trader. Built with [Textual](https://textual.textualize.io/), it provides real-time visibility into the bot's state, account metrics, and trading activities directly from your terminal.
+The **Terminal User Interface (TUI)** is the primary monitoring surface for GPT-Trader. Built with [Textual](https://textual.textualize.io/), it provides real-time visibility into the bot's state, account metrics, and trading activities directly from your terminal. Operator controls (start, stop, panic) act on whatever profile was launched and are subject to the same readiness and approval gates as any other live entrypoint — see [Live Operations](production.md).
 
 ## Getting Started
 
@@ -14,7 +14,7 @@ Launch via the CLI entry point (preferred for env/logging setup):
 ```bash
 uv run gpt-trader tui                 # Mode selector
 uv run gpt-trader tui --mode demo     # Skip selection with a preset scenario
-uv run gpt-trader tui --mode live     # Uses config/profiles/prod.yaml
+uv run gpt-trader tui --mode live     # Legacy mode backed by the prod profile; requires live-operation approval
 ```
 
 Need the trading loop wired to a specific profile? The `run` command remains supported:
@@ -81,12 +81,17 @@ A scrolling log window showing the latest bot activities, errors, and signals.
 
 ## Navigation & Controls
 
+These shortcuts act on the bot launched in the current TUI session. Treat them as
+operator controls over an already-approved run, not a way to start unapproved
+live execution. The PANIC key takes a real action — verify state with the broker
+afterward.
+
 | Key | Action | Description |
 |-----|--------|-------------|
-| `s` | Start/Stop | Toggle the trading bot on or off. |
+| `s` | Start/Stop | Toggle the trading loop for the current profile. |
 | `c` | Config | Open the configuration viewer. |
 | `l` | Focus Logs | Expand/Focus the log widget for easier reading. |
-| `p` | **PANIC** | **Emergency Stop**: Flattens all positions and stops the bot. |
+| `p` | **PANIC** | **Emergency Stop**: Submits flatten orders and stops the bot. |
 | `q` | Quit | Exit the TUI (stops the bot if running). |
 
 ## Troubleshooting

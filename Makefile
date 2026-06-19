@@ -1,7 +1,7 @@
 .PHONY: dev-up dev-down lint fmt fmt-check lint-fix lint-fmt-fix typecheck docs-audit tui-css-check test-guardrails ci-required test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
-	readiness-window legacy-bundle agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
-	agent-naming agent-health agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
-	agent-regenerate agent-verify agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
+	readiness-window agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
+	agent-naming agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
+	agent-regenerate agent-verify agent-artifacts-validate agent-artifacts-package agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
 	canary-decision-trace-probe canary-runtime-info canary-stop canary-start \
 	canary-restart canary-status canary-watchdog canary-watchdog-once ops-controls-smoke \
 	test-triage test-triage-check test-unit test-property test-contract test-real-api test-integration test-integration-fast \
@@ -77,7 +77,7 @@ test-guardrails:
 
 ci-required:
 	$(MAKE) lint
-	uv run ruff check scripts/ops scripts/backtest_runner.py scripts/perps_dashboard.py scripts/monitoring/export_metrics.py scripts/monitoring/canary_reduce_only_test.py scripts/monitoring/manage_logs.py scripts/production_preflight.py scripts/readiness_window.py scripts/test_api_connectivity.py scripts/test_paper_broker.py
+	uv run ruff check scripts/ops scripts/analysis/backtest_runner.py scripts/monitoring scripts/production_preflight.py
 	@if grep -rn -E "(from|import)\\s+gpt_trader\\.orchestration" src tests scripts --include="*.py"; then \
 		echo "::error::gpt_trader.orchestration was removed in v3.0"; \
 		echo "Use canonical paths: app.*, features.live_trade.*, features.brokerages.*"; \
@@ -127,7 +127,7 @@ test-snapshots:
 	uv run pytest -q -n 0 tests/unit/gpt_trader/tui/test_snapshots_*.py
 
 backtest:
-	uv run python scripts/backtest_runner.py \
+	uv run python scripts/analysis/backtest_runner.py \
 		--profile $(BACKTEST_PROFILE) \
 		--symbol $(BACKTEST_SYMBOL) \
 		--granularity $(BACKTEST_GRANULARITY) \
@@ -136,7 +136,7 @@ backtest:
 		$(BACKTEST_EXTRA_ARGS)
 
 backtest-quick:
-	uv run python scripts/backtest_runner.py \
+	uv run python scripts/analysis/backtest_runner.py \
 		--profile $(BACKTEST_PROFILE) \
 		--symbol $(BACKTEST_SYMBOL) \
 		--granularity $(BACKTEST_GRANULARITY) \
@@ -146,7 +146,7 @@ backtest-quick:
 		$(BACKTEST_EXTRA_ARGS)
 
 backtest-walk-forward:
-	uv run python scripts/backtest_runner.py \
+	uv run python scripts/analysis/backtest_runner.py \
 		--profile $(BACKTEST_PROFILE) \
 		--symbol $(BACKTEST_SYMBOL) \
 		--granularity $(BACKTEST_GRANULARITY) \
@@ -158,7 +158,7 @@ backtest-walk-forward:
 		$(BACKTEST_EXTRA_ARGS)
 
 backtest-walk-forward-quick:
-	uv run python scripts/backtest_runner.py \
+	uv run python scripts/analysis/backtest_runner.py \
 		--profile $(BACKTEST_PROFILE) \
 		--symbol $(BACKTEST_SYMBOL) \
 		--granularity $(BACKTEST_GRANULARITY) \
@@ -182,12 +182,12 @@ smoke:
 
 preflight:
 	BROKER="$${BROKER:-coinbase}" COINBASE_SANDBOX="$${COINBASE_SANDBOX:-0}" COINBASE_API_MODE="$${COINBASE_API_MODE:-advanced}" \
-	RISK_MAX_LEVERAGE="$${RISK_MAX_LEVERAGE:-1}" RISK_DAILY_LOSS_LIMIT="$${RISK_DAILY_LOSS_LIMIT:-50}" RISK_MAX_POSITION_PCT_PER_SYMBOL="$${RISK_MAX_POSITION_PCT_PER_SYMBOL:-0.10}" \
+	RISK_MAX_LEVERAGE="$${RISK_MAX_LEVERAGE:-1}" RISK_MAX_POSITION_PCT_PER_SYMBOL="$${RISK_MAX_POSITION_PCT_PER_SYMBOL:-0.10}" \
 	uv run python scripts/production_preflight.py --profile canary --verbose
 
 preflight-readiness:
 	BROKER="$${BROKER:-coinbase}" COINBASE_SANDBOX="$${COINBASE_SANDBOX:-0}" COINBASE_API_MODE="$${COINBASE_API_MODE:-advanced}" \
-	RISK_MAX_LEVERAGE="$${RISK_MAX_LEVERAGE:-1}" RISK_DAILY_LOSS_LIMIT="$${RISK_DAILY_LOSS_LIMIT:-50}" RISK_MAX_POSITION_PCT_PER_SYMBOL="$${RISK_MAX_POSITION_PCT_PER_SYMBOL:-0.10}" \
+	RISK_MAX_LEVERAGE="$${RISK_MAX_LEVERAGE:-1}" RISK_MAX_POSITION_PCT_PER_SYMBOL="$${RISK_MAX_POSITION_PCT_PER_SYMBOL:-0.10}" \
 	GPT_TRADER_READINESS_REPORT="$(READINESS_REPORT_DIR)" uv run python scripts/production_preflight.py \
 		--profile $(PREFLIGHT_PROFILE) --verbose
 
@@ -239,7 +239,7 @@ ops-controls-smoke:
 	uv run python scripts/ops/controls_smoke.py
 
 readiness-window:
-	uv run python scripts/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)
+	uv run python scripts/ops/readiness_window.py --profile $(PREFLIGHT_PROFILE) --hours $(READINESS_WINDOW_HOURS)
 
 cov:
 	uv run pytest -m "not slow and not performance" -q \
@@ -265,9 +265,6 @@ clean-dry-run:
 scaffold-slice:
 	uv run python scripts/maintenance/feature_slice_scaffold.py --name $(name) $(flags)
 
-legacy-bundle:
-	@echo "Legacy bundling helper retired; use git history if you need the old recovery steps."
-
 agent-setup:
 	uv sync --all-extras
 
@@ -292,18 +289,15 @@ agent-risk:
 agent-naming:
 	uv run agent-naming
 
-agent-health:
-	$(MAKE) agent-health-full
-
 agent-health-fast:
 	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced COINBASE_ENABLE_INTX_PERPS=0 \
-	RISK_MAX_LEVERAGE=3 RISK_DAILY_LOSS_LIMIT=100 RISK_MAX_POSITION_PCT_PER_SYMBOL=0.10 \
+	RISK_MAX_LEVERAGE=3 RISK_MAX_POSITION_PCT_PER_SYMBOL=0.10 \
 	uv run agent-health --quality-checks $(AGENT_HEALTH_FAST_QUALITY_CHECKS) \
 	--format json --output var/agents/health/health_report.json
 
 agent-health-full:
 	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced COINBASE_ENABLE_INTX_PERPS=0 \
-	RISK_MAX_LEVERAGE=3 RISK_DAILY_LOSS_LIMIT=100 RISK_MAX_POSITION_PCT_PER_SYMBOL=0.10 \
+	RISK_MAX_LEVERAGE=3 RISK_MAX_POSITION_PCT_PER_SYMBOL=0.10 \
 	uv run agent-health --format json --output var/agents/health/health_report.json \
 	--text-output var/agents/health/health_report.txt --pytest-args -q tests/unit
 
@@ -325,6 +319,13 @@ agent-regenerate:
 
 agent-verify:
 	uv run agent-regenerate --verify
+
+agent-artifacts-validate:
+	uv run agent-artifacts validate
+
+agent-artifacts-package:
+	uv run agent-artifacts package
+	uv run agent-artifacts verify-package
 
 agent-docs-links:
 	uv run python scripts/maintenance/docs_link_audit.py

@@ -15,8 +15,8 @@ campaign. It is descriptive of the codebase as it exists today (not an aspiratio
 | Domain + shared foundations | `src/gpt_trader/core/`, `src/gpt_trader/errors/`, `src/gpt_trader/validation/`, `src/gpt_trader/config/`, `src/gpt_trader/utilities/`, `src/gpt_trader/logging/` | Types, math, error taxonomy, validation helpers, and shared utilities. |
 | Interfaces (protocols) | `src/gpt_trader/app/protocols.py`, `src/gpt_trader/features/**/protocols.py` | Contracts for brokers, risk managers, and runtime services. Keep these import-only and light. |
 | Shared configuration | `src/gpt_trader/app/config/` | `BotConfig` and profile loading. Imports strategy configs from `features/live_trade/strategies`. Used across layers as a shared input surface. |
-| Feature slices (business logic) | `src/gpt_trader/features/` (live_trade, intelligence, data, research, optimize, strategy_dev, strategy_tools) | Trading logic, strategies, guard stack, research/optimization workflows. |
-| Shared engines | `src/gpt_trader/backtesting/` | Canonical backtesting engine used by research and optimization slices. |
+| Feature slices (business logic) | `src/gpt_trader/features/` (live_trade, intelligence, data, optimize, strategy_dev, strategy_tools, trade_ideas) | Trading logic, strategies, guard stack, optimization workflows, trade-idea records. |
+| Shared engines | `src/gpt_trader/backtesting/` | Canonical backtesting engine used by optimization slices. |
 | Adapters + infrastructure | `src/gpt_trader/features/brokerages/`, `src/gpt_trader/persistence/`, `src/gpt_trader/monitoring/`, `src/gpt_trader/observability/`, `src/gpt_trader/security/` | External integrations, IO, stores, telemetry, secrets. `features/brokerages` is an adapter slice. |
 | App/runtime + entrypoints | `src/gpt_trader/app/`, `src/gpt_trader/cli/`, `src/gpt_trader/tui/`, `src/gpt_trader/preflight/`, `scripts/production_preflight.py` | Composition root, config loading, runtime lifecycle, and operator entrypoints. |
 
@@ -76,9 +76,8 @@ To extend the rule set:
 
 - New trading logic, strategy, execution guard, or risk rule? Add it under
   `src/gpt_trader/features/live_trade/` (or the appropriate feature slice).
-- New research, optimization, or backtesting workflow? Use `src/gpt_trader/features/research/`
-  or `src/gpt_trader/features/optimize/`. Core backtesting engine changes belong in
-  `src/gpt_trader/backtesting/`.
+- New optimization or backtesting workflow? Use `src/gpt_trader/features/optimize/`.
+  Core backtesting engine changes belong in `src/gpt_trader/backtesting/`.
 - New external integration (exchange, storage, telemetry, secrets)? Use
   `src/gpt_trader/features/brokerages/`, `src/gpt_trader/persistence/`,
   `src/gpt_trader/monitoring/`, `src/gpt_trader/observability/`, or

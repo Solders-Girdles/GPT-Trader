@@ -92,7 +92,15 @@ class TestProfileMapping:
 
     @pytest.mark.parametrize(
         "profile",
-        [Profile.DEV, Profile.DEMO, Profile.SPOT, Profile.CANARY, Profile.PROD, Profile.TEST],
+        [
+            Profile.DEV,
+            Profile.DEMO,
+            Profile.SPOT,
+            Profile.CANARY,
+            Profile.OBSERVE,
+            Profile.PROD,
+            Profile.TEST,
+        ],
     )
     def test_all_profiles_return_config(self, profile: Profile) -> None:
         factory = _create_mock_config_factory()

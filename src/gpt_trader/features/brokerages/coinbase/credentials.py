@@ -13,7 +13,6 @@ class ResolvedCoinbaseCredentials:
     Values are sourced from (in priority order):
     - COINBASE_CREDENTIALS_FILE (JSON key file)
     - COINBASE_PROD_CDP_* / COINBASE_CDP_* env vars
-    - COINBASE_API_KEY_NAME / COINBASE_PRIVATE_KEY legacy env vars
     """
 
     key_name: str
@@ -62,31 +61,11 @@ def resolve_coinbase_credentials() -> ResolvedCoinbaseCredentials | None:
     env_key_candidates = (
         ("COINBASE_PROD_CDP_API_KEY", os.getenv("COINBASE_PROD_CDP_API_KEY")),
         ("COINBASE_CDP_API_KEY", os.getenv("COINBASE_CDP_API_KEY")),
-        ("COINBASE_API_KEY_NAME", os.getenv("COINBASE_API_KEY_NAME")),
     )
     env_priv_candidates = (
         ("COINBASE_PROD_CDP_PRIVATE_KEY", os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY")),
         ("COINBASE_CDP_PRIVATE_KEY", os.getenv("COINBASE_CDP_PRIVATE_KEY")),
-        ("COINBASE_PRIVATE_KEY", os.getenv("COINBASE_PRIVATE_KEY")),
     )
-
-    # Conflict detection: only flag same-tier vars (CDP vs legacy).
-    # Cross-tier differences (PROD overriding CDP) are the normal deployment pattern.
-    cdp_key = os.getenv("COINBASE_CDP_API_KEY")
-    legacy_key = os.getenv("COINBASE_API_KEY_NAME")
-    cdp_priv = os.getenv("COINBASE_CDP_PRIVATE_KEY")
-    legacy_priv = os.getenv("COINBASE_PRIVATE_KEY")
-
-    key_conflict = bool(cdp_key and legacy_key and cdp_key != legacy_key)
-    private_conflict = bool(cdp_priv and legacy_priv and cdp_priv != legacy_priv)
-    if key_conflict:
-        warnings.append(
-            "COINBASE_CDP_API_KEY and COINBASE_API_KEY_NAME are set with different values"
-        )
-    if private_conflict:
-        warnings.append(
-            "COINBASE_CDP_PRIVATE_KEY and COINBASE_PRIVATE_KEY are set with different values"
-        )
 
     key_name_var = ""
     key_name = ""
@@ -123,8 +102,7 @@ def resolve_coinbase_credentials() -> ResolvedCoinbaseCredentials | None:
                 has_file_env_mismatch = any(
                     "refusing to resolve ambiguous credentials" in w for w in warnings
                 )
-                has_conflict = key_conflict or private_conflict or has_file_env_mismatch
-                if has_conflict and not allow_ambiguous:
+                if has_file_env_mismatch and not allow_ambiguous:
                     return None
                 return ResolvedCoinbaseCredentials(
                     key_name=file_key_name,
@@ -136,9 +114,6 @@ def resolve_coinbase_credentials() -> ResolvedCoinbaseCredentials | None:
             warnings.append(
                 "COINBASE_CREDENTIALS_FILE is set but missing required fields ('name', 'privateKey')"
             )
-
-    if (key_conflict or private_conflict) and not allow_ambiguous:
-        return None
 
     if not key_name or not private_key:
         return None

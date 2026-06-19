@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import gpt_trader.cli.services as cli_services_module
+from gpt_trader.config.types import Profile
 from gpt_trader.tui.services.mode_service import ModeService, create_bot_for_mode
 
 
@@ -125,13 +126,13 @@ class TestCreateBotForMode:
 
     def test_paper_mode_loads_paper_config(self, monkeypatch: pytest.MonkeyPatch) -> None:
         mock_config = MagicMock()
-        mock_load_config = MagicMock(return_value=mock_config)
+        mock_load_profile_config = MagicMock(return_value=mock_config)
         mock_bot = MagicMock()
         mock_instantiate = MagicMock(return_value=mock_bot)
-        monkeypatch.setattr(cli_services_module, "load_config_from_yaml", mock_load_config)
+        monkeypatch.setattr(cli_services_module, "load_profile_config", mock_load_profile_config)
         monkeypatch.setattr(cli_services_module, "instantiate_bot", mock_instantiate)
 
         result = create_bot_for_mode("paper")
 
-        mock_load_config.assert_called_once_with("config/profiles/paper.yaml")
+        mock_load_profile_config.assert_called_once_with(Profile.PAPER)
         assert result == mock_bot

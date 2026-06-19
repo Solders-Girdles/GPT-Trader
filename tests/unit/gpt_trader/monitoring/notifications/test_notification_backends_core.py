@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import tempfile
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from gpt_trader.monitoring.alert_types import Alert, AlertSeverity
+from gpt_trader.monitoring.notifications import backends as backends_module
 from gpt_trader.monitoring.notifications.backends import (
     ConsoleNotificationBackend,
     FileNotificationBackend,
@@ -105,6 +107,30 @@ class TestFileNotificationBackend:
             backend = FileNotificationBackend(file_path=file_path)
             result = await backend.test_connection()
             assert result is True
+        finally:
+            Path(file_path).unlink(missing_ok=True)
+
+    @pytest.mark.asyncio
+    async def test_test_connection_offloads_file_check_to_thread(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        calls: list[tuple[Any, tuple[Any, ...]]] = []
+
+        async def fake_to_thread(func, /, *args, **kwargs):
+            calls.append((func, args))
+            return func(*args, **kwargs)
+
+        monkeypatch.setattr(backends_module.asyncio, "to_thread", fake_to_thread)
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
+            file_path = f.name
+
+        try:
+            backend = FileNotificationBackend(file_path=file_path)
+            result = await backend.test_connection()
+
+            assert result is True
+            assert calls == [(backend._check_file_writable, ())]
         finally:
             Path(file_path).unlink(missing_ok=True)
 

@@ -1,0 +1,99 @@
+"""Approval policy: encodes the autonomy mode as enforceable checks.
+
+This module is the seam where autonomy is handed over. Moving up the ladder
+(human approval -> bounded autonomy) means changing policy data and rules
+here — never the service plumbing or the audit trail. In the current accepted
+mode (``human_approved_execution``), only a human actor can move an idea to
+``approved``, and approvals must clear the eligibility gate and the current
+risk budget.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from gpt_trader.errors import ValidationError
+from gpt_trader.features.trade_ideas.audit import ActorType
+from gpt_trader.features.trade_ideas.budget import RiskBudget
+from gpt_trader.features.trade_ideas.eligibility import evaluate_eligibility
+from gpt_trader.features.trade_ideas.models import AutonomyMode, TradeIdea
+
+
+class PolicyViolationError(ValidationError):
+    """Raised when an action violates the active approval policy."""
+
+    def __init__(self, message: str, violations: list[str] | None = None) -> None:
+        super().__init__(message)
+        self.violations = violations or []
+
+
+class ApprovalPolicy:
+    """Checks workflow actions against the active autonomy mode and budget."""
+
+    def __init__(self, autonomy_mode: AutonomyMode = AutonomyMode.HUMAN_APPROVED_EXECUTION) -> None:
+        self._autonomy_mode = autonomy_mode
+
+    @property
+    def autonomy_mode(self) -> AutonomyMode:
+        return self._autonomy_mode
+
+    def approval_violations(
+        self,
+        idea: TradeIdea,
+        actor_type: ActorType,
+        budget: RiskBudget,
+        open_approved_count: int,
+        now: datetime,
+    ) -> list[str]:
+        """Return every reason this approval must be refused; empty means allowed."""
+        violations: list[str] = []
+
+        if self._autonomy_mode is AutonomyMode.RESEARCH_ONLY:
+            violations.append("Autonomy mode 'research_only' does not permit approvals")
+        elif self._autonomy_mode is AutonomyMode.HUMAN_APPROVED_EXECUTION:
+            if actor_type is not ActorType.HUMAN:
+                violations.append(
+                    "Autonomy mode 'human_approved_execution' requires a human approver; "
+                    f"got actor_type '{actor_type.value}'"
+                )
+
+        violations.extend(evaluate_eligibility(idea))
+
+        percent = idea.max_loss.percent_of_account
+        if percent is None:
+            violations.append(
+                "max_loss.percent_of_account is required to verify the idea against the budget"
+            )
+        elif percent > budget.max_loss_per_idea_pct:
+            violations.append(
+                f"max_loss {percent}% exceeds budget cap of "
+                f"{budget.max_loss_per_idea_pct}% per idea"
+            )
+
+        if open_approved_count >= budget.max_concurrent_approved_tickets:
+            violations.append(
+                f"{open_approved_count} tickets already approved; budget allows "
+                f"{budget.max_concurrent_approved_tickets} concurrent approved tickets"
+            )
+
+        expires_at = idea.time_horizon.expires_at
+        if expires_at is not None and expires_at <= now:
+            violations.append(f"Idea expired at {expires_at.isoformat()}; approve nothing stale")
+
+        return violations
+
+    def budget_change_violations(self, actor_type: ActorType) -> list[str]:
+        """Budget renegotiation rules for the current autonomy mode.
+
+        Agents may *propose* budget changes at any stage; in the current modes
+        only a human can enact one. Bounded autonomy will relax this within a
+        meta-envelope.
+        """
+        if self._autonomy_mode is AutonomyMode.BOUNDED_AUTONOMY:
+            return []
+        if actor_type is not ActorType.HUMAN:
+            return [
+                f"Autonomy mode '{self._autonomy_mode.value}' requires a human to enact "
+                f"budget changes; got actor_type '{actor_type.value}'"
+            ]
+        return []

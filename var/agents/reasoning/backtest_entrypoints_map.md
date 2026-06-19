@@ -27,13 +27,6 @@ Generated: 1970-01-01T00:00:00+00:00
 | simulated_broker_engine | SimulatedBroker | `src/gpt_trader/backtesting/simulation/broker.py` |
 | backtest_guarded_executor | BacktestGuardedExecutor.submit_order | `src/gpt_trader/backtesting/engine/guarded_execution.py` |
 
-## Research Backtesting
-| ID | Label | Path |
-|----|-------|------|
-| backtest_simulator_run | BacktestSimulator.run | `src/gpt_trader/features/research/backtesting/simulator.py` |
-| historical_loader | HistoricalDataLoader.load_symbol | `src/gpt_trader/features/research/backtesting/data_loader.py` |
-| event_store_events | EventStore.events | `src/gpt_trader/persistence/event_store.py` |
-
 ## Intelligence Backtesting
 | ID | Label | Path |
 |----|-------|------|
@@ -60,8 +53,6 @@ Generated: 1970-01-01T00:00:00+00:00
 | ID | Label | Path |
 |----|-------|------|
 | engine_backtest_result | BacktestResult | `src/gpt_trader/backtesting/types.py` |
-| research_backtest_result | BacktestResult | `src/gpt_trader/features/research/backtesting/simulator.py` |
-| performance_metrics | PerformanceMetrics.from_result | `src/gpt_trader/features/research/backtesting/metrics.py` |
 | ensemble_backtest_result | EnsembleBacktestResult | `src/gpt_trader/features/intelligence/backtesting/backtest_adapter.py` |
 | ensemble_backtest_summary | EnsembleBacktestResult.summary | `src/gpt_trader/features/intelligence/backtesting/backtest_adapter.py` |
 | regime_history | RegimeHistory | `src/gpt_trader/features/intelligence/backtesting/batch_regime.py` |
@@ -92,11 +83,6 @@ Generated: 1970-01-01T00:00:00+00:00
 | golden_path_demo | decision_logger_log | log decisions |
 | golden_path_demo | golden_path_validate | validate decisions |
 | golden_path_demo | golden_path_report | generate report |
-| backtest_simulator_run | historical_loader | load history |
-| event_store_events | historical_loader | source events |
-| historical_loader | backtest_simulator_run | data points |
-| backtest_simulator_run | research_backtest_result | result |
-| research_backtest_result | performance_metrics | compute metrics |
 | ensemble_backtest_process | ensemble_backtest_results | record decisions |
 | ensemble_backtest_results | regime_history | build histories |
 | ensemble_backtest_results | ensemble_backtest_result | summary |

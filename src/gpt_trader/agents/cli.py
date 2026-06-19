@@ -177,6 +177,19 @@ def regenerate() -> int:
     return _run_script("regenerate_all.py")
 
 
+def artifacts() -> int:
+    """Validate and package generated agent artifacts.
+
+    Entry point: agent-artifacts
+
+    Examples:
+        uv run agent-artifacts validate
+        uv run agent-artifacts package --output-dir dist/agent-artifacts
+        uv run agent-artifacts verify-package
+    """
+    return _run_script("agent_artifacts.py")
+
+
 def dedupe() -> int:
     """Generate test deduplication candidates.
 

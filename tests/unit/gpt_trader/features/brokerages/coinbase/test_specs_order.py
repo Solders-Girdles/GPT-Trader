@@ -4,7 +4,16 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from gpt_trader.features.brokerages.coinbase.specs import SpecsService
+from gpt_trader.features.brokerages.coinbase.specs import (
+    PRICE_VALIDATED_ORDER_TYPES,
+    SpecsService,
+)
+
+
+def test_price_validated_order_types_are_constant_membership_set():
+    """Price validation order types use a reusable constant set."""
+
+    assert PRICE_VALIDATED_ORDER_TYPES == frozenset({"LIMIT", "STOP_LIMIT"})
 
 
 class TestSpecsServiceCalculateSafePositionSize:

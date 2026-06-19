@@ -1,4 +1,4 @@
-"""Tests for scripts/ci/check_legacy_test_triage.py."""
+"""Tests for the test-triage manifest checker."""
 
 from __future__ import annotations
 

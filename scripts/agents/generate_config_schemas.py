@@ -223,7 +223,7 @@ def generate_risk_config_schema() -> dict[str, Any]:
 
     descriptions = {
         "max_leverage": "Maximum allowed leverage multiplier",
-        "daily_loss_limit": "Maximum daily loss in quote currency",
+        "daily_loss_limit_pct": "Maximum daily loss as a fraction of equity",
         "max_exposure_pct": "Maximum portfolio exposure as decimal (0.8 = 80%)",
         "max_position_pct_per_symbol": "Maximum position size per symbol as decimal",
         "min_liquidation_buffer_pct": "Minimum buffer before liquidation as decimal",

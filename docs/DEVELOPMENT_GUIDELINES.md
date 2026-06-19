@@ -2,10 +2,10 @@
 
 ---
 status: current
-last-updated: 2026-01-31
+last-updated: 2026-05-06
 ---
 
-These guidelines cover contributions to the spot-first `gpt_trader` stack. Older
+These guidelines cover contributions to the readiness-gated `gpt_trader` stack. Older
 guides from the pre-DI era were removed from the tree; use git history if you
 need to review historical practices.
 
@@ -34,7 +34,9 @@ need to review historical practices.
   the slice (`tests/unit/gpt_trader/features/<slice>/`).
 - Use `--dry-run` for previews; the scaffold tool refuses overwrites by design.
 - Keep slice names snake_case, prefer explicit imports, and avoid cross-slice
-  dependencies (see `src/gpt_trader/scripts/README.md`).
+  dependencies.
+- Use the [script taxonomy](../scripts/README.md) when adding or moving repo
+  tooling under `scripts/`.
 
 ## Where to Change Things
 

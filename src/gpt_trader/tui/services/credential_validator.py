@@ -296,15 +296,11 @@ class CredentialValidator:
             private_key = resolved.private_key
         else:
             api_key = (
-                os.getenv("COINBASE_PROD_CDP_API_KEY")
-                or os.getenv("COINBASE_CDP_API_KEY")
-                or os.getenv("COINBASE_API_KEY_NAME")
-                or ""
+                os.getenv("COINBASE_PROD_CDP_API_KEY") or os.getenv("COINBASE_CDP_API_KEY") or ""
             )
             private_key = (
                 os.getenv("COINBASE_PROD_CDP_PRIVATE_KEY")
                 or os.getenv("COINBASE_CDP_PRIVATE_KEY")
-                or os.getenv("COINBASE_PRIVATE_KEY")
                 or ""
             )
 

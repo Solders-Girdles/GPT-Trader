@@ -46,24 +46,24 @@ def create_bot_for_mode(mode: str, demo_scenario: str = "mixed") -> Any:
         return DemoBot(data_generator=scenario)
     else:
         from gpt_trader.app.config import BotConfig
-        from gpt_trader.cli.services import instantiate_bot, load_config_from_yaml
+        from gpt_trader.cli.services import instantiate_bot, load_profile_config
         from gpt_trader.config.types import Profile
 
         if mode == "paper":
             try:
-                config = load_config_from_yaml("config/profiles/paper.yaml")
+                config = load_profile_config(Profile.PAPER)
             except Exception:
                 config = BotConfig.from_profile(profile=Profile.DEMO, mock_broker=False)
         elif mode == "read_only":
             try:
-                config = load_config_from_yaml("config/profiles/observe.yaml")
+                config = load_profile_config(Profile.OBSERVE)
                 config.read_only = True  # type: ignore[attr-defined]
             except Exception:
                 config = BotConfig.from_profile(profile=Profile.DEMO, mock_broker=False)
                 config.read_only = True  # type: ignore[attr-defined]
         elif mode == "live":
             try:
-                config = load_config_from_yaml("config/profiles/prod.yaml")
+                config = load_profile_config(Profile.PROD)
             except Exception:
                 config = BotConfig.from_profile(profile=Profile.PROD, mock_broker=False)
         else:

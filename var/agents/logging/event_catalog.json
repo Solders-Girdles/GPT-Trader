@@ -23,6 +23,7 @@
       "api_health_guard",
       "health_assessment",
       "health_check",
+      "health_check_planner",
       "health_check_runner",
       "health_request",
       "health_server_start",
@@ -68,6 +69,7 @@
       "record_decision_trace",
       "record_preview",
       "record_rejection",
+      "record_submission_attempt",
       "reduce_only",
       "remove_rule",
       "resolve_effective_price",
@@ -979,7 +981,9 @@
     },
     "health_check": {
       "common_fields": [
+        "details",
         "error",
+        "healthy",
         "latency_ms"
       ],
       "components": null,
@@ -987,6 +991,21 @@
         "WARNING"
       ],
       "occurrence_count": 4,
+      "source_files": [
+        "monitoring/health_checks.py"
+      ],
+      "statuses": null
+    },
+    "health_check_planner": {
+      "common_fields": [
+        "error",
+        "key"
+      ],
+      "components": null,
+      "levels": [
+        "WARNING"
+      ],
+      "occurrence_count": 1,
       "source_files": [
         "monitoring/health_checks.py"
       ],
@@ -1391,7 +1410,10 @@
         "action",
         "error_message",
         "failure_detail",
+        "position_state",
+        "quantity",
         "reason",
+        "side",
         "stage",
         "symbol"
       ],
@@ -1399,7 +1421,7 @@
       "levels": [
         "INFO"
       ],
-      "occurrence_count": 4,
+      "occurrence_count": 10,
       "source_files": [
         "features/live_trade/engines/strategy.py"
       ],
@@ -1466,6 +1488,7 @@
     "order_rejected": {
       "common_fields": [
         "client_order_id",
+        "payload",
         "price",
         "reason",
         "reason_detail",
@@ -1525,7 +1548,7 @@
         "ERROR",
         "INFO"
       ],
-      "occurrence_count": 12,
+      "occurrence_count": 13,
       "source_files": [
         "features/live_trade/engines/strategy.py",
         "features/live_trade/execution/order_event_recorder.py",
@@ -1668,8 +1691,10 @@
     },
     "profile_load": {
       "common_fields": [
-        "error",
+        "details",
+        "exception",
         "path",
+        "payload",
         "profile",
         "schema"
       ],
@@ -1678,7 +1703,7 @@
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 2,
+      "occurrence_count": 3,
       "source_files": [
         "app/config/profile_loader.py"
       ],
@@ -1760,7 +1785,7 @@
       "levels": [
         "ERROR"
       ],
-      "occurrence_count": 1,
+      "occurrence_count": 2,
       "source_files": [
         "features/live_trade/execution/order_event_recorder.py"
       ],
@@ -1771,6 +1796,23 @@
         "error_message",
         "error_type",
         "reason",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 2,
+      "source_files": [
+        "features/live_trade/execution/order_event_recorder.py"
+      ],
+      "statuses": null
+    },
+    "record_submission_attempt": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "submit_id",
         "symbol"
       ],
       "components": null,
@@ -1803,6 +1845,7 @@
     },
     "reduce_only": {
       "common_fields": [
+        "_msg",
         "reduce_only",
         "side",
         "stage",
@@ -1810,10 +1853,11 @@
       ],
       "components": null,
       "levels": [
+        "ERROR",
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 2,
+      "occurrence_count": 3,
       "source_files": [
         "features/live_trade/engines/strategy.py",
         "features/live_trade/execution/validation.py"
@@ -1874,9 +1918,9 @@
       ],
       "components": null,
       "levels": [
-        "INFO"
+        "ERROR"
       ],
-      "occurrence_count": 1,
+      "occurrence_count": 2,
       "source_files": [
         "features/live_trade/engines/telemetry_streaming.py"
       ],
@@ -1901,12 +1945,19 @@
       "statuses": null
     },
     "runtime_start": {
-      "common_fields": [],
+      "common_fields": [
+        "config_digest",
+        "expected",
+        "path",
+        "reason"
+      ],
       "components": null,
       "levels": [
-        "INFO"
+        "DEBUG",
+        "INFO",
+        "WARNING"
       ],
-      "occurrence_count": 1,
+      "occurrence_count": 6,
       "source_files": [
         "features/live_trade/engines/strategy.py"
       ],
@@ -2028,8 +2079,8 @@
     },
     "status_reporter": {
       "common_fields": [
-        "details",
-        "error"
+        "error",
+        "result"
       ],
       "components": null,
       "levels": [
@@ -2183,7 +2234,6 @@
     },
     "telemetry_stream": {
       "common_fields": [
-        "None",
         "__all__",
         "_loop_task_handle",
         "_stream_task",
@@ -2193,6 +2243,7 @@
         "coro",
         "ctx",
         "error",
+        "handler_state",
         "ion",
         "level",
         "loop",
@@ -2506,19 +2557,19 @@
     }
   },
   "field_frequency": {
-    "None": 4,
     "__all__": 4,
     "_stream_task": 4,
     "_tracer": 4,
-    "action": 4,
+    "action": 10,
     "broker": 8,
     "client_ip": 4,
-    "client_order_id": 11,
+    "client_order_id": 12,
     "consecutive_failures": 5,
+    "details": 5,
     "error": 42,
-    "error_message": 85,
+    "error_message": 92,
     "error_msg": 5,
-    "error_type": 79,
+    "error_type": 84,
     "event_type": 5,
     "granularity": 5,
     "guard_name": 10,
@@ -2527,23 +2578,23 @@
     "mode": 4,
     "order_id": 23,
     "outcome": 5,
-    "path": 8,
+    "path": 13,
     "portfolio_id": 4,
     "price": 4,
-    "quantity": 6,
-    "reason": 19,
+    "quantity": 7,
+    "reason": 23,
     "service": 9,
-    "side": 20,
-    "stage": 158,
-    "symbol": 68
+    "side": 25,
+    "stage": 167,
+    "symbol": 77
   },
   "level_distribution": {
     "CRITICAL": 1,
-    "DEBUG": 48,
-    "ERROR": 79,
-    "INFO": 121,
-    "WARNING": 72
+    "DEBUG": 51,
+    "ERROR": 86,
+    "INFO": 126,
+    "WARNING": 76
   },
-  "total_event_types": 133,
+  "total_event_types": 135,
   "version": "1.0"
 }

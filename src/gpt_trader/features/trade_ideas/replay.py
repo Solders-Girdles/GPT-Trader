@@ -182,6 +182,11 @@ class ReplayReport:
 LevelExtractor = Callable[[TradeIdea], ScoringLevels]
 
 _NUMBER_RE = re.compile(r"(?<![\w.])-?\d[\d,]*(?:\.\d+)?")
+_DIRECT_STOP_RE = re.compile(
+    rf"\b(?:close|price|stop|invalid(?:ation|ated)?|break|move|trade)\w*\s+"
+    rf"(?:below|under|beneath|above|over)\s+({_NUMBER_RE.pattern})",
+    re.IGNORECASE,
+)
 
 
 def extract_numeric_scoring_levels(idea: TradeIdea) -> ScoringLevels:
@@ -199,8 +204,19 @@ def extract_numeric_scoring_levels(idea: TradeIdea) -> ScoringLevels:
             field="entry_zone",
         )
 
-    stop = _extract_stop_level(idea.invalidation, idea.decision_id)
-    target = _extract_target_level(idea.target_exit, idea.decision_id)
+    entry_midpoint = (idea.entry_zone.lower + idea.entry_zone.upper) / Decimal("2")
+    stop = _extract_stop_level(
+        idea.invalidation,
+        idea.decision_id,
+        direction=idea.direction,
+        entry_midpoint=entry_midpoint,
+    )
+    target = _extract_target_level(
+        idea.target_exit,
+        idea.decision_id,
+        direction=idea.direction,
+        entry_midpoint=entry_midpoint,
+    )
     levels = ScoringLevels(
         entry_lower=idea.entry_zone.lower,
         entry_upper=idea.entry_zone.upper,
@@ -369,38 +385,100 @@ class TradeIdeaReplayRunner:
         )
 
 
-def _extract_stop_level(text: str, decision_id: str) -> Decimal:
-    parenthetical_numbers = _numbers_in_parentheses(text)
-    if parenthetical_numbers:
-        return parenthetical_numbers[-1]
-    numbers = _numbers(text)
-    if not numbers:
+def _extract_stop_level(
+    text: str,
+    decision_id: str,
+    *,
+    direction: TradeDirection,
+    entry_midpoint: Decimal,
+) -> Decimal:
+    candidates = _numbers(text)
+    if not candidates:
         raise ReplayScoringError(
             f"Trade idea '{decision_id}' invalidation has no numeric level",
             field="invalidation",
         )
-    return numbers[-1]
+    direct_stop = _first_number_after_stop_trigger(text)
+    if direct_stop is not None:
+        return direct_stop
+    return _nearest_directional_level(
+        candidates,
+        direction=direction,
+        entry_midpoint=entry_midpoint,
+        level_role="stop",
+    )
 
 
-def _extract_target_level(text: str, decision_id: str) -> Decimal:
-    numbers = _numbers(text)
-    if not numbers:
+def _extract_target_level(
+    text: str,
+    decision_id: str,
+    *,
+    direction: TradeDirection,
+    entry_midpoint: Decimal,
+) -> Decimal:
+    candidates = _numbers_without_reward_multiples(text)
+    if not candidates:
         raise ReplayScoringError(
             f"Trade idea '{decision_id}' target_exit has no numeric level",
             field="target_exit",
         )
-    return numbers[0]
+    return _nearest_directional_level(
+        candidates,
+        direction=direction,
+        entry_midpoint=entry_midpoint,
+        level_role="target",
+    )
+
+
+def _nearest_directional_level(
+    candidates: Sequence[Decimal],
+    *,
+    direction: TradeDirection,
+    entry_midpoint: Decimal,
+    level_role: str,
+) -> Decimal:
+    if direction is TradeDirection.LONG:
+        directional_candidates = tuple(
+            value
+            for value in candidates
+            if (value < entry_midpoint if level_role == "stop" else value > entry_midpoint)
+        )
+    elif direction is TradeDirection.SHORT:
+        directional_candidates = tuple(
+            value
+            for value in candidates
+            if (value > entry_midpoint if level_role == "stop" else value < entry_midpoint)
+        )
+    else:
+        directional_candidates = tuple(candidates)
+
+    if not directional_candidates:
+        return candidates[0] if level_role == "target" else candidates[-1]
+    return min(directional_candidates, key=lambda value: abs(value - entry_midpoint))
 
 
 def _numbers(text: str) -> tuple[Decimal, ...]:
     return tuple(Decimal(match.group().replace(",", "")) for match in _NUMBER_RE.finditer(text))
 
 
-def _numbers_in_parentheses(text: str) -> tuple[Decimal, ...]:
+def _first_number_after_stop_trigger(text: str) -> Decimal | None:
+    match = _DIRECT_STOP_RE.search(text)
+    if match is None:
+        return None
+    return Decimal(match.group(1).replace(",", ""))
+
+
+def _numbers_without_reward_multiples(text: str) -> tuple[Decimal, ...]:
     values: list[Decimal] = []
-    for match in re.finditer(r"\(([^)]*)\)", text):
-        values.extend(_numbers(match.group(1)))
+    for match in _NUMBER_RE.finditer(text):
+        if _is_reward_multiple(text, match.end()):
+            continue
+        values.append(Decimal(match.group().replace(",", "")))
     return tuple(values)
+
+
+def _is_reward_multiple(text: str, number_end: int) -> bool:
+    return re.match(r"\s*[Rr]\b", text[number_end:]) is not None
 
 
 def _validate_level_order(idea: TradeIdea, levels: ScoringLevels) -> None:

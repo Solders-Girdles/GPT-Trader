@@ -72,6 +72,54 @@ def test_extract_numeric_scoring_levels_prefers_parenthesized_baseline_stop() ->
     )
 
 
+def test_extract_numeric_scoring_levels_ignores_indicator_period_before_stop() -> None:
+    idea = scoreable_idea(
+        invalidation="Close below 95 if RSI (14) rolls over",
+        target_exit="Take profit near 113.00 (2R) or exit at expiry",
+    )
+
+    assert extract_numeric_scoring_levels(idea).stop == Decimal("95")
+
+
+def test_extract_numeric_scoring_levels_uses_direct_stop_when_indicator_is_closer() -> None:
+    idea = scoreable_idea(
+        entry_zone=EntryZone(lower=Decimal("15"), upper=Decimal("17")),
+        invalidation="Close below 10 if RSI (14) rolls over",
+        target_exit="Take profit near 25.00 (2R) or exit at expiry",
+    )
+
+    assert extract_numeric_scoring_levels(idea).stop == Decimal("10")
+
+
+def test_extract_numeric_scoring_levels_ignores_indicator_threshold_before_stop() -> None:
+    idea = scoreable_idea(
+        invalidation="Invalid if RSI below 30 or close below 95",
+        target_exit="Take profit near 113.00 (2R) or exit at expiry",
+    )
+
+    assert extract_numeric_scoring_levels(idea).stop == Decimal("95")
+
+
+def test_extract_numeric_scoring_levels_ignores_reward_multiple_before_short_target() -> None:
+    idea = scoreable_idea(
+        direction=TradeDirection.SHORT,
+        invalidation="Close above 106",
+        target_exit="2R target at 95 or exit at expiry",
+    )
+
+    assert extract_numeric_scoring_levels(idea).target == Decimal("95")
+
+
+def test_extract_numeric_scoring_levels_keeps_target_before_resistance_word() -> None:
+    idea = scoreable_idea(
+        direction=TradeDirection.SHORT,
+        invalidation="Close above 106",
+        target_exit="Take profit near 95 resistance or exit at expiry",
+    )
+
+    assert extract_numeric_scoring_levels(idea).target == Decimal("95")
+
+
 def test_score_trade_idea_records_target_hit() -> None:
     result = score_trade_idea(
         scoreable_idea(),

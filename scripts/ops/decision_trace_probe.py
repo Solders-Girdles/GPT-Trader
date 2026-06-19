@@ -5,6 +5,7 @@ import argparse
 import asyncio
 import json
 import logging
+import re
 import sqlite3
 import sys
 from datetime import datetime, timezone
@@ -27,6 +28,16 @@ EXIT_OK = 0
 EXIT_INVALID_INPUT = 2
 EXIT_PROBE_ERROR = 3
 EXIT_EVENT_STORE_ERROR = 4
+SENSITIVE_FIELD_RE = re.compile(
+    r"(?P<quote>['\"]?)"
+    r"\b(?P<label>api[_-]?key|api[_-]?secret|client[_-]?secret|private[_-]?key|"
+    r"access[_-]?token|refresh[_-]?token|auth[_-]?token|bearer[_-]?token|id[_-]?token|"
+    r"secret|token|password|passwd)"
+    r"(?P=quote)"
+    r"(?P<separator>\s*[=:]\s*|\s+)"
+    r"(?P<value>'[^']*'|\"[^\"]*\"|\S+)",
+    re.IGNORECASE,
+)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -131,10 +142,21 @@ async def _run_probe(
         clear_application_container()
 
 
+def _redact_sensitive_text(text: str) -> str:
+    def _replace(match: re.Match[str]) -> str:
+        label = match.group("label")
+        separator = match.group("separator")
+        if separator.strip() in {"=", ":"}:
+            return f"{label}=[REDACTED]"
+        return f"{label} [REDACTED]"
+
+    return SENSITIVE_FIELD_RE.sub(_replace, text)
+
+
 def _summarize_reason(reason: str | None) -> str | None:
     if not reason:
         return None
-    return " ".join(reason.split())
+    return _redact_sensitive_text(" ".join(reason.split()))
 
 
 def _build_json_payload(
@@ -164,10 +186,11 @@ def _print_json_payload(payload: dict[str, object]) -> None:
 
 
 def _emit_error(message: str, *, json_output: bool, exit_code: int) -> int:
+    sanitized_message = _redact_sensitive_text(" ".join(message.split()))
     if json_output:
-        _print_json_payload({"status": "error", "error": message})
+        _print_json_payload({"status": "error", "error": sanitized_message})
     else:
-        print(f"error={message}")
+        print(f"error={sanitized_message}")
     return exit_code
 
 
@@ -225,7 +248,7 @@ def main() -> int:
     print(f"status={status}")
     print(f"decision_id={decision_id or '-'}")
     if reason:
-        print(f"blocked_reason={reason}")
+        print(f"blocked_reason={_summarize_reason(reason)}")
     if latest_id is not None:
         print(f"latest_trace_id={latest_id}")
     print(f"latest_trace_ts={_format_timestamp(latest_ts)}")

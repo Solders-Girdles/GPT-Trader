@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6560,
-    "total_files": 772,
+    "total_tests": 6575,
+    "total_files": 773,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6395,
+    "unit": 6410,
     "asyncio": 372,
     "parametrize": 174,
     "endpoints": 83,
@@ -525,6 +525,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_replay.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
@@ -31837,6 +31838,120 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_replay.py": [
+      {
+        "name": "test_extract_numeric_scoring_levels_prefers_parenthesized_baseline_stop",
+        "line": 61,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_records_target_hit",
+        "line": 75,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_requires_midpoint_entry_fill",
+        "line": 92,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_reports_not_filled_when_only_entry_zone_edge_trades",
+        "line": 108,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_uses_conservative_stop_first_when_bar_hits_both",
+        "line": 123,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_records_short_target_hit",
+        "line": 135,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_uses_conservative_short_stop_first_when_bar_hits_both",
+        "line": 155,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_times_out_at_last_close_before_expiry",
+        "line": 171,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_counts_waiting_bars_before_delayed_entry",
+        "line": 188,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_reports_not_filled_when_entry_zone_never_trades",
+        "line": 206,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_reports_no_future_data",
+        "line": 222,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_runner_feeds_point_in_time_snapshots_and_reports_aggregates",
+        "line": 229,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_runner_scores_baseline_proposer_on_historical_candles",
+        "line": 270,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_runner_config_rejects_non_positive_min_history",
+        "line": 300,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service.py": [
       {
         "name": "test_propose_creates_proposed_view",
@@ -60045,7 +60160,7 @@
     "tests/unit/scripts/test_docs_maintenance.py": [
       {
         "name": "test_iter_links_skips_external_strips_anchors_and_decodes",
-        "line": 14,
+        "line": 13,
         "markers": [
           "parametrize",
           "unit"
@@ -60054,7 +60169,15 @@
       },
       {
         "name": "test_iter_repo_path_references_filters_invalid_patterns",
-        "line": 32,
+        "line": 31,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_docs_link_audit_skips_repo_path_checks_for_proposed_specs",
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -60062,7 +60185,7 @@
       },
       {
         "name": "test_suggest_sections_for_representative_paths",
-        "line": 56,
+        "line": 74,
         "markers": [
           "parametrize",
           "unit"

@@ -159,3 +159,49 @@ def test_once_exit_codes(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Non
 
     monkeypatch.setattr(canary_watchdog.liveness_check, "check_liveness", _red)
     assert canary_watchdog.main() == 1
+
+
+def test_load_state_handles_non_utf8(tmp_path: Path) -> None:
+    state_path = canary_watchdog._state_path(tmp_path, "canary")
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_bytes(b"\xff\xfe\xfa\xfb")
+
+    state = canary_watchdog._load_state(state_path)
+
+    assert state == canary_watchdog.WatchdogState()
+
+
+def test_load_state_rejects_non_finite_consecutive_reds(tmp_path: Path) -> None:
+    state_path = canary_watchdog._state_path(tmp_path, "canary")
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_text('{"consecutive_reds": 1e309}', encoding="utf-8")
+
+    state = canary_watchdog._load_state(state_path)
+
+    assert state == canary_watchdog.WatchdogState()
+
+
+def test_load_state_rejects_oversized_numeric_literal(tmp_path: Path) -> None:
+    state_path = canary_watchdog._state_path(tmp_path, "canary")
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_text(
+        '{"consecutive_reds": ' + ("9" * 5000) + "}",
+        encoding="utf-8",
+    )
+
+    state = canary_watchdog._load_state(state_path)
+
+    assert state == canary_watchdog.WatchdogState()
+
+
+def test_load_state_rejects_non_finite_last_restart_ts(tmp_path: Path) -> None:
+    state_path = canary_watchdog._state_path(tmp_path, "canary")
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_text(
+        '{"consecutive_reds": 1, "last_restart_ts": Infinity}',
+        encoding="utf-8",
+    )
+
+    state = canary_watchdog._load_state(state_path)
+
+    assert state == canary_watchdog.WatchdogState(consecutive_reds=1)

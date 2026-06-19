@@ -294,16 +294,6 @@ def test_update_risk_normalizes_guard_payloads() -> None:
     assert guards[0].triggered_count == 7
     assert guards[1].name == "manual_guard"
 
-    reporter.update_risk(
-        max_leverage=3.0,
-        daily_loss_limit=2.5,
-        current_daily_loss=1.1,
-        reduce_only=False,
-        reduce_reason="",
-        active_guards=["cooldown_guard"],
-    )
-    assert [guard.name for guard in reporter._status.risk.guards] == ["cooldown_guard"]
-
 
 class TestStatusReporterHealth:
     """Tests for StatusReporter health assessment."""

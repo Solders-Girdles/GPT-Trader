@@ -331,34 +331,18 @@ def _handle_dry_run(
 
 def _create_data_provider() -> HistoricalDataManager:
     """Create data provider using environment variables for credentials."""
-    import json
-    import os
+    from gpt_trader.features.brokerages.coinbase.credentials import (
+        resolve_coinbase_credentials,
+    )
 
-    # Reuse existing credential loading logic from container.py
-    api_key_name = None
-    private_key = None
-
-    creds_file = os.environ.get("COINBASE_CREDENTIALS_FILE")
-    if creds_file:
-        path = Path(creds_file)
-        if path.exists():
-            with open(path) as f:
-                data = json.load(f)
-                api_key_name = data.get("name")
-                private_key = data.get("privateKey")
-
-    if not api_key_name:
-        api_key_name = os.environ.get("COINBASE_API_KEY_NAME")
-    if not private_key:
-        private_key = os.environ.get("COINBASE_PRIVATE_KEY")
-
-    if not api_key_name or not private_key:
+    creds = resolve_coinbase_credentials()
+    if not creds:
         raise ValueError(
             "Coinbase credentials required for optimization. "
-            "Set COINBASE_CREDENTIALS_FILE or COINBASE_API_KEY_NAME + COINBASE_PRIVATE_KEY"
+            "Set COINBASE_CREDENTIALS_FILE or COINBASE_CDP_API_KEY + COINBASE_CDP_PRIVATE_KEY"
         )
 
-    auth = SimpleAuth(key_name=api_key_name, private_key=private_key)
+    auth = SimpleAuth(key_name=creds.key_name, private_key=creds.private_key)
     client = CoinbaseClient(auth=auth)
 
     return create_coinbase_data_provider(client=client, validate_quality=True)

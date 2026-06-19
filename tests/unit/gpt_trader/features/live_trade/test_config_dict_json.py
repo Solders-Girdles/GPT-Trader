@@ -10,12 +10,9 @@ from gpt_trader.features.live_trade.risk.config import RiskConfig
 
 def test_riskconfig_to_dict_serializes_decimals():
     config = RiskConfig(
-        daily_loss_limit=Decimal("123.45"),
         max_notional_per_symbol={"BTC-PERP": Decimal("10000")},
     )
     d = config.to_dict()
-    assert isinstance(d["daily_loss_limit"], str)
-    assert d["daily_loss_limit"] == "123.45"
     assert d["max_notional_per_symbol"]["BTC-PERP"] == "10000"
 
 
@@ -24,7 +21,6 @@ def test_riskconfig_from_json_type_normalization(tmp_path):
     payload = {
         "max_leverage": 7,
         "min_liquidation_buffer_pct": 0.2,
-        "daily_loss_limit": "300",
         "max_exposure_pct": 0.9,
         "max_position_pct_per_symbol": 0.3,
         "leverage_max_per_symbol": {"BTC-PERP": 6},
@@ -38,8 +34,6 @@ def test_riskconfig_from_json_type_normalization(tmp_path):
     config = RiskConfig.from_json(str(p))
     assert config.max_leverage == 7
     assert config.min_liquidation_buffer_pct == 0.2
-    assert isinstance(config.daily_loss_limit, Decimal)
-    assert config.daily_loss_limit == Decimal("300")
     assert config.max_exposure_pct == 0.9
     assert config.max_position_pct_per_symbol == 0.3
     assert config.leverage_max_per_symbol == {"BTC-PERP": 6}
@@ -52,7 +46,6 @@ def test_riskconfig_from_yaml_type_normalization(tmp_path):
     payload = {
         "max_leverage": 4,
         "min_liquidation_buffer_pct": 0.15,
-        "daily_loss_limit": 250,
         "max_exposure_pct": 0.7,
         "max_position_pct_per_symbol": 0.25,
         "leverage_max_per_symbol": {"BTC-PERP": 4},
@@ -66,8 +59,6 @@ def test_riskconfig_from_yaml_type_normalization(tmp_path):
     config = RiskConfig.from_yaml(str(p))
     assert config.max_leverage == 4
     assert config.min_liquidation_buffer_pct == 0.15
-    assert isinstance(config.daily_loss_limit, Decimal)
-    assert config.daily_loss_limit == Decimal("250")
     assert config.max_exposure_pct == 0.7
     assert config.max_position_pct_per_symbol == 0.25
     assert config.leverage_max_per_symbol == {"BTC-PERP": 4}

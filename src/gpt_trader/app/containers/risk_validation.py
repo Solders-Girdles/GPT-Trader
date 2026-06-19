@@ -51,8 +51,6 @@ class RiskValidationContainer:
         exposure caps, and other risk controls.
         """
         if self._risk_manager is None:
-            from decimal import Decimal
-
             from gpt_trader.features.live_trade.risk.config import RiskConfig
             from gpt_trader.features.live_trade.risk.manager import LiveRiskManager
 
@@ -68,9 +66,6 @@ class RiskValidationContainer:
 
             risk_config = RiskConfig(
                 max_leverage=bot_risk.max_leverage,
-                # daily_loss_limit is absolute dollar amount (legacy)
-                daily_loss_limit=Decimal("100"),
-                # daily_loss_limit_pct is percentage of equity (used by LiveRiskManager)
                 daily_loss_limit_pct=bot_risk.daily_loss_limit_pct,
                 max_position_pct_per_symbol=float(bot_risk.position_fraction),
                 # Map other relevant fields

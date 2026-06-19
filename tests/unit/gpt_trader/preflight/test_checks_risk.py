@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,7 +16,6 @@ from gpt_trader.preflight.core import PreflightCheck
 def _risk_config(**overrides: object) -> RiskConfig:
     defaults: dict[str, object] = {
         "max_leverage": 3,
-        "daily_loss_limit": Decimal("500"),
         "daily_loss_limit_pct": 0.05,
         "min_liquidation_buffer_pct": 0.15,
         "max_position_pct_per_symbol": 0.10,
@@ -70,9 +68,9 @@ class TestCheckRiskConfiguration:
     def test_warns_when_no_daily_loss_limit_configured(
         self, risk_config_stub: RiskConfigStub
     ) -> None:
-        """Should warn when neither pct nor absolute daily loss limit is configured."""
+        """Should warn when the daily loss limit pct is not configured."""
         checker = PreflightCheck(profile="prod")
-        risk_config_stub.set(daily_loss_limit_pct=0.0, daily_loss_limit=Decimal("0"))
+        risk_config_stub.set(daily_loss_limit_pct=0.0)
         result = check_risk_configuration(checker)
 
         assert result is True
@@ -123,7 +121,7 @@ class TestCheckRiskConfiguration:
     def test_warns_on_high_daily_loss_limit(self, risk_config_stub: RiskConfigStub) -> None:
         """Should warn when daily loss limit pct is high."""
         checker = PreflightCheck(profile="prod")
-        risk_config_stub.set(daily_loss_limit_pct=0.15, daily_loss_limit=Decimal("5000"))
+        risk_config_stub.set(daily_loss_limit_pct=0.15)
         result = check_risk_configuration(checker)
 
         assert result is True

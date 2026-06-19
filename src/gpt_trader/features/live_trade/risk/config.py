@@ -17,7 +17,6 @@ import yaml
 
 RISK_CONFIG_ENV_KEYS = [
     "RISK_MAX_LEVERAGE",
-    "RISK_DAILY_LOSS_LIMIT",
     "RISK_MAX_EXPOSURE_PCT",
     "RISK_MAX_POSITION_PCT_PER_SYMBOL",
     "RISK_UNFILLED_ORDER_ALERT_SECONDS",
@@ -55,7 +54,6 @@ class RiskConfig:
 
     # General risk parameters
     max_leverage: int = 5
-    daily_loss_limit: Decimal = Decimal("100")  # Absolute dollar limit (legacy)
     daily_loss_limit_pct: float = 0.05  # Percentage of equity (0.05 = 5%)
     max_exposure_pct: float = 0.8
     max_position_pct_per_symbol: float = 0.2
@@ -150,7 +148,6 @@ class RiskConfig:
 
         return cls(
             max_leverage=int(_get_env("MAX_LEVERAGE", "5")),
-            daily_loss_limit=Decimal(_get_env("DAILY_LOSS_LIMIT", "100")),
             daily_loss_limit_pct=float(_get_env("DAILY_LOSS_LIMIT_PCT", "0.05")),
             max_exposure_pct=float(_get_env("MAX_EXPOSURE_PCT", "0.8")),
             max_position_pct_per_symbol=float(_get_env("MAX_POSITION_PCT_PER_SYMBOL", "0.2")),
@@ -206,10 +203,6 @@ class RiskConfig:
 
     @classmethod
     def _from_mapping(cls, data: dict[str, Any]) -> "RiskConfig":
-        # Type conversion for Decimal fields
-        if "daily_loss_limit" in data:
-            data["daily_loss_limit"] = Decimal(str(data["daily_loss_limit"]))
-
         if isinstance(data.get("max_notional_per_symbol"), dict):
             data["max_notional_per_symbol"] = {
                 k: Decimal(str(v)) for k, v in data["max_notional_per_symbol"].items()

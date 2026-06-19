@@ -241,15 +241,22 @@ broker = ChaosBroker(DeterministicBroker(), api_outage_scenario())
 Tip: avoid real delays in tests by passing a no-op `sleep_func` to `ChaosBroker` (for example,
 `sleep_func=lambda _: None`). Prefer injected sleep over patching `time.sleep`.
 
-## Rollout Checklist
+## Readiness Evidence Checklist
 
-1. Run preflight in canary and prod:
+This checklist produces evidence for the gates in
+[Live Operations](production.md#live-gate-sequence) and the
+[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md). It does
+not by itself authorize a live profile run.
+
+1. Run preflight against the relevant profiles:
    - `uv run python scripts/production_preflight.py --profile canary`
    - `uv run python scripts/production_preflight.py --profile prod`
 2. Confirm reliability defaults in `.env` or exported overrides for RISK_* vars.
 3. Run chaos tests:
    - `pytest tests/unit/support/test_chaos.py`
    - `pytest tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py`
-4. Canary deploy with reduce-only for 24h; monitor guard and pause logs.
-5. Promote to prod; keep preflight reports and guard events archived.
+4. With recorded human approval, run a reduce-only canary session and archive guard
+   and pause logs as evidence.
+5. Any subsequent live profile run requires its own explicit approval; archive the
+   preflight report and guard events from that run.
 6. Only use `--warn-only` during incident response and document the reason.

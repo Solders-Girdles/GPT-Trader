@@ -4,7 +4,7 @@ import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 
-import scripts.readiness_window as readiness_window
+import scripts.ops.readiness_window as readiness_window
 
 
 def _create_events_db(db_path: Path) -> None:

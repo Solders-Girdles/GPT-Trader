@@ -426,6 +426,31 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
         ),
         monitoring=MonitoringConfig(log_level="DEBUG", update_interval=5),
     ),
+    Profile.OBSERVE: ProfileSchema(
+        profile_name="observe",
+        environment="development",
+        description="Read-only observation profile with live market data and no execution",
+        trading=TradingConfig(
+            symbols=["BTC-USD", "ETH-USD"],
+            mode="normal",
+            interval=15,
+        ),
+        risk=RiskConfig(
+            max_position_size=Decimal("0"),
+            position_fraction=Decimal("0"),
+            max_leverage=1,
+            enable_shorts=False,
+            daily_loss_limit_pct=0.0,
+        ),
+        execution=ExecutionConfig(
+            dry_run=True,
+            mock_broker=False,
+            mock_fills=False,
+            use_limit_orders=False,
+            market_order_fallback=True,
+        ),
+        monitoring=MonitoringConfig(log_level="INFO", update_interval=10),
+    ),
     Profile.PROD: ProfileSchema(
         profile_name="prod",
         environment="production",
@@ -490,6 +515,7 @@ RUNTIME_PROFILE_CHOICES = (
     Profile.PROD.value,
     Profile.CANARY.value,
     Profile.SPOT.value,
+    Profile.OBSERVE.value,
     Profile.PAPER.value,
 )
 DEFAULT_RUNTIME_PROFILE_NAME = Profile.DEV.value
@@ -634,6 +660,7 @@ class ProfileLoader:
 
         kwargs: dict[str, Any] = {
             "profile": profile,
+            "environment": schema.environment,
             "symbols": schema.trading.symbols,
             "interval": schema.trading.interval,
             # Nested risk config (BotRiskConfig instance)

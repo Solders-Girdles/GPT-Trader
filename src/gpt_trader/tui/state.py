@@ -553,12 +553,7 @@ class TuiState(Widget):
         """Update risk data from typed RiskStatus."""
         # Parse enhanced guards if available
         guards: list[RiskGuard] = []
-        raw_guards = getattr(risk, "guards", None)
-        if not raw_guards:
-            legacy_guards = getattr(risk, "active_guards", None)
-            if legacy_guards:
-                raw_guards = [{"name": name} for name in legacy_guards]
-        raw_guards = raw_guards or []
+        raw_guards = getattr(risk, "guards", None) or []
         for guard_data in raw_guards:
             if isinstance(guard_data, dict):
                 guards.append(

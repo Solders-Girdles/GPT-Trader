@@ -290,8 +290,11 @@ class FileNotificationBackend:
             return False
 
         try:
-            with open(self.file_path, "a"):
-                pass  # Just test if we can open for append
+            await asyncio.to_thread(self._check_file_writable)
             return True
         except Exception:
             return False
+
+    def _check_file_writable(self) -> None:
+        with open(self.file_path, "a"):
+            pass  # Just test if we can open for append

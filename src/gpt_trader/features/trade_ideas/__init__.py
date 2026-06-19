@@ -43,6 +43,17 @@ from gpt_trader.features.trade_ideas.models import (
 )
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.proposer import Proposer
+from gpt_trader.features.trade_ideas.replay import (
+    ReplayOutcome,
+    ReplayReport,
+    ReplayResult,
+    ReplayRunnerConfig,
+    ReplayScoringError,
+    ScoringLevels,
+    TradeIdeaReplayRunner,
+    extract_numeric_scoring_levels,
+    score_trade_idea,
+)
 from gpt_trader.features.trade_ideas.service import (
     TradeIdeaService,
     TradeIdeaView,
@@ -86,8 +97,14 @@ __all__ = [
     "PolicyViolationError",
     "ProductType",
     "Proposer",
+    "ReplayOutcome",
+    "ReplayReport",
+    "ReplayResult",
+    "ReplayRunnerConfig",
+    "ReplayScoringError",
     "RiskBudget",
     "RiskBudgetLog",
+    "ScoringLevels",
     "SizingRecommendation",
     "SnapshotIntegrityError",
     "SymbolSeries",
@@ -97,13 +114,16 @@ __all__ = [
     "TradeDirection",
     "TradeIdea",
     "TradeIdeaAuditLog",
+    "TradeIdeaReplayRunner",
     "TradeIdeaService",
     "TradeIdeaState",
     "TradeIdeaStore",
     "TradeIdeaView",
     "UnknownTradeIdeaError",
     "evaluate_eligibility",
+    "extract_numeric_scoring_levels",
     "is_eligible",
     "new_event_id",
+    "score_trade_idea",
     "validate_transition",
 ]

@@ -2407,7 +2407,7 @@
       ],
       "code_references": [
         {
-          "line": 54,
+          "line": 56,
           "path": "src/gpt_trader/features/brokerages/coinbase/specs.py",
           "reader": "os.environ.get"
         }

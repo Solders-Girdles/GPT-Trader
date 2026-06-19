@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 from enum import Enum
 from typing import Any
@@ -233,6 +233,7 @@ def score_trade_idea(
     as_of: datetime,
     future_candles: Sequence[Candle],
     level_extractor: LevelExtractor = extract_numeric_scoring_levels,
+    candle_duration: timedelta | None = None,
 ) -> ReplayResult:
     """Score one trade idea against candles available after ``as_of``."""
     if idea.time_horizon.expires_at is None:
@@ -252,7 +253,12 @@ def score_trade_idea(
             (
                 candle
                 for candle in future_candles
-                if as_of <= candle.ts < idea.time_horizon.expires_at
+                if as_of <= candle.ts
+                and _candle_ends_by_expiry(
+                    candle,
+                    expires_at=idea.time_horizon.expires_at,
+                    candle_duration=candle_duration,
+                )
             ),
             key=lambda candle: candle.ts,
         )
@@ -279,7 +285,12 @@ def score_trade_idea(
     entry_index = candles.index(entry_candle)
     post_entry_candles = candles[entry_index:]
     for bars_after_entry, candle in enumerate(post_entry_candles, start=1):
-        outcome_price = _bar_outcome_price(idea.direction, candle, levels)
+        outcome_price = _bar_outcome_price(
+            idea.direction,
+            candle,
+            levels,
+            allow_favorable_exit=candle is not entry_candle,
+        )
         if outcome_price is None:
             continue
         outcome, exit_price = outcome_price
@@ -372,6 +383,7 @@ class TradeIdeaReplayRunner:
                         as_of=as_of,
                         future_candles=future,
                         level_extractor=self._level_extractor,
+                        candle_duration=_granularity_duration(granularity),
                     )
                 )
 
@@ -508,10 +520,23 @@ def _first_entry_candle(
     return None
 
 
+def _candle_ends_by_expiry(
+    candle: Candle,
+    *,
+    expires_at: datetime,
+    candle_duration: timedelta | None,
+) -> bool:
+    if candle_duration is None:
+        return candle.ts < expires_at
+    return candle.ts + candle_duration <= expires_at
+
+
 def _bar_outcome_price(
     direction: TradeDirection,
     candle: Candle,
     levels: ScoringLevels,
+    *,
+    allow_favorable_exit: bool = True,
 ) -> tuple[ReplayOutcome, Decimal] | None:
     # A single OHLC bar cannot reveal intrabar ordering. Score stops before
     # targets when both are touched in the same bar so calibration stays
@@ -519,15 +544,28 @@ def _bar_outcome_price(
     if direction is TradeDirection.LONG:
         if candle.low <= levels.stop:
             return ReplayOutcome.STOP_HIT, levels.stop
-        if candle.high >= levels.target:
+        if allow_favorable_exit and candle.high >= levels.target:
             return ReplayOutcome.TARGET_HIT, levels.target
         return None
 
     if candle.high >= levels.stop:
         return ReplayOutcome.STOP_HIT, levels.stop
-    if candle.low <= levels.target:
+    if allow_favorable_exit and candle.low <= levels.target:
         return ReplayOutcome.TARGET_HIT, levels.target
     return None
+
+
+def _granularity_duration(granularity: str) -> timedelta | None:
+    return {
+        "ONE_MINUTE": timedelta(minutes=1),
+        "FIVE_MINUTE": timedelta(minutes=5),
+        "FIFTEEN_MINUTE": timedelta(minutes=15),
+        "THIRTY_MINUTE": timedelta(minutes=30),
+        "ONE_HOUR": timedelta(hours=1),
+        "TWO_HOUR": timedelta(hours=2),
+        "SIX_HOUR": timedelta(hours=6),
+        "ONE_DAY": timedelta(days=1),
+    }.get(granularity)
 
 
 def _result(

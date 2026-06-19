@@ -143,14 +143,15 @@ def test_score_trade_idea_requires_midpoint_entry_fill() -> None:
         as_of=AS_OF,
         future_candles=(
             candle(0, high="100.10", low="99.50", close="100"),
-            candle(1, high="114", low="101", close="113"),
+            candle(1, high="106", low="101", close="104"),
+            candle(2, high="114", low="102", close="113"),
         ),
     )
 
     assert result.outcome is ReplayOutcome.TARGET_HIT
     assert result.entry_time == AS_OF + timedelta(hours=1)
     assert result.entry_price == Decimal("101")
-    assert result.bars_evaluated == 2
+    assert result.bars_evaluated == 3
 
 
 def test_score_trade_idea_reports_not_filled_when_only_entry_zone_edge_trades() -> None:
@@ -178,6 +179,22 @@ def test_score_trade_idea_uses_conservative_stop_first_when_bar_hits_both() -> N
     assert result.outcome is ReplayOutcome.STOP_HIT
     assert result.exit_price == Decimal("95")
     assert result.return_r == Decimal("-1")
+
+
+def test_score_trade_idea_defers_target_hit_on_entry_candle() -> None:
+    result = score_trade_idea(
+        scoreable_idea(),
+        as_of=AS_OF,
+        future_candles=(
+            candle(0, open_="114", high="114", low="101", close="102"),
+            candle(1, high="106", low="101", close="104"),
+        ),
+    )
+
+    assert result.outcome is ReplayOutcome.TIMED_OUT
+    assert result.entry_time == AS_OF
+    assert result.exit_time == AS_OF + timedelta(hours=1)
+    assert result.exit_price == Decimal("104")
 
 
 def test_score_trade_idea_records_short_target_hit() -> None:
@@ -269,6 +286,23 @@ def test_score_trade_idea_reports_not_filled_when_entry_zone_never_trades() -> N
 
 def test_score_trade_idea_reports_no_future_data() -> None:
     result = score_trade_idea(scoreable_idea(), as_of=AS_OF, future_candles=())
+
+    assert result.outcome is ReplayOutcome.NO_FUTURE_DATA
+    assert result.bars_evaluated == 0
+
+
+def test_score_trade_idea_excludes_candles_that_extend_past_expiry() -> None:
+    result = score_trade_idea(
+        scoreable_idea(
+            time_horizon=TimeHorizon(
+                expected_hold="30 minutes",
+                expires_at=AS_OF + timedelta(minutes=30),
+            ),
+        ),
+        as_of=AS_OF,
+        future_candles=(candle(0, high="114", low="101", close="113"),),
+        candle_duration=timedelta(hours=1),
+    )
 
     assert result.outcome is ReplayOutcome.NO_FUTURE_DATA
     assert result.bars_evaluated == 0

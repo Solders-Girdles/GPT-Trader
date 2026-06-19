@@ -518,7 +518,7 @@ async def run_stress_test(config: StressTestConfig) -> StressTestResult:
     events_persisted = 0
     persistence_validated = True
     if event_store:
-        events_persisted = len(event_store.events)
+        events_persisted = len(event_store.list_events())
         # Verify we can read events back
         if events_persisted > 0:
             recent = event_store.get_recent(10)
@@ -536,7 +536,7 @@ async def run_stress_test(config: StressTestConfig) -> StressTestResult:
                 "total_trades": trade_stats.total_trades,
             },
         )
-        events_persisted = len(event_store.events)
+        events_persisted = len(event_store.list_events())
         event_store.close()
 
     # Validation checks

@@ -423,19 +423,19 @@ class BotLifecycleManager:
 
         if mode == "paper":
             # Paper trading: Real data, HybridPaperBroker
-            from gpt_trader.cli.services import load_config_from_yaml
+            from gpt_trader.cli.services import load_profile_config
 
             try:
-                return load_config_from_yaml("config/profiles/paper.yaml")
+                return load_profile_config(Profile.PAPER)
             except Exception:
                 return BotConfig.from_profile(profile=Profile.DEMO, mock_broker=False)
 
         elif mode == "read_only":
             # Observation mode: Real data, orders blocked
-            from gpt_trader.cli.services import load_config_from_yaml
+            from gpt_trader.cli.services import load_profile_config
 
             try:
-                config = load_config_from_yaml("config/profiles/observe.yaml")
+                config = load_profile_config(Profile.OBSERVE)
                 config.read_only = True
                 return config
             except Exception:
@@ -445,10 +445,10 @@ class BotLifecycleManager:
 
         elif mode == "live":
             # Live trading: Real broker, real execution
-            from gpt_trader.cli.services import load_config_from_yaml
+            from gpt_trader.cli.services import load_profile_config
 
             try:
-                return load_config_from_yaml("config/profiles/prod.yaml")
+                return load_profile_config(Profile.PROD)
             except Exception:
                 return BotConfig.from_profile(profile=Profile.PROD, mock_broker=False)
 

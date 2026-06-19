@@ -24,6 +24,7 @@ last-updated: 2026-01-23
 - Removed the legacy `config/tui_preferences.json` fallback; TUI preferences now read/write only the runtime path (or `GPT_TRADER_TUI_PREFERENCES_PATH`).
 - Dropped legacy status class aliases (`good`/`bad`/`risk-status-*`) and Log widget CSS; widgets now use canonical `status-*` classes.
 - TUI validation events now use `FieldValidationError` directly (the `ValidationError` alias was removed).
+- TUI risk state now accepts guard data only through `RiskStatus.guards`; the legacy `active_guards` fallback and `StatusReporter.update_risk(active_guards=...)` shim were removed.
 
 ### LiveExecutionEngine Removal
 - **BREAKING**: Removed `LiveExecutionEngine` and its container factory; use `TradingEngine.submit_order()` and guard-stack helpers instead.
@@ -33,6 +34,7 @@ last-updated: 2026-01-23
 - `RiskConfig.from_env` now funnels through a `RiskConfigModel` Pydantic schema, using `RuntimeSettings.snapshot_env` to keep defaults and aliases in lockstep with runtime settings.
 - Environment parsing raises `EnvVarError` with the offending var and logs the failure; JSON inputs emit precise `ValidationError`s when mappings or percentages are malformed.
 - Regression tests snapshot the env key list, cover legacy aliases, and assert percentage bounds; operator docs now describe the stricter validation guarantees.
+- **BREAKING**: Removed the absolute-dollar `RiskConfig.daily_loss_limit` / `RISK_DAILY_LOSS_LIMIT` knob; use `daily_loss_limit_pct` / `RISK_DAILY_LOSS_LIMIT_PCT`.
 
 ### Naming Alignment: `qty` → `quantity`
 - Core brokerage interfaces now expose `quantity` exclusively; legacy `qty` aliases have been removed across serializers and dataclasses.
@@ -64,6 +66,9 @@ last-updated: 2026-01-23
 
 ### Monitoring Alert Cleanup
 - Removed legacy `Alert.id` and `Alert.timestamp` aliases; use `alert_id` and `created_at`.
+
+### Persistence Cleanup
+- Removed `EventStore.events` and `EventStore.path`; use `list_events()` for event reads and `root` for the storage root. The paper stress test now counts persisted SQLite events through `list_events()`.
 
 ### Docs Cleanup
 - Removed legacy risk templates from the tree; use git history for reference.

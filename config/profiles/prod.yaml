@@ -1,9 +1,11 @@
-# Production Profile - Full Perpetuals Trading
-# Purpose: Production perpetuals trading with leverage and shorts
+# Legacy live profile - not a migration approval
+# Purpose: Existing production-style settings for live runs after readiness review.
+# Do not treat this profile as approval for unrestricted automation or AI-submitted
+# orders. New migration work must pass docs/PRE_MIGRATION_DECISION_FRAMEWORK.md.
 
 profile_name: "prod"
 environment: "production"
-description: "Full production profile for perpetuals trading"
+description: "Legacy live profile requiring explicit readiness and approval gates"
 
 trading:
   mode: "normal"

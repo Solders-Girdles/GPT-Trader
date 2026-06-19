@@ -5,7 +5,7 @@ from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
-from scripts import backtest_runner
+from scripts.analysis import backtest_runner
 
 from gpt_trader.app.config.bot_config import MeanReversionConfig
 from gpt_trader.features.live_trade.strategies.mean_reversion.strategy import MeanReversionStrategy

@@ -2,10 +2,12 @@
 
 ---
 status: current
-last-updated: 2026-02-06
+last-updated: 2026-05-06
 ---
 
-This playbook covers the spot-first GPT-Trader monitoring stack including metrics export, dashboards, alerting, and incident response.
+This playbook covers GPT-Trader monitoring for readiness-gated live operations:
+metrics export, dashboards, alerting, and incident response across validated
+product lanes.
 
 ## Quick Start
 

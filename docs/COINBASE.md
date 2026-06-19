@@ -5,7 +5,12 @@ status: current
 last-updated: 2026-01-23
 ---
 
-This repository supports **Coinbase spot trading by default**. Any Coinbase details that drift (endpoint catalogs, message schemas, rate limits) should be verified against the **official Coinbase documentation** and the **current implementation** in this repo.
+This repository implements Coinbase spot adapters by default. Adapter availability
+is implementation state, not execution approval — venue/API/account capability
+and the gates in [Live Operations](production.md) still apply before any live run.
+Any Coinbase details that drift (endpoint catalogs, message schemas, rate limits)
+should be verified against the **official Coinbase documentation** and the
+**current implementation** in this repo.
 
 ## Source of Truth
 
@@ -25,10 +30,14 @@ This repository supports **Coinbase spot trading by default**. Any Coinbase deta
 - Or: `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY`
 - Implementation: `src/gpt_trader/features/brokerages/coinbase/auth.py`
 
-## Derivatives Gating
+## Derivatives Capability Gates
 
-- **CFM futures (US)**: `TRADING_MODES=cfm` + `CFM_ENABLED=1`
-- **INTX perps**: requires INTX access + `COINBASE_ENABLE_INTX_PERPS=1`
+These flags expose adapter code paths; they are not approval to trade derivatives.
+A live derivatives run still requires venue/account verification and the gates in
+[Live Operations](production.md).
+
+- **CFM futures (US)**: `TRADING_MODES=cfm` + `CFM_ENABLED=1` (requires an approved US futures account)
+- **INTX perps**: `COINBASE_ENABLE_INTX_PERPS=1` (requires eligible-region INTX account access)
 
 ## Common Troubleshooting
 

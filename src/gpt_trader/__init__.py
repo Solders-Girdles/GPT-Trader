@@ -1,7 +1,7 @@
 """
-GPT-Trader - Coinbase Advanced Trade Trading Bot
+GPT-Trader - Coinbase-oriented trading system
 
-A production-ready Coinbase spot trading system with future-ready perpetuals support.
+Trading and operator tooling under active cleanup and migration planning.
 """
 
 from __future__ import annotations

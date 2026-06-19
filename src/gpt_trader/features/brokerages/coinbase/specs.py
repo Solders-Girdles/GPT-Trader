@@ -23,6 +23,8 @@ from gpt_trader.utilities.quantization import quantize_price_side_aware
 
 logger = get_logger(__name__, component="coinbase_specs")
 
+PRICE_VALIDATED_ORDER_TYPES = frozenset({"LIMIT", "STOP_LIMIT"})
+
 
 class ProductSpec:
     """Product specification with quantization rules."""
@@ -218,7 +220,7 @@ class SpecsService:
             return result
 
         # Validate price if provided (for limit/stop orders)
-        if price is not None and order_type.upper() in ["LIMIT", "STOP_LIMIT"]:
+        if price is not None and order_type.upper() in PRICE_VALIDATED_ORDER_TYPES:
             price_decimal = Decimal(str(price))
             quantized_price = self.quantize_price_side_aware(product_id, side, price)
 

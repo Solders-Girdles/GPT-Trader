@@ -3,7 +3,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from scripts.maintenance import docs_link_audit, docs_reachability_check
 
 
@@ -42,6 +41,25 @@ def test_iter_repo_path_references_filters_invalid_patterns() -> None:
         "scripts/maintenance/docs_link_audit.py",
         "config/environments/.env.template",
     ]
+
+
+def test_docs_link_audit_skips_repo_path_checks_for_proposed_specs() -> None:
+    root = Path("/repo")
+
+    assert (
+        docs_link_audit.should_check_repo_paths(
+            root / "docs" / "specs" / "future_interface.md",
+            root=root,
+        )
+        is False
+    )
+    assert (
+        docs_link_audit.should_check_repo_paths(
+            root / "docs" / "architecture" / "current_system.md",
+            root=root,
+        )
+        is True
+    )
 
 
 @pytest.mark.parametrize(

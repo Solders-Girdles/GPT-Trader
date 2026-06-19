@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6582,
-    "total_files": 773,
+    "total_tests": 6586,
+    "total_files": 775,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6417,
+    "unit": 6421,
     "asyncio": 372,
     "parametrize": 174,
     "endpoints": 83,
@@ -526,6 +526,8 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
@@ -31840,56 +31842,8 @@
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_replay.py": [
       {
-        "name": "test_extract_numeric_scoring_levels_prefers_parenthesized_baseline_stop",
-        "line": 61,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_extract_numeric_scoring_levels_ignores_indicator_period_before_stop",
-        "line": 75,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_extract_numeric_scoring_levels_uses_direct_stop_when_indicator_is_closer",
-        "line": 84,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_extract_numeric_scoring_levels_ignores_indicator_threshold_before_stop",
-        "line": 94,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_extract_numeric_scoring_levels_ignores_reward_multiple_before_short_target",
-        "line": 103,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_extract_numeric_scoring_levels_keeps_target_before_resistance_word",
-        "line": 113,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
         "name": "test_score_trade_idea_records_target_hit",
-        "line": 123,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -31897,7 +31851,7 @@
       },
       {
         "name": "test_score_trade_idea_requires_midpoint_entry_fill",
-        "line": 140,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -31905,7 +31859,7 @@
       },
       {
         "name": "test_score_trade_idea_reports_not_filled_when_only_entry_zone_edge_trades",
-        "line": 157,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -31913,7 +31867,7 @@
       },
       {
         "name": "test_score_trade_idea_uses_conservative_stop_first_when_bar_hits_both",
-        "line": 172,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -31921,7 +31875,7 @@
       },
       {
         "name": "test_score_trade_idea_defers_target_hit_on_entry_candle",
-        "line": 184,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -31929,7 +31883,7 @@
       },
       {
         "name": "test_score_trade_idea_records_short_target_hit",
-        "line": 200,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -31937,7 +31891,7 @@
       },
       {
         "name": "test_score_trade_idea_uses_conservative_short_stop_first_when_bar_hits_both",
-        "line": 220,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -31945,7 +31899,7 @@
       },
       {
         "name": "test_score_trade_idea_times_out_at_last_close_before_expiry",
-        "line": 236,
+        "line": 166,
         "markers": [
           "unit"
         ],
@@ -31953,7 +31907,7 @@
       },
       {
         "name": "test_score_trade_idea_counts_waiting_bars_before_delayed_entry",
-        "line": 253,
+        "line": 183,
         "markers": [
           "unit"
         ],
@@ -31961,7 +31915,7 @@
       },
       {
         "name": "test_score_trade_idea_reports_not_filled_when_entry_zone_never_trades",
-        "line": 271,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -31969,7 +31923,7 @@
       },
       {
         "name": "test_score_trade_idea_reports_no_future_data",
-        "line": 287,
+        "line": 217,
         "markers": [
           "unit"
         ],
@@ -31977,7 +31931,91 @@
       },
       {
         "name": "test_score_trade_idea_excludes_candles_that_extend_past_expiry",
-        "line": 294,
+        "line": 224,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py": [
+      {
+        "name": "test_extract_numeric_scoring_levels_prefers_parenthesized_baseline_stop",
+        "line": 53,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_ignores_indicator_period_before_stop",
+        "line": 67,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_uses_direct_stop_when_indicator_is_closer",
+        "line": 76,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_ignores_indicator_threshold_before_stop",
+        "line": 86,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_ignores_reward_multiple_before_short_target",
+        "line": 95,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_ignores_percentage_before_long_target",
+        "line": 105,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_keeps_target_before_resistance_word",
+        "line": 115,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_extract_numeric_scoring_levels_ignores_percentage_quantity_targets",
+        "line": 125,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py": [
+      {
+        "name": "test_score_trade_idea_normalizes_common_granularity_aliases_for_expiry",
+        "line": 57,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_runner_normalizes_daily_granularity_before_expiry_filter",
+        "line": 86,
         "markers": [
           "unit"
         ],
@@ -31985,7 +32023,7 @@
       },
       {
         "name": "test_replay_runner_feeds_point_in_time_snapshots_and_reports_aggregates",
-        "line": 311,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -31993,7 +32031,7 @@
       },
       {
         "name": "test_replay_runner_scores_baseline_proposer_on_historical_candles",
-        "line": 352,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -32001,7 +32039,7 @@
       },
       {
         "name": "test_replay_runner_config_rejects_non_positive_min_history",
-        "line": 382,
+        "line": 187,
         "markers": [
           "unit"
         ],

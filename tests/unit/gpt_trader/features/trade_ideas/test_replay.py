@@ -7,19 +7,11 @@ from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 from gpt_trader.core import Candle
 from gpt_trader.features.trade_ideas import (
-    BaselineProposer,
-    BaselineProposerConfig,
     EntryZone,
-    MarketSnapshot,
     ReplayOutcome,
-    ReplayRunnerConfig,
-    ReplayScoringError,
-    ScoringLevels,
     TimeHorizon,
     TradeDirection,
     TradeIdea,
-    TradeIdeaReplayRunner,
-    extract_numeric_scoring_levels,
     score_trade_idea,
 )
 
@@ -56,68 +48,6 @@ def scoreable_idea(**overrides: object) -> TradeIdea:
     }
     fields.update(overrides)
     return build_trade_idea(**fields)
-
-
-def test_extract_numeric_scoring_levels_prefers_parenthesized_baseline_stop() -> None:
-    idea = scoreable_idea(
-        invalidation="Close below the 50-bar average (97.50)",
-        target_exit="Take profit near 113.00 (2R) or exit at expiry",
-    )
-
-    assert extract_numeric_scoring_levels(idea) == ScoringLevels(
-        entry_lower=Decimal("100"),
-        entry_upper=Decimal("102"),
-        stop=Decimal("97.50"),
-        target=Decimal("113.00"),
-    )
-
-
-def test_extract_numeric_scoring_levels_ignores_indicator_period_before_stop() -> None:
-    idea = scoreable_idea(
-        invalidation="Close below 95 if RSI (14) rolls over",
-        target_exit="Take profit near 113.00 (2R) or exit at expiry",
-    )
-
-    assert extract_numeric_scoring_levels(idea).stop == Decimal("95")
-
-
-def test_extract_numeric_scoring_levels_uses_direct_stop_when_indicator_is_closer() -> None:
-    idea = scoreable_idea(
-        entry_zone=EntryZone(lower=Decimal("15"), upper=Decimal("17")),
-        invalidation="Close below 10 if RSI (14) rolls over",
-        target_exit="Take profit near 25.00 (2R) or exit at expiry",
-    )
-
-    assert extract_numeric_scoring_levels(idea).stop == Decimal("10")
-
-
-def test_extract_numeric_scoring_levels_ignores_indicator_threshold_before_stop() -> None:
-    idea = scoreable_idea(
-        invalidation="Invalid if RSI below 30 or close below 95",
-        target_exit="Take profit near 113.00 (2R) or exit at expiry",
-    )
-
-    assert extract_numeric_scoring_levels(idea).stop == Decimal("95")
-
-
-def test_extract_numeric_scoring_levels_ignores_reward_multiple_before_short_target() -> None:
-    idea = scoreable_idea(
-        direction=TradeDirection.SHORT,
-        invalidation="Close above 106",
-        target_exit="2R target at 95 or exit at expiry",
-    )
-
-    assert extract_numeric_scoring_levels(idea).target == Decimal("95")
-
-
-def test_extract_numeric_scoring_levels_keeps_target_before_resistance_word() -> None:
-    idea = scoreable_idea(
-        direction=TradeDirection.SHORT,
-        invalidation="Close above 106",
-        target_exit="Take profit near 95 resistance or exit at expiry",
-    )
-
-    assert extract_numeric_scoring_levels(idea).target == Decimal("95")
 
 
 def test_score_trade_idea_records_target_hit() -> None:
@@ -306,83 +236,3 @@ def test_score_trade_idea_excludes_candles_that_extend_past_expiry() -> None:
 
     assert result.outcome is ReplayOutcome.NO_FUTURE_DATA
     assert result.bars_evaluated == 0
-
-
-def test_replay_runner_feeds_point_in_time_snapshots_and_reports_aggregates() -> None:
-    class ScriptedProposer:
-        proposer_id = "scripted"
-
-        def propose(self, snapshot: MarketSnapshot) -> list[TradeIdea]:
-            series = snapshot.series_for("BTC-USD")
-            assert series is not None
-            assert all(item.ts < snapshot.as_of for item in series.candles)
-            if len(series.candles) != 2:
-                return []
-            return [
-                scoreable_idea(
-                    decision_id=f"trade-{snapshot.as_of:%Y%m%d%H}",
-                    time_horizon=TimeHorizon(
-                        expected_hold="1-4 hours",
-                        expires_at=snapshot.as_of + timedelta(hours=4),
-                    ),
-                )
-            ]
-
-    candles = (
-        candle(-2, close="99", high="100", low="98"),
-        candle(-1, close="101", high="102", low="100"),
-        candle(0, close="102", high="103", low="100"),
-        candle(1, close="113", high="114", low="101"),
-    )
-
-    report = TradeIdeaReplayRunner(
-        ScriptedProposer(),
-        config=ReplayRunnerConfig(min_history=2),
-    ).run_series(symbol="BTC-USD", granularity="ONE_HOUR", candles=candles)
-
-    assert report.snapshots_evaluated == 2
-    assert report.ideas_proposed == 1
-    assert report.target_hits == 1
-    assert report.stop_hits == 0
-    assert report.target_hit_rate == Decimal("1")
-    assert report.average_return_r == Decimal("2")
-    assert report.to_dict()["ideas"][0]["outcome"] == "target_hit"
-
-
-def test_replay_runner_scores_baseline_proposer_on_historical_candles() -> None:
-    candles = (
-        candle(-5, close="100", high="100", low="100"),
-        candle(-4, close="100", high="100", low="100"),
-        candle(-3, close="100", high="100", low="100"),
-        candle(-2, close="100", high="100", low="100"),
-        candle(-1, close="110", high="110", low="110"),
-        candle(0, open_="110", close="111", high="112", low="109"),
-        candle(1, open_="111", close="126", high="126", low="111"),
-    )
-
-    report = TradeIdeaReplayRunner(
-        BaselineProposer(
-            BaselineProposerConfig(
-                short_window=2,
-                long_window=4,
-                crossover_lookback=1,
-                expiry_hours=3,
-            )
-        ),
-        config=ReplayRunnerConfig(source="fixture:candles", min_history=5),
-    ).run_series(symbol="BTC-USD", granularity="ONE_HOUR", candles=candles)
-
-    assert report.ideas_proposed == 1
-    assert report.target_hits == 1
-    assert report.ideas[0].outcome is ReplayOutcome.TARGET_HIT
-    assert report.ideas[0].levels.stop == Decimal("102.50")
-    assert report.ideas[0].levels.target == Decimal("125.00")
-
-
-def test_replay_runner_config_rejects_non_positive_min_history() -> None:
-    try:
-        ReplayRunnerConfig(min_history=0)
-    except ReplayScoringError as exc:
-        assert exc.context["field"] == "min_history"
-    else:  # pragma: no cover - defensive assertion
-        raise AssertionError("ReplayRunnerConfig should reject min_history=0")

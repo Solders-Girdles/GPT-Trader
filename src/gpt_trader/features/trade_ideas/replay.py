@@ -483,7 +483,7 @@ def _first_number_after_stop_trigger(text: str) -> Decimal | None:
 def _numbers_without_reward_multiples(text: str) -> tuple[Decimal, ...]:
     values: list[Decimal] = []
     for match in _NUMBER_RE.finditer(text):
-        if _is_reward_multiple(text, match.end()):
+        if _is_reward_multiple(text, match.end()) or _is_percentage_quantity(text, match.end()):
             continue
         values.append(Decimal(match.group().replace(",", "")))
     return tuple(values)
@@ -491,6 +491,10 @@ def _numbers_without_reward_multiples(text: str) -> tuple[Decimal, ...]:
 
 def _is_reward_multiple(text: str, number_end: int) -> bool:
     return re.match(r"\s*[Rr]\b", text[number_end:]) is not None
+
+
+def _is_percentage_quantity(text: str, number_end: int) -> bool:
+    return re.match(r"\s*%", text[number_end:]) is not None
 
 
 def _validate_level_order(idea: TradeIdea, levels: ScoringLevels) -> None:
@@ -556,16 +560,40 @@ def _bar_outcome_price(
 
 
 def _granularity_duration(granularity: str) -> timedelta | None:
+    normalized = granularity.strip().upper().replace("-", "_")
     return {
+        "1M": timedelta(minutes=1),
+        "1MIN": timedelta(minutes=1),
+        "1MINUTE": timedelta(minutes=1),
         "ONE_MINUTE": timedelta(minutes=1),
+        "5M": timedelta(minutes=5),
+        "5MIN": timedelta(minutes=5),
+        "5MINUTE": timedelta(minutes=5),
         "FIVE_MINUTE": timedelta(minutes=5),
+        "15M": timedelta(minutes=15),
+        "15MIN": timedelta(minutes=15),
+        "15MINUTE": timedelta(minutes=15),
         "FIFTEEN_MINUTE": timedelta(minutes=15),
+        "30M": timedelta(minutes=30),
+        "30MIN": timedelta(minutes=30),
+        "30MINUTE": timedelta(minutes=30),
         "THIRTY_MINUTE": timedelta(minutes=30),
+        "1H": timedelta(hours=1),
+        "1HR": timedelta(hours=1),
+        "1HOUR": timedelta(hours=1),
         "ONE_HOUR": timedelta(hours=1),
+        "2H": timedelta(hours=2),
+        "2HR": timedelta(hours=2),
+        "2HOUR": timedelta(hours=2),
         "TWO_HOUR": timedelta(hours=2),
+        "6H": timedelta(hours=6),
+        "6HR": timedelta(hours=6),
+        "6HOUR": timedelta(hours=6),
         "SIX_HOUR": timedelta(hours=6),
+        "1D": timedelta(days=1),
+        "1DAY": timedelta(days=1),
         "ONE_DAY": timedelta(days=1),
-    }.get(granularity)
+    }.get(normalized)
 
 
 def _result(

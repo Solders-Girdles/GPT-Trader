@@ -186,14 +186,14 @@ _NON_PRICE_QUANTITY_SUFFIX_RE = re.compile(
     rf"\s*(?:[-/]\s*{_NUMBER_RE.pattern}\s*)?(?:"
     r"%|"
     r"[Rr]\b|"
-    r"-(?:bar|bars|candle|candles|day|days|hour|hours|minute|minutes|week|weeks|month|months)\b|"
-    r"(?:bar|bars|candle|candles|trading\s+day|trading\s+days|day|days|hour|hours|minute|minutes|week|weeks|month|months)\b"
+    r"-(?:bar|bars|candle|candles|day|days|hour|hours|minute|minutes|week|weeks|month|months|period|periods)\b|"
+    r"(?:bar|bars|candle|candles|trading\s+day|trading\s+days|day|days|hour|hours|minute|minutes|week|weeks|month|months|period|periods)\b"
     r")",
     re.IGNORECASE,
 )
 _DIRECT_STOP_RE = re.compile(
     rf"\b(?:close|price|stop|invalid(?:ation|ated)?|break|move|trade)\w*\s+"
-    rf"(?:below|under|beneath|above|over)\s+({_NUMBER_RE.pattern})",
+    rf"(?:below|under|beneath|above|over)\s+\$?\s*({_NUMBER_RE.pattern})",
     re.IGNORECASE,
 )
 

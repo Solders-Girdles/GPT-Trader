@@ -170,3 +170,33 @@ def test_extract_numeric_scoring_levels_ignores_indicator_pair_before_stop() -> 
     )
 
     assert extract_numeric_scoring_levels(idea).stop == Decimal("40")
+
+
+def test_extract_numeric_scoring_levels_ignores_period_lookback_before_stop() -> None:
+    idea = scoreable_idea(
+        entry_zone=EntryZone(lower=Decimal("59"), upper=Decimal("61")),
+        invalidation="Close below the 50-period average (40)",
+        target_exit="Take profit at 75 or exit at expiry",
+    )
+
+    assert extract_numeric_scoring_levels(idea).stop == Decimal("40")
+
+
+def test_extract_numeric_scoring_levels_accepts_currency_prefixed_stop() -> None:
+    idea = scoreable_idea(
+        entry_zone=EntryZone(lower=Decimal("15"), upper=Decimal("17")),
+        invalidation="Close below $10 if RSI (14) rolls over",
+        target_exit="Take profit near 25.00 (2R) or exit at expiry",
+    )
+
+    assert extract_numeric_scoring_levels(idea).stop == Decimal("10")
+
+
+def test_extract_numeric_scoring_levels_accepts_spaced_currency_prefixed_stop() -> None:
+    idea = scoreable_idea(
+        entry_zone=EntryZone(lower=Decimal("15"), upper=Decimal("17")),
+        invalidation="Close below $ 10 if RSI (14) rolls over",
+        target_exit="Take profit near 25.00 (2R) or exit at expiry",
+    )
+
+    assert extract_numeric_scoring_levels(idea).stop == Decimal("10")

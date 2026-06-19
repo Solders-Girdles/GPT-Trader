@@ -51,6 +51,19 @@ class TestTrackDailyPnl:
 
         assert result is False
 
+    def test_invalid_daily_loss_limit_triggers_reduce_only(self) -> None:
+        """Should fail closed when daily_loss_limit_pct is invalid."""
+        config = MockConfig(daily_loss_limit_pct="not-a-number")
+        manager = LiveRiskManager(config=config)
+        manager._start_of_day_equity = Decimal("10000")
+
+        result = manager.track_daily_pnl(Decimal("9000"), {})
+
+        assert result is True
+        assert manager._daily_pnl_triggered is True
+        assert manager._reduce_only_mode is True
+        assert manager._reduce_only_reason == "daily_loss_limit_invalid"
+
     def test_loss_within_limit(self) -> None:
         """Should return False when loss within limit."""
         config = MockConfig(daily_loss_limit_pct=Decimal("0.10"))

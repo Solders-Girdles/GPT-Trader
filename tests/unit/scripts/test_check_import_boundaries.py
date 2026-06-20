@@ -8,10 +8,10 @@ import scripts.ci.check_import_boundaries as check_import_boundaries
 def _configure_rule(monkeypatch: object, repo_root: Path) -> Path:
     src_root = repo_root / "src"
     rule = check_import_boundaries.ImportRule(
-        name="features_no_tui_imports",
-        description="Feature slices must not import the TUI layer.",
+        name="features_no_entrypoint_imports",
+        description="Feature slices must not import entrypoint layers or the DI container.",
         source_root=src_root / "gpt_trader" / "features",
-        forbidden_prefixes=("gpt_trader.tui",),
+        forbidden_prefixes=check_import_boundaries.ENTRYPOINT_IMPORT_PREFIXES,
     )
     monkeypatch.setattr(check_import_boundaries, "REPO_ROOT", repo_root)
     monkeypatch.setattr(check_import_boundaries, "SRC_ROOT", src_root)
@@ -76,3 +76,28 @@ def test_allowed_imports_pass(tmp_path, monkeypatch, capsys) -> None:
 
     assert result == 0
     assert "Import boundary guard passed." in captured.out
+
+
+def test_container_import_violation(tmp_path, monkeypatch, capsys) -> None:
+    features_root = _configure_rule(monkeypatch, tmp_path)
+    _write_file(
+        tmp_path,
+        "src/gpt_trader/features/alpha/container_violation.py",
+        "from gpt_trader.app.container import ApplicationContainer\n",
+    )
+
+    result = check_import_boundaries.scan([str(features_root)])
+    captured = capsys.readouterr()
+
+    assert result == 1
+    assert "imports gpt_trader.app.container.ApplicationContainer" in captured.out
+
+
+def test_default_rules_cover_lower_layer_entrypoint_guards() -> None:
+    rule_names = {rule.name for rule in check_import_boundaries.RULES}
+
+    assert "features_no_entrypoint_imports" in rule_names
+    assert "monitoring_no_entrypoint_imports" in rule_names
+    assert "observability_no_entrypoint_imports" in rule_names
+    assert "persistence_no_entrypoint_imports" in rule_names
+    assert "security_no_entrypoint_imports" in rule_names

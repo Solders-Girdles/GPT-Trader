@@ -428,7 +428,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 84,
+          "line": 85,
           "path": "src/gpt_trader/features/live_trade/execution/validation.py"
         }
       ],
@@ -441,7 +441,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 318,
+          "line": 333,
           "path": "src/gpt_trader/features/live_trade/execution/validation.py"
         }
       ],
@@ -454,11 +454,11 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 501,
+          "line": 516,
           "path": "src/gpt_trader/features/live_trade/execution/validation.py"
         },
         {
-          "line": 583,
+          "line": 598,
           "path": "src/gpt_trader/features/live_trade/execution/validation.py"
         }
       ],
@@ -471,7 +471,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 378,
+          "line": 393,
           "path": "src/gpt_trader/features/live_trade/execution/validation.py"
         }
       ],

@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6614,
+    "total_tests": 6616,
     "total_files": 776,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6449,
+    "unit": 6451,
     "asyncio": 373,
     "parametrize": 174,
     "endpoints": 83,
@@ -59713,6 +59713,22 @@
       {
         "name": "test_allowed_imports_pass",
         "line": 61,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_container_import_violation",
+        "line": 81,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_default_rules_cover_lower_layer_entrypoint_guards",
+        "line": 96,
         "markers": [
           "unit"
         ],

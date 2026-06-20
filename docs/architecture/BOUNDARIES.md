@@ -62,9 +62,14 @@ Examples in this repo:
 ## Import boundary guard
 
 We enforce a lightweight import scan in `scripts/ci/check_import_boundaries.py` to keep
-layering drift visible in CI. Current rules are intentionally small:
+layering drift visible in CI. Current rules are intentionally small but cover the main
+directional hazards:
 
-- Feature slices (`src/gpt_trader/features/`) must not import the TUI layer (`gpt_trader.tui`).
+- Feature slices (`src/gpt_trader/features/`) must not import entrypoint layers
+  (`gpt_trader.cli`, `gpt_trader.tui`, `gpt_trader.preflight`) or `gpt_trader.app.container`.
+- Infrastructure layers (`src/gpt_trader/monitoring/`, `src/gpt_trader/observability/`,
+  `src/gpt_trader/persistence/`, `src/gpt_trader/security/`) must not import those same
+  entrypoint/container layers.
 
 To extend the rule set:
 - Add a new `ImportRule` entry in `scripts/ci/check_import_boundaries.py` with a clear name.

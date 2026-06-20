@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6595,
-    "total_files": 775,
+    "total_tests": 6614,
+    "total_files": 776,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6430,
+    "unit": 6449,
     "asyncio": 373,
     "parametrize": 174,
     "endpoints": 83,
@@ -773,6 +773,9 @@
     ],
     "test_manage_logs.py": [
       "tests/unit/scripts/test_manage_logs.py"
+    ],
+    "test_project_review_issue_promoter.py": [
+      "tests/unit/scripts/test_project_review_issue_promoter.py"
     ],
     "test_readiness_window.py": [
       "tests/unit/scripts/test_readiness_window.py"
@@ -28081,8 +28084,17 @@
         "class": "TestTrackDailyPnl"
       },
       {
-        "name": "TestTrackDailyPnl::test_loss_within_limit",
+        "name": "TestTrackDailyPnl::test_invalid_daily_loss_limit_triggers_reduce_only",
         "line": 54,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should fail closed when daily_loss_limit_pct is invalid.",
+        "class": "TestTrackDailyPnl"
+      },
+      {
+        "name": "TestTrackDailyPnl::test_loss_within_limit",
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -28091,7 +28103,7 @@
       },
       {
         "name": "TestTrackDailyPnl::test_loss_at_limit_triggers",
-        "line": 65,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -28100,7 +28112,7 @@
       },
       {
         "name": "TestTrackDailyPnl::test_loss_exceeds_limit_triggers",
-        "line": 78,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -28109,7 +28121,7 @@
       },
       {
         "name": "TestTrackDailyPnl::test_profit_does_not_trigger",
-        "line": 91,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -28118,7 +28130,7 @@
       },
       {
         "name": "TestTrackDailyPnl::test_zero_start_equity_skips",
-        "line": 101,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -28127,7 +28139,7 @@
       },
       {
         "name": "TestResetDailyTracking::test_resets_all_daily_state",
-        "line": 115,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -28136,7 +28148,7 @@
       },
       {
         "name": "TestResetDailyTracking::test_reset_is_idempotent",
-        "line": 130,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -28145,7 +28157,7 @@
       },
       {
         "name": "TestAppendRiskMetrics::test_appends_metrics",
-        "line": 143,
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -28154,7 +28166,7 @@
       },
       {
         "name": "TestAppendRiskMetrics::test_captures_reduce_only_mode",
-        "line": 156,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -28163,7 +28175,7 @@
       },
       {
         "name": "TestAppendRiskMetrics::test_limits_to_100_metrics",
-        "line": 165,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -28172,7 +28184,7 @@
       },
       {
         "name": "TestAppendRiskMetrics::test_converts_nested_decimals_to_strings",
-        "line": 176,
+        "line": 189,
         "markers": [
           "unit"
         ],
@@ -28181,7 +28193,7 @@
       },
       {
         "name": "TestDailyWorkflow::test_daily_workflow",
-        "line": 200,
+        "line": 213,
         "markers": [
           "unit"
         ],
@@ -31890,7 +31902,7 @@
         "docstring": ""
       },
       {
-        "name": "test_score_trade_idea_records_short_target_hit",
+        "name": "test_score_trade_idea_defers_prefill_long_stop_on_entry_candle",
         "line": 130,
         "markers": [
           "unit"
@@ -31898,15 +31910,15 @@
         "docstring": ""
       },
       {
-        "name": "test_score_trade_idea_uses_conservative_short_stop_first_when_bar_hits_both",
-        "line": 150,
+        "name": "test_score_trade_idea_defers_prefill_short_stop_on_entry_candle",
+        "line": 146,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_score_trade_idea_times_out_at_last_close_before_expiry",
+        "name": "test_score_trade_idea_keeps_long_entry_candle_stop_when_not_pinned_to_open",
         "line": 166,
         "markers": [
           "unit"
@@ -31914,8 +31926,40 @@
         "docstring": ""
       },
       {
+        "name": "test_score_trade_idea_keeps_short_entry_candle_stop_when_not_pinned_to_open",
+        "line": 177,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_records_short_target_hit",
+        "line": 192,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_uses_conservative_short_stop_first_when_bar_hits_both",
+        "line": 212,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_score_trade_idea_times_out_at_last_close_before_expiry",
+        "line": 228,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_score_trade_idea_counts_waiting_bars_before_delayed_entry",
-        "line": 183,
+        "line": 245,
         "markers": [
           "unit"
         ],
@@ -31923,7 +31967,7 @@
       },
       {
         "name": "test_score_trade_idea_reports_not_filled_when_entry_zone_never_trades",
-        "line": 201,
+        "line": 263,
         "markers": [
           "unit"
         ],
@@ -31931,7 +31975,7 @@
       },
       {
         "name": "test_score_trade_idea_reports_no_future_data",
-        "line": 217,
+        "line": 279,
         "markers": [
           "unit"
         ],
@@ -31939,7 +31983,7 @@
       },
       {
         "name": "test_score_trade_idea_excludes_candles_that_extend_past_expiry",
-        "line": 224,
+        "line": 286,
         "markers": [
           "unit"
         ],
@@ -59475,6 +59519,38 @@
           "unit"
         ],
         "docstring": ""
+      },
+      {
+        "name": "test_load_state_handles_non_utf8",
+        "line": 164,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_state_rejects_non_finite_consecutive_reds",
+        "line": 174,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_state_rejects_oversized_numeric_literal",
+        "line": 184,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_load_state_rejects_non_finite_last_restart_ts",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/scripts/test_check_dedupe_manifest.py": [
@@ -60302,7 +60378,7 @@
     "tests/unit/scripts/test_decision_trace_probe.py": [
       {
         "name": "test_main_outputs_json_payload_with_summary",
-        "line": 11,
+        "line": 10,
         "markers": [
           "unit"
         ],
@@ -60310,7 +60386,15 @@
       },
       {
         "name": "test_main_outputs_text_by_default",
-        "line": 46,
+        "line": 45,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_redacts_sensitive_text_output_reason",
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -60318,7 +60402,47 @@
       },
       {
         "name": "test_invalid_profile_returns_actionable_error",
-        "line": 82,
+        "line": 108,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_json_payload_has_deterministic_allowlisted_shape",
+        "line": 127,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_json_payload_handles_missing_trace_metadata",
+        "line": 157,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_json_payload_redacts_sensitive_reason_fields",
+        "line": 178,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_json_payload_redacts_quoted_sensitive_reason_fields",
+        "line": 196,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_json_error_output_redacts_sensitive_message",
+        "line": 214,
         "markers": [
           "unit"
         ],
@@ -60615,6 +60739,40 @@
       {
         "name": "test_get_active_logs_reports_sizes",
         "line": 98,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_project_review_issue_promoter.py": [
+      {
+        "name": "test_example_packet_is_valid",
+        "line": 9,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_trading_execution_findings_require_human_decision",
+        "line": 13,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_dry_run_renders_issue_body",
+        "line": 25,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_invalid_candidate_type_is_reported",
+        "line": 38,
         "markers": [
           "unit"
         ],

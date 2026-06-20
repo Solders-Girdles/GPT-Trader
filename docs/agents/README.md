@@ -12,6 +12,7 @@ Use this folder for AI-focused navigation aids and generated inventories.
 - [Agent workflow (canonical)](../../AGENTS.md)
 - [Codebase map](CODEBASE_MAP.md)
 - [Reasoning artifacts](reasoning_artifacts.md)
+- [Recurring project review pipeline](project_review_pipeline.md)
 - [Glossary](glossary.md)
 - [Environment variables](../../var/agents/configuration/environment_variables.md)
 - [Metrics catalog](../../var/agents/observability/metrics_catalog.md)

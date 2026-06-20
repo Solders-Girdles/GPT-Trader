@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6616,
-    "total_files": 776,
+    "total_tests": 6618,
+    "total_files": 777,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6451,
+    "unit": 6453,
     "asyncio": 373,
     "parametrize": 174,
     "endpoints": 83,
@@ -776,6 +776,9 @@
     ],
     "test_project_review_issue_promoter.py": [
       "tests/unit/scripts/test_project_review_issue_promoter.py"
+    ],
+    "test_quality_gate.py": [
+      "tests/unit/scripts/test_quality_gate.py"
     ],
     "test_readiness_window.py": [
       "tests/unit/scripts/test_readiness_window.py"
@@ -60789,6 +60792,24 @@
       {
         "name": "test_invalid_candidate_type_is_reported",
         "line": 38,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_quality_gate.py": [
+      {
+        "name": "test_parse_import_boundary_output",
+        "line": 18,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_default_quality_gate_runs_boundary_check",
+        "line": 44,
         "markers": [
           "unit"
         ],

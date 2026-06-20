@@ -175,6 +175,27 @@ def parse_pytest_output(stdout: str, stderr: str) -> list[dict[str, Any]]:
     return findings
 
 
+def parse_import_boundary_output(stdout: str, stderr: str) -> list[dict[str, Any]]:
+    """Parse import boundary guard output into findings."""
+    findings = []
+    for line in (stdout + stderr).splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("ERROR "):
+            continue
+        payload = stripped.removeprefix("ERROR ")
+        path_and_line, _, message = payload.partition(": imports ")
+        path, _, line_number = path_and_line.rpartition(":")
+        findings.append(
+            {
+                "file": path,
+                "line": int(line_number) if line_number.isdigit() else 0,
+                "message": f"imports {message}" if message else stripped,
+                "severity": "error",
+            }
+        )
+    return findings
+
+
 def run_lint_check(paths: list[str] | None = None) -> CheckResult:
     """Run ruff linter."""
     cmd = ["uv", "run", "ruff", "check"]
@@ -339,6 +360,32 @@ def run_test_check(fast: bool = True, paths: list[str] | None = None) -> CheckRe
     )
 
 
+def run_import_boundary_check(paths: list[str] | None = None) -> CheckResult:
+    """Run the architecture import boundary guard."""
+    cmd = ["uv", "run", "python", "scripts/ci/check_import_boundaries.py"]
+    if paths:
+        cmd.extend(paths)
+
+    exit_code, stdout, stderr, duration = run_command(cmd)
+    findings = parse_import_boundary_output(stdout, stderr)
+
+    return CheckResult(
+        name="boundaries",
+        passed=exit_code == 0,
+        duration_seconds=duration,
+        exit_code=exit_code,
+        findings=findings,
+        summary=(
+            f"{len(findings)} import boundary violations found"
+            if findings
+            else "Import boundary guard passed"
+        ),
+        command=" ".join(cmd),
+        stdout=stdout[:2000],
+        stderr=stderr[:500],
+    )
+
+
 def run_security_check() -> CheckResult:
     """Run basic security checks (bandit if available)."""
     cmd = ["uv", "run", "bandit", "-r", "src/gpt_trader", "-f", "json", "-q"]
@@ -389,8 +436,8 @@ def run_quality_gate(
     paths: list[str] | None = None,
 ) -> dict[str, Any]:
     """Run all quality checks and return results."""
-    all_checks = ["lint", "format", "types", "tests", "security"]
-    checks_to_run = checks if checks else ["lint", "format", "types", "tests"]
+    all_checks = ["lint", "format", "types", "boundaries", "tests", "security"]
+    checks_to_run = checks if checks else ["lint", "format", "types", "boundaries", "tests"]
 
     results: list[CheckResult] = []
     start_time = time.time()
@@ -405,6 +452,8 @@ def run_quality_gate(
             results.append(run_format_check(paths))
         elif check == "types":
             results.append(run_type_check(paths))
+        elif check == "boundaries":
+            results.append(run_import_boundary_check(paths))
         elif check == "tests":
             results.append(run_test_check(fast=fast, paths=paths))
         elif check == "security":
@@ -464,7 +513,7 @@ def main() -> int:
     parser.add_argument(
         "--check",
         type=str,
-        help="Comma-separated list of checks: lint,format,types,tests,security",
+        help="Comma-separated list of checks: lint,format,types,boundaries,tests,security",
     )
     parser.add_argument(
         "--fast",

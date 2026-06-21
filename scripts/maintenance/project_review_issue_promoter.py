@@ -27,6 +27,7 @@ CATEGORIES = {
     "trading-readiness",
 }
 CANDIDATES = {"claw", "hermes", "codex-review", "human"}
+EVIDENCE_ANCHOR_FIELDS = ("command", "path", "url")
 
 CUSTOM_LABELS = {
     "agent-review": {
@@ -173,6 +174,14 @@ def validate_packet(packet: dict[str, Any]) -> list[str]:
                 errors.append(f"evidence[{index}].kind must be a non-empty string")
             if not isinstance(item.get("detail"), str) or not item["detail"].strip():
                 errors.append(f"evidence[{index}].detail must be a non-empty string")
+            if not any(
+                isinstance(item.get(field), str) and item[field].strip()
+                for field in EVIDENCE_ANCHOR_FIELDS
+            ):
+                errors.append(
+                    f"evidence[{index}] must include at least one anchor: "
+                    f"{', '.join(EVIDENCE_ANCHOR_FIELDS)}"
+                )
 
     scope = packet.get("scope")
     if not isinstance(scope, dict):
@@ -230,6 +239,10 @@ def validate_packet(packet: dict[str, Any]) -> list[str]:
             "scope.touches_trading_execution=true requires routing.needs_human_decision=true"
         )
 
+    blocked_by = routing.get("blocked_by", [])
+    if blocked_by is not None and not isinstance(blocked_by, list):
+        errors.append("routing.blocked_by must be a list when present")
+
     return errors
 
 
@@ -238,7 +251,7 @@ def marker_for(finding_id: str) -> str:
 
 
 def packet_labels(packet: dict[str, Any]) -> list[str]:
-    labels = {"agent-review", "agent-ready", "codex"}
+    labels = {"agent-review", "codex"}
     category_label = CATEGORY_LABELS.get(str(packet.get("category")))
     if category_label:
         labels.add(category_label)
@@ -247,6 +260,9 @@ def packet_labels(packet: dict[str, Any]) -> list[str]:
 
     routing = packet.get("routing", {})
     if isinstance(routing, dict):
+        blocked_by = routing.get("blocked_by", [])
+        if not routing.get("needs_human_decision") and not blocked_by:
+            labels.add("agent-ready")
         candidates = routing.get("candidate_for", [])
         if isinstance(candidates, list):
             if "claw" in candidates:
@@ -343,7 +359,16 @@ def render_issue_body(packet: dict[str, Any], labels: list[str], missing_labels:
     evidence_lines = []
     for item in packet["evidence"]:
         command = item.get("command")
-        prefix = f"- `{command}`: " if command else f"- {item['kind']}: "
+        path = item.get("path")
+        url = item.get("url")
+        if command:
+            prefix = f"- `{command}`: "
+        elif path:
+            prefix = f"- `{path}`: "
+        elif url:
+            prefix = f"- {url}: "
+        else:
+            prefix = f"- {item['kind']}: "
         evidence_lines.append(prefix + item["detail"])
 
     body = [

@@ -42,3 +42,23 @@ def test_invalid_candidate_type_is_reported() -> None:
     errors = promoter.validate_packet(packet)
 
     assert "routing.candidate_for must contain only strings" in errors
+
+
+def test_evidence_requires_command_path_or_url_anchor() -> None:
+    packet = promoter.example_packet()
+    del packet["evidence"][0]["command"]
+
+    errors = promoter.validate_packet(packet)
+
+    assert "evidence[1] must include at least one anchor: command, path, url" in errors
+
+
+def test_human_gated_packet_is_not_agent_ready() -> None:
+    packet = promoter.example_packet()
+    packet["routing"]["needs_human_decision"] = True
+    packet["routing"]["blocked_by"] = ["RJ venue decision"]
+
+    labels = promoter.packet_labels(packet)
+
+    assert "agent-ready" not in labels
+    assert "needs-human-decision" in labels

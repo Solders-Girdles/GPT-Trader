@@ -12,7 +12,7 @@ Describe the actionable finding and why it matters.
 
 ## Evidence
 
-- Command/file/PR evidence:
+- Command/file/PR evidence with at least one anchor (`command`, `path`, or `url`):
 
 ## Scope
 
@@ -26,8 +26,8 @@ Touches trading execution: `false`
 
 ## Acceptance Criteria
 
-- [ ] The bounded issue is fixed.
-- [ ] The suggested verification passes.
+- [ ] The bounded issue is fixed without widening beyond the affected paths above.
+- [ ] The suggested verification command passes.
 
 ## Suggested Verification
 

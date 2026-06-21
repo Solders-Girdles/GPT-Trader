@@ -424,7 +424,7 @@
       ],
       "code_references": [
         {
-          "line": 113,
+          "line": 114,
           "path": "src/gpt_trader/preflight/context.py",
           "reader": "os.getenv"
         }
@@ -440,7 +440,7 @@
       ],
       "code_references": [
         {
-          "line": 115,
+          "line": 116,
           "path": "src/gpt_trader/preflight/context.py",
           "reader": "os.getenv"
         }
@@ -520,7 +520,7 @@
           "reader": "parse_bool_env"
         },
         {
-          "line": 150,
+          "line": 153,
           "path": "src/gpt_trader/preflight/context.py",
           "reader": "os.getenv"
         }
@@ -3104,7 +3104,7 @@
           "reader": "os.getenv"
         },
         {
-          "line": 131,
+          "line": 132,
           "path": "src/gpt_trader/preflight/context.py",
           "reader": "os.getenv"
         }

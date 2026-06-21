@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from scripts.agents import health_report
+
+from gpt_trader.config.types import Profile
 
 
 def _write_file(path: Path, content: str) -> Path:
@@ -65,3 +68,85 @@ def json_dumps(payload: object) -> str:
     import json
 
     return json.dumps(payload)
+
+
+def test_run_preflight_dev_profile_skips_remote_checks_by_default(monkeypatch) -> None:
+    monkeypatch.delenv("COINBASE_PREFLIGHT_SKIP_REMOTE", raising=False)
+    monkeypatch.delenv("COINBASE_PREFLIGHT_FORCE_REMOTE", raising=False)
+
+    class FakePreflightCheck:
+        def __init__(self, *, verbose: bool, profile: str) -> None:
+            self.verbose = verbose
+            self.profile = profile
+            self.errors: list[str] = []
+            self.warnings: list[str] = []
+            self.successes: list[str] = []
+
+        def __getattr__(self, name: str):
+            if name == "check_api_connectivity":
+
+                def check_api_connectivity() -> bool:
+                    assert os.environ.get("COINBASE_PREFLIGHT_SKIP_REMOTE") == "1"
+                    self.successes.append(name)
+                    return True
+
+                return check_api_connectivity
+            if name.startswith("check_") or name == "simulate_dry_run":
+
+                def check() -> bool:
+                    self.successes.append(name)
+                    return True
+
+                return check
+            raise AttributeError(name)
+
+        def log_error(self, message: str) -> None:
+            self.errors.append(message)
+
+    monkeypatch.setattr(health_report, "PreflightCheck", FakePreflightCheck)
+
+    result = health_report._run_preflight(Profile.DEV, verbose=False, warn_only=False)
+
+    assert result.status == "passed"
+    assert os.environ.get("COINBASE_PREFLIGHT_SKIP_REMOTE") is None
+
+
+def test_run_preflight_prod_profile_keeps_remote_checks_strict(monkeypatch) -> None:
+    monkeypatch.delenv("COINBASE_PREFLIGHT_SKIP_REMOTE", raising=False)
+    monkeypatch.delenv("COINBASE_PREFLIGHT_FORCE_REMOTE", raising=False)
+
+    class FakePreflightCheck:
+        def __init__(self, *, verbose: bool, profile: str) -> None:
+            self.verbose = verbose
+            self.profile = profile
+            self.errors: list[str] = []
+            self.warnings: list[str] = []
+            self.successes: list[str] = []
+
+        def __getattr__(self, name: str):
+            if name == "check_api_connectivity":
+
+                def check_api_connectivity() -> bool:
+                    assert os.environ.get("COINBASE_PREFLIGHT_SKIP_REMOTE") is None
+                    self.successes.append(name)
+                    return True
+
+                return check_api_connectivity
+            if name.startswith("check_") or name == "simulate_dry_run":
+
+                def check() -> bool:
+                    self.successes.append(name)
+                    return True
+
+                return check
+            raise AttributeError(name)
+
+        def log_error(self, message: str) -> None:
+            self.errors.append(message)
+
+    monkeypatch.setattr(health_report, "PreflightCheck", FakePreflightCheck)
+
+    result = health_report._run_preflight(Profile.PROD, verbose=False, warn_only=False)
+
+    assert result.status == "passed"
+    assert os.environ.get("COINBASE_PREFLIGHT_SKIP_REMOTE") is None

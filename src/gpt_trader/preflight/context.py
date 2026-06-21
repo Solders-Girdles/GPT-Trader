@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, Mapping
+from typing import Any
 
 from gpt_trader.app.config.profile_loader import (
     get_env_defaults_for_profile,
@@ -141,6 +142,8 @@ class PreflightContext:
         return self._env_bool("COINBASE_ENABLE_INTX_PERPS", False)
 
     def intends_real_orders(self) -> bool:
+        if is_dev_profile(self.profile):
+            return False
         if self._env_bool("DRY_RUN", False):
             return False
         if self._env_bool("PAPER_MODE", False):

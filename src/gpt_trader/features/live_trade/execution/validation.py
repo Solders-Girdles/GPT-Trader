@@ -196,7 +196,7 @@ class OrderValidator:
         enable_order_preview: bool,
         record_preview_callback: Any,
         record_rejection_callback: Any,
-        failure_tracker: ValidationFailureTracker | None = None,
+        failure_tracker: ValidationFailureTracker,
         broker_calls: Any | None = None,
     ) -> None:
         """
@@ -208,17 +208,14 @@ class OrderValidator:
             enable_order_preview: Whether to preview orders before submission
             record_preview_callback: Function to record preview results
             record_rejection_callback: Function to record rejections
-            failure_tracker: Optional tracker for consecutive failures.
-                If not provided, uses the global tracker.
+            failure_tracker: Tracker for consecutive validation failures.
         """
         self.broker = broker
         self.risk_manager = risk_manager
         self.enable_order_preview = enable_order_preview
         self._record_preview = record_preview_callback
         self._record_rejection = record_rejection_callback
-        self._failure_tracker = (
-            failure_tracker if failure_tracker is not None else get_failure_tracker()
-        )
+        self._failure_tracker = failure_tracker
         self._broker_calls = (
             broker_calls
             if broker_calls is not None

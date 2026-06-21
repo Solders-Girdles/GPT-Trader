@@ -37,6 +37,20 @@ class TestOrderValidatorInit:
         assert validator._record_preview is record_preview
         assert validator._record_rejection is record_rejection
 
+    def test_init_requires_explicit_failure_tracker(
+        self,
+        mock_broker: MagicMock,
+        mock_risk_manager: MagicMock,
+    ) -> None:
+        with pytest.raises(TypeError, match="failure_tracker"):
+            OrderValidator(
+                broker=mock_broker,
+                risk_manager=mock_risk_manager,
+                enable_order_preview=True,
+                record_preview_callback=MagicMock(),
+                record_rejection_callback=MagicMock(),
+            )
+
 
 class TestRunPreTradeValidation:
     def test_delegates_to_risk_manager(

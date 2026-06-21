@@ -42,7 +42,7 @@ jobs:
       publication_branch: ${{ env.AGENT_ARTIFACTS_BRANCH }}
     steps:
       - name: Checkout source ref
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.SOURCE_REF }}
           fetch-depth: 0
@@ -188,7 +188,7 @@ jobs:
     needs: refresh
     steps:
       - name: Checkout workflow scripts
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.SOURCE_REF }}
 

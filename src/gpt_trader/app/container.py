@@ -215,6 +215,18 @@ def create_application_container(
 _current_container: ApplicationContainer | None = None
 
 
+def _sync_validation_failure_tracker_provider(container: ApplicationContainer | None) -> None:
+    from gpt_trader.features.live_trade.execution.validation import (
+        set_failure_tracker_provider,
+    )
+
+    if container is None:
+        set_failure_tracker_provider(None)
+        return
+
+    set_failure_tracker_provider(lambda: container.validation_failure_tracker)
+
+
 def set_application_container(container: ApplicationContainer | None) -> None:
     """Set the current application container for global access.
 
@@ -232,6 +244,7 @@ def set_application_container(container: ApplicationContainer | None) -> None:
     else:
         logger.debug("Application container cleared via set_application_container(None)")
     _current_container = container
+    _sync_validation_failure_tracker_provider(container)
 
 
 def get_application_container() -> ApplicationContainer | None:
@@ -256,5 +269,6 @@ def clear_application_container() -> None:
     global _current_container
     was_set = _current_container is not None
     _current_container = None
+    _sync_validation_failure_tracker_provider(None)
     if was_set:
         logger.debug("Application container cleared")

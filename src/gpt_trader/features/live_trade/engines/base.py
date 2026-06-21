@@ -11,8 +11,8 @@ from typing import TYPE_CHECKING, Any
 from gpt_trader.app.config import BotConfig
 
 if TYPE_CHECKING:
-    from gpt_trader.app.container import ApplicationContainer
     from gpt_trader.app.protocols import (
+        ApplicationContainerProtocol,
         EventStoreProtocol,
         RuntimeStateProtocol,
     )
@@ -43,7 +43,7 @@ class CoordinatorContext:
     """
 
     config: BotConfig
-    container: ApplicationContainer | None = None
+    container: ApplicationContainerProtocol | None = None
     broker: BrokerProtocol | None = None
     broker_calls: BoundedToThread | None = None
     symbols: tuple[str, ...] = ()

@@ -103,8 +103,41 @@ class RuntimeStateProtocol(Protocol):
         ...
 
 
+@runtime_checkable
+class ApplicationContainerProtocol(Protocol):
+    """Protocol for runtime services exposed by the composition root."""
+
+    @property
+    def broker(self) -> Any: ...
+
+    @property
+    def risk_manager(self) -> Any: ...
+
+    @property
+    def runtime_paths(self) -> Any: ...
+
+    @property
+    def startup_config_fingerprint(self) -> Any: ...
+
+    @property
+    def event_store(self) -> Any: ...
+
+    @property
+    def orders_store(self) -> Any: ...
+
+    @property
+    def notification_service(self) -> Any: ...
+
+    @property
+    def health_state(self) -> Any: ...
+
+    @property
+    def validation_failure_tracker(self) -> Any: ...
+
+
 __all__ = [
     "AccountManagerProtocol",
+    "ApplicationContainerProtocol",
     "EventStoreProtocol",
     "RuntimeStateProtocol",
 ]

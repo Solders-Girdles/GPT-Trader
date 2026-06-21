@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Protocol, cast, runtime_checkable
@@ -115,6 +116,9 @@ class ValidationFailureTracker:
         return self.consecutive_failures[check_type]
 
 
+_failure_tracker_provider: Callable[[], ValidationFailureTracker | None] | None = None
+
+
 def get_failure_tracker() -> ValidationFailureTracker:
     """Get the failure tracker instance.
 
@@ -124,15 +128,26 @@ def get_failure_tracker() -> ValidationFailureTracker:
     Raises:
         RuntimeError: If no application container is set.
     """
-    from gpt_trader.app.container import get_application_container
-
-    container = get_application_container()
-    if container is None:
+    if _failure_tracker_provider is None:
         raise RuntimeError(
             "No application container set. Call set_application_container() "
             "before using get_failure_tracker()."
         )
-    return container.validation_failure_tracker
+    tracker = _failure_tracker_provider()
+    if tracker is None:
+        raise RuntimeError(
+            "No application container set. Call set_application_container() "
+            "before using get_failure_tracker()."
+        )
+    return tracker
+
+
+def set_failure_tracker_provider(
+    provider: Callable[[], ValidationFailureTracker | None] | None,
+) -> None:
+    """Set the provider used by compatibility helpers that need the global tracker."""
+    global _failure_tracker_provider
+    _failure_tracker_provider = provider
 
 
 def configure_failure_tracker(
@@ -196,7 +211,7 @@ class OrderValidator:
         enable_order_preview: bool,
         record_preview_callback: Any,
         record_rejection_callback: Any,
-        failure_tracker: ValidationFailureTracker | None = None,
+        failure_tracker: ValidationFailureTracker,
         broker_calls: Any | None = None,
     ) -> None:
         """
@@ -208,17 +223,14 @@ class OrderValidator:
             enable_order_preview: Whether to preview orders before submission
             record_preview_callback: Function to record preview results
             record_rejection_callback: Function to record rejections
-            failure_tracker: Optional tracker for consecutive failures.
-                If not provided, uses the global tracker.
+            failure_tracker: Tracker for consecutive validation failures.
         """
         self.broker = broker
         self.risk_manager = risk_manager
         self.enable_order_preview = enable_order_preview
         self._record_preview = record_preview_callback
         self._record_rejection = record_rejection_callback
-        self._failure_tracker = (
-            failure_tracker if failure_tracker is not None else get_failure_tracker()
-        )
+        self._failure_tracker = failure_tracker
         self._broker_calls = (
             broker_calls
             if broker_calls is not None

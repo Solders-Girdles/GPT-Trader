@@ -21,9 +21,9 @@ from gpt_trader.utilities.async_tools import BoundedToThread
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
-    from gpt_trader.app.container import ApplicationContainer
     from gpt_trader.app.protocols import (
         AccountManagerProtocol,
+        ApplicationContainerProtocol,
         EventStoreProtocol,
         RuntimeStateProtocol,
     )
@@ -39,7 +39,7 @@ class TradingBot:
     def __init__(
         self,
         config: BotConfig,
-        container: ApplicationContainer,
+        container: ApplicationContainerProtocol,
         event_store: EventStoreProtocol | None = None,
         orders_store: Any = None,
         notification_service: NotificationService | None = None,

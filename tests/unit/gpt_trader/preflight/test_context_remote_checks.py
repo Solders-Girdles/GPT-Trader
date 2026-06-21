@@ -143,6 +143,26 @@ class TestPreflightContextTradingIntent:
 
         assert ctx.requires_trade_permission() is True
 
+    def test_dev_profile_does_not_require_trade_permission_without_dry_run_env(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("DRY_RUN", raising=False)
+        monkeypatch.delenv("PAPER_MODE", raising=False)
+        monkeypatch.delenv("PERPS_PAPER", raising=False)
+        monkeypatch.delenv("COINBASE_SANDBOX", raising=False)
+        monkeypatch.setenv("TRADING_MODES", "spot")
+        monkeypatch.setenv("COINBASE_ENABLE_INTX_PERPS", "0")
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/abc/apiKeys/xyz")
+        monkeypatch.setenv(
+            "COINBASE_CDP_PRIVATE_KEY",
+            "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
+        )
+
+        ctx = PreflightContext(profile="dev")
+
+        assert ctx.intends_real_orders() is False
+        assert ctx.requires_trade_permission() is False
+
     def test_requires_trade_permission_for_intx_only_when_enabled(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

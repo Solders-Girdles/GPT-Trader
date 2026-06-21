@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6620,
+    "total_tests": 6624,
     "total_files": 777,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6455,
+    "unit": 6459,
     "asyncio": 373,
     "parametrize": 174,
     "endpoints": 83,
@@ -23269,8 +23269,17 @@
         "class": "TestOrderValidatorInit"
       },
       {
+        "name": "TestOrderValidatorInit::test_init_requires_explicit_failure_tracker",
+        "line": 40,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestOrderValidatorInit"
+      },
+      {
         "name": "TestRunPreTradeValidation::test_delegates_to_risk_manager",
-        "line": 42,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -23279,7 +23288,7 @@
       },
       {
         "name": "TestRunPreTradeValidation::test_validation_error_propagates",
-        "line": 68,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -23288,7 +23297,7 @@
       },
       {
         "name": "TestFinalizeReduceOnlyFlag::test_not_in_reduce_only_mode_returns_user_flag",
-        "line": 91,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -23297,7 +23306,7 @@
       },
       {
         "name": "TestFinalizeReduceOnlyFlag::test_reduce_only_mode_forces_true",
-        "line": 101,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -23306,7 +23315,7 @@
       },
       {
         "name": "TestEnsureMarkIsFresh::test_fresh_mark_passes",
-        "line": 113,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -23315,7 +23324,7 @@
       },
       {
         "name": "TestEnsureMarkIsFresh::test_stale_mark_raises",
-        "line": 121,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -23324,7 +23333,7 @@
       },
       {
         "name": "TestEnsureMarkIsFresh::test_exception_in_staleness_check_is_suppressed",
-        "line": 129,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -23333,7 +23342,7 @@
       },
       {
         "name": "TestEnsureMarkIsFresh::test_validation_error_propagates",
-        "line": 136,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -23342,7 +23351,7 @@
       },
       {
         "name": "TestEnforceSlippageGuard::test_no_snapshot_method_passes",
-        "line": 145,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -23351,7 +23360,7 @@
       },
       {
         "name": "TestEnforceSlippageGuard::test_no_snapshot_passes",
-        "line": 157,
+        "line": 171,
         "markers": [
           "unit"
         ],
@@ -23360,7 +23369,7 @@
       },
       {
         "name": "TestEnforceSlippageGuard::test_slippage_within_guard_passes",
-        "line": 167,
+        "line": 181,
         "markers": [
           "unit"
         ],
@@ -23369,7 +23378,7 @@
       },
       {
         "name": "TestEnforceSlippageGuard::test_slippage_exceeds_guard_raises",
-        "line": 187,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -23378,7 +23387,7 @@
       },
       {
         "name": "TestEnforceSlippageGuard::test_zero_depth_uses_fallback",
-        "line": 207,
+        "line": 221,
         "markers": [
           "unit"
         ],
@@ -23387,7 +23396,7 @@
       },
       {
         "name": "TestEnforceSlippageGuard::test_exception_in_snapshot_is_suppressed",
-        "line": 227,
+        "line": 241,
         "markers": [
           "unit"
         ],
@@ -40667,7 +40676,7 @@
         "class": "TestPreflightContextTradingIntent"
       },
       {
-        "name": "TestPreflightContextTradingIntent::test_requires_trade_permission_for_intx_only_when_enabled",
+        "name": "TestPreflightContextTradingIntent::test_dev_profile_does_not_require_trade_permission_without_dry_run_env",
         "line": 146,
         "markers": [
           "unit"
@@ -40676,8 +40685,17 @@
         "class": "TestPreflightContextTradingIntent"
       },
       {
+        "name": "TestPreflightContextTradingIntent::test_requires_trade_permission_for_intx_only_when_enabled",
+        "line": 166,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPreflightContextTradingIntent"
+      },
+      {
         "name": "TestPreflightContextTradingIntent::test_requires_trade_permission_false_when_intx_only_disabled",
-        "line": 160,
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -59398,7 +59416,23 @@
     "tests/unit/scripts/test_agent_health_ci_input.py": [
       {
         "name": "test_ci_input_parsing_and_merge",
-        "line": 13,
+        "line": 16,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_preflight_dev_profile_skips_remote_checks_by_default",
+        "line": 73,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_preflight_prod_profile_keeps_remote_checks_strict",
+        "line": 114,
         "markers": [
           "unit"
         ],

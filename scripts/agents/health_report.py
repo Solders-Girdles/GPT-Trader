@@ -34,7 +34,7 @@ sys.path.insert(0, str(SRC_ROOT))
 
 from gpt_trader import __version__ as APP_VERSION  # noqa: E402
 from gpt_trader.app.config.bot_config import BotConfig  # noqa: E402
-from gpt_trader.app.config.profile_loader import ProfileLoader  # noqa: E402
+from gpt_trader.app.config.profile_loader import ProfileLoader, is_dev_profile  # noqa: E402
 from gpt_trader.app.config.validation import validate_config  # noqa: E402
 from gpt_trader.config.types import Profile  # noqa: E402
 from gpt_trader.preflight.core import PreflightCheck  # noqa: E402
@@ -324,8 +324,11 @@ def _run_preflight(profile: Profile, verbose: bool, warn_only: bool) -> HealthCh
     stdout = StringIO()
     stderr = StringIO()
     previous_warn_only = os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY")
+    previous_skip_remote = os.environ.get("COINBASE_PREFLIGHT_SKIP_REMOTE")
     if warn_only:
         os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = "1"
+    if is_dev_profile(profile.value) and os.environ.get("COINBASE_PREFLIGHT_FORCE_REMOTE") != "1":
+        os.environ["COINBASE_PREFLIGHT_SKIP_REMOTE"] = "1"
 
     checker = PreflightCheck(verbose=verbose, profile=profile.value)
     check_functions = [
@@ -343,20 +346,24 @@ def _run_preflight(profile: Profile, verbose: bool, warn_only: bool) -> HealthCh
         checker.simulate_dry_run,
     ]
 
-    start = time.time()
-    with redirect_stdout(stdout), redirect_stderr(stderr):
-        for check in check_functions:
-            try:
-                check()
-            except Exception as exc:  # pragma: no cover - defensive
-                checker.log_error(f"Preflight check failed: {exc}")
-    duration = time.time() - start
-
-    if warn_only:
+    try:
+        start = time.time()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            for check in check_functions:
+                try:
+                    check()
+                except Exception as exc:  # pragma: no cover - defensive
+                    checker.log_error(f"Preflight check failed: {exc}")
+        duration = time.time() - start
+    finally:
         if previous_warn_only is None:
             os.environ.pop("GPT_TRADER_PREFLIGHT_WARN_ONLY", None)
         else:
             os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = previous_warn_only
+        if previous_skip_remote is None:
+            os.environ.pop("COINBASE_PREFLIGHT_SKIP_REMOTE", None)
+        else:
+            os.environ["COINBASE_PREFLIGHT_SKIP_REMOTE"] = previous_skip_remote
 
     errors = checker.errors
     warnings = checker.warnings

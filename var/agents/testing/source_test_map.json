@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 695,
+    "tests_scanned": 696,
     "source_modules": 368,
     "unresolved_modules": 3
   },
@@ -351,7 +351,8 @@
       "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_normalization.py",
-      "tests/unit/gpt_trader/tui/services/test_mode_service.py"
+      "tests/unit/gpt_trader/tui/services/test_mode_service.py",
+      "tests/unit/scripts/test_agent_health_ci_input.py"
     ],
     "gpt_trader.core": [
       "tests/contract/test_coinbase_api_contract.py",
@@ -4835,6 +4836,9 @@
     "tests/unit/gpt_trader/validation/test_type_validators.py": [
       "gpt_trader.errors",
       "gpt_trader.validation.type_validators"
+    ],
+    "tests/unit/scripts/test_agent_health_ci_input.py": [
+      "gpt_trader.config.types"
     ],
     "tests/unit/scripts/test_backtest_runner_pillar2_gates.py": [
       "gpt_trader.app.config.bot_config",

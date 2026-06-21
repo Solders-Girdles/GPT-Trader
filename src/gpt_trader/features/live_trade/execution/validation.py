@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any, Protocol, cast, runtime_checkable
@@ -115,6 +116,9 @@ class ValidationFailureTracker:
         return self.consecutive_failures[check_type]
 
 
+_failure_tracker_provider: Callable[[], ValidationFailureTracker | None] | None = None
+
+
 def get_failure_tracker() -> ValidationFailureTracker:
     """Get the failure tracker instance.
 
@@ -124,15 +128,26 @@ def get_failure_tracker() -> ValidationFailureTracker:
     Raises:
         RuntimeError: If no application container is set.
     """
-    from gpt_trader.app.container import get_application_container
-
-    container = get_application_container()
-    if container is None:
+    if _failure_tracker_provider is None:
         raise RuntimeError(
             "No application container set. Call set_application_container() "
             "before using get_failure_tracker()."
         )
-    return container.validation_failure_tracker
+    tracker = _failure_tracker_provider()
+    if tracker is None:
+        raise RuntimeError(
+            "No application container set. Call set_application_container() "
+            "before using get_failure_tracker()."
+        )
+    return tracker
+
+
+def set_failure_tracker_provider(
+    provider: Callable[[], ValidationFailureTracker | None] | None,
+) -> None:
+    """Set the provider used by compatibility helpers that need the global tracker."""
+    global _failure_tracker_provider
+    _failure_tracker_provider = provider
 
 
 def configure_failure_tracker(

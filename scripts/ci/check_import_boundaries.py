@@ -2,7 +2,8 @@
 """Import boundary guard for architecture slices.
 
 Current rules:
-- Feature slices (src/gpt_trader/features) must not import the TUI layer (gpt_trader.tui).
+- Feature slices and infrastructure layers must not import entrypoint layers
+  (CLI/TUI/preflight) or the DI container.
 
 Usage:
     python scripts/ci/check_import_boundaries.py [paths...]
@@ -17,12 +18,18 @@ from __future__ import annotations
 
 import argparse
 import ast
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable, Sequence
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SRC_ROOT = REPO_ROOT / "src"
+ENTRYPOINT_IMPORT_PREFIXES = (
+    "gpt_trader.app.container",
+    "gpt_trader.cli",
+    "gpt_trader.preflight",
+    "gpt_trader.tui",
+)
 
 
 @dataclass(frozen=True)
@@ -45,10 +52,42 @@ class ImportViolation:
 
 RULES: tuple[ImportRule, ...] = (
     ImportRule(
-        name="features_no_tui_imports",
-        description="Feature slices must not import the TUI layer.",
+        name="features_no_entrypoint_imports",
+        description=("Feature slices must not import entrypoint layers or the DI container."),
         source_root=REPO_ROOT / "src" / "gpt_trader" / "features",
-        forbidden_prefixes=("gpt_trader.tui",),
+        forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
+    ),
+    ImportRule(
+        name="monitoring_no_entrypoint_imports",
+        description=(
+            "Monitoring infrastructure must not import entrypoint layers or the DI container."
+        ),
+        source_root=REPO_ROOT / "src" / "gpt_trader" / "monitoring",
+        forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
+    ),
+    ImportRule(
+        name="observability_no_entrypoint_imports",
+        description=(
+            "Observability infrastructure must not import entrypoint layers or the DI container."
+        ),
+        source_root=REPO_ROOT / "src" / "gpt_trader" / "observability",
+        forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
+    ),
+    ImportRule(
+        name="persistence_no_entrypoint_imports",
+        description=(
+            "Persistence infrastructure must not import entrypoint layers or the DI container."
+        ),
+        source_root=REPO_ROOT / "src" / "gpt_trader" / "persistence",
+        forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
+    ),
+    ImportRule(
+        name="security_no_entrypoint_imports",
+        description=(
+            "Security infrastructure must not import entrypoint layers or the DI container."
+        ),
+        source_root=REPO_ROOT / "src" / "gpt_trader" / "security",
+        forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
     ),
 )
 

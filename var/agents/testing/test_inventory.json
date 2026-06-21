@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6624,
+    "total_tests": 6626,
     "total_files": 777,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6459,
+    "unit": 6461,
     "asyncio": 373,
     "parametrize": 174,
     "endpoints": 83,
@@ -60931,7 +60931,7 @@
     "tests/unit/scripts/test_regenerate_all_verify.py": [
       {
         "name": "test_verify_freshness_reports_all_up_to_date",
-        "line": 53,
+        "line": 59,
         "markers": [
           "parametrize",
           "unit"
@@ -60940,7 +60940,7 @@
       },
       {
         "name": "test_verify_freshness_reports_stale_and_limits_diff_scope",
-        "line": 74,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -60948,7 +60948,23 @@
       },
       {
         "name": "test_verify_freshness_bails_on_generator_failure",
-        "line": 106,
+        "line": 112,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_diff_directories_ignores_git_ignored_health_reports",
+        "line": 142,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_diff_directories_still_reports_tracked_stale_health_files",
+        "line": 188,
         "markers": [
           "unit"
         ],

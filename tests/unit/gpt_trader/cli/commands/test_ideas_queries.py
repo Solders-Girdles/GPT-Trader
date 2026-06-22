@@ -9,7 +9,7 @@ import pytest
 
 from gpt_trader import cli
 from gpt_trader.cli.response import CliErrorCode
-from gpt_trader.features.trade_ideas import TimeHorizon
+from gpt_trader.features.trade_ideas import TimeHorizon, TradeIdeaStore
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 
@@ -134,6 +134,27 @@ def test_show_rejects_absolute_decision_id_before_store_lookup(
     assert exit_code == 1
     assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
     assert response["errors"][0]["details"]["field"] == "decision_id"
+
+
+def test_list_and_show_reject_orphaned_record_without_audit_trail(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    idea = build_trade_idea(
+        decision_id="trade-20350612-orphaned",
+        time_horizon=_future_horizon(),
+    )
+    TradeIdeaStore(root / "records").save(idea)
+
+    exit_code, response = _run_json(capsys, ["ideas", "list", *_root_args(root)])
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.OPERATION_FAILED.value
+    assert "has no audit trail" in response["errors"][0]["message"]
+
+    exit_code, response = _run_json(capsys, ["ideas", "show", *_root_args(root), idea.decision_id])
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.OPERATION_FAILED.value
+    assert "has no audit trail" in response["errors"][0]["message"]
 
 
 def test_audit_verify_ok_and_tampered_line_failure(

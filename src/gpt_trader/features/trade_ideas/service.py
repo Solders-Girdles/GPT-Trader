@@ -21,6 +21,7 @@ from gpt_trader.features.trade_ideas.audit import (
     ActorType,
     AuditAction,
     AuditEvent,
+    AuditIntegrityError,
     TradeIdeaAuditLog,
     new_event_id,
 )
@@ -391,7 +392,13 @@ class TradeIdeaService:
     def get(self, decision_id: str) -> TradeIdeaView:
         idea = self._require_idea(decision_id)
         events = tuple(self._audit.read_events(decision_id))
-        state = events[-1].after_state if events else TradeIdeaState.PROPOSED
+        if not events:
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' has no audit trail",
+                field="decision_id",
+                value=decision_id,
+            )
+        state = events[-1].after_state
         return TradeIdeaView(idea=idea, state=state, events=events)
 
     def list_views(self, state: TradeIdeaState | None = None) -> list[TradeIdeaView]:

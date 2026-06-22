@@ -44,6 +44,16 @@ class BudgetIntegrityError(ValidationError):
     """Raised when a budget append would break version sequencing."""
 
 
+def _require_boolean(value: Any, field: str) -> bool:
+    if isinstance(value, bool):
+        return value
+    raise BudgetIntegrityError(
+        f"{field} must be a JSON boolean",
+        field=field,
+        value=value,
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class RiskBudget:
     """One immutable version of the risk budget."""
@@ -98,10 +108,16 @@ class RiskBudget:
             max_open_notional_pct=Decimal(payload["max_open_notional_pct"]),
             max_concurrent_approved_tickets=int(payload["max_concurrent_approved_tickets"]),
             max_review_latency_hours=int(payload["max_review_latency_hours"]),
-            sizing_capped_by_budget=bool(payload["sizing_capped_by_budget"]),
+            sizing_capped_by_budget=_require_boolean(
+                payload["sizing_capped_by_budget"], "sizing_capped_by_budget"
+            ),
             gain_retention_floor_pct=Decimal(payload["gain_retention_floor_pct"]),
-            allow_futures_leverage=bool(payload["allow_futures_leverage"]),
-            allow_naked_shorts=bool(payload["allow_naked_shorts"]),
+            allow_futures_leverage=_require_boolean(
+                payload["allow_futures_leverage"], "allow_futures_leverage"
+            ),
+            allow_naked_shorts=_require_boolean(
+                payload["allow_naked_shorts"], "allow_naked_shorts"
+            ),
             reason=payload.get("reason", ""),
         )
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -11,12 +12,16 @@ from gpt_trader.features.trade_ideas import (
     DEFAULT_RISK_BUDGET,
     ActorType,
     AuditAction,
+    AuditIntegrityError,
+    BudgetIntegrityError,
+    BudgetLogEntry,
     DuplicateTradeIdeaError,
     InvalidTransitionError,
     MaxLoss,
     PolicyViolationError,
     ProductType,
     RiskBudget,
+    RiskBudgetLog,
     TimeHorizon,
     TradeDirection,
     TradeIdeaService,
@@ -119,6 +124,35 @@ def test_resubmit_rejects_orphaned_record_without_audit_mutation(tmp_path: Path)
     assert exc_info.value.context["value"] == "none"
     assert latest_path.read_text(encoding="utf-8") == original_latest
     assert not audit_path.exists()
+
+
+def test_get_rejects_orphaned_record_without_audit_trail(tmp_path: Path) -> None:
+    root = tmp_path / "trade_ideas"
+    service = TradeIdeaService(
+        root,
+        now_factory=lambda: datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
+    )
+    idea = build_trade_idea(decision_id="trade-20260612-orphaned-get")
+    TradeIdeaStore(root / "records").save(idea)
+
+    with pytest.raises(AuditIntegrityError, match="has no audit trail") as exc_info:
+        service.get(idea.decision_id)
+
+    assert exc_info.value.context["field"] == "decision_id"
+    assert exc_info.value.context["value"] == idea.decision_id
+
+
+def test_list_views_rejects_orphaned_record_without_audit_trail(tmp_path: Path) -> None:
+    root = tmp_path / "trade_ideas"
+    service = TradeIdeaService(
+        root,
+        now_factory=lambda: datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
+    )
+    idea = build_trade_idea(decision_id="trade-20260612-orphaned-list")
+    TradeIdeaStore(root / "records").save(idea)
+
+    with pytest.raises(AuditIntegrityError, match="has no audit trail"):
+        service.list_views()
 
 
 def test_approval_refused_for_budget_violation(service: TradeIdeaService) -> None:
@@ -315,3 +349,29 @@ def test_review_latency_budget_refuses_approval_and_sweep_expires_far_future_ide
 
     assert [view.idea.decision_id for view in expired] == [idea.decision_id]
     assert service.get(idea.decision_id).state is TradeIdeaState.EXPIRED
+
+
+@pytest.mark.parametrize(
+    "field",
+    [
+        "sizing_capped_by_budget",
+        "allow_futures_leverage",
+        "allow_naked_shorts",
+    ],
+)
+def test_persisted_budget_rejects_non_boolean_boolean_fields(
+    tmp_path: Path,
+    field: str,
+) -> None:
+    path = tmp_path / "risk_budget.jsonl"
+    entry = BudgetLogEntry(
+        timestamp=datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
+        actor_type=ActorType.SYSTEM,
+        actor_id="seed-defaults",
+        budget=DEFAULT_RISK_BUDGET,
+    ).to_dict()
+    entry["budget"][field] = "false"
+    path.write_text(json.dumps(entry) + "\n", encoding="utf-8")
+
+    with pytest.raises(BudgetIntegrityError, match=f"{field} must be a JSON boolean"):
+        RiskBudgetLog(path).current()

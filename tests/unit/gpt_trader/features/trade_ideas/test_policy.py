@@ -13,6 +13,7 @@ from gpt_trader.features.trade_ideas import (
     MaxLoss,
     ProductType,
     RiskBudget,
+    TradeDirection,
     TradeIdea,
 )
 
@@ -86,6 +87,42 @@ def test_futures_leverage_passes_when_budget_allows_it() -> None:
             **DEFAULT_RISK_BUDGET.to_dict(),
             "version": 2,
             "allow_futures_leverage": True,
+        }
+    )
+
+    assert violations(idea, budget=allowed_budget) == []
+
+
+def test_short_direction_requires_budget_permission_by_default() -> None:
+    idea = build_trade_idea(direction=TradeDirection.SHORT)
+
+    found = violations(idea)
+
+    assert found == ["direction short requires risk budget allow_naked_shorts=true"]
+
+
+def test_short_direction_requires_budget_permission_when_explicitly_disabled() -> None:
+    idea = build_trade_idea(direction=TradeDirection.SHORT)
+    disabled_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 2,
+            "allow_naked_shorts": False,
+        }
+    )
+
+    found = violations(idea, budget=disabled_budget)
+
+    assert found == ["direction short requires risk budget allow_naked_shorts=true"]
+
+
+def test_short_direction_passes_when_budget_allows_naked_shorts() -> None:
+    idea = build_trade_idea(direction=TradeDirection.SHORT)
+    allowed_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 2,
+            "allow_naked_shorts": True,
         }
     )
 

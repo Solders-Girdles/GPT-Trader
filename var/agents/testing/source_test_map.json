@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 705,
+    "tests_scanned": 706,
     "source_modules": 370,
     "unresolved_modules": 3
   },
@@ -14,7 +14,8 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py"
+      "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py"
     ],
     "gpt_trader.agents": [
       "tests/unit/gpt_trader/agents/test_agents_import.py",
@@ -337,6 +338,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
       "tests/unit/gpt_trader/cli/test_commands_orders_history.py",
       "tests/unit/gpt_trader/cli/test_commands_report.py",
       "tests/unit/gpt_trader/cli/test_response_cli_response.py",
@@ -1270,6 +1272,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
@@ -2657,6 +2660,11 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py": [
+      "gpt_trader",
+      "gpt_trader.cli.response",
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py": [
       "gpt_trader",
       "gpt_trader.cli.response",
       "gpt_trader.features.trade_ideas"

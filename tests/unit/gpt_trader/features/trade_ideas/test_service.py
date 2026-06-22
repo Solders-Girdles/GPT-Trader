@@ -17,6 +17,7 @@ from gpt_trader.features.trade_ideas import (
     ProductType,
     RiskBudget,
     TimeHorizon,
+    TradeDirection,
     TradeIdeaService,
     TradeIdeaState,
     UnknownTradeIdeaError,
@@ -127,6 +128,45 @@ def test_futures_approval_requires_budget_leverage_flag(service: TradeIdeaServic
     service.update_budget(allowed_budget, actor_type=ActorType.HUMAN, actor_id="rj")
 
     view = service.approve(idea.decision_id, actor_id="rj", reason="Futures leverage accepted")
+
+    assert view.state is TradeIdeaState.APPROVED
+
+
+def test_short_approval_requires_naked_shorts_flag(service: TradeIdeaService) -> None:
+    idea = build_trade_idea(direction=TradeDirection.SHORT)
+    service.propose(idea, actor_id="idea-generator-v1")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(idea.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert any("allow_naked_shorts" in violation for violation in exc_info.value.violations)
+    assert service.get(idea.decision_id).state is TradeIdeaState.PROPOSED
+
+    disabled_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 2,
+            "allow_naked_shorts": False,
+        }
+    )
+    service.update_budget(disabled_budget, actor_type=ActorType.HUMAN, actor_id="rj")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(idea.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert any("allow_naked_shorts" in violation for violation in exc_info.value.violations)
+    assert service.get(idea.decision_id).state is TradeIdeaState.PROPOSED
+
+    allowed_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 3,
+            "allow_naked_shorts": True,
+        }
+    )
+    service.update_budget(allowed_budget, actor_type=ActorType.HUMAN, actor_id="rj")
+
+    view = service.approve(idea.decision_id, actor_id="rj", reason="Naked short accepted")
 
     assert view.state is TradeIdeaState.APPROVED
 

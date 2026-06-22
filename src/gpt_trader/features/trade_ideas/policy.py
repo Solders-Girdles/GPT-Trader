@@ -16,7 +16,12 @@ from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import ActorType
 from gpt_trader.features.trade_ideas.budget import RiskBudget
 from gpt_trader.features.trade_ideas.eligibility import evaluate_eligibility
-from gpt_trader.features.trade_ideas.models import AutonomyMode, ProductType, TradeIdea
+from gpt_trader.features.trade_ideas.models import (
+    AutonomyMode,
+    ProductType,
+    TradeDirection,
+    TradeIdea,
+)
 
 
 class PolicyViolationError(ValidationError):
@@ -74,6 +79,9 @@ class ApprovalPolicy:
             violations.append(
                 "product_type futures requires risk budget allow_futures_leverage=true"
             )
+
+        if idea.direction is TradeDirection.SHORT and not budget.allow_naked_shorts:
+            violations.append("direction short requires risk budget allow_naked_shorts=true")
 
         if open_approved_count >= budget.max_concurrent_approved_tickets:
             violations.append(

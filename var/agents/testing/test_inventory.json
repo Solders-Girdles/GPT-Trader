@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6675,
-    "total_files": 786,
+    "total_tests": 6680,
+    "total_files": 787,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6510,
+    "unit": 6515,
     "asyncio": 373,
     "parametrize": 184,
     "endpoints": 83,
@@ -211,6 +211,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
       "tests/unit/gpt_trader/cli/test_broker_connectivity.py",
       "tests/unit/gpt_trader/cli/test_cli_unit.py",
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py",
@@ -9244,6 +9245,16 @@
       {
         "name": "test_resubmit_preview_budget_failure_happens_before_record_or_audit_write",
         "line": 273,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py": [
+      {
+        "name": "test_short_preview_and_approval_follow_naked_short_flag",
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -32174,7 +32185,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_policy.py": [
       {
         "name": "test_eligible_idea_with_human_approver_passes",
-        "line": 40,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -32182,7 +32193,7 @@
       },
       {
         "name": "test_ai_actor_cannot_approve_in_human_approved_mode",
-        "line": 44,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -32190,7 +32201,7 @@
       },
       {
         "name": "test_research_only_mode_blocks_all_approvals",
-        "line": 50,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -32198,7 +32209,7 @@
       },
       {
         "name": "test_ineligible_idea_cannot_be_approved",
-        "line": 58,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -32206,7 +32217,7 @@
       },
       {
         "name": "test_max_loss_above_budget_cap_is_refused",
-        "line": 64,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -32214,7 +32225,7 @@
       },
       {
         "name": "test_futures_leverage_requires_budget_permission",
-        "line": 74,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -32222,7 +32233,31 @@
       },
       {
         "name": "test_futures_leverage_passes_when_budget_allows_it",
-        "line": 82,
+        "line": 83,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_short_direction_requires_budget_permission_by_default",
+        "line": 96,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_short_direction_requires_budget_permission_when_explicitly_disabled",
+        "line": 104,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_short_direction_passes_when_budget_allows_naked_shorts",
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -32230,7 +32265,7 @@
       },
       {
         "name": "test_missing_percent_cannot_be_verified",
-        "line": 95,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -32238,7 +32273,7 @@
       },
       {
         "name": "test_concurrent_approved_cap_is_enforced",
-        "line": 103,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -32246,7 +32281,7 @@
       },
       {
         "name": "test_stale_idea_cannot_be_approved",
-        "line": 112,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -32254,7 +32289,7 @@
       },
       {
         "name": "test_budget_changes_require_human_below_bounded_autonomy",
-        "line": 126,
+        "line": 163,
         "markers": [
           "unit"
         ],
@@ -32262,7 +32297,7 @@
       },
       {
         "name": "test_bounded_autonomy_lets_agents_change_budgets",
-        "line": 133,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -32566,7 +32601,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_service.py": [
       {
         "name": "test_propose_creates_proposed_view",
-        "line": 34,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -32574,7 +32609,7 @@
       },
       {
         "name": "test_duplicate_propose_rejects_before_record_or_audit_mutation",
-        "line": 42,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -32582,7 +32617,7 @@
       },
       {
         "name": "test_full_lifecycle_to_fill",
-        "line": 65,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -32590,7 +32625,7 @@
       },
       {
         "name": "test_changes_loop_keeps_every_record_version",
-        "line": 83,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -32598,7 +32633,7 @@
       },
       {
         "name": "test_approval_refused_for_budget_violation",
-        "line": 97,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -32606,7 +32641,15 @@
       },
       {
         "name": "test_futures_approval_requires_budget_leverage_flag",
-        "line": 110,
+        "line": 111,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_short_approval_requires_naked_shorts_flag",
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -32614,7 +32657,7 @@
       },
       {
         "name": "test_unknown_decision_id_is_an_error",
-        "line": 134,
+        "line": 174,
         "markers": [
           "unit"
         ],
@@ -32622,7 +32665,7 @@
       },
       {
         "name": "test_list_views_filters_by_state",
-        "line": 139,
+        "line": 179,
         "markers": [
           "unit"
         ],
@@ -32630,7 +32673,7 @@
       },
       {
         "name": "test_budget_seeds_defaults_on_first_use",
-        "line": 152,
+        "line": 192,
         "markers": [
           "unit"
         ],
@@ -32638,7 +32681,7 @@
       },
       {
         "name": "test_human_can_renegotiate_budget",
-        "line": 156,
+        "line": 196,
         "markers": [
           "unit"
         ],
@@ -32646,7 +32689,7 @@
       },
       {
         "name": "test_agent_budget_change_refused_in_current_mode",
-        "line": 166,
+        "line": 206,
         "markers": [
           "unit"
         ],
@@ -32654,7 +32697,7 @@
       },
       {
         "name": "test_expire_is_a_system_action",
-        "line": 177,
+        "line": 217,
         "markers": [
           "unit"
         ],
@@ -32662,7 +32705,7 @@
       },
       {
         "name": "test_expire_due_ideas_skips_submitted_and_continues",
-        "line": 187,
+        "line": 227,
         "markers": [
           "unit"
         ],

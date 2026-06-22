@@ -5,9 +5,9 @@ from types import SimpleNamespace
 from gpt_trader.ci import local_ci
 
 
-def _make_args(profile: str) -> SimpleNamespace:
+def _make_args(profile: str, *, include_snapshots: bool = False) -> SimpleNamespace:
     return SimpleNamespace(
-        include_snapshots=False,
+        include_snapshots=include_snapshots,
         include_property_tests=False,
         include_contract_tests=False,
         include_agent_health=False,
@@ -50,6 +50,18 @@ def test_strict_profile_runs_readiness_and_agent_artifacts() -> None:
     assert readiness_step.skip_reason is None
     assert artifacts_step.enabled is True
     assert artifacts_step.skip_reason is None
+
+
+def test_snapshot_step_expands_test_files_before_subprocess() -> None:
+    args = _make_args("quick", include_snapshots=True)
+    profile = local_ci.resolve_profile(args.profile)
+    steps = local_ci.build_steps(profile, args)
+
+    snapshot_step = _find_step(steps, "TUI snapshot tests")
+
+    assert snapshot_step.enabled is True
+    assert "tests/unit/gpt_trader/tui/test_snapshots_*.py" not in snapshot_step.command
+    assert any("test_snapshots_main_screen.py" in part for part in snapshot_step.command)
 
 
 def test_print_profile_banner_reports_alias_and_status(capsys) -> None:

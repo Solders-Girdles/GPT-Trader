@@ -178,6 +178,7 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
         "GPT_TRADER_STRICT_CONTAINER": "1",
         "PYTHONWARNINGS": "default",
     }
+    snapshot_test_paths = _snapshot_test_paths()
 
     steps = [
         PlannedStep(
@@ -293,7 +294,7 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
                 "uv",
                 "run",
                 "pytest",
-                "tests/unit/gpt_trader/tui/test_snapshots_*.py",
+                *snapshot_test_paths,
                 "-v",
             ],
             env=test_env,
@@ -316,6 +317,12 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
         ),
     ]
     return steps
+
+
+def _snapshot_test_paths() -> list[str]:
+    return [
+        str(path) for path in sorted(Path("tests/unit/gpt_trader/tui").glob("test_snapshots_*.py"))
+    ]
 
 
 def format_command(command: Sequence[str]) -> str:

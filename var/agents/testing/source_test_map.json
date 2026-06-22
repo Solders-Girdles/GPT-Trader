@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 696,
-    "source_modules": 368,
+    "tests_scanned": 697,
+    "source_modules": 369,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -303,6 +303,9 @@
       "tests/unit/gpt_trader/cli/test_commands_orders_editing.py",
       "tests/unit/gpt_trader/cli/test_commands_orders_history.py"
     ],
+    "gpt_trader.cli.commands.report": [
+      "tests/unit/gpt_trader/cli/test_commands_report.py"
+    ],
     "gpt_trader.cli.commands.run": [
       "tests/integration/test_container_lifecycle_cli.py",
       "tests/unit/gpt_trader/cli/test_commands_run.py",
@@ -317,6 +320,7 @@
     "gpt_trader.cli.response": [
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py",
       "tests/unit/gpt_trader/cli/test_commands_orders_history.py",
+      "tests/unit/gpt_trader/cli/test_commands_report.py",
       "tests/unit/gpt_trader/cli/test_response_cli_response.py",
       "tests/unit/gpt_trader/cli/test_response_envelope_contract.py",
       "tests/unit/gpt_trader/cli/test_response_error.py",
@@ -2620,6 +2624,10 @@
       "gpt_trader.cli.commands",
       "gpt_trader.preflight.report"
     ],
+    "tests/unit/gpt_trader/cli/test_commands_report.py": [
+      "gpt_trader.cli.commands.report",
+      "gpt_trader.cli.response"
+    ],
     "tests/unit/gpt_trader/cli/test_commands_run.py": [
       "gpt_trader.app.config.validation",
       "gpt_trader.cli.commands.run"
@@ -4897,6 +4905,7 @@
     "gpt_trader.cli.commands.optimize.formatters": "src/gpt_trader/cli/commands/optimize/formatters.py",
     "gpt_trader.cli.commands.optimize.registry": "src/gpt_trader/cli/commands/optimize/registry.py",
     "gpt_trader.cli.commands.orders": "src/gpt_trader/cli/commands/orders.py",
+    "gpt_trader.cli.commands.report": "src/gpt_trader/cli/commands/report.py",
     "gpt_trader.cli.commands.run": "src/gpt_trader/cli/commands/run.py",
     "gpt_trader.cli.commands.treasury": "src/gpt_trader/cli/commands/treasury.py",
     "gpt_trader.cli.options": "src/gpt_trader/cli/options.py",

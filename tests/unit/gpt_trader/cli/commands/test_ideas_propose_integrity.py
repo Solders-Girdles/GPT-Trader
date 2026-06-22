@@ -218,6 +218,81 @@ def test_propose_malformed_nested_section_returns_invalid_argument_without_write
     assert not (root / "audit.jsonl").exists()
 
 
+@pytest.mark.parametrize(
+    ("field_path", "malformed_value", "message"),
+    [
+        ("data_used", "coinbase:candles:BTC-USD", "data_used must be a JSON array of strings"),
+        ("data_used", 42, "data_used must be a JSON array of strings"),
+        ("data_used", ["coinbase:candles:BTC-USD", 42], "data_used[1] must be a string"),
+        (
+            "do_not_trade_if",
+            "FOMC announcement within 24 hours",
+            "do_not_trade_if must be a JSON array of strings",
+        ),
+        (
+            "do_not_trade_if",
+            42,
+            "do_not_trade_if must be a JSON array of strings",
+        ),
+        (
+            "do_not_trade_if",
+            ["FOMC announcement within 24 hours", 42],
+            "do_not_trade_if[1] must be a string",
+        ),
+        (
+            "max_loss.assumptions",
+            "No slippage beyond 10 bps",
+            "max_loss.assumptions must be a JSON array of strings",
+        ),
+        (
+            "max_loss.assumptions",
+            42,
+            "max_loss.assumptions must be a JSON array of strings",
+        ),
+        (
+            "max_loss.assumptions",
+            ["No slippage beyond 10 bps", 42],
+            "max_loss.assumptions[1] must be a string",
+        ),
+    ],
+)
+def test_propose_rejects_malformed_string_sequences_without_writes(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    field_path: str,
+    malformed_value: object,
+    message: str,
+) -> None:
+    root = tmp_path / "ideas"
+    payload = _idea_payload(
+        decision_id=f"trade-20350612-bad-sequence-{field_path.replace('.', '-')}"
+    )
+    if field_path == "max_loss.assumptions":
+        payload["max_loss"]["assumptions"] = malformed_value
+    else:
+        payload[field_path] = malformed_value
+    path = _write_idea(tmp_path / f"bad-sequence-{field_path.replace('.', '-')}.json", payload)
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "propose",
+            *_root_args(root),
+            "--actor",
+            "idea-generator-v1",
+            "--file",
+            str(path),
+        ],
+    )
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert message in response["errors"][0]["message"]
+    assert not (root / "records" / payload["decision_id"]).exists()
+    assert not (root / "audit.jsonl").exists()
+
+
 def test_propose_preview_budget_failure_happens_before_record_or_audit_write(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

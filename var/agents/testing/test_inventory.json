@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6661,
+    "total_tests": 6664,
     "total_files": 784,
     "markers_used": 16
   },
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6496,
+    "unit": 6499,
     "asyncio": 373,
-    "parametrize": 174,
+    "parametrize": 177,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -9114,8 +9114,17 @@
         "docstring": ""
       },
       {
+        "name": "test_propose_rejects_malformed_string_sequences_without_writes",
+        "line": 259,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_propose_preview_budget_failure_happens_before_record_or_audit_write",
-        "line": 221,
+        "line": 296,
         "markers": [
           "unit"
         ],
@@ -9174,8 +9183,17 @@
         "docstring": ""
       },
       {
+        "name": "test_resubmit_rejects_malformed_string_sequences_without_writes",
+        "line": 157,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_resubmit_preview_budget_failure_happens_before_record_or_audit_write",
-        "line": 119,
+        "line": 203,
         "markers": [
           "unit"
         ],
@@ -32004,7 +32022,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_models.py": [
       {
         "name": "test_round_trip_preserves_record",
-        "line": 19,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -32012,7 +32030,7 @@
       },
       {
         "name": "test_to_dict_serializes_decimals_as_strings",
-        "line": 25,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -32020,7 +32038,7 @@
       },
       {
         "name": "test_from_dict_restores_decimal_types",
-        "line": 33,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -32028,7 +32046,7 @@
       },
       {
         "name": "test_time_horizon_rejects_timezone_naive_expiry",
-        "line": 41,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -32036,7 +32054,7 @@
       },
       {
         "name": "test_broker_ticket_defaults_to_no_venue",
-        "line": 52,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -32044,7 +32062,7 @@
       },
       {
         "name": "test_record_hash_is_stable",
-        "line": 58,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -32052,7 +32070,7 @@
       },
       {
         "name": "test_record_hash_changes_when_content_changes",
-        "line": 63,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -32060,8 +32078,17 @@
       },
       {
         "name": "test_optional_value_objects_round_trip_when_empty",
-        "line": 69,
+        "line": 70,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_dict_rejects_malformed_string_sequences",
+        "line": 117,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""

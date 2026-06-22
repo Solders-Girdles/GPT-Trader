@@ -97,6 +97,17 @@ def _object_payload(value: Any, field: str) -> Mapping[str, Any]:
     return value
 
 
+def _string_sequence(value: Any, field: str) -> tuple[str, ...]:
+    if value is None:
+        return ()
+    if isinstance(value, str) or not isinstance(value, (list, tuple)):
+        raise ValueError(f"{field} must be a JSON array of strings")
+    for index, item in enumerate(value):
+        if not isinstance(item, str):
+            raise ValueError(f"{field}[{index}] must be a string")
+    return tuple(value)
+
+
 def _require_timezone_aware(value: datetime | None, field: str) -> None:
     if value is None:
         return
@@ -170,7 +181,7 @@ class MaxLoss:
             percent_of_account=_decimal_or_none(
                 payload.get("percent_of_account"), "max_loss.percent_of_account"
             ),
-            assumptions=tuple(payload.get("assumptions", ())),
+            assumptions=_string_sequence(payload.get("assumptions", ()), "max_loss.assumptions"),
         )
 
 
@@ -335,10 +346,10 @@ class TradeIdea:
                 payload.get("sizing_recommendation", {})
             ),
             time_horizon=TimeHorizon.from_dict(payload.get("time_horizon", {})),
-            data_used=tuple(payload.get("data_used", ())),
+            data_used=_string_sequence(payload.get("data_used", ()), "data_used"),
             confidence=Confidence.from_dict(payload["confidence"]),
             failure_mode=payload["failure_mode"],
-            do_not_trade_if=tuple(payload.get("do_not_trade_if", ())),
+            do_not_trade_if=_string_sequence(payload.get("do_not_trade_if", ()), "do_not_trade_if"),
             broker_ticket=BrokerTicket.from_dict(payload.get("broker_ticket", {})),
         )
 

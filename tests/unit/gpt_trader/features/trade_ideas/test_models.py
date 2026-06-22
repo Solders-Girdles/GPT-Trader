@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from decimal import Decimal
 
@@ -73,3 +74,57 @@ def test_optional_value_objects_round_trip_when_empty() -> None:
     assert restored.max_loss.amount is None
     assert restored.max_loss.percent_of_account is None
     assert restored.do_not_trade_if == ()
+
+
+@pytest.mark.parametrize(
+    ("field_path", "malformed_value", "message"),
+    [
+        ("data_used", "coinbase:candles:BTC-USD", "data_used must be a JSON array of strings"),
+        ("data_used", 42, "data_used must be a JSON array of strings"),
+        ("data_used", ["coinbase:candles:BTC-USD", 42], "data_used[1] must be a string"),
+        (
+            "do_not_trade_if",
+            "FOMC announcement within 24 hours",
+            "do_not_trade_if must be a JSON array of strings",
+        ),
+        (
+            "do_not_trade_if",
+            42,
+            "do_not_trade_if must be a JSON array of strings",
+        ),
+        (
+            "do_not_trade_if",
+            ["FOMC announcement within 24 hours", 42],
+            "do_not_trade_if[1] must be a string",
+        ),
+        (
+            "max_loss.assumptions",
+            "No slippage beyond 10 bps",
+            "max_loss.assumptions must be a JSON array of strings",
+        ),
+        (
+            "max_loss.assumptions",
+            42,
+            "max_loss.assumptions must be a JSON array of strings",
+        ),
+        (
+            "max_loss.assumptions",
+            ["No slippage beyond 10 bps", 42],
+            "max_loss.assumptions[1] must be a string",
+        ),
+    ],
+)
+def test_from_dict_rejects_malformed_string_sequences(
+    trade_idea: TradeIdea,
+    field_path: str,
+    malformed_value: object,
+    message: str,
+) -> None:
+    payload = trade_idea.to_dict()
+    if field_path == "max_loss.assumptions":
+        payload["max_loss"]["assumptions"] = malformed_value
+    else:
+        payload[field_path] = malformed_value
+
+    with pytest.raises(ValueError, match=re.escape(message)):
+        TradeIdea.from_dict(payload)

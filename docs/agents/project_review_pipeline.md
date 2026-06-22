@@ -2,7 +2,7 @@
 
 ---
 status: draft
-last-updated: 2026-06-20
+last-updated: 2026-06-22
 ---
 
 This document defines the recurring project-review pipeline for GPT-Trader. The
@@ -197,8 +197,28 @@ Claw and Hermes should treat each promoted issue as the implementation contract:
 - run the smallest meaningful verification plus repo-required checks
 - leave any broader discovery as a new finding instead of scope creep
 
-The PR body should follow `.github/pull_request_template.md` and include
-`Closes #<issue>`.
+The PR body should follow `.github/pull_request_template.md`. For
+issue-backed work, include `Closes #<issue>`.
+
+### Direct Package Cycles
+
+When RJ or the active agent workspace explicitly routes a build/package cycle,
+a promoted GitHub issue is useful but not required. In that path, the direct
+request, the observed repo evidence, and the PR body form the implementation
+contract.
+
+Use this path only when the work is already bounded and safe to verify locally:
+
+- name the package source in the PR body, such as `RJ-routed package`,
+  `agent-review finding`, or a specific doc/receipt
+- preserve the same trading boundaries as issue-backed work
+- run the smallest meaningful verification plus repo-required checks
+- push the branch and open the PR once the package is clean
+- do not stop at "ready for PR decision" unless a concrete blocker or explicit
+  park instruction exists
+
+Merge remains a separate later pipeline decision. Opening a review PR is part
+of packaging; merging is not.
 
 ## Stage 6: Review Feedback
 

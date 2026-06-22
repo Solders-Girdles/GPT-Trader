@@ -32,7 +32,7 @@ from gpt_trader.features.trade_ideas.budget import (
 from gpt_trader.features.trade_ideas.models import TradeIdea
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
-from gpt_trader.features.trade_ideas.workflow import TradeIdeaState
+from gpt_trader.features.trade_ideas.workflow import TradeIdeaState, validate_transition
 
 DEFAULT_IDEAS_ROOT = Path("var/data/trade_ideas")
 IDEAS_ROOT_ENV_VAR = "GPT_TRADER_IDEAS_ROOT"
@@ -48,6 +48,10 @@ EXPIRABLE_STATES = frozenset(
 
 class UnknownTradeIdeaError(ValidationError):
     """Raised when a decision_id has no stored record."""
+
+
+class DuplicateTradeIdeaError(ValidationError):
+    """Raised when a new proposal reuses an existing decision_id."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -160,6 +164,7 @@ class TradeIdeaService:
         reason: str = "New trade idea proposed",
         evidence: tuple[str, ...] = (),
     ) -> TradeIdeaView:
+        self._require_new_decision_id(idea.decision_id)
         self._store.save(idea)
         self._append(
             idea,
@@ -192,6 +197,7 @@ class TradeIdeaService:
         reason: str = "Revised after requested changes",
     ) -> TradeIdeaView:
         self._require_idea(idea.decision_id)
+        validate_transition(self._audit.current_state(idea.decision_id), TradeIdeaState.PROPOSED)
         self._store.save(idea)
         self._append(
             idea,
@@ -377,6 +383,15 @@ class TradeIdeaService:
                 value=decision_id,
             )
         return idea
+
+    def _require_new_decision_id(self, decision_id: str) -> None:
+        if self._store.exists(decision_id) or self._audit.current_state(decision_id) is not None:
+            raise DuplicateTradeIdeaError(
+                f"Trade idea decision_id '{decision_id}' already exists; use resubmit "
+                "after requested changes",
+                field="decision_id",
+                value=decision_id,
+            )
 
     def _append(
         self,

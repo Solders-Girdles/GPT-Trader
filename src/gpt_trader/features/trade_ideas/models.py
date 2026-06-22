@@ -73,6 +73,23 @@ def _decimal_to_str(value: Decimal | None) -> str | None:
     return str(value)
 
 
+def _require_timezone_aware(value: datetime | None, field: str) -> None:
+    if value is None:
+        return
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError(f"{field} must include a timezone")
+
+
+def _parse_expires_at(value: Any) -> datetime | None:
+    if value is None or value == "":
+        return None
+    if not isinstance(value, str):
+        raise ValueError("time_horizon.expires_at must be an ISO datetime string")
+    expires_at = datetime.fromisoformat(value)
+    _require_timezone_aware(expires_at, "time_horizon.expires_at")
+    return expires_at
+
+
 @dataclass(frozen=True, slots=True)
 class EntryZone:
     """Price range or conditional trigger that defines a valid entry."""
@@ -152,6 +169,9 @@ class TimeHorizon:
     expected_hold: str = ""
     expires_at: datetime | None = None
 
+    def __post_init__(self) -> None:
+        _require_timezone_aware(self.expires_at, "time_horizon.expires_at")
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "expected_hold": self.expected_hold,
@@ -160,10 +180,9 @@ class TimeHorizon:
 
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> TimeHorizon:
-        raw_expiry = payload.get("expires_at")
         return cls(
             expected_hold=payload.get("expected_hold", ""),
-            expires_at=datetime.fromisoformat(raw_expiry) if raw_expiry else None,
+            expires_at=_parse_expires_at(payload.get("expires_at")),
         )
 
 

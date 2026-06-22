@@ -11,6 +11,7 @@ from gpt_trader.features.trade_ideas import (
     DEFAULT_RISK_BUDGET,
     ActorType,
     AuditAction,
+    DuplicateTradeIdeaError,
     MaxLoss,
     PolicyViolationError,
     RiskBudget,
@@ -35,6 +36,29 @@ def test_propose_creates_proposed_view(service: TradeIdeaService) -> None:
     assert view.state is TradeIdeaState.PROPOSED
     assert view.events[0].actor_type is ActorType.AI
     assert view.events[0].record_hash == view.idea.record_hash()
+
+
+def test_duplicate_propose_rejects_before_record_or_audit_mutation(tmp_path: Path) -> None:
+    root = tmp_path / "trade_ideas"
+    service = TradeIdeaService(
+        root,
+        now_factory=lambda: datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
+    )
+    idea = build_trade_idea()
+    service.propose(idea, actor_id="idea-generator-v1")
+    latest_path = root / "records" / idea.decision_id / "latest.json"
+    audit_path = root / "audit.jsonl"
+    original_latest = latest_path.read_text(encoding="utf-8")
+    original_audit = audit_path.read_text(encoding="utf-8")
+    revised = build_trade_idea(thesis="Edited thesis that must not persist")
+
+    with pytest.raises(DuplicateTradeIdeaError):
+        service.propose(revised, actor_id="idea-generator-v1")
+
+    assert latest_path.read_text(encoding="utf-8") == original_latest
+    assert audit_path.read_text(encoding="utf-8") == original_audit
+    assert service.get(idea.decision_id).idea.thesis == idea.thesis
+    assert len(service.get(idea.decision_id).events) == 1
 
 
 def test_full_lifecycle_to_fill(service: TradeIdeaService) -> None:

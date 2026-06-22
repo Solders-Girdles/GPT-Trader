@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 
+import pytest
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 from gpt_trader.features.trade_ideas import (
@@ -9,6 +11,7 @@ from gpt_trader.features.trade_ideas import (
     MaxLoss,
     TicketStatus,
     TicketVenue,
+    TimeHorizon,
     TradeIdea,
 )
 
@@ -33,6 +36,17 @@ def test_from_dict_restores_decimal_types(trade_idea: TradeIdea) -> None:
     assert restored.max_loss.amount == Decimal("250")
     assert isinstance(restored.max_loss.amount, Decimal)
     assert restored.time_horizon.expires_at == trade_idea.time_horizon.expires_at
+
+
+def test_time_horizon_rejects_timezone_naive_expiry(trade_idea: TradeIdea) -> None:
+    with pytest.raises(ValueError, match="time_horizon.expires_at must include a timezone"):
+        TimeHorizon(expires_at=datetime(2035, 6, 19, 16, 0))
+
+    payload = trade_idea.to_dict()
+    payload["time_horizon"]["expires_at"] = "2035-06-19T16:00:00"
+
+    with pytest.raises(ValueError, match="time_horizon.expires_at must include a timezone"):
+        TradeIdea.from_dict(payload)
 
 
 def test_broker_ticket_defaults_to_no_venue(trade_idea: TradeIdea) -> None:

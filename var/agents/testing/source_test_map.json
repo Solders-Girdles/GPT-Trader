@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 707,
+    "tests_scanned": 708,
     "source_modules": 370,
     "unresolved_modules": 3
   },
@@ -1286,6 +1286,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
@@ -3889,6 +3890,9 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py": [
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py": [

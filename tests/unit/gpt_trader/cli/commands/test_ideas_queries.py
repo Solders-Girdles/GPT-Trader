@@ -9,7 +9,7 @@ import pytest
 
 from gpt_trader import cli
 from gpt_trader.cli.response import CliErrorCode
-from gpt_trader.features.trade_ideas import TimeHorizon, TradeIdeaStore
+from gpt_trader.features.trade_ideas import TimeHorizon, TradeIdeaService, TradeIdeaStore
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 
@@ -155,6 +155,48 @@ def test_list_and_show_reject_orphaned_record_without_audit_trail(
     assert exit_code == 1
     assert response["errors"][0]["code"] == CliErrorCode.OPERATION_FAILED.value
     assert "has no audit trail" in response["errors"][0]["message"]
+
+
+def test_list_show_and_reject_refuse_unaudited_interrupted_resubmit(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    idea = build_trade_idea(
+        decision_id="trade-20350612-interrupted-resubmit",
+        time_horizon=_future_horizon(),
+    )
+    service = TradeIdeaService(root)
+    service.propose(idea, actor_id="idea-generator-v1")
+    service.request_changes(idea.decision_id, actor_id="rj", reason="Need tighter risk")
+    audit_path = root / "audit.jsonl"
+    original_audit = audit_path.read_text(encoding="utf-8")
+    unaudited_revision = build_trade_idea(
+        decision_id=idea.decision_id,
+        invalidation="Daily close below 59000",
+        time_horizon=_future_horizon(),
+    )
+    TradeIdeaStore(root / "records").save(unaudited_revision)
+
+    for argv in (
+        ["ideas", "list", *_root_args(root)],
+        ["ideas", "show", *_root_args(root), idea.decision_id],
+        [
+            "ideas",
+            "reject",
+            *_root_args(root),
+            "--actor",
+            "rj",
+            idea.decision_id,
+            "--reason",
+            "Reject stale revision",
+        ],
+    ):
+        exit_code, response = _run_json(capsys, argv)
+        assert exit_code == 1
+        assert response["errors"][0]["code"] == CliErrorCode.OPERATION_FAILED.value
+        assert "does not match latest audit record_hash" in response["errors"][0]["message"]
+
+    assert audit_path.read_text(encoding="utf-8") == original_audit
 
 
 def test_audit_verify_ok_and_tampered_line_failure(

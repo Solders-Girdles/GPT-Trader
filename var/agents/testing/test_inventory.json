@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6693,
-    "total_files": 788,
+    "total_tests": 6695,
+    "total_files": 789,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6528,
+    "unit": 6530,
     "asyncio": 373,
     "parametrize": 188,
     "endpoints": 83,
@@ -540,6 +540,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
@@ -9217,7 +9218,7 @@
         "docstring": ""
       },
       {
-        "name": "test_audit_verify_ok_and_tampered_line_failure",
+        "name": "test_list_show_and_reject_refuse_unaudited_interrupted_resubmit",
         "line": 160,
         "markers": [
           "unit"
@@ -9225,8 +9226,16 @@
         "docstring": ""
       },
       {
+        "name": "test_audit_verify_ok_and_tampered_line_failure",
+        "line": 202,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_help_lists_ideas_subcommands",
-        "line": 179,
+        "line": 221,
         "markers": [
           "unit"
         ],
@@ -32818,6 +32827,16 @@
         "line": 362,
         "markers": [
           "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py": [
+      {
+        "name": "test_interrupted_resubmit_latest_hash_mismatch_is_integrity_error",
+        "line": 16,
+        "markers": [
           "unit"
         ],
         "docstring": ""

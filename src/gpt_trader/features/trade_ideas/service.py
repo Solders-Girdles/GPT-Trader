@@ -427,7 +427,24 @@ class TradeIdeaService:
                 field="decision_id",
                 value=decision_id,
             )
+        self._verify_latest_record_is_audited(idea)
         return idea
+
+    def _verify_latest_record_is_audited(self, idea: TradeIdea) -> None:
+        events = tuple(self._audit.read_events(idea.decision_id))
+        if not events:
+            return
+        audited_record_hash = events[-1].record_hash
+        latest_record_hash = idea.record_hash()
+        if latest_record_hash == audited_record_hash:
+            return
+        raise AuditIntegrityError(
+            f"Stored trade idea '{idea.decision_id}' latest record hash "
+            f"'{latest_record_hash}' does not match latest audit record_hash "
+            f"'{audited_record_hash}'",
+            field="record_hash",
+            value=latest_record_hash,
+        )
 
     def _require_new_decision_id(self, decision_id: str) -> None:
         if self._store.exists(decision_id) or self._audit.current_state(decision_id) is not None:

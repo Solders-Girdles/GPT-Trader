@@ -14,6 +14,7 @@ from gpt_trader.features.trade_ideas import (
     MaxLoss,
     PolicyViolationError,
     RiskBudget,
+    TimeHorizon,
     TradeIdeaService,
     TradeIdeaState,
     UnknownTradeIdeaError,
@@ -132,3 +133,34 @@ def test_expire_is_a_system_action(service: TradeIdeaService) -> None:
 
     assert view.state is TradeIdeaState.EXPIRED
     assert view.events[-1].actor_type is ActorType.SYSTEM
+
+
+def test_expire_due_ideas_skips_submitted_and_continues(tmp_path: Path) -> None:
+    current_time = datetime(2026, 6, 10, 10, 0, tzinfo=UTC)
+    service = TradeIdeaService(
+        tmp_path / "trade_ideas",
+        now_factory=lambda: current_time,
+    )
+    expires_soon = TimeHorizon(
+        expected_hold="1 day",
+        expires_at=datetime(2026, 6, 11, 10, 0, tzinfo=UTC),
+    )
+    submitted = build_trade_idea(
+        decision_id="trade-20260612-submitted",
+        time_horizon=expires_soon,
+    )
+    proposed = build_trade_idea(
+        decision_id="trade-20260612-proposed",
+        time_horizon=expires_soon,
+    )
+    service.propose(submitted, actor_id="idea-generator-v1")
+    service.approve(submitted.decision_id, actor_id="rj", reason="Fresh at approval time")
+    service.record_submission(submitted.decision_id, actor_id="manual", venue="coinbase")
+    service.propose(proposed, actor_id="idea-generator-v1")
+
+    current_time = datetime(2026, 6, 12, 10, 0, tzinfo=UTC)
+    expired = service.expire_due_ideas()
+
+    assert [view.idea.decision_id for view in expired] == [proposed.decision_id]
+    assert service.get(submitted.decision_id).state is TradeIdeaState.SUBMITTED
+    assert service.get(proposed.decision_id).state is TradeIdeaState.EXPIRED

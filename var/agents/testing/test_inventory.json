@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6645,
+    "total_tests": 6647,
     "total_files": 782,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6480,
+    "unit": 6482,
     "asyncio": 373,
     "parametrize": 174,
     "endpoints": 83,
@@ -9004,7 +9004,7 @@
         "docstring": ""
       },
       {
-        "name": "test_approve_happy_path_records_human_actor",
+        "name": "test_propose_malformed_decimal_returns_invalid_argument",
         "line": 145,
         "markers": [
           "unit"
@@ -9012,8 +9012,16 @@
         "docstring": ""
       },
       {
+        "name": "test_approve_happy_path_records_human_actor",
+        "line": 171,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_approve_policy_violation_returns_all_violations",
-        "line": 178,
+        "line": 204,
         "markers": [
           "unit"
         ],
@@ -9021,7 +9029,7 @@
       },
       {
         "name": "test_request_changes_resubmit_and_approve_loop",
-        "line": 210,
+        "line": 236,
         "markers": [
           "unit"
         ],
@@ -9029,7 +9037,7 @@
       },
       {
         "name": "test_reject_cancel_expire_and_sweep_paths",
-        "line": 270,
+        "line": 296,
         "markers": [
           "unit"
         ],
@@ -32328,7 +32336,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_service.py": [
       {
         "name": "test_propose_creates_proposed_view",
-        "line": 31,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -32336,7 +32344,7 @@
       },
       {
         "name": "test_full_lifecycle_to_fill",
-        "line": 39,
+        "line": 40,
         "markers": [
           "unit"
         ],
@@ -32344,7 +32352,7 @@
       },
       {
         "name": "test_changes_loop_keeps_every_record_version",
-        "line": 57,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -32352,7 +32360,7 @@
       },
       {
         "name": "test_approval_refused_for_budget_violation",
-        "line": 71,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -32360,7 +32368,7 @@
       },
       {
         "name": "test_unknown_decision_id_is_an_error",
-        "line": 84,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -32368,7 +32376,7 @@
       },
       {
         "name": "test_list_views_filters_by_state",
-        "line": 89,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -32376,7 +32384,7 @@
       },
       {
         "name": "test_budget_seeds_defaults_on_first_use",
-        "line": 102,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -32384,7 +32392,7 @@
       },
       {
         "name": "test_human_can_renegotiate_budget",
-        "line": 106,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -32392,7 +32400,7 @@
       },
       {
         "name": "test_agent_budget_change_refused_in_current_mode",
-        "line": 116,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -32400,7 +32408,15 @@
       },
       {
         "name": "test_expire_is_a_system_action",
-        "line": 127,
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_expire_due_ideas_skips_submitted_and_continues",
+        "line": 138,
         "markers": [
           "unit"
         ],

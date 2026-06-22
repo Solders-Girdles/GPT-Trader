@@ -306,7 +306,7 @@ def _load_trade_idea(args: Namespace) -> TradeIdea:
     except KeyError as error:
         field = str(error).strip("'")
         raise IdeaInputError(f"Missing required trade idea field: {field}", field=field) from error
-    except (TypeError, ValueError) as error:
+    except (InvalidOperation, TypeError, ValueError) as error:
         raise IdeaInputError(f"Invalid trade idea field: {error}") from error
 
 

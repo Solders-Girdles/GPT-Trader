@@ -142,6 +142,32 @@ def test_propose_missing_required_field_returns_invalid_argument(
     assert response["errors"][0]["details"]["field"] == "thesis"
 
 
+def test_propose_malformed_decimal_returns_invalid_argument(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    payload = _idea_payload()
+    payload["max_loss"]["percent_of_account"] = "not-a-decimal"
+    path = _write_idea(tmp_path / "bad-decimal.json", payload)
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "propose",
+            *_root_args(root),
+            "--actor",
+            "idea-generator-v1",
+            "--file",
+            str(path),
+        ],
+    )
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert "Invalid trade idea field" in response["errors"][0]["message"]
+
+
 def test_approve_happy_path_records_human_actor(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

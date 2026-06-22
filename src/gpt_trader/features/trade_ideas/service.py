@@ -32,11 +32,18 @@ from gpt_trader.features.trade_ideas.budget import (
 from gpt_trader.features.trade_ideas.models import TradeIdea
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
-from gpt_trader.features.trade_ideas.workflow import TERMINAL_STATES, TradeIdeaState
+from gpt_trader.features.trade_ideas.workflow import TradeIdeaState
 
 DEFAULT_IDEAS_ROOT = Path("var/data/trade_ideas")
 IDEAS_ROOT_ENV_VAR = "GPT_TRADER_IDEAS_ROOT"
 ACTOR_ENV_VAR = "GPT_TRADER_ACTOR"
+EXPIRABLE_STATES = frozenset(
+    {
+        TradeIdeaState.PROPOSED,
+        TradeIdeaState.NEEDS_CHANGES,
+        TradeIdeaState.APPROVED,
+    }
+)
 
 
 class UnknownTradeIdeaError(ValidationError):
@@ -280,11 +287,11 @@ class TradeIdeaService:
         reason: str = "Idea passed its review or execution deadline",
         actor_type: ActorType = ActorType.SYSTEM,
     ) -> list[TradeIdeaView]:
-        """Expire all non-terminal ideas whose review deadline has passed."""
+        """Expire all stale ideas that can legally transition to expired."""
         now = self._now()
         expired: list[TradeIdeaView] = []
         for view in self.list_views():
-            if view.state in TERMINAL_STATES:
+            if view.state not in EXPIRABLE_STATES:
                 continue
             expires_at = view.idea.time_horizon.expires_at
             if expires_at is not None and expires_at <= now:

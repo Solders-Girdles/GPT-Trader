@@ -70,10 +70,6 @@ class CoinbaseBrokerage:
     @product_catalog.setter
     def product_catalog(self, value):
         self._product_catalog = value
-        # Sync with rest_service if possible, but rest_service has its own reference.
-        # Since we can't easily update rest_service's internal reference if it's not a property,
-        # we might need to recreate rest_service or hack it.
-        # CoinbaseRestService stores it in self.product_catalog.
         self.rest_service.product_catalog = value
 
     def connect(self):

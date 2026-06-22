@@ -17,6 +17,7 @@ from gpt_trader.persistence.durability import (
     check_sqlite_integrity,
     compute_checksum,
     read_json_with_checksum,
+    repair_sqlite_database,
     verify_checksum,
 )
 
@@ -214,3 +215,38 @@ class TestSqliteIntegrity:
 
             assert is_ok is False
             assert len(issues) > 0
+
+    def test_repair_sqlite_database_persists_recovered_rows(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            db_path = Path(tmpdir) / "events.db"
+            backup_path = Path(tmpdir) / "events.corrupted"
+            conn = sqlite3.connect(str(db_path))
+            try:
+                conn.execute(
+                    """
+                    CREATE TABLE events (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        timestamp TEXT NOT NULL DEFAULT (datetime('now', 'utc')),
+                        event_type TEXT NOT NULL,
+                        payload TEXT NOT NULL,
+                        bot_id TEXT
+                    )
+                    """
+                )
+                conn.execute(
+                    "INSERT INTO events (event_type, payload, bot_id) VALUES (?, ?, ?)",
+                    ("recovered_event", '{"symbol":"BTC-USD"}', "bot-1"),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+            assert repair_sqlite_database(db_path, backup_path) is True
+
+            conn = sqlite3.connect(str(db_path))
+            try:
+                rows = conn.execute("SELECT id, event_type, payload, bot_id FROM events").fetchall()
+            finally:
+                conn.close()
+
+            assert rows == [(1, "recovered_event", '{"symbol":"BTC-USD"}', "bot-1")]

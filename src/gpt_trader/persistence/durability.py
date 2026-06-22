@@ -356,6 +356,7 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
                         operation="database_repair",
                         table=table_name,
                     )
+            conn.commit()
         finally:
             try:
                 conn.execute("DETACH DATABASE corrupted")

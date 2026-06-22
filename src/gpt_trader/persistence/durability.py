@@ -307,52 +307,71 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
             error=str(e),
         )
 
-    # Try to recover data
+    # Try to recover data via an ATTACH strategy to avoid N+1 queries and memory loads
+    temp_db_path = database_path.with_suffix(".tmp")
+    if temp_db_path.exists():
+        try:
+            temp_db_path.unlink()
+        except OSError:
+            pass
+
     try:
-        conn = sqlite3.connect(str(database_path))
+        conn = sqlite3.connect(str(temp_db_path))
+        recovered_count = 0
         try:
-            # Export all readable data
-            cursor = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-            )
-            tables = [row[0] for row in cursor]
-
-            recovered_data: dict[str, list[tuple[Any, ...]]] = {}
-            for table in tables:
-                try:
-                    cursor = conn.execute(f"SELECT * FROM {table}")  # noqa: S608  # nosec B608
-                    recovered_data[table] = cursor.fetchall()
-                except sqlite3.Error:
-                    logger.warning(
-                        "Could not recover table",
-                        operation="database_repair",
-                        table=table,
-                    )
-        finally:
-            conn.close()
-
-        # Recreate database
-        database_path.unlink()
-        conn = sqlite3.connect(str(database_path))
-        try:
-            # Note: This is a simplified recovery. In production,
-            # you'd want to preserve the schema and indexes.
             conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("PRAGMA synchronous=NORMAL")
 
-            # For event store, recreate with known schema
+            # Initialize with known schemas to preserve them
             schema_path = Path(__file__).parent / "schema.sql"
             if schema_path.exists():
                 conn.executescript(schema_path.read_text())
 
-            logger.info(
-                "Database recreated",
-                operation="database_repair",
-                tables_recovered=len(recovered_data),
+            # Attach corrupted backup to stream data directly at SQLite level
+            conn.execute("ATTACH DATABASE ? AS corrupted", (str(backup_path),))
+
+            cursor = conn.execute(
+                "SELECT name, sql FROM corrupted.sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
             )
-            return True
+            tables = cursor.fetchall()
+
+            for table_name, table_sql in tables:
+                try:
+                    # If the table wasn't created by schema.sql, recreate it from the original schema
+                    if table_sql:
+                        try:
+                            conn.execute(table_sql)
+                        except sqlite3.OperationalError:
+                            # Table may already exist from schema.sql execution above
+                            pass
+
+                    # Direct engine-level copy
+                    conn.execute(
+                        f"INSERT OR IGNORE INTO {table_name} SELECT * FROM corrupted.{table_name}"
+                    )
+                    recovered_count += 1
+                except sqlite3.Error:
+                    logger.warning(
+                        "Could not recover table",
+                        operation="database_repair",
+                        table=table_name,
+                    )
         finally:
+            try:
+                conn.execute("DETACH DATABASE corrupted")
+            except sqlite3.Error:
+                pass
             conn.close()
+
+        # Replace corrupted database with recovered temporary database
+        temp_db_path.replace(database_path)
+
+        logger.info(
+            "Database recreated",
+            operation="database_repair",
+            tables_recovered=recovered_count,
+        )
+        return True
 
     except Exception as e:
         logger.error(
@@ -360,6 +379,12 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
             operation="database_repair",
             error=str(e),
         )
+        # Cleanup temp database on failure
+        if temp_db_path.exists():
+            try:
+                temp_db_path.unlink()
+            except OSError:
+                pass
         return False
 
 

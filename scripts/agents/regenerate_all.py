@@ -249,6 +249,21 @@ def _diff_directories(committed_dir: Path, generated_dir: Path) -> str | None:
             f"{generated_dir.as_posix()})."
         )
 
+    ignored_paths = _git_ignored_paths_under(committed_dir)
+    if ignored_paths:
+        with tempfile.TemporaryDirectory(prefix="agent-diff-") as temp_dir:
+            filtered_committed_dir = Path(temp_dir) / committed_dir.name
+            _copy_directory_without_paths(
+                committed_dir,
+                filtered_committed_dir,
+                ignored_paths,
+            )
+            return _run_directory_diff(filtered_committed_dir, generated_dir)
+
+    return _run_directory_diff(committed_dir, generated_dir)
+
+
+def _run_directory_diff(committed_dir: Path, generated_dir: Path) -> str | None:
     diff_result = subprocess.run(
         [
             "git",
@@ -272,6 +287,62 @@ def _diff_directories(committed_dir: Path, generated_dir: Path) -> str | None:
 
     message = (diff_result.stderr or diff_result.stdout).strip() or "Unknown git diff error"
     return f"git diff failed ({diff_result.returncode}): {message}"
+
+
+def _git_ignored_paths_under(directory: Path) -> set[Path]:
+    try:
+        repo_relative_dir = directory.resolve().relative_to(PROJECT_ROOT.resolve())
+    except ValueError:
+        return set()
+
+    result = subprocess.run(
+        [
+            "git",
+            "ls-files",
+            "--others",
+            "--ignored",
+            "--exclude-standard",
+            "-z",
+            "--",
+            repo_relative_dir.as_posix(),
+        ],
+        cwd=PROJECT_ROOT,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return set()
+
+    ignored_paths: set[Path] = set()
+    for raw_path in result.stdout.split("\0"):
+        if not raw_path:
+            continue
+        try:
+            ignored_paths.add(Path(raw_path).relative_to(repo_relative_dir))
+        except ValueError:
+            continue
+    return ignored_paths
+
+
+def _copy_directory_without_paths(
+    source_dir: Path,
+    target_dir: Path,
+    excluded_paths: set[Path],
+) -> None:
+    def ignore(directory: str, names: list[str]) -> set[str]:
+        try:
+            directory_relative = Path(directory).relative_to(source_dir)
+        except ValueError:
+            directory_relative = Path()
+
+        ignored_names: set[str] = set()
+        for name in names:
+            candidate = directory_relative / name
+            if candidate in excluded_paths:
+                ignored_names.add(name)
+        return ignored_names
+
+    shutil.copytree(source_dir, target_dir, ignore=ignore)
 
 
 def verify_freshness(generators: Sequence[tuple[str, str, str]] | None = None) -> int:

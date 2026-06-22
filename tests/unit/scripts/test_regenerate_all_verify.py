@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import subprocess
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Sequence
 
 import pytest
-
 from scripts.agents import regenerate_all
 
 SAMPLE_GENERATORS: list[tuple[str, str, str]] = [
@@ -47,6 +47,12 @@ def _patch_regenerate_all(monkeypatch: pytest.MonkeyPatch, success: bool = True)
         return results, success
 
     monkeypatch.setattr(regenerate_all, "regenerate_all", fake_regenerate_all)
+
+
+def _init_git_repo(path: Path) -> None:
+    if regenerate_all.shutil.which("git") is None:
+        pytest.skip("git is required for regenerate_all diff tests")
+    subprocess.run(["git", "init"], cwd=path, check=True, capture_output=True, text=True)
 
 
 @pytest.mark.parametrize("generators", [SAMPLE_GENERATORS])
@@ -131,3 +137,95 @@ def test_verify_freshness_bails_on_generator_failure(
     assert not diff_called
     captured = capsys.readouterr()
     assert "Some generators failed. Cannot verify freshness." in captured.err
+
+
+def test_diff_directories_ignores_git_ignored_health_reports(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    _init_git_repo(repo_root)
+    (repo_root / ".gitignore").write_text(
+        "var/agents/health/health_report.*\n",
+        encoding="utf-8",
+    )
+
+    committed_dir = repo_root / "var" / "agents" / "health"
+    generated_dir = tmp_path / "generated" / "health"
+    committed_dir.mkdir(parents=True)
+    generated_dir.mkdir(parents=True)
+
+    (committed_dir / "agent_health_schema.json").write_text(
+        '{"schema": "same"}\n',
+        encoding="utf-8",
+    )
+    subprocess.run(
+        ["git", "add", ".gitignore", "var/agents/health/agent_health_schema.json"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    (generated_dir / "agent_health_schema.json").write_text(
+        '{"schema": "same"}\n',
+        encoding="utf-8",
+    )
+    (committed_dir / "health_report.json").write_text(
+        '{"status": "local"}\n',
+        encoding="utf-8",
+    )
+    (committed_dir / "health_report.txt").write_text(
+        "local report\n",
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(regenerate_all, "PROJECT_ROOT", repo_root)
+
+    assert regenerate_all._diff_directories(committed_dir, generated_dir) is None
+
+
+def test_diff_directories_still_reports_tracked_stale_health_files(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    _init_git_repo(repo_root)
+    (repo_root / ".gitignore").write_text(
+        "var/agents/health/health_report.*\n",
+        encoding="utf-8",
+    )
+
+    committed_dir = repo_root / "var" / "agents" / "health"
+    generated_dir = tmp_path / "generated" / "health"
+    committed_dir.mkdir(parents=True)
+    generated_dir.mkdir(parents=True)
+
+    (committed_dir / "agent_health_schema.json").write_text(
+        '{"schema": "committed"}\n',
+        encoding="utf-8",
+    )
+    subprocess.run(
+        ["git", "add", ".gitignore", "var/agents/health/agent_health_schema.json"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    (generated_dir / "agent_health_schema.json").write_text(
+        '{"schema": "generated"}\n',
+        encoding="utf-8",
+    )
+    (committed_dir / "health_report.json").write_text(
+        '{"status": "local"}\n',
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(regenerate_all, "PROJECT_ROOT", repo_root)
+
+    diff_text = regenerate_all._diff_directories(committed_dir, generated_dir)
+
+    assert diff_text is not None
+    assert "agent_health_schema.json" in diff_text
+    assert "health_report.json" not in diff_text

@@ -48,7 +48,7 @@ class IntegerRule(BaseValidationRule):
         if isinstance(value, str):
             candidate = value.strip()
             unsigned = candidate[1:] if candidate.startswith(("+", "-")) else candidate
-            if unsigned.isdigit() and unsigned:
+            if unsigned and all("0" <= character <= "9" for character in unsigned):
                 return int(candidate)
 
         raise RuleError(

@@ -104,6 +104,7 @@ class TestIntegerRule:
         rule = IntegerRule()
         assert rule("10") == 10
         assert rule("+10") == 10
+        assert rule(" +10 ") == 10
         assert rule("-7") == -7
         assert rule(7) == 7
 
@@ -112,7 +113,10 @@ class TestIntegerRule:
         with pytest.raises(RuleError):
             rule("not-int", "field")
 
-    @pytest.mark.parametrize("value", [True, False, 1.2, "1.2", "1e3", ""])
+    @pytest.mark.parametrize(
+        "value",
+        [True, False, 1.2, "1.2", "1e3", "", " ", "+", "-", "１２"],
+    )
     def test_lossy_integer_values_raise(self, value: object) -> None:
         rule = IntegerRule()
         with pytest.raises(RuleError):

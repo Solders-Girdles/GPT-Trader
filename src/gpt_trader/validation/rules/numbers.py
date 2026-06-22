@@ -19,13 +19,42 @@ class IntegerRule(BaseValidationRule):
             if self._allow_none:
                 return None
             raise RuleError(f"{field_name} expected an integer but received None", value=value)
-        try:
-            return int(value)
-        except Exception as exc:  # pragma: no cover - defensive
+
+        if isinstance(value, bool):
             raise RuleError(
                 f"{field_name} expected an integer-compatible value but received {value!r}",
                 value=value,
-            ) from exc
+            )
+
+        if isinstance(value, int):
+            return int(value)
+
+        if isinstance(value, float):
+            if value.is_integer():
+                return int(value)
+            raise RuleError(
+                f"{field_name} expected an integer-compatible value but received {value!r}",
+                value=value,
+            )
+
+        if isinstance(value, Decimal):
+            if value == value.to_integral_value():
+                return int(value)
+            raise RuleError(
+                f"{field_name} expected an integer-compatible value but received {value!r}",
+                value=value,
+            )
+
+        if isinstance(value, str):
+            candidate = value.strip()
+            unsigned = candidate[1:] if candidate.startswith(("+", "-")) else candidate
+            if unsigned.isdigit() and unsigned:
+                return int(candidate)
+
+        raise RuleError(
+            f"{field_name} expected an integer-compatible value but received {value!r}",
+            value=value,
+        )
 
 
 class DecimalRule(BaseValidationRule):

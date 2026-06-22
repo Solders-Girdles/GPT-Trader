@@ -103,12 +103,20 @@ class TestIntegerRule:
     def test_parses_integers(self) -> None:
         rule = IntegerRule()
         assert rule("10") == 10
+        assert rule("+10") == 10
+        assert rule("-7") == -7
         assert rule(7) == 7
 
     def test_invalid_integer_raises(self) -> None:
         rule = IntegerRule()
         with pytest.raises(RuleError):
             rule("not-int", "field")
+
+    @pytest.mark.parametrize("value", [True, False, 1.2, "1.2", "1e3", ""])
+    def test_lossy_integer_values_raise(self, value: object) -> None:
+        rule = IntegerRule()
+        with pytest.raises(RuleError):
+            rule(value, "field")
 
 
 class TestIntegerRuleExtended:

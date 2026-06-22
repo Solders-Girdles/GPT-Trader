@@ -408,9 +408,21 @@ class TradeIdeaService:
         return [view for view in views if view.state is state]
 
     def open_approved_count(self) -> int:
-        return len(self.list_views(TradeIdeaState.APPROVED))
+        approved_count = 0
+        for decision_id, event in self._latest_audit_events_by_decision_id().items():
+            if event.after_state is not TradeIdeaState.APPROVED:
+                continue
+            self._require_idea(decision_id)
+            approved_count += 1
+        return approved_count
 
     # -- internals -----------------------------------------------------------
+
+    def _latest_audit_events_by_decision_id(self) -> dict[str, AuditEvent]:
+        latest_events: dict[str, AuditEvent] = {}
+        for event in self._audit.read_events():
+            latest_events[event.decision_id] = event
+        return latest_events
 
     def _require_idea(self, decision_id: str) -> TradeIdea:
         try:

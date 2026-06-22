@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6695,
-    "total_files": 789,
+    "total_tests": 6697,
+    "total_files": 790,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6530,
+    "unit": 6532,
     "asyncio": 373,
     "parametrize": 188,
     "endpoints": 83,
@@ -203,6 +203,7 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_registration.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
@@ -8957,6 +8958,16 @@
         ],
         "docstring": "Test deltas are preserved in the JSON matrix.",
         "class": "TestFormatComparisonJson"
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py": [
+      {
+        "name": "test_propose_preview_ignores_unrelated_unaudited_latest_record",
+        "line": 43,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py": [
@@ -32835,7 +32846,15 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py": [
       {
         "name": "test_interrupted_resubmit_latest_hash_mismatch_is_integrity_error",
-        "line": 16,
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approval_count_ignores_unaudited_latest_for_nonapproved_records",
+        "line": 50,
         "markers": [
           "unit"
         ],

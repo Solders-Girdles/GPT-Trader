@@ -1,12 +1,13 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 708,
+    "tests_scanned": 709,
     "source_modules": 370,
     "unresolved_modules": 3
   },
   "source_to_tests": {
     "gpt_trader": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
@@ -1266,6 +1267,7 @@
       "tests/unit/gpt_trader/features/strategy_tools/test_risk_guards_edges.py"
     ],
     "gpt_trader.features.trade_ideas": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
@@ -2627,6 +2629,10 @@
     ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py": [
       "gpt_trader.cli.commands.optimize.formatters"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py": [
+      "gpt_trader",
+      "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py": [
       "gpt_trader",

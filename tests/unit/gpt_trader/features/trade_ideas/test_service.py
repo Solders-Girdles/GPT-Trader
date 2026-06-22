@@ -12,6 +12,7 @@ from gpt_trader.features.trade_ideas import (
     ActorType,
     AuditAction,
     DuplicateTradeIdeaError,
+    InvalidTransitionError,
     MaxLoss,
     PolicyViolationError,
     ProductType,
@@ -20,6 +21,7 @@ from gpt_trader.features.trade_ideas import (
     TradeDirection,
     TradeIdeaService,
     TradeIdeaState,
+    TradeIdeaStore,
     UnknownTradeIdeaError,
 )
 
@@ -93,6 +95,30 @@ def test_changes_loop_keeps_every_record_version(service: TradeIdeaService) -> N
     hashes = {event.record_hash for event in view.events}
     assert idea.record_hash() in hashes
     assert revised.record_hash() in hashes
+
+
+def test_resubmit_rejects_orphaned_record_without_audit_mutation(tmp_path: Path) -> None:
+    root = tmp_path / "trade_ideas"
+    service = TradeIdeaService(
+        root,
+        now_factory=lambda: datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
+    )
+    idea = build_trade_idea(decision_id="trade-20260612-orphaned-resubmit")
+    TradeIdeaStore(root / "records").save(idea)
+    latest_path = root / "records" / idea.decision_id / "latest.json"
+    audit_path = root / "audit.jsonl"
+    original_latest = latest_path.read_text(encoding="utf-8")
+    revised = build_trade_idea(
+        decision_id=idea.decision_id,
+        invalidation="Daily close below 59000",
+    )
+
+    with pytest.raises(InvalidTransitionError) as exc_info:
+        service.resubmit(revised, actor_id="idea-generator-v1")
+
+    assert exc_info.value.context["value"] == "none"
+    assert latest_path.read_text(encoding="utf-8") == original_latest
+    assert not audit_path.exists()
 
 
 def test_approval_refused_for_budget_violation(service: TradeIdeaService) -> None:

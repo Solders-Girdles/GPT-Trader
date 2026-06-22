@@ -33,7 +33,11 @@ from gpt_trader.features.trade_ideas.budget import (
 from gpt_trader.features.trade_ideas.models import TradeIdea
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
-from gpt_trader.features.trade_ideas.workflow import TradeIdeaState, validate_transition
+from gpt_trader.features.trade_ideas.workflow import (
+    InvalidTransitionError,
+    TradeIdeaState,
+    validate_transition,
+)
 
 DEFAULT_IDEAS_ROOT = Path("var/data/trade_ideas")
 IDEAS_ROOT_ENV_VAR = "GPT_TRADER_IDEAS_ROOT"
@@ -145,7 +149,16 @@ class TradeIdeaService:
     def validate_resubmission(self, idea: TradeIdea) -> None:
         """Validate resubmission lifecycle preconditions without writing state."""
         self._require_idea(idea.decision_id)
-        validate_transition(self._audit.current_state(idea.decision_id), TradeIdeaState.PROPOSED)
+        current_state = self._audit.current_state(idea.decision_id)
+        if current_state is not TradeIdeaState.NEEDS_CHANGES:
+            recorded = current_state.value if current_state else "none"
+            raise InvalidTransitionError(
+                f"Trade idea '{idea.decision_id}' must be in state "
+                f"'{TradeIdeaState.NEEDS_CHANGES.value}' before resubmit; got '{recorded}'",
+                field="before_state",
+                value=recorded,
+            )
+        validate_transition(current_state, TradeIdeaState.PROPOSED)
 
     def update_budget(self, budget: RiskBudget, actor_type: ActorType, actor_id: str) -> None:
         """Enact a new budget version, subject to the autonomy-mode policy."""

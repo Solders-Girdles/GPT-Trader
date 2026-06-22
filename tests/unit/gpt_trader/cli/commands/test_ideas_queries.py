@@ -117,6 +117,25 @@ def test_show_unknown_id_and_show_with_events(
     assert response["data"]["events"][0]["action"] == "proposed"
 
 
+def test_show_rejects_absolute_decision_id_before_store_lookup(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    outside_dir = tmp_path / "outside-record"
+    outside_dir.mkdir()
+    payload = _idea_payload(decision_id="trade-20350612-outside")
+    (outside_dir / "latest.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    exit_code, response = _run_json(
+        capsys,
+        ["ideas", "show", *_root_args(root), str(outside_dir)],
+    )
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert response["errors"][0]["details"]["field"] == "decision_id"
+
+
 def test_audit_verify_ok_and_tampered_line_failure(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

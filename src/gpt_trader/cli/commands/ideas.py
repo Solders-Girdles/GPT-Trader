@@ -30,6 +30,7 @@ from gpt_trader.features.trade_ideas import (
     TradeIdeaState,
     UnknownTradeIdeaError,
     create_trade_idea_service,
+    is_safe_decision_id,
     resolve_trade_idea_actor_id,
 )
 
@@ -264,9 +265,12 @@ def _add_actor_options(parser: ArgumentParser) -> None:
 
 def _decimal_value(value: str) -> Decimal:
     try:
-        return Decimal(value)
+        parsed = Decimal(value)
     except InvalidOperation as error:
         raise argparse.ArgumentTypeError(f"invalid decimal value: {value}") from error
+    if not parsed.is_finite():
+        raise argparse.ArgumentTypeError(f"decimal value must be finite: {value}")
+    return parsed
 
 
 def _bool_value(value: str) -> bool:
@@ -383,6 +387,9 @@ def _handle_list(args: Namespace) -> CliResponse:
 
 def _handle_show(args: Namespace) -> CliResponse:
     command = "ideas show"
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
     try:
         view = _service(args).get(args.decision_id)
     except Exception as error:
@@ -398,6 +405,9 @@ def _handle_approve(args: Namespace) -> CliResponse:
     reason_error = _reason_error(command, args)
     if reason_error is not None:
         return reason_error
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
     try:
         view = _service(args).approve(
             args.decision_id, actor_id=_actor_id(args), reason=args.reason
@@ -412,6 +422,9 @@ def _handle_reject(args: Namespace) -> CliResponse:
     reason_error = _reason_error(command, args)
     if reason_error is not None:
         return reason_error
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
     try:
         view = _service(args).reject(args.decision_id, actor_id=_actor_id(args), reason=args.reason)
     except Exception as error:
@@ -424,6 +437,9 @@ def _handle_request_changes(args: Namespace) -> CliResponse:
     reason_error = _reason_error(command, args)
     if reason_error is not None:
         return reason_error
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
     try:
         view = _service(args).request_changes(
             args.decision_id,
@@ -440,6 +456,9 @@ def _handle_cancel(args: Namespace) -> CliResponse:
     reason_error = _reason_error(command, args)
     if reason_error is not None:
         return reason_error
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
     try:
         view = _service(args).cancel(args.decision_id, actor_id=_actor_id(args), reason=args.reason)
     except Exception as error:
@@ -457,6 +476,10 @@ def _handle_expire(args: Namespace) -> CliResponse:
             CliErrorCode.MISSING_ARGUMENT,
             "Provide exactly one of DECISION_ID or --sweep",
         )
+    if has_decision_id:
+        decision_id_error = _decision_id_error(command, args, args.decision_id)
+        if decision_id_error is not None:
+            return decision_id_error
 
     try:
         service = _service(args)
@@ -475,6 +498,9 @@ def _handle_expire(args: Namespace) -> CliResponse:
 
 def _handle_mark_submitted(args: Namespace) -> CliResponse:
     command = "ideas mark-submitted"
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
     try:
         view = _service(args).record_submission(
             args.decision_id,
@@ -491,6 +517,9 @@ def _handle_mark_submitted(args: Namespace) -> CliResponse:
 
 def _handle_mark_filled(args: Namespace) -> CliResponse:
     command = "ideas mark-filled"
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
     try:
         view = _service(args).record_fill(
             args.decision_id,
@@ -644,6 +673,19 @@ def _input_error(command: str, args: Namespace, error: IdeaInputError) -> CliRes
         str(error),
         details=details,
         data={"field": error.field} if error.field else None,
+    )
+
+
+def _decision_id_error(command: str, args: Namespace, decision_id: str) -> CliResponse | None:
+    if is_safe_decision_id(decision_id):
+        return None
+    return _failure(
+        command,
+        args,
+        CliErrorCode.INVALID_ARGUMENT,
+        "decision_id must be a safe path segment",
+        details={"field": "decision_id", "value": decision_id},
+        data={"field": "decision_id"},
     )
 
 

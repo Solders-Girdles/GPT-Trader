@@ -22,6 +22,11 @@ from typing import Any
 _SAFE_DECISION_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
+def is_safe_decision_id(value: str) -> bool:
+    """Return whether a decision id is one filesystem-safe path segment."""
+    return bool(_SAFE_DECISION_ID.fullmatch(value))
+
+
 class AutonomyMode(str, Enum):
     RESEARCH_ONLY = "research_only"
     HUMAN_APPROVED_EXECUTION = "human_approved_execution"
@@ -274,7 +279,7 @@ class TradeIdea:
     broker_ticket: BrokerTicket = field(default_factory=BrokerTicket)
 
     def __post_init__(self) -> None:
-        if not _SAFE_DECISION_ID.fullmatch(self.decision_id):
+        if not is_safe_decision_id(self.decision_id):
             raise ValueError("decision_id must be a safe path segment")
 
     def to_dict(self) -> dict[str, Any]:

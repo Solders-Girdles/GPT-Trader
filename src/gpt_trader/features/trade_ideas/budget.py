@@ -25,6 +25,11 @@ from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import ActorType
 
 
+def _require_finite_decimal(value: Decimal, field: str) -> None:
+    if not value.is_finite():
+        raise ValueError(f"{field} must be finite")
+
+
 class BudgetIntegrityError(ValidationError):
     """Raised when a budget append would break version sequencing."""
 
@@ -44,6 +49,12 @@ class RiskBudget:
     allow_futures_leverage: bool
     allow_naked_shorts: bool
     reason: str
+
+    def __post_init__(self) -> None:
+        _require_finite_decimal(self.max_loss_per_idea_pct, "max_loss_per_idea_pct")
+        _require_finite_decimal(self.max_daily_loss_pct, "max_daily_loss_pct")
+        _require_finite_decimal(self.max_open_notional_pct, "max_open_notional_pct")
+        _require_finite_decimal(self.gain_retention_floor_pct, "gain_retention_floor_pct")
 
     def to_dict(self) -> dict[str, Any]:
         return {

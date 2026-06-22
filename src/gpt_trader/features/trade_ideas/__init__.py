@@ -40,6 +40,7 @@ from gpt_trader.features.trade_ideas.models import (
     TimeHorizon,
     TradeDirection,
     TradeIdea,
+    is_safe_decision_id,
 )
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.proposer import Proposer
@@ -135,6 +136,7 @@ __all__ = [
     "evaluate_eligibility",
     "extract_numeric_scoring_levels",
     "is_eligible",
+    "is_safe_decision_id",
     "new_event_id",
     "resolve_ideas_root",
     "resolve_trade_idea_actor_id",

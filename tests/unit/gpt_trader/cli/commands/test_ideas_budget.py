@@ -82,6 +82,32 @@ def test_budget_set_requires_at_least_one_field_flag(
     assert response["errors"][0]["code"] == CliErrorCode.MISSING_ARGUMENT.value
 
 
+def test_budget_set_rejects_non_finite_decimal_before_budget_write(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "ideas",
+                "budget",
+                "set",
+                *_root_args(root),
+                "--actor",
+                "rj",
+                "--max-loss-per-idea-pct",
+                "Infinity",
+                "--reason",
+                "Unsafe budget",
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert "decimal value must be finite" in capsys.readouterr().err
+    assert not (root / "risk_budget.jsonl").exists()
+
+
 def test_shared_root_and_actor_resolution_helpers(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

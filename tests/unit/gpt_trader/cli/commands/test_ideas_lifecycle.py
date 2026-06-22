@@ -233,6 +233,36 @@ def test_approve_policy_violation_returns_all_violations(
     assert any("expired" in violation for violation in violations)
 
 
+def test_approve_rejects_absolute_decision_id_before_audit_or_budget_writes(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    outside_dir = tmp_path / "outside-record"
+    outside_dir.mkdir()
+    payload = _idea_payload(decision_id="trade-20350612-outside-approve")
+    (outside_dir / "latest.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "approve",
+            *_root_args(root),
+            "--actor",
+            "rj",
+            str(outside_dir),
+            "--reason",
+            "Risk verified",
+        ],
+    )
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert response["errors"][0]["details"]["field"] == "decision_id"
+    assert not (root / "audit.jsonl").exists()
+    assert not (root / "risk_budget.jsonl").exists()
+
+
 def test_request_changes_resubmit_and_approve_loop(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:

@@ -279,3 +279,39 @@ def test_expire_due_ideas_skips_submitted_and_continues(tmp_path: Path) -> None:
     assert [view.idea.decision_id for view in expired] == [proposed.decision_id]
     assert service.get(submitted.decision_id).state is TradeIdeaState.SUBMITTED
     assert service.get(proposed.decision_id).state is TradeIdeaState.EXPIRED
+
+
+def test_review_latency_budget_refuses_approval_and_sweep_expires_far_future_idea(
+    tmp_path: Path,
+) -> None:
+    current_time = datetime(2026, 6, 12, 10, 0, tzinfo=UTC)
+    service = TradeIdeaService(
+        tmp_path / "trade_ideas",
+        now_factory=lambda: current_time,
+    )
+    idea = build_trade_idea(
+        decision_id="trade-20260612-review-latency",
+        time_horizon=TimeHorizon(
+            expected_hold="3-10 days",
+            expires_at=datetime(2035, 6, 19, 16, 0, tzinfo=UTC),
+        ),
+    )
+    service.propose(idea, actor_id="idea-generator-v1")
+    current_time = datetime(2026, 6, 12, 12, 0, tzinfo=UTC)
+    strict_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 2,
+            "max_review_latency_hours": 1,
+        }
+    )
+    service.update_budget(strict_budget, actor_type=ActorType.HUMAN, actor_id="rj")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(idea.decision_id, actor_id="rj", reason="Review lagged")
+
+    assert any("review deadline expired" in violation for violation in exc_info.value.violations)
+    expired = service.expire_due_ideas()
+
+    assert [view.idea.decision_id for view in expired] == [idea.decision_id]
+    assert service.get(idea.decision_id).state is TradeIdeaState.EXPIRED

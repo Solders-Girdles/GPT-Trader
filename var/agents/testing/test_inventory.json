@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6683,
-    "total_files": 787,
+    "total_tests": 6686,
+    "total_files": 788,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6518,
+    "unit": 6521,
     "asyncio": 373,
     "parametrize": 184,
     "endpoints": 83,
@@ -211,6 +211,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
       "tests/unit/gpt_trader/cli/test_broker_connectivity.py",
       "tests/unit/gpt_trader/cli/test_cli_unit.py",
@@ -9245,6 +9246,16 @@
       {
         "name": "test_resubmit_preview_budget_failure_happens_before_record_or_audit_write",
         "line": 273,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py": [
+      {
+        "name": "test_review_latency_budget_blocks_approval_and_sweep_for_far_future_idea",
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -32304,7 +32315,7 @@
         "docstring": ""
       },
       {
-        "name": "test_budget_changes_require_human_below_bounded_autonomy",
+        "name": "test_review_latency_budget_blocks_stale_proposed_idea",
         "line": 163,
         "markers": [
           "unit"
@@ -32312,8 +32323,16 @@
         "docstring": ""
       },
       {
+        "name": "test_budget_changes_require_human_below_bounded_autonomy",
+        "line": 185,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_bounded_autonomy_lets_agents_change_budgets",
-        "line": 170,
+        "line": 192,
         "markers": [
           "unit"
         ],
@@ -32730,6 +32749,14 @@
       {
         "name": "test_expire_due_ideas_skips_submitted_and_continues",
         "line": 253,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_review_latency_budget_refuses_approval_and_sweep_expires_far_future_idea",
+        "line": 284,
         "markers": [
           "unit"
         ],

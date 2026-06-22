@@ -10,7 +10,7 @@ risk budget.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import ActorType
@@ -49,6 +49,7 @@ class ApprovalPolicy:
         budget: RiskBudget,
         open_approved_count: int,
         now: datetime,
+        review_started_at: datetime | None = None,
     ) -> list[str]:
         """Return every reason this approval must be refused; empty means allowed."""
         violations: list[str] = []
@@ -93,7 +94,33 @@ class ApprovalPolicy:
         if expires_at is not None and expires_at <= now:
             violations.append(f"Idea expired at {expires_at.isoformat()}; approve nothing stale")
 
+        review_latency_violation = self.review_latency_violation(
+            review_started_at=review_started_at,
+            budget=budget,
+            now=now,
+        )
+        if review_latency_violation is not None:
+            violations.append(review_latency_violation)
+
         return violations
+
+    def review_latency_violation(
+        self,
+        *,
+        review_started_at: datetime | None,
+        budget: RiskBudget,
+        now: datetime,
+    ) -> str | None:
+        """Return a violation when the active review window has elapsed."""
+        if review_started_at is None:
+            return None
+        review_deadline = review_started_at + timedelta(hours=budget.max_review_latency_hours)
+        if review_deadline > now:
+            return None
+        return (
+            f"Idea review deadline expired at {review_deadline.isoformat()} "
+            f"after max_review_latency_hours={budget.max_review_latency_hours}"
+        )
 
     def budget_change_violations(self, actor_type: ActorType) -> list[str]:
         """Budget renegotiation rules for the current autonomy mode.

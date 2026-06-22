@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
@@ -158,6 +158,28 @@ def test_stale_idea_cannot_be_approved(trade_idea: TradeIdea) -> None:
     )
 
     assert any("expired" in violation for violation in found)
+
+
+def test_review_latency_budget_blocks_stale_proposed_idea(trade_idea: TradeIdea) -> None:
+    policy = ApprovalPolicy()
+    strict_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 2,
+            "max_review_latency_hours": 1,
+        }
+    )
+
+    found = policy.approval_violations(
+        trade_idea,
+        actor_type=ActorType.HUMAN,
+        budget=strict_budget,
+        open_approved_count=0,
+        now=NOW,
+        review_started_at=NOW - timedelta(hours=2),
+    )
+
+    assert any("review deadline expired" in violation for violation in found)
 
 
 def test_budget_changes_require_human_below_bounded_autonomy() -> None:

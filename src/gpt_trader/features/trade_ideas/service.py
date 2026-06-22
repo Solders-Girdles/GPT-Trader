@@ -140,6 +140,7 @@ class TradeIdeaService:
             budget=self.current_budget(),
             open_approved_count=self.open_approved_count(),
             now=self._now(),
+            review_started_at=self._review_started_at(idea.decision_id),
         )
 
     def validate_new_proposal(self, idea: TradeIdea) -> None:
@@ -239,6 +240,7 @@ class TradeIdeaService:
             budget=self.current_budget(),
             open_approved_count=self.open_approved_count(),
             now=self._now(),
+            review_started_at=self._review_started_at(decision_id),
         )
         if violations:
             raise PolicyViolationError(
@@ -317,12 +319,19 @@ class TradeIdeaService:
     ) -> list[TradeIdeaView]:
         """Expire all stale ideas that can legally transition to expired."""
         now = self._now()
+        budget = self._budget_log.current() or DEFAULT_RISK_BUDGET
         expired: list[TradeIdeaView] = []
         for view in self.list_views():
             if view.state not in EXPIRABLE_STATES:
                 continue
             expires_at = view.idea.time_horizon.expires_at
-            if expires_at is not None and expires_at <= now:
+            idea_expired = expires_at is not None and expires_at <= now
+            review_latency_violation = self._policy.review_latency_violation(
+                review_started_at=self._review_started_at_from_events(view.events),
+                budget=budget,
+                now=now,
+            )
+            if idea_expired or review_latency_violation is not None:
                 expired.append(
                     self.expire(
                         view.idea.decision_id,
@@ -421,6 +430,20 @@ class TradeIdeaService:
                 field="decision_id",
                 value=decision_id,
             )
+
+    def _review_started_at(self, decision_id: str) -> datetime | None:
+        return self._review_started_at_from_events(tuple(self._audit.read_events(decision_id)))
+
+    def _review_started_at_from_events(self, events: tuple[AuditEvent, ...]) -> datetime | None:
+        if not events or events[-1].after_state is not TradeIdeaState.PROPOSED:
+            return None
+        for event in reversed(events):
+            if (
+                event.action is AuditAction.PROPOSED
+                and event.after_state is TradeIdeaState.PROPOSED
+            ):
+                return event.timestamp
+        return None
 
     def _append(
         self,

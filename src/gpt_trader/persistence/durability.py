@@ -356,6 +356,7 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
                         operation="database_repair",
                         table=table_name,
                     )
+            # Commit the copied data to the new database before closing
             conn.commit()
         finally:
             try:

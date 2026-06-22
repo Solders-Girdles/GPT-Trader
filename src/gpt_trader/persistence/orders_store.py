@@ -632,9 +632,12 @@ class OrdersStore:
             logger.error(error_msg, operation="update_status", error=str(e))
             return WriteResult.fail(error_msg)
 
-    def verify_integrity(self) -> tuple[int, list[str]]:
+    def verify_integrity(self, chunk_size: int = 1000) -> tuple[int, list[str]]:
         """
         Verify integrity of all stored orders.
+
+        Args:
+            chunk_size: Number of orders to fetch and process in each batch.
 
         Returns:
             Tuple of (valid_count, list of invalid order_ids)
@@ -646,21 +649,26 @@ class OrdersStore:
         valid_count = 0
         invalid_orders: list[str] = []
 
-        for row in cursor:
-            record = self._row_to_record(row)
-            expected_checksum = record.compute_checksum()
+        while True:
+            rows = cursor.fetchmany(chunk_size)
+            if not rows:
+                break
 
-            if row["checksum"] and row["checksum"] != expected_checksum:
-                invalid_orders.append(record.order_id)
-                logger.warning(
-                    "Order checksum mismatch",
-                    operation="verify_integrity",
-                    order_id=record.order_id,
-                    stored=row["checksum"][:16] if row["checksum"] else None,
-                    expected=expected_checksum[:16],
-                )
-            else:
-                valid_count += 1
+            for row in rows:
+                record = self._row_to_record(row)
+                expected_checksum = record.compute_checksum()
+
+                if row["checksum"] and row["checksum"] != expected_checksum:
+                    invalid_orders.append(record.order_id)
+                    logger.warning(
+                        "Order checksum mismatch",
+                        operation="verify_integrity",
+                        order_id=record.order_id,
+                        stored=row["checksum"][:16] if row["checksum"] else None,
+                        expected=expected_checksum[:16],
+                    )
+                else:
+                    valid_count += 1
 
         return valid_count, invalid_orders
 

@@ -137,6 +137,15 @@ class TradeIdeaService:
             now=self._now(),
         )
 
+    def validate_new_proposal(self, idea: TradeIdea) -> None:
+        """Validate proposal lifecycle preconditions without writing state."""
+        self._require_new_decision_id(idea.decision_id)
+
+    def validate_resubmission(self, idea: TradeIdea) -> None:
+        """Validate resubmission lifecycle preconditions without writing state."""
+        self._require_idea(idea.decision_id)
+        validate_transition(self._audit.current_state(idea.decision_id), TradeIdeaState.PROPOSED)
+
     def update_budget(self, budget: RiskBudget, actor_type: ActorType, actor_id: str) -> None:
         """Enact a new budget version, subject to the autonomy-mode policy."""
         violations = self._policy.budget_change_violations(actor_type)
@@ -164,7 +173,7 @@ class TradeIdeaService:
         reason: str = "New trade idea proposed",
         evidence: tuple[str, ...] = (),
     ) -> TradeIdeaView:
-        self._require_new_decision_id(idea.decision_id)
+        self.validate_new_proposal(idea)
         self._store.save(idea)
         self._append(
             idea,
@@ -196,8 +205,7 @@ class TradeIdeaService:
         actor_type: ActorType = ActorType.AI,
         reason: str = "Revised after requested changes",
     ) -> TradeIdeaView:
-        self._require_idea(idea.decision_id)
-        validate_transition(self._audit.current_state(idea.decision_id), TradeIdeaState.PROPOSED)
+        self.validate_resubmission(idea)
         self._store.save(idea)
         self._append(
             idea,

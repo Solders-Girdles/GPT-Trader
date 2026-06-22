@@ -319,13 +319,14 @@ def _handle_propose(args: Namespace) -> CliResponse:
     try:
         idea = _load_trade_idea(args)
         service = _service(args)
+        service.validate_new_proposal(idea)
+        violations = service.approval_violations(idea, actor_type=ActorType.HUMAN)
         view = service.propose(
             idea,
             actor_id=_actor_id(args),
             actor_type=ActorType(args.actor_type),
             reason=args.reason,
         )
-        violations = service.approval_violations(view.idea, actor_type=ActorType.HUMAN)
     except IdeaInputError as error:
         return _input_error(command, args, error)
     except Exception as error:
@@ -348,13 +349,14 @@ def _handle_resubmit(args: Namespace) -> CliResponse:
     try:
         idea = _load_trade_idea(args)
         service = _service(args)
+        service.validate_resubmission(idea)
+        violations = service.approval_violations(idea, actor_type=ActorType.HUMAN)
         view = service.resubmit(
             idea,
             actor_id=_actor_id(args),
             actor_type=ActorType(args.actor_type),
             reason=args.reason,
         )
-        violations = service.approval_violations(view.idea, actor_type=ActorType.HUMAN)
     except IdeaInputError as error:
         return _input_error(command, args, error)
     except Exception as error:

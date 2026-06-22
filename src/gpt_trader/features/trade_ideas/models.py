@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
@@ -88,6 +89,14 @@ def _decimal_to_str(value: Decimal | None) -> str | None:
     return str(value)
 
 
+def _object_payload(value: Any, field: str) -> Mapping[str, Any]:
+    if value is None:
+        return {}
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{field} must be a JSON object")
+    return value
+
+
 def _require_timezone_aware(value: datetime | None, field: str) -> None:
     if value is None:
         return
@@ -125,7 +134,8 @@ class EntryZone:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> EntryZone:
+    def from_dict(cls, payload: Mapping[str, Any]) -> EntryZone:
+        payload = _object_payload(payload, "entry_zone")
         return cls(
             lower=_decimal_or_none(payload.get("lower"), "entry_zone.lower"),
             upper=_decimal_or_none(payload.get("upper"), "entry_zone.upper"),
@@ -153,7 +163,8 @@ class MaxLoss:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> MaxLoss:
+    def from_dict(cls, payload: Mapping[str, Any]) -> MaxLoss:
+        payload = _object_payload(payload, "max_loss")
         return cls(
             amount=_decimal_or_none(payload.get("amount"), "max_loss.amount"),
             percent_of_account=_decimal_or_none(
@@ -183,7 +194,8 @@ class SizingRecommendation:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> SizingRecommendation:
+    def from_dict(cls, payload: Mapping[str, Any]) -> SizingRecommendation:
+        payload = _object_payload(payload, "sizing_recommendation")
         return cls(
             quantity=_decimal_or_none(payload.get("quantity"), "sizing_recommendation.quantity"),
             notional=_decimal_or_none(payload.get("notional"), "sizing_recommendation.notional"),
@@ -208,7 +220,8 @@ class TimeHorizon:
         }
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> TimeHorizon:
+    def from_dict(cls, payload: Mapping[str, Any]) -> TimeHorizon:
+        payload = _object_payload(payload, "time_horizon")
         return cls(
             expected_hold=payload.get("expected_hold", ""),
             expires_at=_parse_expires_at(payload.get("expires_at")),
@@ -226,7 +239,8 @@ class Confidence:
         return {"label": self.label.value, "rationale": self.rationale}
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> Confidence:
+    def from_dict(cls, payload: Mapping[str, Any]) -> Confidence:
+        payload = _object_payload(payload, "confidence")
         return cls(
             label=ConfidenceLabel(payload["label"]),
             rationale=payload.get("rationale", ""),
@@ -244,7 +258,8 @@ class BrokerTicket:
         return {"venue": self.venue.value, "status": self.status.value}
 
     @classmethod
-    def from_dict(cls, payload: dict[str, Any]) -> BrokerTicket:
+    def from_dict(cls, payload: Mapping[str, Any]) -> BrokerTicket:
+        payload = _object_payload(payload, "broker_ticket")
         return cls(
             venue=TicketVenue(payload.get("venue", TicketVenue.NONE.value)),
             status=TicketStatus(payload.get("status", TicketStatus.NOT_CREATED.value)),

@@ -188,3 +188,59 @@ def test_propose_rejects_non_finite_preview_numbers_without_writes(
     assert "max_loss.percent_of_account must be finite" in response["errors"][0]["message"]
     assert not (root / "records" / payload["decision_id"]).exists()
     assert not (root / "audit.jsonl").exists()
+
+
+def test_propose_malformed_nested_section_returns_invalid_argument_without_writes(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    payload = _idea_payload(decision_id="trade-20350612-bad-entry-zone")
+    payload["entry_zone"] = []
+    path = _write_idea(tmp_path / "bad-entry-zone.json", payload)
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "propose",
+            *_root_args(root),
+            "--actor",
+            "idea-generator-v1",
+            "--file",
+            str(path),
+        ],
+    )
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert "entry_zone must be a JSON object" in response["errors"][0]["message"]
+    assert not (root / "records" / payload["decision_id"]).exists()
+    assert not (root / "audit.jsonl").exists()
+
+
+def test_propose_preview_budget_failure_happens_before_record_or_audit_write(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    root.mkdir()
+    (root / "risk_budget.jsonl").write_text("{malformed budget json}\n", encoding="utf-8")
+    payload = _idea_payload(decision_id="trade-20350612-bad-budget-preview")
+    path = _write_idea(tmp_path / "bad-budget-preview.json", payload)
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "propose",
+            *_root_args(root),
+            "--actor",
+            "idea-generator-v1",
+            "--file",
+            str(path),
+        ],
+    )
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.OPERATION_FAILED.value
+    assert not (root / "records" / payload["decision_id"]).exists()
+    assert not (root / "audit.jsonl").exists()

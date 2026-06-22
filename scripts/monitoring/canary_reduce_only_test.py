@@ -3,14 +3,15 @@
 Canary Reduce-Only Smoke Test (Production, Advanced Trade)
 
 Places a reduce-only limit order far from mark, verifies ACK and then cancels.
-Defaults to PREVIEW mode (no live order). Use --live to actually place.
+Defaults to PREVIEW mode (no live order). Live placement requires both --live
+and --confirm-human-approved-live-order.
 
 Usage:
   # Dry-run preview (safe)
   uv run python scripts/monitoring/canary_reduce_only_test.py --symbol BTC-PERP --price 10 --quantity 0.001
 
-  # Live (use only with proper guardrails configured)
-  uv run python scripts/monitoring/canary_reduce_only_test.py --live --symbol BTC-PERP --price 10 --quantity 0.001
+  # Live (requires human-approved execution confirmation)
+  uv run python scripts/monitoring/canary_reduce_only_test.py --live --confirm-human-approved-live-order --symbol BTC-PERP --price 10 --quantity 0.001
 """
 
 from __future__ import annotations
@@ -30,18 +31,23 @@ from gpt_trader.features.brokerages.coinbase.credentials import (
 )
 
 
-def _parse_args() -> argparse.Namespace:
+def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Reduce-Only Canary Smoke Test")
     parser.add_argument("--symbol", default="BTC-PERP", help="Perpetual symbol, e.g., BTC-PERP")
     parser.add_argument("--price", type=float, default=10.0, help="Limit price (far from market)")
     parser.add_argument("--quantity", type=float, default=0.001, help="Order quantity")
     parser.add_argument("--live", action="store_true", help="Place live order (otherwise preview)")
     parser.add_argument(
+        "--confirm-human-approved-live-order",
+        action="store_true",
+        help="Confirm that this live order test has passed the human-approved execution gate",
+    )
+    parser.add_argument(
         "--credentials-file",
         default=os.getenv("COINBASE_CREDENTIALS_FILE"),
         help="Path to Coinbase CDP JSON key file (default: $COINBASE_CREDENTIALS_FILE)",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def _resolve_credentials(
@@ -56,8 +62,22 @@ def _resolve_credentials(
     return creds
 
 
-def main() -> int:
-    args = _parse_args()
+def _live_gate_confirmed(args: argparse.Namespace) -> bool:
+    if not args.live:
+        return True
+    if args.confirm_human_approved_live_order:
+        return True
+    print(
+        "❌ Live reduce-only test requires --confirm-human-approved-live-order "
+        "after the human-approved execution gate is satisfied."
+    )
+    return False
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = _parse_args(argv)
+    if not _live_gate_confirmed(args):
+        return 2
     creds = _resolve_credentials(args.credentials_file)
 
     auth = create_cdp_jwt_auth(api_key=creds.key_name, private_key=creds.private_key)

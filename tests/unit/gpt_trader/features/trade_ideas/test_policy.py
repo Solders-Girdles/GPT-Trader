@@ -11,6 +11,8 @@ from gpt_trader.features.trade_ideas import (
     ApprovalPolicy,
     AutonomyMode,
     MaxLoss,
+    ProductType,
+    RiskBudget,
     TradeIdea,
 )
 
@@ -22,13 +24,14 @@ def violations(
     *,
     policy: ApprovalPolicy | None = None,
     actor_type: ActorType = ActorType.HUMAN,
+    budget: RiskBudget = DEFAULT_RISK_BUDGET,
     open_approved_count: int = 0,
 ) -> list[str]:
     active = policy or ApprovalPolicy()
     return active.approval_violations(
         idea,
         actor_type=actor_type,
-        budget=DEFAULT_RISK_BUDGET,
+        budget=budget,
         open_approved_count=open_approved_count,
         now=NOW,
     )
@@ -66,6 +69,27 @@ def test_max_loss_above_budget_cap_is_refused() -> None:
     found = violations(idea)
 
     assert any("exceeds budget cap" in violation for violation in found)
+
+
+def test_futures_leverage_requires_budget_permission() -> None:
+    idea = build_trade_idea(product_type=ProductType.FUTURES)
+
+    found = violations(idea)
+
+    assert found == ["product_type futures requires risk budget allow_futures_leverage=true"]
+
+
+def test_futures_leverage_passes_when_budget_allows_it() -> None:
+    idea = build_trade_idea(product_type=ProductType.FUTURES)
+    allowed_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 2,
+            "allow_futures_leverage": True,
+        }
+    )
+
+    assert violations(idea, budget=allowed_budget) == []
 
 
 def test_missing_percent_cannot_be_verified() -> None:

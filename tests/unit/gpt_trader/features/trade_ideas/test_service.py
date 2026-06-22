@@ -14,6 +14,7 @@ from gpt_trader.features.trade_ideas import (
     DuplicateTradeIdeaError,
     MaxLoss,
     PolicyViolationError,
+    ProductType,
     RiskBudget,
     TimeHorizon,
     TradeIdeaService,
@@ -104,6 +105,30 @@ def test_approval_refused_for_budget_violation(service: TradeIdeaService) -> Non
 
     assert any("exceeds budget cap" in violation for violation in exc_info.value.violations)
     assert service.get(idea.decision_id).state is TradeIdeaState.PROPOSED
+
+
+def test_futures_approval_requires_budget_leverage_flag(service: TradeIdeaService) -> None:
+    idea = build_trade_idea(product_type=ProductType.FUTURES)
+    service.propose(idea, actor_id="idea-generator-v1")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(idea.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert any("allow_futures_leverage" in violation for violation in exc_info.value.violations)
+    assert service.get(idea.decision_id).state is TradeIdeaState.PROPOSED
+
+    allowed_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 2,
+            "allow_futures_leverage": True,
+        }
+    )
+    service.update_budget(allowed_budget, actor_type=ActorType.HUMAN, actor_id="rj")
+
+    view = service.approve(idea.decision_id, actor_id="rj", reason="Futures leverage accepted")
+
+    assert view.state is TradeIdeaState.APPROVED
 
 
 def test_unknown_decision_id_is_an_error(service: TradeIdeaService) -> None:

@@ -49,6 +49,18 @@ class AuditIntegrityError(ValidationError):
     """Raised when an append would break audit-log sequencing or integrity."""
 
 
+_ACTION_AFTER_STATES: dict[AuditAction, TradeIdeaState] = {
+    AuditAction.PROPOSED: TradeIdeaState.PROPOSED,
+    AuditAction.CHANGED: TradeIdeaState.NEEDS_CHANGES,
+    AuditAction.APPROVED: TradeIdeaState.APPROVED,
+    AuditAction.REJECTED: TradeIdeaState.REJECTED,
+    AuditAction.SUBMITTED: TradeIdeaState.SUBMITTED,
+    AuditAction.FILLED: TradeIdeaState.FILLED,
+    AuditAction.CANCELLED: TradeIdeaState.CANCELLED,
+    AuditAction.EXPIRED: TradeIdeaState.EXPIRED,
+}
+
+
 def new_event_id() -> str:
     return f"evt-{uuid.uuid4().hex}"
 
@@ -132,6 +144,7 @@ class TradeIdeaAuditLog:
                 field="before_state",
                 value=claimed,
             )
+        _validate_action_after_state(event)
         validate_transition(event.before_state, event.after_state)
 
         self._path.parent.mkdir(parents=True, exist_ok=True)
@@ -184,6 +197,7 @@ class TradeIdeaAuditLog:
                         field="before_state",
                         value=claimed,
                     )
+                _validate_action_after_state(event, line_number=line_number)
                 try:
                     validate_transition(event.before_state, event.after_state)
                 except InvalidTransitionError as error:
@@ -203,3 +217,18 @@ class TradeIdeaAuditLog:
         if not events:
             return None
         return events[-1].after_state
+
+
+def _validate_action_after_state(event: AuditEvent, *, line_number: int | None = None) -> None:
+    expected_after_state = _ACTION_AFTER_STATES[event.action]
+    if event.after_state is expected_after_state:
+        return
+
+    location = f"Audit log line {line_number}" if line_number is not None else "Audit event"
+    raise AuditIntegrityError(
+        f"{location} for '{event.decision_id}' has action '{event.action.value}' "
+        f"but after_state '{event.after_state.value}'; expected "
+        f"after_state '{expected_after_state.value}'",
+        field="after_state",
+        value=event.after_state.value,
+    )

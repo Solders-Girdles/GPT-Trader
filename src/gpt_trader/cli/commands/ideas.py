@@ -204,17 +204,17 @@ def register(subparsers: Any) -> None:
     _add_common_options(budget_set)
     _add_actor_options(budget_set)
     budget_set.add_argument("--reason", required=True, help="Reason for this budget version")
-    budget_set.add_argument("--max-loss-per-idea-pct", type=_decimal_value)
-    budget_set.add_argument("--max-daily-loss-pct", type=_decimal_value)
-    budget_set.add_argument("--max-open-notional-pct", type=_decimal_value)
-    budget_set.add_argument("--max-concurrent-approved-tickets", type=int)
-    budget_set.add_argument("--max-review-latency-hours", type=int)
+    budget_set.add_argument("--max-loss-per-idea-pct", type=_non_negative_decimal_value)
+    budget_set.add_argument("--max-daily-loss-pct", type=_non_negative_decimal_value)
+    budget_set.add_argument("--max-open-notional-pct", type=_non_negative_decimal_value)
+    budget_set.add_argument("--max-concurrent-approved-tickets", type=_non_negative_int_value)
+    budget_set.add_argument("--max-review-latency-hours", type=_non_negative_int_value)
     budget_set.add_argument(
         "--sizing-capped-by-budget",
         choices=("true", "false"),
         help="Whether sizing is capped by budget",
     )
-    budget_set.add_argument("--gain-retention-floor-pct", type=_decimal_value)
+    budget_set.add_argument("--gain-retention-floor-pct", type=_non_negative_decimal_value)
     budget_set.add_argument(
         "--allow-futures-leverage",
         choices=("true", "false"),
@@ -270,6 +270,23 @@ def _decimal_value(value: str) -> Decimal:
         raise argparse.ArgumentTypeError(f"invalid decimal value: {value}") from error
     if not parsed.is_finite():
         raise argparse.ArgumentTypeError(f"decimal value must be finite: {value}")
+    return parsed
+
+
+def _non_negative_decimal_value(value: str) -> Decimal:
+    parsed = _decimal_value(value)
+    if parsed < 0:
+        raise argparse.ArgumentTypeError(f"decimal value must be non-negative: {value}")
+    return parsed
+
+
+def _non_negative_int_value(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(f"invalid integer value: {value}") from error
+    if parsed < 0:
+        raise argparse.ArgumentTypeError(f"integer value must be non-negative: {value}")
     return parsed
 
 

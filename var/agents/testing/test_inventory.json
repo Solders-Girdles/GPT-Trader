@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6686,
+    "total_tests": 6689,
     "total_files": 788,
     "markers_used": 16
   },
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6521,
+    "unit": 6524,
     "asyncio": 373,
-    "parametrize": 184,
+    "parametrize": 187,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -8984,8 +8984,17 @@
         "docstring": ""
       },
       {
+        "name": "test_budget_set_rejects_negative_limit_flags_before_budget_write",
+        "line": 122,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_shared_root_and_actor_resolution_helpers",
-        "line": 111,
+        "line": 151,
         "markers": [
           "unit"
         ],
@@ -32001,8 +32010,26 @@
         "docstring": ""
       },
       {
+        "name": "test_budget_rejects_negative_decimal_limits_from_dict",
+        "line": 58,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_budget_rejects_negative_integer_limits_from_dict",
+        "line": 72,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_empty_log_has_no_current_budget",
-        "line": 49,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -32010,7 +32037,7 @@
       },
       {
         "name": "test_append_and_current",
-        "line": 54,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -32018,7 +32045,7 @@
       },
       {
         "name": "test_versions_must_be_contiguous",
-        "line": 61,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -32026,7 +32053,7 @@
       },
       {
         "name": "test_renegotiated_budget_becomes_current",
-        "line": 69,
+        "line": 99,
         "markers": [
           "unit"
         ],

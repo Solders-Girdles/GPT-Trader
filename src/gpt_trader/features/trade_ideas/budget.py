@@ -30,6 +30,16 @@ def _require_finite_decimal(value: Decimal, field: str) -> None:
         raise ValueError(f"{field} must be finite")
 
 
+def _require_non_negative_decimal(value: Decimal, field: str) -> None:
+    if value < 0:
+        raise ValueError(f"{field} must be non-negative")
+
+
+def _require_non_negative_int(value: int, field: str) -> None:
+    if value < 0:
+        raise ValueError(f"{field} must be non-negative")
+
+
 class BudgetIntegrityError(ValidationError):
     """Raised when a budget append would break version sequencing."""
 
@@ -55,6 +65,14 @@ class RiskBudget:
         _require_finite_decimal(self.max_daily_loss_pct, "max_daily_loss_pct")
         _require_finite_decimal(self.max_open_notional_pct, "max_open_notional_pct")
         _require_finite_decimal(self.gain_retention_floor_pct, "gain_retention_floor_pct")
+        _require_non_negative_decimal(self.max_loss_per_idea_pct, "max_loss_per_idea_pct")
+        _require_non_negative_decimal(self.max_daily_loss_pct, "max_daily_loss_pct")
+        _require_non_negative_decimal(self.max_open_notional_pct, "max_open_notional_pct")
+        _require_non_negative_decimal(self.gain_retention_floor_pct, "gain_retention_floor_pct")
+        _require_non_negative_int(
+            self.max_concurrent_approved_tickets, "max_concurrent_approved_tickets"
+        )
+        _require_non_negative_int(self.max_review_latency_hours, "max_review_latency_hours")
 
     def to_dict(self) -> dict[str, Any]:
         return {

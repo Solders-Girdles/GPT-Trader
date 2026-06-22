@@ -108,6 +108,46 @@ def test_budget_set_rejects_non_finite_decimal_before_budget_write(
     assert not (root / "risk_budget.jsonl").exists()
 
 
+@pytest.mark.parametrize(
+    ("flag", "expected_error"),
+    [
+        ("--max-loss-per-idea-pct", "decimal value must be non-negative"),
+        ("--max-daily-loss-pct", "decimal value must be non-negative"),
+        ("--max-open-notional-pct", "decimal value must be non-negative"),
+        ("--gain-retention-floor-pct", "decimal value must be non-negative"),
+        ("--max-concurrent-approved-tickets", "integer value must be non-negative"),
+        ("--max-review-latency-hours", "integer value must be non-negative"),
+    ],
+)
+def test_budget_set_rejects_negative_limit_flags_before_budget_write(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    flag: str,
+    expected_error: str,
+) -> None:
+    root = tmp_path / "ideas"
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(
+            [
+                "ideas",
+                "budget",
+                "set",
+                *_root_args(root),
+                "--actor",
+                "rj",
+                flag,
+                "-1",
+                "--reason",
+                "Unsafe budget",
+            ]
+        )
+
+    assert exc_info.value.code == 2
+    assert expected_error in capsys.readouterr().err
+    assert not (root / "risk_budget.jsonl").exists()
+
+
 def test_shared_root_and_actor_resolution_helpers(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

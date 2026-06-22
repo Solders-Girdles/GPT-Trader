@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6630,
-    "total_files": 778,
+    "total_tests": 6645,
+    "total_files": 782,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6465,
+    "unit": 6480,
     "asyncio": 373,
     "parametrize": 174,
     "endpoints": 83,
@@ -203,6 +203,10 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_registration.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/test_broker_connectivity.py",
       "tests/unit/gpt_trader/cli/test_cli_unit.py",
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py",
@@ -8946,6 +8950,134 @@
         ],
         "docstring": "Test deltas are preserved in the JSON matrix.",
         "class": "TestFormatComparisonJson"
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py": [
+      {
+        "name": "test_budget_show_seeds_defaults_and_budget_set_bumps_version",
+        "line": 31,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_budget_set_requires_at_least_one_field_flag",
+        "line": 62,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_shared_root_and_actor_resolution_helpers",
+        "line": 85,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py": [
+      {
+        "name": "test_propose_from_file_persists_record_and_warns_for_non_compliant_idea",
+        "line": 80,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_from_stdin_returns_json_envelope",
+        "line": 101,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_missing_required_field_returns_invalid_argument",
+        "line": 119,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approve_happy_path_records_human_actor",
+        "line": 145,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approve_policy_violation_returns_all_violations",
+        "line": 178,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_request_changes_resubmit_and_approve_loop",
+        "line": 210,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reject_cancel_expire_and_sweep_paths",
+        "line": 270,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py": [
+      {
+        "name": "test_mark_submitted_and_filled_record_manual_execution_events",
+        "line": 60,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py": [
+      {
+        "name": "test_list_empty_store_and_state_filter",
+        "line": 63,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_show_unknown_id_and_show_with_events",
+        "line": 100,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_verify_ok_and_tampered_line_failure",
+        "line": 120,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_help_lists_ideas_subcommands",
+        "line": 139,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/cli/test_broker_connectivity.py": [

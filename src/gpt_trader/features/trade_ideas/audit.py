@@ -20,7 +20,11 @@ from pathlib import Path
 from typing import Any
 
 from gpt_trader.errors import ValidationError
-from gpt_trader.features.trade_ideas.workflow import TradeIdeaState, validate_transition
+from gpt_trader.features.trade_ideas.workflow import (
+    InvalidTransitionError,
+    TradeIdeaState,
+    validate_transition,
+)
 
 
 class ActorType(str, Enum):
@@ -147,6 +151,51 @@ class TradeIdeaAuditLog:
                 event = AuditEvent.from_dict(json.loads(line))
                 if decision_id is None or event.decision_id == decision_id:
                     events.append(event)
+        return events
+
+    def verify(self) -> list[AuditEvent]:
+        """Read the full log and verify per-decision state sequencing."""
+        if not self._path.exists():
+            return []
+
+        events: list[AuditEvent] = []
+        states: dict[str, TradeIdeaState | None] = {}
+        with self._path.open("r", encoding="utf-8") as handle:
+            for line_number, raw_line in enumerate(handle, start=1):
+                line = raw_line.strip()
+                if not line:
+                    continue
+                try:
+                    event = AuditEvent.from_dict(json.loads(line))
+                except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+                    raise AuditIntegrityError(
+                        f"Audit log line {line_number} is malformed: {error}",
+                        field="line",
+                        value=line_number,
+                    ) from error
+
+                expected_before = states.get(event.decision_id)
+                if event.before_state != expected_before:
+                    recorded = expected_before.value if expected_before else "none"
+                    claimed = event.before_state.value if event.before_state else "none"
+                    raise AuditIntegrityError(
+                        f"Audit log line {line_number} for '{event.decision_id}' claims "
+                        f"before_state '{claimed}' but previous events record '{recorded}'",
+                        field="before_state",
+                        value=claimed,
+                    )
+                try:
+                    validate_transition(event.before_state, event.after_state)
+                except InvalidTransitionError as error:
+                    raise AuditIntegrityError(
+                        f"Audit log line {line_number} has an illegal transition: {error}",
+                        field="line",
+                        value=line_number,
+                    ) from error
+
+                states[event.decision_id] = event.after_state
+                events.append(event)
+
         return events
 
     def current_state(self, decision_id: str) -> TradeIdeaState | None:

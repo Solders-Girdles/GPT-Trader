@@ -1,11 +1,17 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 697,
-    "source_modules": 369,
+    "tests_scanned": 701,
+    "source_modules": 370,
     "unresolved_modules": 3
   },
   "source_to_tests": {
+    "gpt_trader": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py"
+    ],
     "gpt_trader.agents": [
       "tests/unit/gpt_trader/agents/test_agents_import.py",
       "tests/unit/gpt_trader/agents/test_cli_edges.py"
@@ -271,6 +277,7 @@
     ],
     "gpt_trader.cli.commands": [
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/test_commands_controls.py",
       "tests/unit/gpt_trader/cli/test_commands_preflight.py"
     ],
@@ -319,6 +326,9 @@
     ],
     "gpt_trader.cli.response": [
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/test_commands_orders_history.py",
       "tests/unit/gpt_trader/cli/test_commands_report.py",
       "tests/unit/gpt_trader/cli/test_response_cli_response.py",
@@ -1244,6 +1254,10 @@
       "tests/unit/gpt_trader/features/strategy_tools/test_risk_guards_edges.py"
     ],
     "gpt_trader.features.trade_ideas": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
@@ -2594,6 +2608,26 @@
     ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py": [
       "gpt_trader.cli.commands.optimize.formatters"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py": [
+      "gpt_trader",
+      "gpt_trader.cli.response",
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py": [
+      "gpt_trader",
+      "gpt_trader.cli.commands",
+      "gpt_trader.cli.response",
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py": [
+      "gpt_trader",
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py": [
+      "gpt_trader",
+      "gpt_trader.cli.response",
+      "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/cli/test_broker_connectivity.py": [
       "gpt_trader.cli.commands.broker_connectivity",
@@ -4860,6 +4894,7 @@
     ]
   },
   "source_paths": {
+    "gpt_trader": "src/gpt_trader/__init__.py",
     "gpt_trader.agents": "src/gpt_trader/agents/__init__.py",
     "gpt_trader.app": "src/gpt_trader/app/__init__.py",
     "gpt_trader.app.bootstrap": "src/gpt_trader/app/bootstrap.py",

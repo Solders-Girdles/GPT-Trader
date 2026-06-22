@@ -1,5 +1,10 @@
 # GPT-Trader Decision Log
 
+---
+status: current
+last-updated: 2026-06-22
+---
+
 Durable product and engineering direction for GPT-Trader. Use this log for
 decisions that should outlive chat, PR receipts, and local branch state.
 

@@ -8,6 +8,8 @@ servers must stay thin adapters over these methods.
 
 from __future__ import annotations
 
+import getpass
+import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -30,7 +32,11 @@ from gpt_trader.features.trade_ideas.budget import (
 from gpt_trader.features.trade_ideas.models import TradeIdea
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
-from gpt_trader.features.trade_ideas.workflow import TradeIdeaState
+from gpt_trader.features.trade_ideas.workflow import TERMINAL_STATES, TradeIdeaState
+
+DEFAULT_IDEAS_ROOT = Path("var/data/trade_ideas")
+IDEAS_ROOT_ENV_VAR = "GPT_TRADER_IDEAS_ROOT"
+ACTOR_ENV_VAR = "GPT_TRADER_ACTOR"
 
 
 class UnknownTradeIdeaError(ValidationError):
@@ -48,6 +54,26 @@ class TradeIdeaView:
 
 def _utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+def resolve_ideas_root(root: Path | None = None) -> Path:
+    """Resolve the trade-idea storage root from arg, environment, or default."""
+    if root is not None:
+        return root
+    configured_root = os.environ.get(IDEAS_ROOT_ENV_VAR, "").strip()
+    if configured_root:
+        return Path(configured_root)
+    return DEFAULT_IDEAS_ROOT
+
+
+def resolve_trade_idea_actor_id(actor_id: str | None = None) -> str:
+    """Resolve actor identity from arg, environment, or the current OS user."""
+    if actor_id and actor_id.strip():
+        return actor_id
+    configured_actor = os.environ.get(ACTOR_ENV_VAR, "").strip()
+    if configured_actor:
+        return configured_actor
+    return getpass.getuser()
 
 
 class TradeIdeaService:
@@ -84,6 +110,21 @@ class TradeIdeaService:
             )
         )
         return DEFAULT_RISK_BUDGET
+
+    def approval_violations(
+        self,
+        idea: TradeIdea,
+        *,
+        actor_type: ActorType = ActorType.HUMAN,
+    ) -> list[str]:
+        """Return every current-policy reason an idea could not be approved."""
+        return self._policy.approval_violations(
+            idea,
+            actor_type=actor_type,
+            budget=self.current_budget(),
+            open_approved_count=self.open_approved_count(),
+            now=self._now(),
+        )
 
     def update_budget(self, budget: RiskBudget, actor_type: ActorType, actor_id: str) -> None:
         """Enact a new budget version, subject to the autonomy-mode policy."""
@@ -232,6 +273,31 @@ class TradeIdeaService:
         )
         return self.get(decision_id)
 
+    def expire_due_ideas(
+        self,
+        *,
+        actor_id: str = "expiry-sweep",
+        reason: str = "Idea passed its review or execution deadline",
+        actor_type: ActorType = ActorType.SYSTEM,
+    ) -> list[TradeIdeaView]:
+        """Expire all non-terminal ideas whose review deadline has passed."""
+        now = self._now()
+        expired: list[TradeIdeaView] = []
+        for view in self.list_views():
+            if view.state in TERMINAL_STATES:
+                continue
+            expires_at = view.idea.time_horizon.expires_at
+            if expires_at is not None and expires_at <= now:
+                expired.append(
+                    self.expire(
+                        view.idea.decision_id,
+                        actor_id=actor_id,
+                        reason=reason,
+                        actor_type=actor_type,
+                    )
+                )
+        return expired
+
     def record_submission(
         self,
         decision_id: str,
@@ -335,3 +401,13 @@ class TradeIdeaService:
                 external_order_id=external_order_id,
             )
         )
+
+
+def create_trade_idea_service(
+    root: Path | None = None,
+    *,
+    policy: ApprovalPolicy | None = None,
+    now_factory: Callable[[], datetime] = _utc_now,
+) -> TradeIdeaService:
+    """Resolve root (arg > GPT_TRADER_IDEAS_ROOT > default) and build the service."""
+    return TradeIdeaService(resolve_ideas_root(root), policy=policy, now_factory=now_factory)

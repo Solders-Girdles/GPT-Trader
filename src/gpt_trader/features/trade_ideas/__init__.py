@@ -55,9 +55,15 @@ from gpt_trader.features.trade_ideas.replay import (
     score_trade_idea,
 )
 from gpt_trader.features.trade_ideas.service import (
+    ACTOR_ENV_VAR,
+    DEFAULT_IDEAS_ROOT,
+    IDEAS_ROOT_ENV_VAR,
     TradeIdeaService,
     TradeIdeaView,
     UnknownTradeIdeaError,
+    create_trade_idea_service,
+    resolve_ideas_root,
+    resolve_trade_idea_actor_id,
 )
 from gpt_trader.features.trade_ideas.snapshot import (
     MarketSnapshot,
@@ -75,7 +81,10 @@ from gpt_trader.features.trade_ideas.workflow import (
 
 __all__ = [
     "ALLOWED_TRANSITIONS",
+    "ACTOR_ENV_VAR",
     "DEFAULT_RISK_BUDGET",
+    "DEFAULT_IDEAS_ROOT",
+    "IDEAS_ROOT_ENV_VAR",
     "TERMINAL_STATES",
     "ActorType",
     "ApprovalPolicy",
@@ -120,10 +129,13 @@ __all__ = [
     "TradeIdeaStore",
     "TradeIdeaView",
     "UnknownTradeIdeaError",
+    "create_trade_idea_service",
     "evaluate_eligibility",
     "extract_numeric_scoring_levels",
     "is_eligible",
     "new_event_id",
+    "resolve_ideas_root",
+    "resolve_trade_idea_actor_id",
     "score_trade_idea",
     "validate_transition",
 ]

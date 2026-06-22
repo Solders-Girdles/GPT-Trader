@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6630,
-    "total_files": 778,
+    "total_tests": 6632,
+    "total_files": 779,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6465,
+    "unit": 6467,
     "asyncio": 373,
     "parametrize": 174,
     "endpoints": 83,
@@ -705,6 +705,9 @@
     ],
     "test_canary_process.py": [
       "tests/unit/scripts/test_canary_process.py"
+    ],
+    "test_canary_reduce_only_test.py": [
+      "tests/unit/scripts/test_canary_reduce_only_test.py"
     ],
     "test_canary_watchdog.py": [
       "tests/unit/scripts/test_canary_watchdog.py"
@@ -59545,6 +59548,24 @@
       {
         "name": "test_is_canary_command_excludes_canary_open",
         "line": 131,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_canary_reduce_only_test.py": [
+      {
+        "name": "test_live_mode_requires_human_approved_confirmation_before_credentials",
+        "line": 27,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_live_mode_with_confirmation_can_place_and_cancel",
+        "line": 44,
         "markers": [
           "unit"
         ],

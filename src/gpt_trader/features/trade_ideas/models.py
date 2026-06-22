@@ -108,6 +108,12 @@ def _string_sequence(value: Any, field: str) -> tuple[str, ...]:
     return tuple(value)
 
 
+def _string_value(value: Any, field: str) -> str:
+    if not isinstance(value, str):
+        raise ValueError(f"{field} must be a string")
+    return value
+
+
 def _require_timezone_aware(value: datetime | None, field: str) -> None:
     if value is None:
         return
@@ -150,7 +156,7 @@ class EntryZone:
         return cls(
             lower=_decimal_or_none(payload.get("lower"), "entry_zone.lower"),
             upper=_decimal_or_none(payload.get("upper"), "entry_zone.upper"),
-            trigger=payload.get("trigger", ""),
+            trigger=_string_value(payload.get("trigger", ""), "entry_zone.trigger"),
         )
 
 
@@ -210,7 +216,9 @@ class SizingRecommendation:
         return cls(
             quantity=_decimal_or_none(payload.get("quantity"), "sizing_recommendation.quantity"),
             notional=_decimal_or_none(payload.get("notional"), "sizing_recommendation.notional"),
-            rationale=payload.get("rationale", ""),
+            rationale=_string_value(
+                payload.get("rationale", ""), "sizing_recommendation.rationale"
+            ),
         )
 
 
@@ -234,7 +242,9 @@ class TimeHorizon:
     def from_dict(cls, payload: Mapping[str, Any]) -> TimeHorizon:
         payload = _object_payload(payload, "time_horizon")
         return cls(
-            expected_hold=payload.get("expected_hold", ""),
+            expected_hold=_string_value(
+                payload.get("expected_hold", ""), "time_horizon.expected_hold"
+            ),
             expires_at=_parse_expires_at(payload.get("expires_at")),
         )
 
@@ -254,7 +264,7 @@ class Confidence:
         payload = _object_payload(payload, "confidence")
         return cls(
             label=ConfidenceLabel(payload["label"]),
-            rationale=payload.get("rationale", ""),
+            rationale=_string_value(payload.get("rationale", ""), "confidence.rationale"),
         )
 
 
@@ -334,13 +344,13 @@ class TradeIdea:
         return cls(
             decision_id=payload["decision_id"],
             autonomy_mode=AutonomyMode(payload["autonomy_mode"]),
-            thesis=payload["thesis"],
-            instrument=payload["instrument"],
+            thesis=_string_value(payload["thesis"], "thesis"),
+            instrument=_string_value(payload["instrument"], "instrument"),
             product_type=ProductType(payload["product_type"]),
             direction=TradeDirection(payload["direction"]),
             entry_zone=EntryZone.from_dict(payload.get("entry_zone", {})),
-            invalidation=payload["invalidation"],
-            target_exit=payload["target_exit"],
+            invalidation=_string_value(payload["invalidation"], "invalidation"),
+            target_exit=_string_value(payload["target_exit"], "target_exit"),
             max_loss=MaxLoss.from_dict(payload.get("max_loss", {})),
             sizing_recommendation=SizingRecommendation.from_dict(
                 payload.get("sizing_recommendation", {})
@@ -348,7 +358,7 @@ class TradeIdea:
             time_horizon=TimeHorizon.from_dict(payload.get("time_horizon", {})),
             data_used=_string_sequence(payload.get("data_used", ()), "data_used"),
             confidence=Confidence.from_dict(payload["confidence"]),
-            failure_mode=payload["failure_mode"],
+            failure_mode=_string_value(payload["failure_mode"], "failure_mode"),
             do_not_trade_if=_string_sequence(payload.get("do_not_trade_if", ()), "do_not_trade_if"),
             broker_ticket=BrokerTicket.from_dict(payload.get("broker_ticket", {})),
         )

@@ -41,6 +41,15 @@ def _root_args(root: Path) -> list[str]:
     return ["--ideas-root", str(root), "--format", "json"]
 
 
+def _set_payload_field(payload: dict[str, Any], field_path: str, value: object) -> None:
+    target = payload
+    parts = field_path.split(".")
+    for part in parts[:-1]:
+        target = target[part]
+        assert isinstance(target, dict)
+    target[parts[-1]] = value
+
+
 def _propose(
     capsys: pytest.CaptureFixture[str],
     root: Path,
@@ -178,6 +187,67 @@ def test_resubmit_rejects_malformed_string_sequences_without_writes(
         revised[field_path] = malformed_value
     revised_path = _write_idea(
         tmp_path / f"bad-resubmit-sequence-{field_path.replace('.', '-')}.json", revised
+    )
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "resubmit",
+            *_root_args(root),
+            "--actor",
+            "idea-generator-v1",
+            "--file",
+            str(revised_path),
+        ],
+    )
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert message in response["errors"][0]["message"]
+    assert latest_path.read_text(encoding="utf-8") == original_latest
+    assert audit_path.read_text(encoding="utf-8") == original_audit
+
+
+@pytest.mark.parametrize(
+    ("field_path", "malformed_value", "message"),
+    [
+        ("thesis", 42, "thesis must be a string"),
+        ("instrument", 42, "instrument must be a string"),
+        ("invalidation", 42, "invalidation must be a string"),
+        ("target_exit", 42, "target_exit must be a string"),
+        ("failure_mode", 42, "failure_mode must be a string"),
+        ("entry_zone.trigger", 42, "entry_zone.trigger must be a string"),
+        (
+            "sizing_recommendation.rationale",
+            42,
+            "sizing_recommendation.rationale must be a string",
+        ),
+        ("time_horizon.expected_hold", 42, "time_horizon.expected_hold must be a string"),
+        ("confidence.rationale", 42, "confidence.rationale must be a string"),
+    ],
+)
+def test_resubmit_rejects_malformed_scalar_strings_without_writes(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    field_path: str,
+    malformed_value: object,
+    message: str,
+) -> None:
+    root = tmp_path / "ideas"
+    payload = _idea_payload(
+        decision_id=f"trade-20350612-bad-resubmit-scalar-{field_path.replace('.', '-')}"
+    )
+    _propose(capsys, root, payload)
+    _request_changes(capsys, root, payload["decision_id"])
+    latest_path = root / "records" / payload["decision_id"] / "latest.json"
+    audit_path = root / "audit.jsonl"
+    original_latest = latest_path.read_text(encoding="utf-8")
+    original_audit = audit_path.read_text(encoding="utf-8")
+    revised = json.loads(json.dumps(payload))
+    _set_payload_field(revised, field_path, malformed_value)
+    revised_path = _write_idea(
+        tmp_path / f"bad-resubmit-scalar-{field_path.replace('.', '-')}.json", revised
     )
 
     exit_code, response = _run_json(

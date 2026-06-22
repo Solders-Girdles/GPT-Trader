@@ -128,3 +128,39 @@ def test_from_dict_rejects_malformed_string_sequences(
 
     with pytest.raises(ValueError, match=re.escape(message)):
         TradeIdea.from_dict(payload)
+
+
+@pytest.mark.parametrize(
+    ("field_path", "malformed_value", "message"),
+    [
+        ("thesis", 42, "thesis must be a string"),
+        ("instrument", 42, "instrument must be a string"),
+        ("invalidation", 42, "invalidation must be a string"),
+        ("target_exit", 42, "target_exit must be a string"),
+        ("failure_mode", 42, "failure_mode must be a string"),
+        ("entry_zone.trigger", 42, "entry_zone.trigger must be a string"),
+        (
+            "sizing_recommendation.rationale",
+            42,
+            "sizing_recommendation.rationale must be a string",
+        ),
+        ("time_horizon.expected_hold", 42, "time_horizon.expected_hold must be a string"),
+        ("confidence.rationale", 42, "confidence.rationale must be a string"),
+    ],
+)
+def test_from_dict_rejects_malformed_scalar_strings(
+    trade_idea: TradeIdea,
+    field_path: str,
+    malformed_value: object,
+    message: str,
+) -> None:
+    payload = trade_idea.to_dict()
+    target = payload
+    parts = field_path.split(".")
+    for part in parts[:-1]:
+        target = target[part]
+        assert isinstance(target, dict)
+    target[parts[-1]] = malformed_value
+
+    with pytest.raises(ValueError, match=re.escape(message)):
+        TradeIdea.from_dict(payload)

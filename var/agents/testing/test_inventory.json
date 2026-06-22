@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6668,
+    "total_tests": 6671,
     "total_files": 785,
     "markers_used": 16
   },
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6503,
+    "unit": 6506,
     "asyncio": 373,
-    "parametrize": 177,
+    "parametrize": 180,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -9086,7 +9086,7 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py": [
       {
         "name": "test_propose_duplicate_rejects_without_overwriting_record_or_audit",
-        "line": 69,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -9094,7 +9094,7 @@
       },
       {
         "name": "test_propose_timezone_naive_expiry_returns_invalid_argument_without_writes",
-        "line": 108,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -9102,7 +9102,7 @@
       },
       {
         "name": "test_propose_rejects_path_traversal_decision_id_without_writes",
-        "line": 136,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -9110,7 +9110,7 @@
       },
       {
         "name": "test_propose_rejects_non_finite_preview_numbers_without_writes",
-        "line": 165,
+        "line": 174,
         "markers": [
           "unit"
         ],
@@ -9118,7 +9118,7 @@
       },
       {
         "name": "test_propose_malformed_nested_section_returns_invalid_argument_without_writes",
-        "line": 193,
+        "line": 202,
         "markers": [
           "unit"
         ],
@@ -9126,7 +9126,16 @@
       },
       {
         "name": "test_propose_rejects_malformed_string_sequences_without_writes",
-        "line": 259,
+        "line": 268,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_rejects_malformed_scalar_strings_without_writes",
+        "line": 323,
         "markers": [
           "parametrize",
           "unit"
@@ -9135,7 +9144,7 @@
       },
       {
         "name": "test_propose_preview_budget_failure_happens_before_record_or_audit_write",
-        "line": 296,
+        "line": 355,
         "markers": [
           "unit"
         ],
@@ -9187,7 +9196,7 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py": [
       {
         "name": "test_resubmit_malformed_nested_section_returns_invalid_argument_without_writes",
-        "line": 84,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -9195,7 +9204,16 @@
       },
       {
         "name": "test_resubmit_rejects_malformed_string_sequences_without_writes",
-        "line": 157,
+        "line": 166,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_resubmit_rejects_malformed_scalar_strings_without_writes",
+        "line": 230,
         "markers": [
           "parametrize",
           "unit"
@@ -9204,7 +9222,7 @@
       },
       {
         "name": "test_resubmit_preview_budget_failure_happens_before_record_or_audit_write",
-        "line": 203,
+        "line": 273,
         "markers": [
           "unit"
         ],
@@ -32098,6 +32116,15 @@
       {
         "name": "test_from_dict_rejects_malformed_string_sequences",
         "line": 117,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_dict_rejects_malformed_scalar_strings",
+        "line": 151,
         "markers": [
           "parametrize",
           "unit"

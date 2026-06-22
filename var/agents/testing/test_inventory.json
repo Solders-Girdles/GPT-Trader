@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6626,
+    "total_tests": 6627,
     "total_files": 777,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6461,
+    "unit": 6462,
     "asyncio": 373,
     "parametrize": 174,
     "endpoints": 83,
@@ -9023,8 +9023,16 @@
     ],
     "tests/unit/gpt_trader/cli/test_cli_unit.py": [
       {
+        "name": "test_cli_root_help_shows_command_list",
+        "line": 12,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_cli_run_defaults_to_run_subcommand",
-        "line": 10,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -9032,7 +9040,7 @@
       },
       {
         "name": "test_orders_preview_invokes_broker_preview",
-        "line": 72,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -9040,7 +9048,7 @@
       },
       {
         "name": "test_cli_preflight_delegates_to_preflight_cli",
-        "line": 154,
+        "line": 183,
         "markers": [
           "unit"
         ],
@@ -9048,7 +9056,7 @@
       },
       {
         "name": "test_orders_profile_argument_inherits_across_nested_subcommands",
-        "line": 172,
+        "line": 201,
         "markers": [
           "unit"
         ],

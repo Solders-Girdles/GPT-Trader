@@ -115,7 +115,22 @@ class TestIntegerRule:
 
     @pytest.mark.parametrize(
         "value",
-        [True, False, 1.2, "1.2", "1e3", "", " ", "+", "-", "１２"],
+        [
+            True,
+            False,
+            1.2,
+            "1.2",
+            "1e3",
+            "",
+            " ",
+            "+",
+            "-",
+            "１２",
+            Decimal("Infinity"),
+            Decimal("-Infinity"),
+            Decimal("NaN"),
+            Decimal("sNaN"),
+        ],
     )
     def test_lossy_integer_values_raise(self, value: object) -> None:
         rule = IntegerRule()

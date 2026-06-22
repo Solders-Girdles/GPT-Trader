@@ -58709,7 +58709,7 @@
       },
       {
         "name": "TestIntegerRule::test_lossy_integer_values_raise",
-        "line": 120,
+        "line": 135,
         "markers": [
           "parametrize",
           "unit"
@@ -58719,7 +58719,7 @@
       },
       {
         "name": "TestIntegerRuleExtended::test_none_allowed",
-        "line": 129,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -58728,7 +58728,7 @@
       },
       {
         "name": "TestIntegerRuleExtended::test_none_not_allowed_raises",
-        "line": 133,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -58737,7 +58737,7 @@
       },
       {
         "name": "TestPercentageRule::test_accepts_fractional_range",
-        "line": 140,
+        "line": 155,
         "markers": [
           "unit"
         ],
@@ -58746,7 +58746,7 @@
       },
       {
         "name": "TestPercentageRule::test_out_of_range_raises",
-        "line": 144,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -58755,7 +58755,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_none_allowed",
-        "line": 153,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -58764,7 +58764,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_none_not_allowed_raises",
-        "line": 157,
+        "line": 172,
         "markers": [
           "unit"
         ],
@@ -58773,7 +58773,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_auto_converts_integer_percentage",
-        "line": 162,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -58782,7 +58782,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_boundary_values",
-        "line": 166,
+        "line": 181,
         "markers": [
           "unit"
         ],
@@ -58791,7 +58791,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_negative_raises",
-        "line": 171,
+        "line": 186,
         "markers": [
           "unit"
         ],
@@ -58800,7 +58800,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_non_integer_over_1_raises",
-        "line": 176,
+        "line": 191,
         "markers": [
           "unit"
         ],

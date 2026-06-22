@@ -38,6 +38,11 @@ class IntegerRule(BaseValidationRule):
             )
 
         if isinstance(value, Decimal):
+            if not value.is_finite():
+                raise RuleError(
+                    f"{field_name} expected an integer-compatible value but received {value!r}",
+                    value=value,
+                )
             if value == value.to_integral_value():
                 return int(value)
             raise RuleError(

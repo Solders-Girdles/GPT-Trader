@@ -76,6 +76,21 @@ def test_optional_value_objects_round_trip_when_empty() -> None:
     assert restored.do_not_trade_if == ()
 
 
+@pytest.mark.parametrize("field_name", ["amount", "percent_of_account"])
+def test_max_loss_rejects_negative_values(field_name: str) -> None:
+    with pytest.raises(ValueError, match=rf"max_loss\.{field_name} must be non-negative"):
+        MaxLoss(**{field_name: Decimal("-1")})
+
+
+@pytest.mark.parametrize("field_name", ["amount", "percent_of_account"])
+def test_from_dict_rejects_negative_max_loss_values(trade_idea: TradeIdea, field_name: str) -> None:
+    payload = trade_idea.to_dict()
+    payload["max_loss"][field_name] = "-1"
+
+    with pytest.raises(ValueError, match=rf"max_loss\.{field_name} must be non-negative"):
+        TradeIdea.from_dict(payload)
+
+
 @pytest.mark.parametrize(
     ("field_path", "malformed_value", "message"),
     [

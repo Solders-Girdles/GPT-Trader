@@ -13,6 +13,7 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from decimal import InvalidOperation
 from pathlib import Path
 
 from gpt_trader.errors import ValidationError
@@ -383,7 +384,14 @@ class TradeIdeaService:
     # -- internals -----------------------------------------------------------
 
     def _require_idea(self, decision_id: str) -> TradeIdea:
-        idea = self._store.load_latest(decision_id)
+        try:
+            idea = self._store.load_latest(decision_id)
+        except (InvalidOperation, TypeError, ValueError) as error:
+            raise ValidationError(
+                f"Stored trade idea '{decision_id}' is invalid: {error}",
+                field="decision_id",
+                value=decision_id,
+            ) from error
         if idea is None:
             raise UnknownTradeIdeaError(
                 f"No trade idea stored for decision_id '{decision_id}'",

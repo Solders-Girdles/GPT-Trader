@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6671,
-    "total_files": 785,
+    "total_tests": 6675,
+    "total_files": 786,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6506,
+    "unit": 6510,
     "asyncio": 373,
-    "parametrize": 180,
+    "parametrize": 184,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -207,6 +207,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
@@ -9078,6 +9079,26 @@
         "name": "test_mark_submitted_and_filled_record_manual_execution_events",
         "line": 60,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py": [
+      {
+        "name": "test_propose_negative_max_loss_returns_invalid_argument_without_side_effects",
+        "line": 44,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approve_negative_max_loss_record_returns_validation_error_without_side_effects",
+        "line": 74,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""
@@ -32114,8 +32135,26 @@
         "docstring": ""
       },
       {
+        "name": "test_max_loss_rejects_negative_values",
+        "line": 80,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_dict_rejects_negative_max_loss_values",
+        "line": 86,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_from_dict_rejects_malformed_string_sequences",
-        "line": 117,
+        "line": 132,
         "markers": [
           "parametrize",
           "unit"
@@ -32124,7 +32163,7 @@
       },
       {
         "name": "test_from_dict_rejects_malformed_scalar_strings",
-        "line": 151,
+        "line": 166,
         "markers": [
           "parametrize",
           "unit"

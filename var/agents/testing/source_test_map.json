@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 704,
+    "tests_scanned": 705,
     "source_modules": 370,
     "unresolved_modules": 3
   },
@@ -11,6 +11,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py"
@@ -332,6 +333,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
@@ -1264,6 +1266,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
@@ -2636,6 +2639,11 @@
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py": [
       "gpt_trader",
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py": [
+      "gpt_trader",
+      "gpt_trader.cli.response",
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py": [

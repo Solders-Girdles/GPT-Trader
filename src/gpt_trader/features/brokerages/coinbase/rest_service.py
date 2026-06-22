@@ -128,7 +128,7 @@ class CoinbaseRestService:
         """Set product catalog and update composed services."""
         self._product_catalog = value
         # Update composed services that depend on product_catalog
-        self._product_service._product_catalog = value
+        self._product_service.product_catalog = value
         self._core.product_catalog = value
 
     # =========================================================================

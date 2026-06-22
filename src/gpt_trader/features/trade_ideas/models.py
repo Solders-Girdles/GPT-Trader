@@ -12,11 +12,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any
+
+_SAFE_DECISION_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 
 
 class AutonomyMode(str, Enum):
@@ -61,10 +64,17 @@ class TicketStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-def _decimal_or_none(value: Any) -> Decimal | None:
+def _validate_finite_decimal(value: Decimal | None, field: str) -> None:
+    if value is not None and not value.is_finite():
+        raise ValueError(f"{field} must be finite")
+
+
+def _decimal_or_none(value: Any, field: str) -> Decimal | None:
     if value is None:
         return None
-    return Decimal(str(value))
+    parsed = Decimal(str(value))
+    _validate_finite_decimal(parsed, field)
+    return parsed
 
 
 def _decimal_to_str(value: Decimal | None) -> str | None:
@@ -98,6 +108,10 @@ class EntryZone:
     upper: Decimal | None = None
     trigger: str = ""
 
+    def __post_init__(self) -> None:
+        _validate_finite_decimal(self.lower, "entry_zone.lower")
+        _validate_finite_decimal(self.upper, "entry_zone.upper")
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "lower": _decimal_to_str(self.lower),
@@ -108,8 +122,8 @@ class EntryZone:
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> EntryZone:
         return cls(
-            lower=_decimal_or_none(payload.get("lower")),
-            upper=_decimal_or_none(payload.get("upper")),
+            lower=_decimal_or_none(payload.get("lower"), "entry_zone.lower"),
+            upper=_decimal_or_none(payload.get("upper"), "entry_zone.upper"),
             trigger=payload.get("trigger", ""),
         )
 
@@ -122,6 +136,10 @@ class MaxLoss:
     percent_of_account: Decimal | None = None
     assumptions: tuple[str, ...] = ()
 
+    def __post_init__(self) -> None:
+        _validate_finite_decimal(self.amount, "max_loss.amount")
+        _validate_finite_decimal(self.percent_of_account, "max_loss.percent_of_account")
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "amount": _decimal_to_str(self.amount),
@@ -132,8 +150,10 @@ class MaxLoss:
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> MaxLoss:
         return cls(
-            amount=_decimal_or_none(payload.get("amount")),
-            percent_of_account=_decimal_or_none(payload.get("percent_of_account")),
+            amount=_decimal_or_none(payload.get("amount"), "max_loss.amount"),
+            percent_of_account=_decimal_or_none(
+                payload.get("percent_of_account"), "max_loss.percent_of_account"
+            ),
             assumptions=tuple(payload.get("assumptions", ())),
         )
 
@@ -146,6 +166,10 @@ class SizingRecommendation:
     notional: Decimal | None = None
     rationale: str = ""
 
+    def __post_init__(self) -> None:
+        _validate_finite_decimal(self.quantity, "sizing_recommendation.quantity")
+        _validate_finite_decimal(self.notional, "sizing_recommendation.notional")
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "quantity": _decimal_to_str(self.quantity),
@@ -156,8 +180,8 @@ class SizingRecommendation:
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> SizingRecommendation:
         return cls(
-            quantity=_decimal_or_none(payload.get("quantity")),
-            notional=_decimal_or_none(payload.get("notional")),
+            quantity=_decimal_or_none(payload.get("quantity"), "sizing_recommendation.quantity"),
+            notional=_decimal_or_none(payload.get("notional"), "sizing_recommendation.notional"),
             rationale=payload.get("rationale", ""),
         )
 
@@ -248,6 +272,10 @@ class TradeIdea:
     failure_mode: str
     do_not_trade_if: tuple[str, ...] = ()
     broker_ticket: BrokerTicket = field(default_factory=BrokerTicket)
+
+    def __post_init__(self) -> None:
+        if not _SAFE_DECISION_ID.fullmatch(self.decision_id):
+            raise ValueError("decision_id must be a safe path segment")
 
     def to_dict(self) -> dict[str, Any]:
         return {

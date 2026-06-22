@@ -22,7 +22,7 @@ def register(subparsers: Any) -> None:
 
     # Daily report command
     daily = report_subparsers.add_parser("daily", help="Generate daily performance report")
-    options.add_profile_option(daily)
+    options.add_profile_option(daily, inherit_from_parent=True)
     daily.add_argument(
         "--date",
         type=str,

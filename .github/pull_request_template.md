@@ -1,6 +1,6 @@
 ## Summary
 <!-- What and why. Keep it crisp. Link related issues. -->
-Closes #<issue-id(s)>
+Related issue / finding / RJ-routed package:
 
 ## Type of change
 - [ ] Refactor
@@ -45,6 +45,6 @@ Closes #<issue-id(s)>
 <!-- Paste sample structured logs or screenshots to aid review -->
 
 ## Checklist
-- [ ] Acceptance criteria in linked issue(s) met
+- [ ] Acceptance criteria in linked issue(s), finding packet, or routed package met
 - [ ] Affected paths listed in PR description
 - [ ] Changelog entry (if repo uses one)

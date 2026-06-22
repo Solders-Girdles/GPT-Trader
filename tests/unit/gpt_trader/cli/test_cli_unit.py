@@ -6,6 +6,35 @@ import builtins
 import importlib
 from types import SimpleNamespace
 
+import pytest
+
+
+def test_cli_root_help_shows_command_list(capsys):
+    cli = importlib.import_module("gpt_trader.cli")
+
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(["--help"])
+
+    assert exc_info.value.code == 0
+    output = capsys.readouterr().out
+    assert "Coinbase Trading Bot" in output
+    for command_name in (
+        "tui",
+        "run",
+        "account",
+        "coinbase",
+        "controls",
+        "orders",
+        "treasury",
+        "report",
+        "strategy",
+        "optimize",
+        "preflight",
+        "broker-check",
+    ):
+        assert command_name in output
+    assert "Perpetuals Trading Bot" not in output
+
 
 def test_cli_run_defaults_to_run_subcommand(monkeypatch):
     argv = [

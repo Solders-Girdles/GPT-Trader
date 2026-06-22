@@ -196,8 +196,6 @@ def _ensure_command(argv: Sequence[str]) -> list[str]:
         return ["run"]
 
     if any(token in {"-h", "--help"} for token in argv):
-        if argv[0] in {"-h", "--help"}:
-            return ["run", *argv]
         return list(argv)
 
     first = argv[0]

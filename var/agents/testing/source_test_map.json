@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 709,
+    "tests_scanned": 710,
     "source_modules": 370,
     "unresolved_modules": 3
   },
@@ -1520,6 +1520,7 @@
     "gpt_trader.persistence.durability": [
       "tests/unit/gpt_trader/persistence/test_database_engine_edges.py",
       "tests/unit/gpt_trader/persistence/test_durability.py",
+      "tests/unit/gpt_trader/persistence/test_durability_repair.py",
       "tests/unit/gpt_trader/persistence/test_orders_store_edges.py"
     ],
     "gpt_trader.persistence.event_store": [
@@ -4194,6 +4195,9 @@
       "gpt_trader.persistence.durability"
     ],
     "tests/unit/gpt_trader/persistence/test_durability.py": [
+      "gpt_trader.persistence.durability"
+    ],
+    "tests/unit/gpt_trader/persistence/test_durability_repair.py": [
       "gpt_trader.persistence.durability"
     ],
     "tests/unit/gpt_trader/persistence/test_event_store.py": [

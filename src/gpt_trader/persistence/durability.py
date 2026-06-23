@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import sqlite3
 import tempfile
 from dataclasses import dataclass
@@ -46,6 +47,117 @@ class RecoveryError(PersistenceError):
     """Raised when recovery fails."""
 
     pass
+
+
+def _sqlite_sidecar_paths(database_path: Path) -> tuple[Path, Path]:
+    """Return SQLite WAL sidecar paths for a database path."""
+    return (
+        database_path.with_name(f"{database_path.name}-wal"),
+        database_path.with_name(f"{database_path.name}-shm"),
+    )
+
+
+def _remove_sqlite_sidecars(database_path: Path) -> bool:
+    removed = True
+    for sidecar_path in _sqlite_sidecar_paths(database_path):
+        try:
+            sidecar_path.unlink()
+        except FileNotFoundError:
+            continue
+        except OSError as e:
+            logger.error(
+                "Failed to remove SQLite sidecar",
+                operation="database_repair",
+                sidecar=str(sidecar_path),
+                error=str(e),
+            )
+            removed = False
+    return removed
+
+
+def _remove_sqlite_file_set(database_path: Path) -> bool:
+    removed = _remove_sqlite_sidecars(database_path)
+    try:
+        database_path.unlink()
+    except FileNotFoundError:
+        pass
+    except OSError as e:
+        logger.error(
+            "Failed to remove SQLite database file",
+            operation="database_repair",
+            path=str(database_path),
+            error=str(e),
+        )
+        removed = False
+    return removed
+
+
+def _copy_sqlite_file_set(database_path: Path, backup_path: Path) -> bool:
+    if not _remove_sqlite_sidecars(backup_path):
+        return False
+    try:
+        shutil.copy2(database_path, backup_path)
+        for source_sidecar, backup_sidecar in zip(
+            _sqlite_sidecar_paths(database_path), _sqlite_sidecar_paths(backup_path), strict=True
+        ):
+            if source_sidecar.exists():
+                shutil.copy2(source_sidecar, backup_sidecar)
+    except OSError as e:
+        logger.error(
+            "Failed to backup corrupted database",
+            operation="database_repair",
+            error=str(e),
+        )
+        return False
+    return True
+
+
+def _quote_sqlite_identifier(identifier: str) -> str:
+    escaped_identifier = identifier.replace('"', '""')
+    return f'"{escaped_identifier}"'
+
+
+def _sqlite_table_columns(
+    connection: sqlite3.Connection,
+    table_name: str,
+    *,
+    schema: str = "main",
+) -> list[str]:
+    quoted_schema = _quote_sqlite_identifier(schema)
+    quoted_table = _quote_sqlite_identifier(table_name)
+    cursor = connection.execute(f"PRAGMA {quoted_schema}.table_info({quoted_table})")
+    return [row[1] for row in cursor.fetchall()]
+
+
+def _log_sqlite_recovery_skip(table_name: str) -> None:
+    logger.warning(
+        "Could not recover table without common columns",
+        operation="database_repair",
+        table=table_name,
+    )
+
+
+def _copy_common_sqlite_columns(
+    connection: sqlite3.Connection,
+    table_name: str,
+    *,
+    source_schema: str,
+) -> bool:
+    destination_columns = _sqlite_table_columns(connection, table_name)
+    source_columns = set(_sqlite_table_columns(connection, table_name, schema=source_schema))
+    common_columns = [column for column in destination_columns if column in source_columns]
+    if not common_columns:
+        _log_sqlite_recovery_skip(table_name)
+        return False
+
+    quoted_table = _quote_sqlite_identifier(table_name)
+    quoted_source_schema = _quote_sqlite_identifier(source_schema)
+    quoted_columns = ", ".join(_quote_sqlite_identifier(column) for column in common_columns)
+    connection.execute(
+        f"INSERT OR IGNORE INTO {quoted_table} ({quoted_columns}) "
+        f"SELECT {quoted_columns} FROM {quoted_source_schema}.{quoted_table}"
+    )
+    return True
 
 
 @dataclass(frozen=True)
@@ -290,69 +402,83 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
     if backup_path is None:
         backup_path = database_path.with_suffix(".corrupted")
 
+    if not _copy_sqlite_file_set(database_path, backup_path):
+        return False
+
+    logger.info(
+        "Backed up corrupted database",
+        operation="database_repair",
+        original=str(database_path),
+        backup=str(backup_path),
+    )
+
+    # Try to recover data via an ATTACH strategy to avoid N+1 queries and memory loads
+    temp_db_path = database_path.with_suffix(".tmp")
+    if not _remove_sqlite_file_set(temp_db_path):
+        return False
+
     try:
-        import shutil
-
-        shutil.copy2(database_path, backup_path)
-        logger.info(
-            "Backed up corrupted database",
-            operation="database_repair",
-            original=str(database_path),
-            backup=str(backup_path),
-        )
-    except OSError as e:
-        logger.warning(
-            "Failed to backup corrupted database",
-            operation="database_repair",
-            error=str(e),
-        )
-
-    # Try to recover data
-    try:
-        conn = sqlite3.connect(str(database_path))
+        conn = sqlite3.connect(str(temp_db_path))
+        recovered_count = 0
         try:
-            # Export all readable data
-            cursor = conn.execute(
-                "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-            )
-            tables = [row[0] for row in cursor]
-
-            recovered_data: dict[str, list[tuple[Any, ...]]] = {}
-            for table in tables:
-                try:
-                    cursor = conn.execute(f"SELECT * FROM {table}")  # noqa: S608  # nosec B608
-                    recovered_data[table] = cursor.fetchall()
-                except sqlite3.Error:
-                    logger.warning(
-                        "Could not recover table",
-                        operation="database_repair",
-                        table=table,
-                    )
-        finally:
-            conn.close()
-
-        # Recreate database
-        database_path.unlink()
-        conn = sqlite3.connect(str(database_path))
-        try:
-            # Note: This is a simplified recovery. In production,
-            # you'd want to preserve the schema and indexes.
             conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("PRAGMA synchronous=NORMAL")
 
-            # For event store, recreate with known schema
+            # Initialize with known schemas to preserve them
             schema_path = Path(__file__).parent / "schema.sql"
             if schema_path.exists():
                 conn.executescript(schema_path.read_text())
 
-            logger.info(
-                "Database recreated",
-                operation="database_repair",
-                tables_recovered=len(recovered_data),
+            # Attach corrupted backup to stream data directly at SQLite level
+            conn.execute("ATTACH DATABASE ? AS corrupted", (str(backup_path),))
+
+            cursor = conn.execute(
+                "SELECT name, sql FROM corrupted.sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
             )
-            return True
+            tables = cursor.fetchall()
+
+            for table_name, table_sql in tables:
+                try:
+                    # If the table wasn't created by schema.sql, recreate it from the original schema
+                    if table_sql:
+                        try:
+                            conn.execute(table_sql)
+                        except sqlite3.OperationalError:
+                            # Table may already exist from schema.sql execution above
+                            pass
+
+                    if _copy_common_sqlite_columns(conn, table_name, source_schema="corrupted"):
+                        recovered_count += 1
+                except sqlite3.Error:
+                    logger.warning(
+                        "Could not recover table",
+                        operation="database_repair",
+                        table=table_name,
+                    )
+            # Commit the copied data to the new database before closing
+            conn.commit()
+            conn.execute("PRAGMA main.wal_checkpoint(TRUNCATE)")
         finally:
+            try:
+                conn.execute("DETACH DATABASE corrupted")
+            except sqlite3.Error:
+                pass
             conn.close()
+
+        if not _remove_sqlite_sidecars(temp_db_path):
+            raise RecoveryError("Could not remove recovered database WAL sidecars")
+        if not _remove_sqlite_sidecars(database_path):
+            raise RecoveryError("Could not remove original database WAL sidecars")
+
+        # Replace corrupted database with recovered temporary database
+        temp_db_path.replace(database_path)
+
+        logger.info(
+            "Database recreated",
+            operation="database_repair",
+            tables_recovered=recovered_count,
+        )
+        return True
 
     except Exception as e:
         logger.error(
@@ -360,6 +486,8 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
             operation="database_repair",
             error=str(e),
         )
+        # Cleanup temp database on failure
+        _remove_sqlite_file_set(temp_db_path)
         return False
 
 

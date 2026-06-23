@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6707,
+    "total_tests": 6708,
     "total_files": 793,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6542,
+    "unit": 6543,
     "asyncio": 373,
     "parametrize": 189,
     "endpoints": 83,
@@ -61196,7 +61196,7 @@
     "tests/unit/scripts/test_dependency_graph.py": [
       {
         "name": "test_main_queries_fully_qualified_dependencies",
-        "line": 29,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -61204,7 +61204,15 @@
       },
       {
         "name": "test_main_queries_fully_qualified_dependents",
-        "line": 51,
+        "line": 59,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_resolves_package_init_relative_imports",
+        "line": 81,
         "markers": [
           "unit"
         ],

@@ -23,6 +23,14 @@ def _sample_source_tree(tmp_path: Path) -> Path:
         src / "gpt_trader" / "features" / "alpha" / "service.py",
         "from gpt_trader.app.container import ApplicationContainer\n",
     )
+    _write_python(
+        src / "gpt_trader" / "utilities" / "__init__.py",
+        "from .datetime_helpers import utc_now\n",
+    )
+    _write_python(
+        src / "gpt_trader" / "utilities" / "datetime_helpers.py",
+        "def utc_now(): ...\n",
+    )
     return src
 
 
@@ -68,3 +76,25 @@ def test_main_queries_fully_qualified_dependents(tmp_path, monkeypatch, capsys) 
     output = json.loads(capsys.readouterr().out)
     assert output["module"] == "gpt_trader.app.container"
     assert output["direct_dependents"] == ["gpt_trader.features.alpha.service"]
+
+
+def test_main_resolves_package_init_relative_imports(tmp_path, monkeypatch, capsys) -> None:
+    src = _sample_source_tree(tmp_path)
+    monkeypatch.setattr(dependency_graph, "SRC_DIR", src)
+    monkeypatch.setattr(dependency_graph, "PROJECT_ROOT", tmp_path)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "dependency_graph.py",
+            "--depends-on",
+            "gpt_trader.utilities.datetime_helpers",
+        ],
+    )
+
+    result = dependency_graph.main()
+
+    assert result == 0
+    output = json.loads(capsys.readouterr().out)
+    assert output["module"] == "gpt_trader.utilities.datetime_helpers"
+    assert output["direct_dependents"] == ["gpt_trader.utilities"]

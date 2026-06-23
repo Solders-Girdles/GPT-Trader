@@ -25,33 +25,8 @@ from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import ActorType
 
 
-def _require_finite_decimal(value: Decimal, field: str) -> None:
-    if not value.is_finite():
-        raise ValueError(f"{field} must be finite")
-
-
-def _require_non_negative_decimal(value: Decimal, field: str) -> None:
-    if value < 0:
-        raise ValueError(f"{field} must be non-negative")
-
-
-def _require_non_negative_int(value: int, field: str) -> None:
-    if value < 0:
-        raise ValueError(f"{field} must be non-negative")
-
-
 class BudgetIntegrityError(ValidationError):
     """Raised when a budget append would break version sequencing."""
-
-
-def _require_boolean(value: Any, field: str) -> bool:
-    if isinstance(value, bool):
-        return value
-    raise BudgetIntegrityError(
-        f"{field} must be a JSON boolean",
-        field=field,
-        value=value,
-    )
 
 
 @dataclass(frozen=True, slots=True)
@@ -69,20 +44,6 @@ class RiskBudget:
     allow_futures_leverage: bool
     allow_naked_shorts: bool
     reason: str
-
-    def __post_init__(self) -> None:
-        _require_finite_decimal(self.max_loss_per_idea_pct, "max_loss_per_idea_pct")
-        _require_finite_decimal(self.max_daily_loss_pct, "max_daily_loss_pct")
-        _require_finite_decimal(self.max_open_notional_pct, "max_open_notional_pct")
-        _require_finite_decimal(self.gain_retention_floor_pct, "gain_retention_floor_pct")
-        _require_non_negative_decimal(self.max_loss_per_idea_pct, "max_loss_per_idea_pct")
-        _require_non_negative_decimal(self.max_daily_loss_pct, "max_daily_loss_pct")
-        _require_non_negative_decimal(self.max_open_notional_pct, "max_open_notional_pct")
-        _require_non_negative_decimal(self.gain_retention_floor_pct, "gain_retention_floor_pct")
-        _require_non_negative_int(
-            self.max_concurrent_approved_tickets, "max_concurrent_approved_tickets"
-        )
-        _require_non_negative_int(self.max_review_latency_hours, "max_review_latency_hours")
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -108,16 +69,10 @@ class RiskBudget:
             max_open_notional_pct=Decimal(payload["max_open_notional_pct"]),
             max_concurrent_approved_tickets=int(payload["max_concurrent_approved_tickets"]),
             max_review_latency_hours=int(payload["max_review_latency_hours"]),
-            sizing_capped_by_budget=_require_boolean(
-                payload["sizing_capped_by_budget"], "sizing_capped_by_budget"
-            ),
+            sizing_capped_by_budget=bool(payload["sizing_capped_by_budget"]),
             gain_retention_floor_pct=Decimal(payload["gain_retention_floor_pct"]),
-            allow_futures_leverage=_require_boolean(
-                payload["allow_futures_leverage"], "allow_futures_leverage"
-            ),
-            allow_naked_shorts=_require_boolean(
-                payload["allow_naked_shorts"], "allow_naked_shorts"
-            ),
+            allow_futures_leverage=bool(payload["allow_futures_leverage"]),
+            allow_naked_shorts=bool(payload["allow_naked_shorts"]),
             reason=payload.get("reason", ""),
         )
 

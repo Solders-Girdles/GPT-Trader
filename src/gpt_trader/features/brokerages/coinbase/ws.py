@@ -457,11 +457,10 @@ class CoinbaseWebSocket:
                 ),
             )
 
-            # Use event wait instead of sleep to allow interruption during shutdown
-            shutdown_requested = self._shutdown.wait(delay)
+            time.sleep(delay)
 
             # Double-check shutdown wasn't requested during sleep
-            if not shutdown_requested and not self._shutdown.is_set():
+            if not self._shutdown.is_set():
                 self.connect()
 
     def get_health(self) -> dict[str, Any]:

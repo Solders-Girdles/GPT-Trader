@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6702,
-    "total_files": 791,
+    "total_tests": 6630,
+    "total_files": 778,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6537,
+    "unit": 6465,
     "asyncio": 373,
-    "parametrize": 189,
+    "parametrize": 174,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -203,17 +203,6 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_registration.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
       "tests/unit/gpt_trader/cli/test_broker_connectivity.py",
       "tests/unit/gpt_trader/cli/test_cli_unit.py",
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py",
@@ -541,7 +530,6 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
-      "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
@@ -632,7 +620,6 @@
       "tests/unit/gpt_trader/persistence/test_database_engine.py",
       "tests/unit/gpt_trader/persistence/test_database_engine_edges.py",
       "tests/unit/gpt_trader/persistence/test_durability.py",
-      "tests/unit/gpt_trader/persistence/test_durability_repair.py",
       "tests/unit/gpt_trader/persistence/test_event_store.py",
       "tests/unit/gpt_trader/persistence/test_event_store_edges.py",
       "tests/unit/gpt_trader/persistence/test_orders_store.py",
@@ -8959,355 +8946,6 @@
         ],
         "docstring": "Test deltas are preserved in the JSON matrix.",
         "class": "TestFormatComparisonJson"
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py": [
-      {
-        "name": "test_propose_preview_ignores_unrelated_unaudited_latest_record",
-        "line": 43,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py": [
-      {
-        "name": "test_budget_show_seeds_defaults_and_budget_set_bumps_version",
-        "line": 31,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_budget_set_requires_at_least_one_field_flag",
-        "line": 62,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_budget_set_rejects_non_finite_decimal_before_budget_write",
-        "line": 85,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_budget_set_rejects_negative_limit_flags_before_budget_write",
-        "line": 122,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_shared_root_and_actor_resolution_helpers",
-        "line": 151,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py": [
-      {
-        "name": "test_futures_preview_and_approval_follow_budget_leverage_flag",
-        "line": 71,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py": [
-      {
-        "name": "test_propose_from_file_persists_record_and_warns_for_non_compliant_idea",
-        "line": 80,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_propose_from_stdin_returns_json_envelope",
-        "line": 101,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_propose_missing_required_field_returns_invalid_argument",
-        "line": 119,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_propose_malformed_decimal_returns_invalid_argument",
-        "line": 145,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_approve_happy_path_records_human_actor",
-        "line": 171,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_approve_policy_violation_returns_all_violations",
-        "line": 204,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_approve_rejects_absolute_decision_id_before_audit_or_budget_writes",
-        "line": 236,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_request_changes_resubmit_and_approve_loop",
-        "line": 266,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_reject_cancel_expire_and_sweep_paths",
-        "line": 326,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py": [
-      {
-        "name": "test_mark_submitted_and_filled_record_manual_execution_events",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py": [
-      {
-        "name": "test_propose_negative_max_loss_returns_invalid_argument_without_side_effects",
-        "line": 44,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_approve_negative_max_loss_record_returns_validation_error_without_side_effects",
-        "line": 74,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py": [
-      {
-        "name": "test_propose_duplicate_rejects_without_overwriting_record_or_audit",
-        "line": 78,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_propose_timezone_naive_expiry_returns_invalid_argument_without_writes",
-        "line": 117,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_propose_rejects_path_traversal_decision_id_without_writes",
-        "line": 145,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_propose_rejects_non_finite_preview_numbers_without_writes",
-        "line": 174,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_propose_malformed_nested_section_returns_invalid_argument_without_writes",
-        "line": 202,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_propose_rejects_malformed_string_sequences_without_writes",
-        "line": 268,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_propose_rejects_malformed_scalar_strings_without_writes",
-        "line": 323,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_propose_preview_budget_failure_happens_before_record_or_audit_write",
-        "line": 355,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py": [
-      {
-        "name": "test_list_empty_store_and_state_filter",
-        "line": 63,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_show_unknown_id_and_show_with_events",
-        "line": 100,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_show_rejects_absolute_decision_id_before_store_lookup",
-        "line": 120,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_list_and_show_reject_orphaned_record_without_audit_trail",
-        "line": 139,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_list_show_and_reject_refuse_unaudited_interrupted_resubmit",
-        "line": 160,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_audit_verify_ok_and_tampered_line_failure",
-        "line": 202,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_help_lists_ideas_subcommands",
-        "line": 221,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py": [
-      {
-        "name": "test_resubmit_malformed_nested_section_returns_invalid_argument_without_writes",
-        "line": 93,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_resubmit_rejects_malformed_string_sequences_without_writes",
-        "line": 166,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_resubmit_rejects_malformed_scalar_strings_without_writes",
-        "line": 230,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_resubmit_preview_budget_failure_happens_before_record_or_audit_write",
-        "line": 273,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py": [
-      {
-        "name": "test_review_latency_budget_blocks_approval_and_sweep_for_far_future_idea",
-        "line": 76,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py": [
-      {
-        "name": "test_short_preview_and_approval_follow_naked_short_flag",
-        "line": 69,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/cli/test_broker_connectivity.py": [
@@ -31890,7 +31528,7 @@
         "docstring": ""
       },
       {
-        "name": "test_append_rejects_action_after_state_mismatch",
+        "name": "test_rejected_append_leaves_log_untouched",
         "line": 140,
         "markers": [
           "unit"
@@ -31898,24 +31536,8 @@
         "docstring": ""
       },
       {
-        "name": "test_verify_rejects_tampered_action_after_state_mismatch",
-        "line": 157,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_rejected_append_leaves_log_untouched",
-        "line": 181,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
         "name": "test_read_events_filters_by_decision",
-        "line": 193,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -31925,7 +31547,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py": [
       {
         "name": "test_satisfies_proposer_protocol",
-        "line": 55,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -31933,7 +31555,7 @@
       },
       {
         "name": "test_fresh_golden_cross_produces_long_idea",
-        "line": 59,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -31941,15 +31563,7 @@
       },
       {
         "name": "test_idea_records_are_complete_and_pinned",
-        "line": 69,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_internal_naive_snapshot_as_of_produces_aware_expiry",
-        "line": 80,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -31957,7 +31571,7 @@
       },
       {
         "name": "test_flat_market_produces_nothing",
-        "line": 92,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -31965,7 +31579,7 @@
       },
       {
         "name": "test_downtrend_produces_nothing",
-        "line": 96,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -31973,7 +31587,7 @@
       },
       {
         "name": "test_stale_crossover_outside_lookback_produces_nothing",
-        "line": 100,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -31981,7 +31595,7 @@
       },
       {
         "name": "test_insufficient_history_produces_nothing",
-        "line": 106,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -31989,7 +31603,7 @@
       },
       {
         "name": "test_identical_snapshots_produce_identical_records",
-        "line": 112,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -31997,7 +31611,7 @@
       },
       {
         "name": "test_volume_confirmation_raises_confidence",
-        "line": 122,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -32005,7 +31619,7 @@
       },
       {
         "name": "test_multi_symbol_snapshot_only_signals_where_warranted",
-        "line": 134,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -32013,7 +31627,7 @@
       },
       {
         "name": "test_decision_ids_are_distinct_per_symbol",
-        "line": 147,
+        "line": 132,
         "markers": [
           "parametrize",
           "unit"
@@ -32039,26 +31653,8 @@
         "docstring": ""
       },
       {
-        "name": "test_budget_rejects_negative_decimal_limits_from_dict",
-        "line": 58,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_budget_rejects_negative_integer_limits_from_dict",
-        "line": 72,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
         "name": "test_empty_log_has_no_current_budget",
-        "line": 79,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -32066,7 +31662,7 @@
       },
       {
         "name": "test_append_and_current",
-        "line": 84,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -32074,7 +31670,7 @@
       },
       {
         "name": "test_versions_must_be_contiguous",
-        "line": 91,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -32082,7 +31678,7 @@
       },
       {
         "name": "test_renegotiated_budget_becomes_current",
-        "line": 99,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -32166,7 +31762,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_models.py": [
       {
         "name": "test_round_trip_preserves_record",
-        "line": 20,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -32174,7 +31770,7 @@
       },
       {
         "name": "test_to_dict_serializes_decimals_as_strings",
-        "line": 26,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -32182,15 +31778,7 @@
       },
       {
         "name": "test_from_dict_restores_decimal_types",
-        "line": 34,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_time_horizon_rejects_timezone_naive_expiry",
-        "line": 42,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -32198,7 +31786,7 @@
       },
       {
         "name": "test_broker_ticket_defaults_to_no_venue",
-        "line": 53,
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -32206,7 +31794,7 @@
       },
       {
         "name": "test_record_hash_is_stable",
-        "line": 59,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -32214,7 +31802,7 @@
       },
       {
         "name": "test_record_hash_changes_when_content_changes",
-        "line": 64,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -32222,44 +31810,8 @@
       },
       {
         "name": "test_optional_value_objects_round_trip_when_empty",
-        "line": 70,
+        "line": 55,
         "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_max_loss_rejects_negative_values",
-        "line": 80,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_dict_rejects_negative_max_loss_values",
-        "line": 86,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_dict_rejects_malformed_string_sequences",
-        "line": 132,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_from_dict_rejects_malformed_scalar_strings",
-        "line": 166,
-        "markers": [
-          "parametrize",
           "unit"
         ],
         "docstring": ""
@@ -32268,7 +31820,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_policy.py": [
       {
         "name": "test_eligible_idea_with_human_approver_passes",
-        "line": 41,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -32276,7 +31828,7 @@
       },
       {
         "name": "test_ai_actor_cannot_approve_in_human_approved_mode",
-        "line": 45,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -32284,7 +31836,7 @@
       },
       {
         "name": "test_research_only_mode_blocks_all_approvals",
-        "line": 51,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -32292,7 +31844,7 @@
       },
       {
         "name": "test_ineligible_idea_cannot_be_approved",
-        "line": 59,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -32300,47 +31852,7 @@
       },
       {
         "name": "test_max_loss_above_budget_cap_is_refused",
-        "line": 65,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_futures_leverage_requires_budget_permission",
-        "line": 75,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_futures_leverage_passes_when_budget_allows_it",
-        "line": 83,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_short_direction_requires_budget_permission_by_default",
-        "line": 96,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_short_direction_requires_budget_permission_when_explicitly_disabled",
-        "line": 104,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_short_direction_passes_when_budget_allows_naked_shorts",
-        "line": 119,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -32348,7 +31860,7 @@
       },
       {
         "name": "test_missing_percent_cannot_be_verified",
-        "line": 132,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -32356,7 +31868,7 @@
       },
       {
         "name": "test_concurrent_approved_cap_is_enforced",
-        "line": 140,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -32364,15 +31876,7 @@
       },
       {
         "name": "test_stale_idea_cannot_be_approved",
-        "line": 149,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_review_latency_budget_blocks_stale_proposed_idea",
-        "line": 163,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -32380,7 +31884,7 @@
       },
       {
         "name": "test_budget_changes_require_human_below_bounded_autonomy",
-        "line": 185,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -32388,7 +31892,7 @@
       },
       {
         "name": "test_bounded_autonomy_lets_agents_change_budgets",
-        "line": 192,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -32692,15 +32196,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_service.py": [
       {
         "name": "test_propose_creates_proposed_view",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_duplicate_propose_rejects_before_record_or_audit_mutation",
-        "line": 50,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -32708,7 +32204,7 @@
       },
       {
         "name": "test_full_lifecycle_to_fill",
-        "line": 73,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -32716,31 +32212,7 @@
       },
       {
         "name": "test_changes_loop_keeps_every_record_version",
-        "line": 91,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_resubmit_rejects_orphaned_record_without_audit_mutation",
-        "line": 105,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_rejects_orphaned_record_without_audit_trail",
-        "line": 129,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_list_views_rejects_orphaned_record_without_audit_trail",
-        "line": 145,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -32748,23 +32220,7 @@
       },
       {
         "name": "test_approval_refused_for_budget_violation",
-        "line": 158,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_futures_approval_requires_budget_leverage_flag",
-        "line": 171,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_short_approval_requires_naked_shorts_flag",
-        "line": 195,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -32772,7 +32228,7 @@
       },
       {
         "name": "test_unknown_decision_id_is_an_error",
-        "line": 234,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -32780,7 +32236,7 @@
       },
       {
         "name": "test_list_views_filters_by_state",
-        "line": 239,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -32788,7 +32244,7 @@
       },
       {
         "name": "test_budget_seeds_defaults_on_first_use",
-        "line": 252,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -32796,7 +32252,7 @@
       },
       {
         "name": "test_human_can_renegotiate_budget",
-        "line": 256,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -32804,7 +32260,7 @@
       },
       {
         "name": "test_agent_budget_change_refused_in_current_mode",
-        "line": 266,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -32812,50 +32268,7 @@
       },
       {
         "name": "test_expire_is_a_system_action",
-        "line": 277,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_expire_due_ideas_skips_submitted_and_continues",
-        "line": 287,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_review_latency_budget_refuses_approval_and_sweep_expires_far_future_idea",
-        "line": 318,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_persisted_budget_rejects_non_boolean_boolean_fields",
-        "line": 362,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py": [
-      {
-        "name": "test_interrupted_resubmit_latest_hash_mismatch_is_integrity_error",
-        "line": 17,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_approval_count_ignores_unaudited_latest_for_nonapproved_records",
-        "line": 50,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -39150,32 +38563,6 @@
         ],
         "docstring": "",
         "class": "TestSqliteIntegrity"
-      }
-    ],
-    "tests/unit/gpt_trader/persistence/test_durability_repair.py": [
-      {
-        "name": "test_repair_sqlite_database_aborts_when_backup_copy_fails",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_repair_sqlite_database_removes_stale_wal_sidecars",
-        "line": 44,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_repair_sqlite_database_preserves_uncheckpointed_wal_rows",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/persistence/test_event_store.py": [
@@ -59151,7 +58538,7 @@
     "tests/unit/gpt_trader/validation/test_rules_numeric_rules.py": [
       {
         "name": "TestDecimalRule::test_coerces_str_and_numbers",
-        "line": 16,
+        "line": 15,
         "markers": [
           "unit"
         ],
@@ -59160,7 +58547,7 @@
       },
       {
         "name": "TestDecimalRule::test_empty_string_returns_default",
-        "line": 21,
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -59169,7 +58556,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_none_with_default_returns_default",
-        "line": 29,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -59178,7 +58565,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_none_allowed",
-        "line": 33,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -59187,7 +58574,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_none_not_allowed_raises",
-        "line": 37,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -59196,7 +58583,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_decimal_passthrough",
-        "line": 42,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -59205,7 +58592,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_float_conversion",
-        "line": 47,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -59214,7 +58601,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_empty_with_allow_none",
-        "line": 52,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -59223,7 +58610,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_empty_no_default_no_allow_none_raises",
-        "line": 56,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -59232,7 +58619,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_unsupported_type_raises",
-        "line": 61,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -59241,7 +58628,7 @@
       },
       {
         "name": "TestFloatRule::test_uses_default_for_none",
-        "line": 68,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -59250,7 +58637,7 @@
       },
       {
         "name": "TestFloatRule::test_blank_string_errors_when_no_default",
-        "line": 72,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -59259,7 +58646,7 @@
       },
       {
         "name": "TestFloatRuleExtended::test_allow_none",
-        "line": 81,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -59268,7 +58655,7 @@
       },
       {
         "name": "TestFloatRuleExtended::test_none_no_default_no_allow_raises",
-        "line": 85,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -59277,7 +58664,7 @@
       },
       {
         "name": "TestFloatRuleExtended::test_string_conversion",
-        "line": 90,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -59286,7 +58673,7 @@
       },
       {
         "name": "TestFloatRuleExtended::test_blank_with_default",
-        "line": 94,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -59295,7 +58682,7 @@
       },
       {
         "name": "TestFloatRuleExtended::test_blank_with_allow_none",
-        "line": 98,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -59304,7 +58691,7 @@
       },
       {
         "name": "TestIntegerRule::test_parses_integers",
-        "line": 104,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -59313,26 +58700,7 @@
       },
       {
         "name": "TestIntegerRule::test_invalid_integer_raises",
-        "line": 112,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntegerRule"
-      },
-      {
-        "name": "TestIntegerRule::test_lossy_integer_values_raise",
-        "line": 136,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntegerRule"
-      },
-      {
-        "name": "TestIntegerRule::test_oversized_digit_string_raises_rule_error",
-        "line": 141,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -59341,7 +58709,7 @@
       },
       {
         "name": "TestIntegerRuleExtended::test_none_allowed",
-        "line": 154,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -59350,7 +58718,7 @@
       },
       {
         "name": "TestIntegerRuleExtended::test_none_not_allowed_raises",
-        "line": 158,
+        "line": 121,
         "markers": [
           "unit"
         ],
@@ -59359,7 +58727,7 @@
       },
       {
         "name": "TestPercentageRule::test_accepts_fractional_range",
-        "line": 165,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -59368,7 +58736,7 @@
       },
       {
         "name": "TestPercentageRule::test_out_of_range_raises",
-        "line": 169,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -59377,7 +58745,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_none_allowed",
-        "line": 178,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -59386,7 +58754,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_none_not_allowed_raises",
-        "line": 182,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -59395,7 +58763,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_auto_converts_integer_percentage",
-        "line": 187,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -59404,7 +58772,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_boundary_values",
-        "line": 191,
+        "line": 154,
         "markers": [
           "unit"
         ],
@@ -59413,7 +58781,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_negative_raises",
-        "line": 196,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -59422,7 +58790,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_non_integer_over_1_raises",
-        "line": 201,
+        "line": 164,
         "markers": [
           "unit"
         ],

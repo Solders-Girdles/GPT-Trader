@@ -40,7 +40,6 @@ from gpt_trader.features.trade_ideas.models import (
     TimeHorizon,
     TradeDirection,
     TradeIdea,
-    is_safe_decision_id,
 )
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.proposer import Proposer
@@ -56,16 +55,9 @@ from gpt_trader.features.trade_ideas.replay import (
     score_trade_idea,
 )
 from gpt_trader.features.trade_ideas.service import (
-    ACTOR_ENV_VAR,
-    DEFAULT_IDEAS_ROOT,
-    IDEAS_ROOT_ENV_VAR,
-    DuplicateTradeIdeaError,
     TradeIdeaService,
     TradeIdeaView,
     UnknownTradeIdeaError,
-    create_trade_idea_service,
-    resolve_ideas_root,
-    resolve_trade_idea_actor_id,
 )
 from gpt_trader.features.trade_ideas.snapshot import (
     MarketSnapshot,
@@ -83,11 +75,7 @@ from gpt_trader.features.trade_ideas.workflow import (
 
 __all__ = [
     "ALLOWED_TRANSITIONS",
-    "ACTOR_ENV_VAR",
     "DEFAULT_RISK_BUDGET",
-    "DEFAULT_IDEAS_ROOT",
-    "DuplicateTradeIdeaError",
-    "IDEAS_ROOT_ENV_VAR",
     "TERMINAL_STATES",
     "ActorType",
     "ApprovalPolicy",
@@ -132,14 +120,10 @@ __all__ = [
     "TradeIdeaStore",
     "TradeIdeaView",
     "UnknownTradeIdeaError",
-    "create_trade_idea_service",
     "evaluate_eligibility",
     "extract_numeric_scoring_levels",
     "is_eligible",
-    "is_safe_decision_id",
     "new_event_id",
-    "resolve_ideas_root",
-    "resolve_trade_idea_actor_id",
     "score_trade_idea",
     "validate_transition",
 ]

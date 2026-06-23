@@ -8,9 +8,12 @@ servers must stay thin adapters over these methods.
 
 from __future__ import annotations
 
+import getpass
+import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from decimal import InvalidOperation
 from pathlib import Path
 
 from gpt_trader.errors import ValidationError
@@ -18,6 +21,7 @@ from gpt_trader.features.trade_ideas.audit import (
     ActorType,
     AuditAction,
     AuditEvent,
+    AuditIntegrityError,
     TradeIdeaAuditLog,
     new_event_id,
 )
@@ -30,11 +34,30 @@ from gpt_trader.features.trade_ideas.budget import (
 from gpt_trader.features.trade_ideas.models import TradeIdea
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
-from gpt_trader.features.trade_ideas.workflow import TradeIdeaState
+from gpt_trader.features.trade_ideas.workflow import (
+    InvalidTransitionError,
+    TradeIdeaState,
+    validate_transition,
+)
+
+DEFAULT_IDEAS_ROOT = Path("var/data/trade_ideas")
+IDEAS_ROOT_ENV_VAR = "GPT_TRADER_IDEAS_ROOT"
+ACTOR_ENV_VAR = "GPT_TRADER_ACTOR"
+EXPIRABLE_STATES = frozenset(
+    {
+        TradeIdeaState.PROPOSED,
+        TradeIdeaState.NEEDS_CHANGES,
+        TradeIdeaState.APPROVED,
+    }
+)
 
 
 class UnknownTradeIdeaError(ValidationError):
     """Raised when a decision_id has no stored record."""
+
+
+class DuplicateTradeIdeaError(ValidationError):
+    """Raised when a new proposal reuses an existing decision_id."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +71,26 @@ class TradeIdeaView:
 
 def _utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+def resolve_ideas_root(root: Path | None = None) -> Path:
+    """Resolve the trade-idea storage root from arg, environment, or default."""
+    if root is not None:
+        return root
+    configured_root = os.environ.get(IDEAS_ROOT_ENV_VAR, "").strip()
+    if configured_root:
+        return Path(configured_root)
+    return DEFAULT_IDEAS_ROOT
+
+
+def resolve_trade_idea_actor_id(actor_id: str | None = None) -> str:
+    """Resolve actor identity from arg, environment, or the current OS user."""
+    if actor_id and actor_id.strip():
+        return actor_id
+    configured_actor = os.environ.get(ACTOR_ENV_VAR, "").strip()
+    if configured_actor:
+        return configured_actor
+    return getpass.getuser()
 
 
 class TradeIdeaService:
@@ -85,6 +128,40 @@ class TradeIdeaService:
         )
         return DEFAULT_RISK_BUDGET
 
+    def approval_violations(
+        self,
+        idea: TradeIdea,
+        *,
+        actor_type: ActorType = ActorType.HUMAN,
+    ) -> list[str]:
+        """Return every current-policy reason an idea could not be approved."""
+        return self._policy.approval_violations(
+            idea,
+            actor_type=actor_type,
+            budget=self.current_budget(),
+            open_approved_count=self.open_approved_count(),
+            now=self._now(),
+            review_started_at=self._review_started_at(idea.decision_id),
+        )
+
+    def validate_new_proposal(self, idea: TradeIdea) -> None:
+        """Validate proposal lifecycle preconditions without writing state."""
+        self._require_new_decision_id(idea.decision_id)
+
+    def validate_resubmission(self, idea: TradeIdea) -> None:
+        """Validate resubmission lifecycle preconditions without writing state."""
+        self._require_idea(idea.decision_id)
+        current_state = self._audit.current_state(idea.decision_id)
+        if current_state is not TradeIdeaState.NEEDS_CHANGES:
+            recorded = current_state.value if current_state else "none"
+            raise InvalidTransitionError(
+                f"Trade idea '{idea.decision_id}' must be in state "
+                f"'{TradeIdeaState.NEEDS_CHANGES.value}' before resubmit; got '{recorded}'",
+                field="before_state",
+                value=recorded,
+            )
+        validate_transition(current_state, TradeIdeaState.PROPOSED)
+
     def update_budget(self, budget: RiskBudget, actor_type: ActorType, actor_id: str) -> None:
         """Enact a new budget version, subject to the autonomy-mode policy."""
         violations = self._policy.budget_change_violations(actor_type)
@@ -112,6 +189,7 @@ class TradeIdeaService:
         reason: str = "New trade idea proposed",
         evidence: tuple[str, ...] = (),
     ) -> TradeIdeaView:
+        self.validate_new_proposal(idea)
         self._store.save(idea)
         self._append(
             idea,
@@ -143,7 +221,7 @@ class TradeIdeaService:
         actor_type: ActorType = ActorType.AI,
         reason: str = "Revised after requested changes",
     ) -> TradeIdeaView:
-        self._require_idea(idea.decision_id)
+        self.validate_resubmission(idea)
         self._store.save(idea)
         self._append(
             idea,
@@ -163,6 +241,7 @@ class TradeIdeaService:
             budget=self.current_budget(),
             open_approved_count=self.open_approved_count(),
             now=self._now(),
+            review_started_at=self._review_started_at(decision_id),
         )
         if violations:
             raise PolicyViolationError(
@@ -232,6 +311,38 @@ class TradeIdeaService:
         )
         return self.get(decision_id)
 
+    def expire_due_ideas(
+        self,
+        *,
+        actor_id: str = "expiry-sweep",
+        reason: str = "Idea passed its review or execution deadline",
+        actor_type: ActorType = ActorType.SYSTEM,
+    ) -> list[TradeIdeaView]:
+        """Expire all stale ideas that can legally transition to expired."""
+        now = self._now()
+        budget = self._budget_log.current() or DEFAULT_RISK_BUDGET
+        expired: list[TradeIdeaView] = []
+        for view in self.list_views():
+            if view.state not in EXPIRABLE_STATES:
+                continue
+            expires_at = view.idea.time_horizon.expires_at
+            idea_expired = expires_at is not None and expires_at <= now
+            review_latency_violation = self._policy.review_latency_violation(
+                review_started_at=self._review_started_at_from_events(view.events),
+                budget=budget,
+                now=now,
+            )
+            if idea_expired or review_latency_violation is not None:
+                expired.append(
+                    self.expire(
+                        view.idea.decision_id,
+                        actor_id=actor_id,
+                        reason=reason,
+                        actor_type=actor_type,
+                    )
+                )
+        return expired
+
     def record_submission(
         self,
         decision_id: str,
@@ -281,7 +392,13 @@ class TradeIdeaService:
     def get(self, decision_id: str) -> TradeIdeaView:
         idea = self._require_idea(decision_id)
         events = tuple(self._audit.read_events(decision_id))
-        state = events[-1].after_state if events else TradeIdeaState.PROPOSED
+        if not events:
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' has no audit trail",
+                field="decision_id",
+                value=decision_id,
+            )
+        state = events[-1].after_state
         return TradeIdeaView(idea=idea, state=state, events=events)
 
     def list_views(self, state: TradeIdeaState | None = None) -> list[TradeIdeaView]:
@@ -291,19 +408,78 @@ class TradeIdeaService:
         return [view for view in views if view.state is state]
 
     def open_approved_count(self) -> int:
-        return len(self.list_views(TradeIdeaState.APPROVED))
+        approved_count = 0
+        for decision_id, event in self._latest_audit_events_by_decision_id().items():
+            if event.after_state is not TradeIdeaState.APPROVED:
+                continue
+            self._require_idea(decision_id)
+            approved_count += 1
+        return approved_count
 
     # -- internals -----------------------------------------------------------
 
+    def _latest_audit_events_by_decision_id(self) -> dict[str, AuditEvent]:
+        latest_events: dict[str, AuditEvent] = {}
+        for event in self._audit.read_events():
+            latest_events[event.decision_id] = event
+        return latest_events
+
     def _require_idea(self, decision_id: str) -> TradeIdea:
-        idea = self._store.load_latest(decision_id)
+        try:
+            idea = self._store.load_latest(decision_id)
+        except (InvalidOperation, TypeError, ValueError) as error:
+            raise ValidationError(
+                f"Stored trade idea '{decision_id}' is invalid: {error}",
+                field="decision_id",
+                value=decision_id,
+            ) from error
         if idea is None:
             raise UnknownTradeIdeaError(
                 f"No trade idea stored for decision_id '{decision_id}'",
                 field="decision_id",
                 value=decision_id,
             )
+        self._verify_latest_record_is_audited(idea)
         return idea
+
+    def _verify_latest_record_is_audited(self, idea: TradeIdea) -> None:
+        events = tuple(self._audit.read_events(idea.decision_id))
+        if not events:
+            return
+        audited_record_hash = events[-1].record_hash
+        latest_record_hash = idea.record_hash()
+        if latest_record_hash == audited_record_hash:
+            return
+        raise AuditIntegrityError(
+            f"Stored trade idea '{idea.decision_id}' latest record hash "
+            f"'{latest_record_hash}' does not match latest audit record_hash "
+            f"'{audited_record_hash}'",
+            field="record_hash",
+            value=latest_record_hash,
+        )
+
+    def _require_new_decision_id(self, decision_id: str) -> None:
+        if self._store.exists(decision_id) or self._audit.current_state(decision_id) is not None:
+            raise DuplicateTradeIdeaError(
+                f"Trade idea decision_id '{decision_id}' already exists; use resubmit "
+                "after requested changes",
+                field="decision_id",
+                value=decision_id,
+            )
+
+    def _review_started_at(self, decision_id: str) -> datetime | None:
+        return self._review_started_at_from_events(tuple(self._audit.read_events(decision_id)))
+
+    def _review_started_at_from_events(self, events: tuple[AuditEvent, ...]) -> datetime | None:
+        if not events or events[-1].after_state is not TradeIdeaState.PROPOSED:
+            return None
+        for event in reversed(events):
+            if (
+                event.action is AuditAction.PROPOSED
+                and event.after_state is TradeIdeaState.PROPOSED
+            ):
+                return event.timestamp
+        return None
 
     def _append(
         self,
@@ -335,3 +511,13 @@ class TradeIdeaService:
                 external_order_id=external_order_id,
             )
         )
+
+
+def create_trade_idea_service(
+    root: Path | None = None,
+    *,
+    policy: ApprovalPolicy | None = None,
+    now_factory: Callable[[], datetime] = _utc_now,
+) -> TradeIdeaService:
+    """Resolve root (arg > GPT_TRADER_IDEAS_ROOT > default) and build the service."""
+    return TradeIdeaService(resolve_ideas_root(root), policy=policy, now_factory=now_factory)

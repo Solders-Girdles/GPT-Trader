@@ -39,6 +39,14 @@ class ProductService:
         self._product_catalog = product_catalog
         self._market_data = market_data
 
+    @property
+    def product_catalog(self) -> ProductCatalog:
+        return self._product_catalog
+
+    @product_catalog.setter
+    def product_catalog(self, value: ProductCatalog) -> None:
+        self._product_catalog = value
+
     def list_products(self) -> list[Product]:
         """List all available products."""
         try:

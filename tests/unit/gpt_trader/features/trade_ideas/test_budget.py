@@ -46,6 +46,36 @@ def test_budget_round_trip() -> None:
     assert isinstance(restored.max_loss_per_idea_pct, Decimal)
 
 
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "max_loss_per_idea_pct",
+        "max_daily_loss_pct",
+        "max_open_notional_pct",
+        "gain_retention_floor_pct",
+    ],
+)
+def test_budget_rejects_negative_decimal_limits_from_dict(field_name: str) -> None:
+    payload = {**DEFAULT_RISK_BUDGET.to_dict(), field_name: "-0.01"}
+
+    with pytest.raises(ValueError, match=f"{field_name} must be non-negative"):
+        RiskBudget.from_dict(payload)
+
+
+@pytest.mark.parametrize(
+    "field_name",
+    [
+        "max_concurrent_approved_tickets",
+        "max_review_latency_hours",
+    ],
+)
+def test_budget_rejects_negative_integer_limits_from_dict(field_name: str) -> None:
+    payload = {**DEFAULT_RISK_BUDGET.to_dict(), field_name: "-1"}
+
+    with pytest.raises(ValueError, match=f"{field_name} must be non-negative"):
+        RiskBudget.from_dict(payload)
+
+
 def test_empty_log_has_no_current_budget(budget_log: RiskBudgetLog) -> None:
     assert budget_log.current() is None
     assert budget_log.history() == []

@@ -92,6 +92,26 @@ def _remove_sqlite_file_set(database_path: Path) -> bool:
     return removed
 
 
+def _copy_sqlite_file_set(database_path: Path, backup_path: Path) -> bool:
+    if not _remove_sqlite_sidecars(backup_path):
+        return False
+    try:
+        shutil.copy2(database_path, backup_path)
+        for source_sidecar, backup_sidecar in zip(
+            _sqlite_sidecar_paths(database_path), _sqlite_sidecar_paths(backup_path), strict=True
+        ):
+            if source_sidecar.exists():
+                shutil.copy2(source_sidecar, backup_sidecar)
+    except OSError as e:
+        logger.error(
+            "Failed to backup corrupted database",
+            operation="database_repair",
+            error=str(e),
+        )
+        return False
+    return True
+
+
 @dataclass(frozen=True)
 class WriteResult:
     """Result of a write operation."""
@@ -334,21 +354,15 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
     if backup_path is None:
         backup_path = database_path.with_suffix(".corrupted")
 
-    try:
-        shutil.copy2(database_path, backup_path)
-        logger.info(
-            "Backed up corrupted database",
-            operation="database_repair",
-            original=str(database_path),
-            backup=str(backup_path),
-        )
-    except OSError as e:
-        logger.warning(
-            "Failed to backup corrupted database",
-            operation="database_repair",
-            error=str(e),
-        )
+    if not _copy_sqlite_file_set(database_path, backup_path):
         return False
+
+    logger.info(
+        "Backed up corrupted database",
+        operation="database_repair",
+        original=str(database_path),
+        backup=str(backup_path),
+    )
 
     # Try to recover data via an ATTACH strategy to avoid N+1 queries and memory loads
     temp_db_path = database_path.with_suffix(".tmp")

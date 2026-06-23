@@ -460,15 +460,16 @@
     "database_repair": {
       "common_fields": [
         "backup",
-        "backup_path",
         "error",
+        "frozen",
         "original",
         "path",
         "removed",
         "sidecar",
         "table",
         "tables_recovered",
-        "tion"
+        "tion",
+        "up_path"
       ],
       "components": null,
       "levels": [
@@ -2594,9 +2595,9 @@
   "level_distribution": {
     "CRITICAL": 1,
     "DEBUG": 51,
-    "ERROR": 88,
+    "ERROR": 89,
     "INFO": 126,
-    "WARNING": 76
+    "WARNING": 75
   },
   "total_event_types": 135,
   "version": "1.0"

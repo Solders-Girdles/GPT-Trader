@@ -52,3 +52,23 @@ def test_repair_sqlite_database_removes_stale_wal_sidecars(tmp_path: Path) -> No
     assert all(not sidecar_path.exists() for sidecar_path in _sidecar_paths(database_path))
     with sqlite3.connect(str(database_path)) as connection:
         assert connection.execute("SELECT name FROM repair_items").fetchone() == ("kept",)
+
+
+def test_repair_sqlite_database_preserves_uncheckpointed_wal_rows(tmp_path: Path) -> None:
+    database_path = tmp_path / "events.db"
+    connection = sqlite3.connect(str(database_path))
+    try:
+        connection.execute("PRAGMA journal_mode=WAL")
+        connection.execute("PRAGMA wal_autocheckpoint=0")
+        connection.execute("CREATE TABLE repair_items (id INTEGER PRIMARY KEY, name TEXT)")
+        connection.commit()
+        connection.execute("INSERT INTO repair_items VALUES (1, 'from-wal')")
+        connection.commit()
+        assert _sidecar_paths(database_path)[0].stat().st_size > 0
+
+        assert durability.repair_sqlite_database(database_path) is True
+    finally:
+        connection.close()
+
+    with sqlite3.connect(str(database_path)) as repaired:
+        assert repaired.execute("SELECT name FROM repair_items").fetchone() == ("from-wal",)

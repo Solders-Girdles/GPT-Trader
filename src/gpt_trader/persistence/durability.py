@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import sqlite3
 import tempfile
 from dataclasses import dataclass
@@ -46,6 +47,117 @@ class RecoveryError(PersistenceError):
     """Raised when recovery fails."""
 
     pass
+
+
+def _sqlite_sidecar_paths(database_path: Path) -> tuple[Path, Path]:
+    """Return SQLite WAL sidecar paths for a database path."""
+    return (
+        database_path.with_name(f"{database_path.name}-wal"),
+        database_path.with_name(f"{database_path.name}-shm"),
+    )
+
+
+def _remove_sqlite_sidecars(database_path: Path) -> bool:
+    removed = True
+    for sidecar_path in _sqlite_sidecar_paths(database_path):
+        try:
+            sidecar_path.unlink()
+        except FileNotFoundError:
+            continue
+        except OSError as e:
+            logger.error(
+                "Failed to remove SQLite sidecar",
+                operation="database_repair",
+                sidecar=str(sidecar_path),
+                error=str(e),
+            )
+            removed = False
+    return removed
+
+
+def _remove_sqlite_file_set(database_path: Path) -> bool:
+    removed = _remove_sqlite_sidecars(database_path)
+    try:
+        database_path.unlink()
+    except FileNotFoundError:
+        pass
+    except OSError as e:
+        logger.error(
+            "Failed to remove SQLite database file",
+            operation="database_repair",
+            path=str(database_path),
+            error=str(e),
+        )
+        removed = False
+    return removed
+
+
+def _copy_sqlite_file_set(database_path: Path, backup_path: Path) -> bool:
+    if not _remove_sqlite_sidecars(backup_path):
+        return False
+    try:
+        shutil.copy2(database_path, backup_path)
+        for source_sidecar, backup_sidecar in zip(
+            _sqlite_sidecar_paths(database_path), _sqlite_sidecar_paths(backup_path), strict=True
+        ):
+            if source_sidecar.exists():
+                shutil.copy2(source_sidecar, backup_sidecar)
+    except OSError as e:
+        logger.error(
+            "Failed to backup corrupted database",
+            operation="database_repair",
+            error=str(e),
+        )
+        return False
+    return True
+
+
+def _quote_sqlite_identifier(identifier: str) -> str:
+    escaped_identifier = identifier.replace('"', '""')
+    return f'"{escaped_identifier}"'
+
+
+def _sqlite_table_columns(
+    connection: sqlite3.Connection,
+    table_name: str,
+    *,
+    schema: str = "main",
+) -> list[str]:
+    quoted_schema = _quote_sqlite_identifier(schema)
+    quoted_table = _quote_sqlite_identifier(table_name)
+    cursor = connection.execute(f"PRAGMA {quoted_schema}.table_info({quoted_table})")
+    return [row[1] for row in cursor.fetchall()]
+
+
+def _log_sqlite_recovery_skip(table_name: str) -> None:
+    logger.warning(
+        "Could not recover table without common columns",
+        operation="database_repair",
+        table=table_name,
+    )
+
+
+def _copy_common_sqlite_columns(
+    connection: sqlite3.Connection,
+    table_name: str,
+    *,
+    source_schema: str,
+) -> bool:
+    destination_columns = _sqlite_table_columns(connection, table_name)
+    source_columns = set(_sqlite_table_columns(connection, table_name, schema=source_schema))
+    common_columns = [column for column in destination_columns if column in source_columns]
+    if not common_columns:
+        _log_sqlite_recovery_skip(table_name)
+        return False
+
+    quoted_table = _quote_sqlite_identifier(table_name)
+    quoted_source_schema = _quote_sqlite_identifier(source_schema)
+    quoted_columns = ", ".join(_quote_sqlite_identifier(column) for column in common_columns)
+    connection.execute(
+        f"INSERT OR IGNORE INTO {quoted_table} ({quoted_columns}) "
+        f"SELECT {quoted_columns} FROM {quoted_source_schema}.{quoted_table}"
+    )
+    return True
 
 
 @dataclass(frozen=True)
@@ -290,41 +402,20 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
     if backup_path is None:
         backup_path = database_path.with_suffix(".corrupted")
 
-    try:
-        import shutil
-
-        shutil.copy2(database_path, backup_path)
-
-        # Also backup WAL and SHM sidecars if they exist so committed WAL frames are preserved
-        wal_path = database_path.with_name(f"{database_path.name}-wal")
-        if wal_path.exists():
-            shutil.copy2(wal_path, backup_path.with_name(f"{backup_path.name}-wal"))
-
-        shm_path = database_path.with_name(f"{database_path.name}-shm")
-        if shm_path.exists():
-            shutil.copy2(shm_path, backup_path.with_name(f"{backup_path.name}-shm"))
-
-        logger.info(
-            "Backed up corrupted database",
-            operation="database_repair",
-            original=str(database_path),
-            backup=str(backup_path),
-        )
-    except OSError as e:
-        logger.error(
-            "Failed to backup corrupted database, aborting repair",
-            operation="database_repair",
-            error=str(e),
-        )
+    if not _copy_sqlite_file_set(database_path, backup_path):
         return False
+
+    logger.info(
+        "Backed up corrupted database",
+        operation="database_repair",
+        original=str(database_path),
+        backup=str(backup_path),
+    )
 
     # Try to recover data via an ATTACH strategy to avoid N+1 queries and memory loads
     temp_db_path = database_path.with_suffix(".tmp")
-    if temp_db_path.exists():
-        try:
-            temp_db_path.unlink()
-        except OSError:
-            pass
+    if not _remove_sqlite_file_set(temp_db_path):
+        return False
 
     try:
         conn = sqlite3.connect(str(temp_db_path))
@@ -356,30 +447,8 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
                             # Table may already exist from schema.sql execution above
                             pass
 
-                    # Get target columns
-                    cursor_dest = conn.execute(f"PRAGMA table_info({table_name})")
-                    dest_cols = {row[1] for row in cursor_dest.fetchall()}
-
-                    # Get source columns
-                    cursor_src = conn.execute(f"PRAGMA corrupted.table_info({table_name})")
-                    src_cols = {row[1] for row in cursor_src.fetchall()}
-
-                    # Intersect common columns
-                    common_cols = dest_cols.intersection(src_cols)
-
-                    if common_cols:
-                        cols_str = ", ".join(common_cols)
-                        # Direct engine-level copy
-                        conn.execute(
-                            f"INSERT OR IGNORE INTO {table_name} ({cols_str}) SELECT {cols_str} FROM corrupted.{table_name}"
-                        )
-                    else:
-                        # If no common columns but the table exists, we can try a fallback or just skip
-                        conn.execute(
-                            f"INSERT OR IGNORE INTO {table_name} SELECT * FROM corrupted.{table_name}"
-                        )
-
-                    recovered_count += 1
+                    if _copy_common_sqlite_columns(conn, table_name, source_schema="corrupted"):
+                        recovered_count += 1
                 except sqlite3.Error:
                     logger.warning(
                         "Could not recover table",
@@ -388,27 +457,18 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
                     )
             # Commit the copied data to the new database before closing
             conn.commit()
+            conn.execute("PRAGMA main.wal_checkpoint(TRUNCATE)")
         finally:
             try:
-                conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
                 conn.execute("DETACH DATABASE corrupted")
             except sqlite3.Error:
                 pass
             conn.close()
 
-        # Remove temporary sidecars
-        try:
-            temp_db_path.with_suffix(".tmp-wal").unlink(missing_ok=True)
-            temp_db_path.with_suffix(".tmp-shm").unlink(missing_ok=True)
-        except OSError:
-            pass
-
-        # Remove original sidecars to prevent interference after replacement
-        try:
-            database_path.with_name(f"{database_path.name}-wal").unlink(missing_ok=True)
-            database_path.with_name(f"{database_path.name}-shm").unlink(missing_ok=True)
-        except OSError:
-            pass
+        if not _remove_sqlite_sidecars(temp_db_path):
+            raise RecoveryError("Could not remove recovered database WAL sidecars")
+        if not _remove_sqlite_sidecars(database_path):
+            raise RecoveryError("Could not remove original database WAL sidecars")
 
         # Replace corrupted database with recovered temporary database
         temp_db_path.replace(database_path)
@@ -426,17 +486,8 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
             operation="database_repair",
             error=str(e),
         )
-        # Cleanup temp database and sidecars on failure
-        for path_to_clean in (
-            temp_db_path,
-            temp_db_path.with_suffix(".tmp-wal"),
-            temp_db_path.with_suffix(".tmp-shm"),
-        ):
-            if path_to_clean.exists():
-                try:
-                    path_to_clean.unlink()
-                except OSError:
-                    pass
+        # Cleanup temp database on failure
+        _remove_sqlite_file_set(temp_db_path)
         return False
 
 

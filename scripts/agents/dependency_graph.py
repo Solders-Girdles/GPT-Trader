@@ -78,6 +78,23 @@ def file_to_module(file_path: Path, base: Path) -> str:
     return ".".join(parts)
 
 
+def resolve_import_module(module: str, file_path: Path, imported_module: str, level: int) -> str:
+    """Resolve an import module path relative to the current file's package."""
+    if level <= 0:
+        return imported_module
+
+    parts = module.split(".")
+    package_parts = parts if file_path.name == "__init__.py" else parts[:-1]
+    trim = level - 1
+    if trim > len(package_parts):
+        return imported_module
+
+    base_parts = package_parts[: len(package_parts) - trim] if trim else package_parts
+    if imported_module:
+        return ".".join(base_parts + [imported_module])
+    return ".".join(base_parts)
+
+
 def build_dependency_graph(source_dir: Path) -> dict[str, Any]:
     """Build a complete dependency graph of the codebase."""
     graph: dict[str, set[str]] = defaultdict(set)
@@ -103,19 +120,12 @@ def build_dependency_graph(source_dir: Path) -> dict[str, Any]:
         imports = extract_imports(py_file)
 
         for imp in imports:
-            imported_module = imp["module"]
-
-            # Handle relative imports
-            if imp.get("level", 0) > 0:
-                # Convert relative to absolute
-                parts = module.split(".")
-                level = imp["level"]
-                if level <= len(parts):
-                    base_parts = parts[:-level] if level > 0 else parts
-                    if imported_module:
-                        imported_module = ".".join(base_parts + [imported_module])
-                    else:
-                        imported_module = ".".join(base_parts)
+            imported_module = resolve_import_module(
+                module=module,
+                file_path=py_file,
+                imported_module=imp["module"],
+                level=imp.get("level", 0),
+            )
 
             # Check if it's an internal module
             is_internal = False
@@ -377,7 +387,7 @@ def main() -> int:
     args = parser.parse_args()
 
     print("Building dependency graph...", file=sys.stderr)
-    graph = build_dependency_graph(SRC_DIR / "gpt_trader")
+    graph = build_dependency_graph(SRC_DIR)
 
     # Handle specific queries
     if args.dependencies_of:

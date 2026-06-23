@@ -54,7 +54,13 @@ class IntegerRule(BaseValidationRule):
             candidate = value.strip()
             unsigned = candidate[1:] if candidate.startswith(("+", "-")) else candidate
             if unsigned and all("0" <= character <= "9" for character in unsigned):
-                return int(candidate)
+                try:
+                    return int(candidate)
+                except ValueError as exc:
+                    raise RuleError(
+                        f"{field_name} expected an integer-compatible value but received {value!r}",
+                        value=value,
+                    ) from exc
 
         raise RuleError(
             f"{field_name} expected an integer-compatible value but received {value!r}",

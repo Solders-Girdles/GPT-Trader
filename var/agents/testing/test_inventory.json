@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6698,
+    "total_tests": 6699,
     "total_files": 790,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6533,
+    "unit": 6534,
     "asyncio": 373,
     "parametrize": 189,
     "endpoints": 83,
@@ -59124,7 +59124,7 @@
     "tests/unit/gpt_trader/validation/test_rules_numeric_rules.py": [
       {
         "name": "TestDecimalRule::test_coerces_str_and_numbers",
-        "line": 15,
+        "line": 16,
         "markers": [
           "unit"
         ],
@@ -59133,7 +59133,7 @@
       },
       {
         "name": "TestDecimalRule::test_empty_string_returns_default",
-        "line": 20,
+        "line": 21,
         "markers": [
           "unit"
         ],
@@ -59142,7 +59142,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_none_with_default_returns_default",
-        "line": 28,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -59151,7 +59151,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_none_allowed",
-        "line": 32,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -59160,7 +59160,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_none_not_allowed_raises",
-        "line": 36,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -59169,7 +59169,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_decimal_passthrough",
-        "line": 41,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -59178,7 +59178,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_float_conversion",
-        "line": 46,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -59187,7 +59187,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_empty_with_allow_none",
-        "line": 51,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -59196,7 +59196,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_empty_no_default_no_allow_none_raises",
-        "line": 55,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -59205,7 +59205,7 @@
       },
       {
         "name": "TestDecimalRuleExtended::test_unsupported_type_raises",
-        "line": 60,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -59214,7 +59214,7 @@
       },
       {
         "name": "TestFloatRule::test_uses_default_for_none",
-        "line": 67,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -59223,7 +59223,7 @@
       },
       {
         "name": "TestFloatRule::test_blank_string_errors_when_no_default",
-        "line": 71,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -59232,7 +59232,7 @@
       },
       {
         "name": "TestFloatRuleExtended::test_allow_none",
-        "line": 80,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -59241,7 +59241,7 @@
       },
       {
         "name": "TestFloatRuleExtended::test_none_no_default_no_allow_raises",
-        "line": 84,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -59250,7 +59250,7 @@
       },
       {
         "name": "TestFloatRuleExtended::test_string_conversion",
-        "line": 89,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -59259,7 +59259,7 @@
       },
       {
         "name": "TestFloatRuleExtended::test_blank_with_default",
-        "line": 93,
+        "line": 94,
         "markers": [
           "unit"
         ],
@@ -59268,7 +59268,7 @@
       },
       {
         "name": "TestFloatRuleExtended::test_blank_with_allow_none",
-        "line": 97,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -59277,7 +59277,7 @@
       },
       {
         "name": "TestIntegerRule::test_parses_integers",
-        "line": 103,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -59286,7 +59286,7 @@
       },
       {
         "name": "TestIntegerRule::test_invalid_integer_raises",
-        "line": 111,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -59295,7 +59295,7 @@
       },
       {
         "name": "TestIntegerRule::test_lossy_integer_values_raise",
-        "line": 135,
+        "line": 136,
         "markers": [
           "parametrize",
           "unit"
@@ -59304,8 +59304,17 @@
         "class": "TestIntegerRule"
       },
       {
+        "name": "TestIntegerRule::test_oversized_digit_string_raises_rule_error",
+        "line": 141,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntegerRule"
+      },
+      {
         "name": "TestIntegerRuleExtended::test_none_allowed",
-        "line": 144,
+        "line": 154,
         "markers": [
           "unit"
         ],
@@ -59314,7 +59323,7 @@
       },
       {
         "name": "TestIntegerRuleExtended::test_none_not_allowed_raises",
-        "line": 148,
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -59323,7 +59332,7 @@
       },
       {
         "name": "TestPercentageRule::test_accepts_fractional_range",
-        "line": 155,
+        "line": 165,
         "markers": [
           "unit"
         ],
@@ -59332,7 +59341,7 @@
       },
       {
         "name": "TestPercentageRule::test_out_of_range_raises",
-        "line": 159,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -59341,7 +59350,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_none_allowed",
-        "line": 168,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -59350,7 +59359,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_none_not_allowed_raises",
-        "line": 172,
+        "line": 182,
         "markers": [
           "unit"
         ],
@@ -59359,7 +59368,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_auto_converts_integer_percentage",
-        "line": 177,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -59368,7 +59377,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_boundary_values",
-        "line": 181,
+        "line": 191,
         "markers": [
           "unit"
         ],
@@ -59377,7 +59386,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_negative_raises",
-        "line": 186,
+        "line": 196,
         "markers": [
           "unit"
         ],
@@ -59386,7 +59395,7 @@
       },
       {
         "name": "TestPercentageRuleExtended::test_non_integer_over_1_raises",
-        "line": 191,
+        "line": 201,
         "markers": [
           "unit"
         ],

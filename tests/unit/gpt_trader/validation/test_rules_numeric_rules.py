@@ -1,3 +1,4 @@
+import sys
 from decimal import Decimal
 
 import pytest
@@ -136,6 +137,15 @@ class TestIntegerRule:
         rule = IntegerRule()
         with pytest.raises(RuleError):
             rule(value, "field")
+
+    def test_oversized_digit_string_raises_rule_error(self) -> None:
+        max_digits = sys.get_int_max_str_digits()
+        if max_digits == 0:
+            pytest.skip("integer string conversion limit is disabled")
+
+        rule = IntegerRule()
+        with pytest.raises(RuleError):
+            rule("9" * (max_digits + 1), "field")
 
 
 class TestIntegerRuleExtended:

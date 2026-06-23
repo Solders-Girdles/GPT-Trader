@@ -12,20 +12,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-import re
-from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any
-
-_SAFE_DECISION_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
-
-
-def is_safe_decision_id(value: str) -> bool:
-    """Return whether a decision id is one filesystem-safe path segment."""
-    return bool(_SAFE_DECISION_ID.fullmatch(value))
 
 
 class AutonomyMode(str, Enum):
@@ -70,70 +61,16 @@ class TicketStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-def _validate_finite_decimal(value: Decimal | None, field: str) -> None:
-    if value is not None and not value.is_finite():
-        raise ValueError(f"{field} must be finite")
-
-
-def _validate_non_negative_decimal(value: Decimal | None, field: str) -> None:
-    if value is not None and value < 0:
-        raise ValueError(f"{field} must be non-negative")
-
-
-def _decimal_or_none(value: Any, field: str) -> Decimal | None:
+def _decimal_or_none(value: Any) -> Decimal | None:
     if value is None:
         return None
-    parsed = Decimal(str(value))
-    _validate_finite_decimal(parsed, field)
-    return parsed
+    return Decimal(str(value))
 
 
 def _decimal_to_str(value: Decimal | None) -> str | None:
     if value is None:
         return None
     return str(value)
-
-
-def _object_payload(value: Any, field: str) -> Mapping[str, Any]:
-    if value is None:
-        return {}
-    if not isinstance(value, Mapping):
-        raise ValueError(f"{field} must be a JSON object")
-    return value
-
-
-def _string_sequence(value: Any, field: str) -> tuple[str, ...]:
-    if value is None:
-        return ()
-    if isinstance(value, str) or not isinstance(value, (list, tuple)):
-        raise ValueError(f"{field} must be a JSON array of strings")
-    for index, item in enumerate(value):
-        if not isinstance(item, str):
-            raise ValueError(f"{field}[{index}] must be a string")
-    return tuple(value)
-
-
-def _string_value(value: Any, field: str) -> str:
-    if not isinstance(value, str):
-        raise ValueError(f"{field} must be a string")
-    return value
-
-
-def _require_timezone_aware(value: datetime | None, field: str) -> None:
-    if value is None:
-        return
-    if value.tzinfo is None or value.utcoffset() is None:
-        raise ValueError(f"{field} must include a timezone")
-
-
-def _parse_expires_at(value: Any) -> datetime | None:
-    if value is None or value == "":
-        return None
-    if not isinstance(value, str):
-        raise ValueError("time_horizon.expires_at must be an ISO datetime string")
-    expires_at = datetime.fromisoformat(value)
-    _require_timezone_aware(expires_at, "time_horizon.expires_at")
-    return expires_at
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,10 +81,6 @@ class EntryZone:
     upper: Decimal | None = None
     trigger: str = ""
 
-    def __post_init__(self) -> None:
-        _validate_finite_decimal(self.lower, "entry_zone.lower")
-        _validate_finite_decimal(self.upper, "entry_zone.upper")
-
     def to_dict(self) -> dict[str, Any]:
         return {
             "lower": _decimal_to_str(self.lower),
@@ -156,12 +89,11 @@ class EntryZone:
         }
 
     @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> EntryZone:
-        payload = _object_payload(payload, "entry_zone")
+    def from_dict(cls, payload: dict[str, Any]) -> EntryZone:
         return cls(
-            lower=_decimal_or_none(payload.get("lower"), "entry_zone.lower"),
-            upper=_decimal_or_none(payload.get("upper"), "entry_zone.upper"),
-            trigger=_string_value(payload.get("trigger", ""), "entry_zone.trigger"),
+            lower=_decimal_or_none(payload.get("lower")),
+            upper=_decimal_or_none(payload.get("upper")),
+            trigger=payload.get("trigger", ""),
         )
 
 
@@ -173,12 +105,6 @@ class MaxLoss:
     percent_of_account: Decimal | None = None
     assumptions: tuple[str, ...] = ()
 
-    def __post_init__(self) -> None:
-        _validate_finite_decimal(self.amount, "max_loss.amount")
-        _validate_finite_decimal(self.percent_of_account, "max_loss.percent_of_account")
-        _validate_non_negative_decimal(self.amount, "max_loss.amount")
-        _validate_non_negative_decimal(self.percent_of_account, "max_loss.percent_of_account")
-
     def to_dict(self) -> dict[str, Any]:
         return {
             "amount": _decimal_to_str(self.amount),
@@ -187,14 +113,11 @@ class MaxLoss:
         }
 
     @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> MaxLoss:
-        payload = _object_payload(payload, "max_loss")
+    def from_dict(cls, payload: dict[str, Any]) -> MaxLoss:
         return cls(
-            amount=_decimal_or_none(payload.get("amount"), "max_loss.amount"),
-            percent_of_account=_decimal_or_none(
-                payload.get("percent_of_account"), "max_loss.percent_of_account"
-            ),
-            assumptions=_string_sequence(payload.get("assumptions", ()), "max_loss.assumptions"),
+            amount=_decimal_or_none(payload.get("amount")),
+            percent_of_account=_decimal_or_none(payload.get("percent_of_account")),
+            assumptions=tuple(payload.get("assumptions", ())),
         )
 
 
@@ -206,10 +129,6 @@ class SizingRecommendation:
     notional: Decimal | None = None
     rationale: str = ""
 
-    def __post_init__(self) -> None:
-        _validate_finite_decimal(self.quantity, "sizing_recommendation.quantity")
-        _validate_finite_decimal(self.notional, "sizing_recommendation.notional")
-
     def to_dict(self) -> dict[str, Any]:
         return {
             "quantity": _decimal_to_str(self.quantity),
@@ -218,14 +137,11 @@ class SizingRecommendation:
         }
 
     @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> SizingRecommendation:
-        payload = _object_payload(payload, "sizing_recommendation")
+    def from_dict(cls, payload: dict[str, Any]) -> SizingRecommendation:
         return cls(
-            quantity=_decimal_or_none(payload.get("quantity"), "sizing_recommendation.quantity"),
-            notional=_decimal_or_none(payload.get("notional"), "sizing_recommendation.notional"),
-            rationale=_string_value(
-                payload.get("rationale", ""), "sizing_recommendation.rationale"
-            ),
+            quantity=_decimal_or_none(payload.get("quantity")),
+            notional=_decimal_or_none(payload.get("notional")),
+            rationale=payload.get("rationale", ""),
         )
 
 
@@ -236,9 +152,6 @@ class TimeHorizon:
     expected_hold: str = ""
     expires_at: datetime | None = None
 
-    def __post_init__(self) -> None:
-        _require_timezone_aware(self.expires_at, "time_horizon.expires_at")
-
     def to_dict(self) -> dict[str, Any]:
         return {
             "expected_hold": self.expected_hold,
@@ -246,13 +159,11 @@ class TimeHorizon:
         }
 
     @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> TimeHorizon:
-        payload = _object_payload(payload, "time_horizon")
+    def from_dict(cls, payload: dict[str, Any]) -> TimeHorizon:
+        raw_expiry = payload.get("expires_at")
         return cls(
-            expected_hold=_string_value(
-                payload.get("expected_hold", ""), "time_horizon.expected_hold"
-            ),
-            expires_at=_parse_expires_at(payload.get("expires_at")),
+            expected_hold=payload.get("expected_hold", ""),
+            expires_at=datetime.fromisoformat(raw_expiry) if raw_expiry else None,
         )
 
 
@@ -267,11 +178,10 @@ class Confidence:
         return {"label": self.label.value, "rationale": self.rationale}
 
     @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> Confidence:
-        payload = _object_payload(payload, "confidence")
+    def from_dict(cls, payload: dict[str, Any]) -> Confidence:
         return cls(
             label=ConfidenceLabel(payload["label"]),
-            rationale=_string_value(payload.get("rationale", ""), "confidence.rationale"),
+            rationale=payload.get("rationale", ""),
         )
 
 
@@ -286,8 +196,7 @@ class BrokerTicket:
         return {"venue": self.venue.value, "status": self.status.value}
 
     @classmethod
-    def from_dict(cls, payload: Mapping[str, Any]) -> BrokerTicket:
-        payload = _object_payload(payload, "broker_ticket")
+    def from_dict(cls, payload: dict[str, Any]) -> BrokerTicket:
         return cls(
             venue=TicketVenue(payload.get("venue", TicketVenue.NONE.value)),
             status=TicketStatus(payload.get("status", TicketStatus.NOT_CREATED.value)),
@@ -321,10 +230,6 @@ class TradeIdea:
     do_not_trade_if: tuple[str, ...] = ()
     broker_ticket: BrokerTicket = field(default_factory=BrokerTicket)
 
-    def __post_init__(self) -> None:
-        if not is_safe_decision_id(self.decision_id):
-            raise ValueError("decision_id must be a safe path segment")
-
     def to_dict(self) -> dict[str, Any]:
         return {
             "decision_id": self.decision_id,
@@ -351,22 +256,22 @@ class TradeIdea:
         return cls(
             decision_id=payload["decision_id"],
             autonomy_mode=AutonomyMode(payload["autonomy_mode"]),
-            thesis=_string_value(payload["thesis"], "thesis"),
-            instrument=_string_value(payload["instrument"], "instrument"),
+            thesis=payload["thesis"],
+            instrument=payload["instrument"],
             product_type=ProductType(payload["product_type"]),
             direction=TradeDirection(payload["direction"]),
             entry_zone=EntryZone.from_dict(payload.get("entry_zone", {})),
-            invalidation=_string_value(payload["invalidation"], "invalidation"),
-            target_exit=_string_value(payload["target_exit"], "target_exit"),
+            invalidation=payload["invalidation"],
+            target_exit=payload["target_exit"],
             max_loss=MaxLoss.from_dict(payload.get("max_loss", {})),
             sizing_recommendation=SizingRecommendation.from_dict(
                 payload.get("sizing_recommendation", {})
             ),
             time_horizon=TimeHorizon.from_dict(payload.get("time_horizon", {})),
-            data_used=_string_sequence(payload.get("data_used", ()), "data_used"),
+            data_used=tuple(payload.get("data_used", ())),
             confidence=Confidence.from_dict(payload["confidence"]),
-            failure_mode=_string_value(payload["failure_mode"], "failure_mode"),
-            do_not_trade_if=_string_sequence(payload.get("do_not_trade_if", ()), "do_not_trade_if"),
+            failure_mode=payload["failure_mode"],
+            do_not_trade_if=tuple(payload.get("do_not_trade_if", ())),
             broker_ticket=BrokerTicket.from_dict(payload.get("broker_ticket", {})),
         )
 

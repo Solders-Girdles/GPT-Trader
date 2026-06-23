@@ -13,7 +13,6 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-import shutil
 import sqlite3
 import tempfile
 from dataclasses import dataclass
@@ -47,49 +46,6 @@ class RecoveryError(PersistenceError):
     """Raised when recovery fails."""
 
     pass
-
-
-def _sqlite_sidecar_paths(database_path: Path) -> tuple[Path, Path]:
-    """Return SQLite WAL sidecar paths for a database path."""
-    return (
-        database_path.with_name(f"{database_path.name}-wal"),
-        database_path.with_name(f"{database_path.name}-shm"),
-    )
-
-
-def _remove_sqlite_sidecars(database_path: Path) -> bool:
-    removed = True
-    for sidecar_path in _sqlite_sidecar_paths(database_path):
-        try:
-            sidecar_path.unlink()
-        except FileNotFoundError:
-            continue
-        except OSError as e:
-            logger.error(
-                "Failed to remove SQLite sidecar",
-                operation="database_repair",
-                sidecar=str(sidecar_path),
-                error=str(e),
-            )
-            removed = False
-    return removed
-
-
-def _remove_sqlite_file_set(database_path: Path) -> bool:
-    removed = _remove_sqlite_sidecars(database_path)
-    try:
-        database_path.unlink()
-    except FileNotFoundError:
-        pass
-    except OSError as e:
-        logger.error(
-            "Failed to remove SQLite database file",
-            operation="database_repair",
-            path=str(database_path),
-            error=str(e),
-        )
-        removed = False
-    return removed
 
 
 @dataclass(frozen=True)
@@ -335,6 +291,8 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
         backup_path = database_path.with_suffix(".corrupted")
 
     try:
+        import shutil
+
         shutil.copy2(database_path, backup_path)
         logger.info(
             "Backed up corrupted database",
@@ -343,8 +301,8 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
             backup=str(backup_path),
         )
     except OSError as e:
-        logger.warning(
-            "Failed to backup corrupted database",
+        logger.error(
+            "Failed to backup corrupted database, aborting repair",
             operation="database_repair",
             error=str(e),
         )
@@ -352,8 +310,11 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
 
     # Try to recover data via an ATTACH strategy to avoid N+1 queries and memory loads
     temp_db_path = database_path.with_suffix(".tmp")
-    if not _remove_sqlite_file_set(temp_db_path):
-        return False
+    if temp_db_path.exists():
+        try:
+            temp_db_path.unlink()
+        except OSError:
+            pass
 
     try:
         conn = sqlite3.connect(str(temp_db_path))
@@ -398,18 +359,27 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
                     )
             # Commit the copied data to the new database before closing
             conn.commit()
-            conn.execute("PRAGMA main.wal_checkpoint(TRUNCATE)")
         finally:
             try:
+                conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
                 conn.execute("DETACH DATABASE corrupted")
             except sqlite3.Error:
                 pass
             conn.close()
 
-        if not _remove_sqlite_sidecars(temp_db_path):
-            raise RecoveryError("Could not remove recovered database WAL sidecars")
-        if not _remove_sqlite_sidecars(database_path):
-            raise RecoveryError("Could not remove original database WAL sidecars")
+        # Remove temporary sidecars
+        try:
+            temp_db_path.with_suffix(".tmp-wal").unlink(missing_ok=True)
+            temp_db_path.with_suffix(".tmp-shm").unlink(missing_ok=True)
+        except OSError:
+            pass
+
+        # Remove original sidecars to prevent interference after replacement
+        try:
+            database_path.with_name(f"{database_path.name}-wal").unlink(missing_ok=True)
+            database_path.with_name(f"{database_path.name}-shm").unlink(missing_ok=True)
+        except OSError:
+            pass
 
         # Replace corrupted database with recovered temporary database
         temp_db_path.replace(database_path)
@@ -427,8 +397,17 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
             operation="database_repair",
             error=str(e),
         )
-        # Cleanup temp database on failure
-        _remove_sqlite_file_set(temp_db_path)
+        # Cleanup temp database and sidecars on failure
+        for path_to_clean in (
+            temp_db_path,
+            temp_db_path.with_suffix(".tmp-wal"),
+            temp_db_path.with_suffix(".tmp-shm"),
+        ):
+            if path_to_clean.exists():
+                try:
+                    path_to_clean.unlink()
+                except OSError:
+                    pass
         return False
 
 

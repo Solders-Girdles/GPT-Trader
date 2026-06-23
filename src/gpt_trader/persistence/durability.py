@@ -112,6 +112,54 @@ def _copy_sqlite_file_set(database_path: Path, backup_path: Path) -> bool:
     return True
 
 
+def _quote_sqlite_identifier(identifier: str) -> str:
+    escaped_identifier = identifier.replace('"', '""')
+    return f'"{escaped_identifier}"'
+
+
+def _sqlite_table_columns(
+    connection: sqlite3.Connection,
+    table_name: str,
+    *,
+    schema: str = "main",
+) -> list[str]:
+    quoted_schema = _quote_sqlite_identifier(schema)
+    quoted_table = _quote_sqlite_identifier(table_name)
+    cursor = connection.execute(f"PRAGMA {quoted_schema}.table_info({quoted_table})")
+    return [row[1] for row in cursor.fetchall()]
+
+
+def _log_sqlite_recovery_skip(table_name: str) -> None:
+    logger.warning(
+        "Could not recover table without common columns",
+        operation="database_repair",
+        table=table_name,
+    )
+
+
+def _copy_common_sqlite_columns(
+    connection: sqlite3.Connection,
+    table_name: str,
+    *,
+    source_schema: str,
+) -> bool:
+    destination_columns = _sqlite_table_columns(connection, table_name)
+    source_columns = set(_sqlite_table_columns(connection, table_name, schema=source_schema))
+    common_columns = [column for column in destination_columns if column in source_columns]
+    if not common_columns:
+        _log_sqlite_recovery_skip(table_name)
+        return False
+
+    quoted_table = _quote_sqlite_identifier(table_name)
+    quoted_source_schema = _quote_sqlite_identifier(source_schema)
+    quoted_columns = ", ".join(_quote_sqlite_identifier(column) for column in common_columns)
+    connection.execute(
+        f"INSERT OR IGNORE INTO {quoted_table} ({quoted_columns}) "
+        f"SELECT {quoted_columns} FROM {quoted_source_schema}.{quoted_table}"
+    )
+    return True
+
+
 @dataclass(frozen=True)
 class WriteResult:
     """Result of a write operation."""
@@ -399,11 +447,8 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
                             # Table may already exist from schema.sql execution above
                             pass
 
-                    # Direct engine-level copy
-                    conn.execute(
-                        f"INSERT OR IGNORE INTO {table_name} SELECT * FROM corrupted.{table_name}"
-                    )
-                    recovered_count += 1
+                    if _copy_common_sqlite_columns(conn, table_name, source_schema="corrupted"):
+                        recovered_count += 1
                 except sqlite3.Error:
                     logger.warning(
                         "Could not recover table",

@@ -461,7 +461,6 @@
       "common_fields": [
         "backup",
         "error",
-        "frozen",
         "original",
         "path",
         "removed",
@@ -477,7 +476,7 @@
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 7,
+      "occurrence_count": 8,
       "source_files": [
         "persistence/durability.py"
       ],
@@ -2597,7 +2596,7 @@
     "DEBUG": 51,
     "ERROR": 89,
     "INFO": 126,
-    "WARNING": 75
+    "WARNING": 76
   },
   "total_event_types": 135,
   "version": "1.0"

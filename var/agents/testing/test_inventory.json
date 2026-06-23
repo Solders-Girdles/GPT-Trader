@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6702,
+    "total_tests": 6703,
     "total_files": 791,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6537,
+    "unit": 6538,
     "asyncio": 373,
     "parametrize": 189,
     "endpoints": 83,
@@ -39172,6 +39172,14 @@
       {
         "name": "test_repair_sqlite_database_preserves_uncheckpointed_wal_rows",
         "line": 57,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_repair_sqlite_database_copies_common_columns_from_stale_schema",
+        "line": 77,
         "markers": [
           "unit"
         ],

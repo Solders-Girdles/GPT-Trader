@@ -72,3 +72,34 @@ def test_repair_sqlite_database_preserves_uncheckpointed_wal_rows(tmp_path: Path
 
     with sqlite3.connect(str(database_path)) as repaired:
         assert repaired.execute("SELECT name FROM repair_items").fetchone() == ("from-wal",)
+
+
+def test_repair_sqlite_database_copies_common_columns_from_stale_schema(
+    tmp_path: Path,
+) -> None:
+    database_path = tmp_path / "events.db"
+    with sqlite3.connect(str(database_path)) as connection:
+        connection.execute(
+            """
+            CREATE TABLE events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                payload TEXT NOT NULL
+            )
+            """
+        )
+        connection.execute(
+            "INSERT INTO events (event_type, payload) VALUES (?, ?)",
+            ("order_submitted", '{"symbol": "BTC-USD"}'),
+        )
+
+    assert durability.repair_sqlite_database(database_path) is True
+
+    with sqlite3.connect(str(database_path)) as repaired:
+        row = repaired.execute(
+            "SELECT id, event_type, payload, timestamp, bot_id FROM events"
+        ).fetchone()
+
+    assert row[:3] == (1, "order_submitted", '{"symbol": "BTC-USD"}')
+    assert row[3] is not None
+    assert row[4] is None

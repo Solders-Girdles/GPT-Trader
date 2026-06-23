@@ -26,6 +26,10 @@ class TradeIdeaStore:
     def _decision_dir(self, decision_id: str) -> Path:
         return self._root / decision_id
 
+    def exists(self, decision_id: str) -> bool:
+        """Return whether a latest record already exists for this decision."""
+        return (self._decision_dir(decision_id) / "latest.json").exists()
+
     def save(self, idea: TradeIdea) -> str:
         """Persist a record version; returns its record hash."""
         record_hash = idea.record_hash()

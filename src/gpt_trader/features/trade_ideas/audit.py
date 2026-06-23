@@ -20,7 +20,11 @@ from pathlib import Path
 from typing import Any
 
 from gpt_trader.errors import ValidationError
-from gpt_trader.features.trade_ideas.workflow import TradeIdeaState, validate_transition
+from gpt_trader.features.trade_ideas.workflow import (
+    InvalidTransitionError,
+    TradeIdeaState,
+    validate_transition,
+)
 
 
 class ActorType(str, Enum):
@@ -43,6 +47,18 @@ class AuditAction(str, Enum):
 
 class AuditIntegrityError(ValidationError):
     """Raised when an append would break audit-log sequencing or integrity."""
+
+
+_ACTION_AFTER_STATES: dict[AuditAction, TradeIdeaState] = {
+    AuditAction.PROPOSED: TradeIdeaState.PROPOSED,
+    AuditAction.CHANGED: TradeIdeaState.NEEDS_CHANGES,
+    AuditAction.APPROVED: TradeIdeaState.APPROVED,
+    AuditAction.REJECTED: TradeIdeaState.REJECTED,
+    AuditAction.SUBMITTED: TradeIdeaState.SUBMITTED,
+    AuditAction.FILLED: TradeIdeaState.FILLED,
+    AuditAction.CANCELLED: TradeIdeaState.CANCELLED,
+    AuditAction.EXPIRED: TradeIdeaState.EXPIRED,
+}
 
 
 def new_event_id() -> str:
@@ -128,6 +144,7 @@ class TradeIdeaAuditLog:
                 field="before_state",
                 value=claimed,
             )
+        _validate_action_after_state(event)
         validate_transition(event.before_state, event.after_state)
 
         self._path.parent.mkdir(parents=True, exist_ok=True)
@@ -149,8 +166,69 @@ class TradeIdeaAuditLog:
                     events.append(event)
         return events
 
+    def verify(self) -> list[AuditEvent]:
+        """Read the full log and verify per-decision state sequencing."""
+        if not self._path.exists():
+            return []
+
+        events: list[AuditEvent] = []
+        states: dict[str, TradeIdeaState | None] = {}
+        with self._path.open("r", encoding="utf-8") as handle:
+            for line_number, raw_line in enumerate(handle, start=1):
+                line = raw_line.strip()
+                if not line:
+                    continue
+                try:
+                    event = AuditEvent.from_dict(json.loads(line))
+                except (KeyError, TypeError, ValueError, json.JSONDecodeError) as error:
+                    raise AuditIntegrityError(
+                        f"Audit log line {line_number} is malformed: {error}",
+                        field="line",
+                        value=line_number,
+                    ) from error
+
+                expected_before = states.get(event.decision_id)
+                if event.before_state != expected_before:
+                    recorded = expected_before.value if expected_before else "none"
+                    claimed = event.before_state.value if event.before_state else "none"
+                    raise AuditIntegrityError(
+                        f"Audit log line {line_number} for '{event.decision_id}' claims "
+                        f"before_state '{claimed}' but previous events record '{recorded}'",
+                        field="before_state",
+                        value=claimed,
+                    )
+                _validate_action_after_state(event, line_number=line_number)
+                try:
+                    validate_transition(event.before_state, event.after_state)
+                except InvalidTransitionError as error:
+                    raise AuditIntegrityError(
+                        f"Audit log line {line_number} has an illegal transition: {error}",
+                        field="line",
+                        value=line_number,
+                    ) from error
+
+                states[event.decision_id] = event.after_state
+                events.append(event)
+
+        return events
+
     def current_state(self, decision_id: str) -> TradeIdeaState | None:
         events = self.read_events(decision_id)
         if not events:
             return None
         return events[-1].after_state
+
+
+def _validate_action_after_state(event: AuditEvent, *, line_number: int | None = None) -> None:
+    expected_after_state = _ACTION_AFTER_STATES[event.action]
+    if event.after_state is expected_after_state:
+        return
+
+    location = f"Audit log line {line_number}" if line_number is not None else "Audit event"
+    raise AuditIntegrityError(
+        f"{location} for '{event.decision_id}' has action '{event.action.value}' "
+        f"but after_state '{event.after_state.value}'; expected "
+        f"after_state '{expected_after_state.value}'",
+        field="after_state",
+        value=event.after_state.value,
+    )

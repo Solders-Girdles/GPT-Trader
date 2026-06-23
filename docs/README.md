@@ -24,6 +24,7 @@ When adding a new doc, link it below in the best-fit section.
 | [Ownership Map](architecture/OWNERSHIP.md) | Module ownership map and boundaries |
 | [Entrypoints](architecture/ENTRYPOINTS.md) | CLI, TUI, preflight, and live bot wiring |
 | [Core Cleanup Roadmap](CORE_CLEANUP_ROADMAP.md) | Cleanup lanes, decision backlog, and verification bundle |
+| [Decision Log](GPT_TRADER_DECISION_LOG.md) | Durable product and engineering decisions |
 | [Live Operations Guide](production.md) | Readiness-gated live operations, rollback, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
 | [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) | AI-assisted trading autonomy, product, venue, approval, and audit gates |

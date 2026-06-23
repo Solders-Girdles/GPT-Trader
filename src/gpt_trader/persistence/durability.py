@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shutil
 import sqlite3
 import tempfile
 from dataclasses import dataclass
@@ -46,6 +47,69 @@ class RecoveryError(PersistenceError):
     """Raised when recovery fails."""
 
     pass
+
+
+def _sqlite_sidecar_paths(database_path: Path) -> tuple[Path, Path]:
+    """Return SQLite WAL sidecar paths for a database path."""
+    return (
+        database_path.with_name(f"{database_path.name}-wal"),
+        database_path.with_name(f"{database_path.name}-shm"),
+    )
+
+
+def _remove_sqlite_sidecars(database_path: Path) -> bool:
+    removed = True
+    for sidecar_path in _sqlite_sidecar_paths(database_path):
+        try:
+            sidecar_path.unlink()
+        except FileNotFoundError:
+            continue
+        except OSError as e:
+            logger.error(
+                "Failed to remove SQLite sidecar",
+                operation="database_repair",
+                sidecar=str(sidecar_path),
+                error=str(e),
+            )
+            removed = False
+    return removed
+
+
+def _remove_sqlite_file_set(database_path: Path) -> bool:
+    removed = _remove_sqlite_sidecars(database_path)
+    try:
+        database_path.unlink()
+    except FileNotFoundError:
+        pass
+    except OSError as e:
+        logger.error(
+            "Failed to remove SQLite database file",
+            operation="database_repair",
+            path=str(database_path),
+            error=str(e),
+        )
+        removed = False
+    return removed
+
+
+def _copy_sqlite_file_set(database_path: Path, backup_path: Path) -> bool:
+    if not _remove_sqlite_sidecars(backup_path):
+        return False
+    try:
+        shutil.copy2(database_path, backup_path)
+        for source_sidecar, backup_sidecar in zip(
+            _sqlite_sidecar_paths(database_path), _sqlite_sidecar_paths(backup_path), strict=True
+        ):
+            if source_sidecar.exists():
+                shutil.copy2(source_sidecar, backup_sidecar)
+    except OSError as e:
+        logger.error(
+            "Failed to backup corrupted database",
+            operation="database_repair",
+            error=str(e),
+        )
+        return False
+    return True
 
 
 @dataclass(frozen=True)
@@ -290,41 +354,20 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
     if backup_path is None:
         backup_path = database_path.with_suffix(".corrupted")
 
-    try:
-        import shutil
-
-        shutil.copy2(database_path, backup_path)
-
-        # Also backup WAL and SHM sidecars if they exist so committed WAL frames are preserved
-        wal_path = database_path.with_name(f"{database_path.name}-wal")
-        if wal_path.exists():
-            shutil.copy2(wal_path, backup_path.with_name(f"{backup_path.name}-wal"))
-
-        shm_path = database_path.with_name(f"{database_path.name}-shm")
-        if shm_path.exists():
-            shutil.copy2(shm_path, backup_path.with_name(f"{backup_path.name}-shm"))
-
-        logger.info(
-            "Backed up corrupted database",
-            operation="database_repair",
-            original=str(database_path),
-            backup=str(backup_path),
-        )
-    except OSError as e:
-        logger.error(
-            "Failed to backup corrupted database, aborting repair",
-            operation="database_repair",
-            error=str(e),
-        )
+    if not _copy_sqlite_file_set(database_path, backup_path):
         return False
+
+    logger.info(
+        "Backed up corrupted database",
+        operation="database_repair",
+        original=str(database_path),
+        backup=str(backup_path),
+    )
 
     # Try to recover data via an ATTACH strategy to avoid N+1 queries and memory loads
     temp_db_path = database_path.with_suffix(".tmp")
-    if temp_db_path.exists():
-        try:
-            temp_db_path.unlink()
-        except OSError:
-            pass
+    if not _remove_sqlite_file_set(temp_db_path):
+        return False
 
     try:
         conn = sqlite3.connect(str(temp_db_path))
@@ -369,27 +412,18 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
                     )
             # Commit the copied data to the new database before closing
             conn.commit()
+            conn.execute("PRAGMA main.wal_checkpoint(TRUNCATE)")
         finally:
             try:
-                conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
                 conn.execute("DETACH DATABASE corrupted")
             except sqlite3.Error:
                 pass
             conn.close()
 
-        # Remove temporary sidecars
-        try:
-            temp_db_path.with_suffix(".tmp-wal").unlink(missing_ok=True)
-            temp_db_path.with_suffix(".tmp-shm").unlink(missing_ok=True)
-        except OSError:
-            pass
-
-        # Remove original sidecars to prevent interference after replacement
-        try:
-            database_path.with_name(f"{database_path.name}-wal").unlink(missing_ok=True)
-            database_path.with_name(f"{database_path.name}-shm").unlink(missing_ok=True)
-        except OSError:
-            pass
+        if not _remove_sqlite_sidecars(temp_db_path):
+            raise RecoveryError("Could not remove recovered database WAL sidecars")
+        if not _remove_sqlite_sidecars(database_path):
+            raise RecoveryError("Could not remove original database WAL sidecars")
 
         # Replace corrupted database with recovered temporary database
         temp_db_path.replace(database_path)
@@ -407,17 +441,8 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
             operation="database_repair",
             error=str(e),
         )
-        # Cleanup temp database and sidecars on failure
-        for path_to_clean in (
-            temp_db_path,
-            temp_db_path.with_suffix(".tmp-wal"),
-            temp_db_path.with_suffix(".tmp-shm"),
-        ):
-            if path_to_clean.exists():
-                try:
-                    path_to_clean.unlink()
-                except OSError:
-                    pass
+        # Cleanup temp database on failure
+        _remove_sqlite_file_set(temp_db_path)
         return False
 
 

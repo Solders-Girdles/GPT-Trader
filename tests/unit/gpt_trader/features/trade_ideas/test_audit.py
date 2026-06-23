@@ -137,6 +137,47 @@ def test_append_rejects_illegal_transition(
     assert audit_log.current_state(trade_idea.decision_id) is TradeIdeaState.PROPOSED
 
 
+def test_append_rejects_action_after_state_mismatch(
+    audit_log: TradeIdeaAuditLog, trade_idea: TradeIdea
+) -> None:
+    propose(audit_log, trade_idea)
+
+    with pytest.raises(AuditIntegrityError, match="action 'approved'"):
+        audit_log.append(
+            build_event(
+                trade_idea,
+                action=AuditAction.APPROVED,
+                before_state=TradeIdeaState.PROPOSED,
+                after_state=TradeIdeaState.REJECTED,
+                minute=1,
+            )
+        )
+
+
+def test_verify_rejects_tampered_action_after_state_mismatch(
+    audit_log: TradeIdeaAuditLog, trade_idea: TradeIdea
+) -> None:
+    propose(audit_log, trade_idea)
+    audit_log.append(
+        build_event(
+            trade_idea,
+            action=AuditAction.REJECTED,
+            before_state=TradeIdeaState.PROPOSED,
+            after_state=TradeIdeaState.REJECTED,
+            minute=1,
+        )
+    )
+    lines = audit_log.path.read_text(encoding="utf-8").strip().splitlines()
+    payload = json.loads(lines[1])
+    payload["action"] = AuditAction.APPROVED.value
+    lines[1] = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    audit_log.path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    assert audit_log.current_state(trade_idea.decision_id) is TradeIdeaState.REJECTED
+    with pytest.raises(AuditIntegrityError, match="action 'approved'"):
+        audit_log.verify()
+
+
 def test_rejected_append_leaves_log_untouched(
     audit_log: TradeIdeaAuditLog, trade_idea: TradeIdea
 ) -> None:

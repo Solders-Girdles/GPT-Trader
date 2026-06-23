@@ -33,12 +33,14 @@ class CliErrorCode(str, Enum):
     CONFIG_NOT_FOUND = "CONFIG_NOT_FOUND"
     CONFIG_INVALID = "CONFIG_INVALID"
     STUDY_NOT_FOUND = "STUDY_NOT_FOUND"
+    IDEA_NOT_FOUND = "IDEA_NOT_FOUND"
 
     # Operation errors
     INSUFFICIENT_RUNS = "INSUFFICIENT_RUNS"
     STUDY_INCOMPLETE = "STUDY_INCOMPLETE"
     NO_BEST_PARAMS = "NO_BEST_PARAMS"
     OPERATION_FAILED = "OPERATION_FAILED"
+    POLICY_VIOLATION = "POLICY_VIOLATION"
 
     # API/External errors
     API_ERROR = "API_ERROR"
@@ -257,6 +259,9 @@ def format_response(response: CliResponse, output_format: str = "text") -> str:
         return capture.get()
     else:
         # Format errors for text output
+        if isinstance(response.data, str):
+            return response.data
+
         lines = []
         for error in response.errors:
             lines.append(f"[bold red]Error [{error.code}]:[/bold red] {error.message}")

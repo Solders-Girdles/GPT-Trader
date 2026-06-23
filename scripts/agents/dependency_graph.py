@@ -377,7 +377,7 @@ def main() -> int:
     args = parser.parse_args()
 
     print("Building dependency graph...", file=sys.stderr)
-    graph = build_dependency_graph(SRC_DIR / "gpt_trader")
+    graph = build_dependency_graph(SRC_DIR)
 
     # Handle specific queries
     if args.dependencies_of:

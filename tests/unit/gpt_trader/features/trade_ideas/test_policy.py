@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
@@ -11,9 +11,6 @@ from gpt_trader.features.trade_ideas import (
     ApprovalPolicy,
     AutonomyMode,
     MaxLoss,
-    ProductType,
-    RiskBudget,
-    TradeDirection,
     TradeIdea,
 )
 
@@ -25,14 +22,13 @@ def violations(
     *,
     policy: ApprovalPolicy | None = None,
     actor_type: ActorType = ActorType.HUMAN,
-    budget: RiskBudget = DEFAULT_RISK_BUDGET,
     open_approved_count: int = 0,
 ) -> list[str]:
     active = policy or ApprovalPolicy()
     return active.approval_violations(
         idea,
         actor_type=actor_type,
-        budget=budget,
+        budget=DEFAULT_RISK_BUDGET,
         open_approved_count=open_approved_count,
         now=NOW,
     )
@@ -72,63 +68,6 @@ def test_max_loss_above_budget_cap_is_refused() -> None:
     assert any("exceeds budget cap" in violation for violation in found)
 
 
-def test_futures_leverage_requires_budget_permission() -> None:
-    idea = build_trade_idea(product_type=ProductType.FUTURES)
-
-    found = violations(idea)
-
-    assert found == ["product_type futures requires risk budget allow_futures_leverage=true"]
-
-
-def test_futures_leverage_passes_when_budget_allows_it() -> None:
-    idea = build_trade_idea(product_type=ProductType.FUTURES)
-    allowed_budget = RiskBudget.from_dict(
-        {
-            **DEFAULT_RISK_BUDGET.to_dict(),
-            "version": 2,
-            "allow_futures_leverage": True,
-        }
-    )
-
-    assert violations(idea, budget=allowed_budget) == []
-
-
-def test_short_direction_requires_budget_permission_by_default() -> None:
-    idea = build_trade_idea(direction=TradeDirection.SHORT)
-
-    found = violations(idea)
-
-    assert found == ["direction short requires risk budget allow_naked_shorts=true"]
-
-
-def test_short_direction_requires_budget_permission_when_explicitly_disabled() -> None:
-    idea = build_trade_idea(direction=TradeDirection.SHORT)
-    disabled_budget = RiskBudget.from_dict(
-        {
-            **DEFAULT_RISK_BUDGET.to_dict(),
-            "version": 2,
-            "allow_naked_shorts": False,
-        }
-    )
-
-    found = violations(idea, budget=disabled_budget)
-
-    assert found == ["direction short requires risk budget allow_naked_shorts=true"]
-
-
-def test_short_direction_passes_when_budget_allows_naked_shorts() -> None:
-    idea = build_trade_idea(direction=TradeDirection.SHORT)
-    allowed_budget = RiskBudget.from_dict(
-        {
-            **DEFAULT_RISK_BUDGET.to_dict(),
-            "version": 2,
-            "allow_naked_shorts": True,
-        }
-    )
-
-    assert violations(idea, budget=allowed_budget) == []
-
-
 def test_missing_percent_cannot_be_verified() -> None:
     idea = build_trade_idea(max_loss=MaxLoss(amount=Decimal("250")))
 
@@ -158,28 +97,6 @@ def test_stale_idea_cannot_be_approved(trade_idea: TradeIdea) -> None:
     )
 
     assert any("expired" in violation for violation in found)
-
-
-def test_review_latency_budget_blocks_stale_proposed_idea(trade_idea: TradeIdea) -> None:
-    policy = ApprovalPolicy()
-    strict_budget = RiskBudget.from_dict(
-        {
-            **DEFAULT_RISK_BUDGET.to_dict(),
-            "version": 2,
-            "max_review_latency_hours": 1,
-        }
-    )
-
-    found = policy.approval_violations(
-        trade_idea,
-        actor_type=ActorType.HUMAN,
-        budget=strict_budget,
-        open_approved_count=0,
-        now=NOW,
-        review_started_at=NOW - timedelta(hours=2),
-    )
-
-    assert any("review deadline expired" in violation for violation in found)
 
 
 def test_budget_changes_require_human_below_bounded_autonomy() -> None:

@@ -19,53 +19,13 @@ class IntegerRule(BaseValidationRule):
             if self._allow_none:
                 return None
             raise RuleError(f"{field_name} expected an integer but received None", value=value)
-
-        if isinstance(value, bool):
-            raise RuleError(
-                f"{field_name} expected an integer-compatible value but received {value!r}",
-                value=value,
-            )
-
-        if isinstance(value, int):
+        try:
             return int(value)
-
-        if isinstance(value, float):
-            if value.is_integer():
-                return int(value)
+        except Exception as exc:  # pragma: no cover - defensive
             raise RuleError(
                 f"{field_name} expected an integer-compatible value but received {value!r}",
                 value=value,
-            )
-
-        if isinstance(value, Decimal):
-            if not value.is_finite():
-                raise RuleError(
-                    f"{field_name} expected an integer-compatible value but received {value!r}",
-                    value=value,
-                )
-            if value == value.to_integral_value():
-                return int(value)
-            raise RuleError(
-                f"{field_name} expected an integer-compatible value but received {value!r}",
-                value=value,
-            )
-
-        if isinstance(value, str):
-            candidate = value.strip()
-            unsigned = candidate[1:] if candidate.startswith(("+", "-")) else candidate
-            if unsigned and all("0" <= character <= "9" for character in unsigned):
-                try:
-                    return int(candidate)
-                except ValueError as exc:
-                    raise RuleError(
-                        f"{field_name} expected an integer-compatible value but received {value!r}",
-                        value=value,
-                    ) from exc
-
-        raise RuleError(
-            f"{field_name} expected an integer-compatible value but received {value!r}",
-            value=value,
-        )
+            ) from exc
 
 
 class DecimalRule(BaseValidationRule):

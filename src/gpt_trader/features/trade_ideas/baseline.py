@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 from gpt_trader.errors import ValidationError
@@ -49,12 +49,6 @@ def _moving_average(closes: list[Decimal], window: int, end_index: int) -> Decim
     return sum(closes[start : end_index + 1], Decimal("0")) / Decimal(window)
 
 
-def _utc_aware(value: datetime) -> datetime:
-    if value.tzinfo is None or value.utcoffset() is None:
-        return value.replace(tzinfo=UTC)
-    return value
-
-
 class BaselineProposer:
     """Long-only MA-crossover proposer over spot symbols in a snapshot."""
 
@@ -77,7 +71,6 @@ class BaselineProposer:
         self, snapshot: MarketSnapshot, series: SymbolSeries
     ) -> TradeIdea | None:
         config = self._config
-        as_of = _utc_aware(snapshot.as_of)
         required = config.long_window + config.crossover_lookback
         if len(series.candles) < required:
             return None
@@ -122,7 +115,7 @@ class BaselineProposer:
         )
 
         idea = TradeIdea(
-            decision_id=self._decision_id(as_of, series.symbol),
+            decision_id=self._decision_id(snapshot, series.symbol),
             autonomy_mode=AutonomyMode.HUMAN_APPROVED_EXECUTION,
             thesis=(
                 f"{series.symbol} {config.short_window}-bar average crossed above the "
@@ -154,11 +147,11 @@ class BaselineProposer:
             ),
             time_horizon=TimeHorizon(
                 expected_hold=config.expected_hold,
-                expires_at=as_of + timedelta(hours=config.expiry_hours),
+                expires_at=snapshot.as_of + timedelta(hours=config.expiry_hours),
             ),
             data_used=(
                 f"{snapshot.source}:{series.symbol}:{series.granularity}"
-                f":as_of={as_of.isoformat()}",
+                f":as_of={snapshot.as_of.isoformat()}",
             ),
             confidence=confidence,
             failure_mode=(
@@ -179,9 +172,9 @@ class BaselineProposer:
             )
         return idea
 
-    def _decision_id(self, as_of: datetime, symbol: str) -> str:
+    def _decision_id(self, snapshot: MarketSnapshot, symbol: str) -> str:
         digest = hashlib.sha256(
-            f"{self.proposer_id}|{symbol}|{as_of.isoformat()}".encode()
+            f"{self.proposer_id}|{symbol}|{snapshot.as_of.isoformat()}".encode()
         ).hexdigest()[:8]
         symbol_slug = symbol.lower().replace("-", "")
-        return f"trade-{as_of:%Y%m%d}-{symbol_slug}-{digest}"
+        return f"trade-{snapshot.as_of:%Y%m%d}-{symbol_slug}-{digest}"

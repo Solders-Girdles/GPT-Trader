@@ -21,7 +21,10 @@ CONFIG = BaselineProposerConfig(short_window=5, long_window=20, crossover_lookba
 
 
 def make_series(
-    closes: list[str], symbol: str = "BTC-USD", last_volume: str = "1000"
+    closes: list[str],
+    symbol: str = "BTC-USD",
+    last_volume: str = "1000",
+    as_of: datetime = AS_OF,
 ) -> SymbolSeries:
     candles = []
     for index, close in enumerate(closes):
@@ -29,7 +32,7 @@ def make_series(
         volume = Decimal(last_volume) if index == len(closes) - 1 else Decimal("1000")
         candles.append(
             Candle(
-                ts=AS_OF - timedelta(days=len(closes) - index),
+                ts=as_of - timedelta(days=len(closes) - index),
                 open=price,
                 high=price,
                 low=price,
@@ -40,8 +43,8 @@ def make_series(
     return SymbolSeries(symbol=symbol, granularity="1d", candles=tuple(candles))
 
 
-def snapshot_of(*series: SymbolSeries) -> MarketSnapshot:
-    return MarketSnapshot(as_of=AS_OF, source="coinbase:candles", series=series)
+def snapshot_of(*series: SymbolSeries, as_of: datetime = AS_OF) -> MarketSnapshot:
+    return MarketSnapshot(as_of=as_of, source="coinbase:candles", series=series)
 
 
 GOLDEN_CROSS = ["100"] * 28 + ["102", "104"]
@@ -72,6 +75,18 @@ def test_idea_records_are_complete_and_pinned() -> None:
     assert idea.entry_zone.lower is not None
     assert idea.entry_zone.upper is not None
     assert idea.entry_zone.lower < idea.entry_zone.upper
+
+
+def test_internal_naive_snapshot_as_of_produces_aware_expiry() -> None:
+    naive_as_of = AS_OF.replace(tzinfo=None)
+
+    idea = BaselineProposer(CONFIG).propose(
+        snapshot_of(make_series(GOLDEN_CROSS, as_of=naive_as_of), as_of=naive_as_of)
+    )[0]
+
+    assert idea.time_horizon.expires_at == naive_as_of.replace(tzinfo=UTC) + timedelta(
+        hours=CONFIG.expiry_hours
+    )
 
 
 def test_flat_market_produces_nothing() -> None:

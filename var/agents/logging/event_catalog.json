@@ -459,13 +459,16 @@
     },
     "database_repair": {
       "common_fields": [
-        "__all__",
         "backup",
-        "conn",
+        "backup_path",
         "error",
         "original",
+        "path",
+        "removed",
+        "sidecar",
         "table",
-        "tables_recovered"
+        "tables_recovered",
+        "tion"
       ],
       "components": null,
       "levels": [
@@ -473,7 +476,7 @@
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 5,
+      "occurrence_count": 7,
       "source_files": [
         "persistence/durability.py"
       ],
@@ -2557,7 +2560,6 @@
     }
   },
   "field_frequency": {
-    "__all__": 4,
     "_stream_task": 4,
     "_tracer": 4,
     "action": 10,
@@ -2566,7 +2568,7 @@
     "client_order_id": 12,
     "consecutive_failures": 5,
     "details": 5,
-    "error": 42,
+    "error": 44,
     "error_message": 92,
     "error_msg": 5,
     "error_type": 84,
@@ -2578,12 +2580,13 @@
     "mode": 4,
     "order_id": 23,
     "outcome": 5,
-    "path": 13,
+    "path": 14,
     "portfolio_id": 4,
     "price": 4,
     "quantity": 7,
     "reason": 23,
     "service": 9,
+    "severity": 4,
     "side": 25,
     "stage": 167,
     "symbol": 77
@@ -2591,7 +2594,7 @@
   "level_distribution": {
     "CRITICAL": 1,
     "DEBUG": 51,
-    "ERROR": 86,
+    "ERROR": 88,
     "INFO": 126,
     "WARNING": 76
   },

@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import re
+from datetime import datetime
 from decimal import Decimal
 
+import pytest
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 from gpt_trader.features.trade_ideas import (
@@ -9,6 +12,7 @@ from gpt_trader.features.trade_ideas import (
     MaxLoss,
     TicketStatus,
     TicketVenue,
+    TimeHorizon,
     TradeIdea,
 )
 
@@ -35,6 +39,17 @@ def test_from_dict_restores_decimal_types(trade_idea: TradeIdea) -> None:
     assert restored.time_horizon.expires_at == trade_idea.time_horizon.expires_at
 
 
+def test_time_horizon_rejects_timezone_naive_expiry(trade_idea: TradeIdea) -> None:
+    with pytest.raises(ValueError, match="time_horizon.expires_at must include a timezone"):
+        TimeHorizon(expires_at=datetime(2035, 6, 19, 16, 0))
+
+    payload = trade_idea.to_dict()
+    payload["time_horizon"]["expires_at"] = "2035-06-19T16:00:00"
+
+    with pytest.raises(ValueError, match="time_horizon.expires_at must include a timezone"):
+        TradeIdea.from_dict(payload)
+
+
 def test_broker_ticket_defaults_to_no_venue(trade_idea: TradeIdea) -> None:
     assert trade_idea.broker_ticket == BrokerTicket(
         venue=TicketVenue.NONE, status=TicketStatus.NOT_CREATED
@@ -59,3 +74,108 @@ def test_optional_value_objects_round_trip_when_empty() -> None:
     assert restored.max_loss.amount is None
     assert restored.max_loss.percent_of_account is None
     assert restored.do_not_trade_if == ()
+
+
+@pytest.mark.parametrize("field_name", ["amount", "percent_of_account"])
+def test_max_loss_rejects_negative_values(field_name: str) -> None:
+    with pytest.raises(ValueError, match=rf"max_loss\.{field_name} must be non-negative"):
+        MaxLoss(**{field_name: Decimal("-1")})
+
+
+@pytest.mark.parametrize("field_name", ["amount", "percent_of_account"])
+def test_from_dict_rejects_negative_max_loss_values(trade_idea: TradeIdea, field_name: str) -> None:
+    payload = trade_idea.to_dict()
+    payload["max_loss"][field_name] = "-1"
+
+    with pytest.raises(ValueError, match=rf"max_loss\.{field_name} must be non-negative"):
+        TradeIdea.from_dict(payload)
+
+
+@pytest.mark.parametrize(
+    ("field_path", "malformed_value", "message"),
+    [
+        ("data_used", "coinbase:candles:BTC-USD", "data_used must be a JSON array of strings"),
+        ("data_used", 42, "data_used must be a JSON array of strings"),
+        ("data_used", ["coinbase:candles:BTC-USD", 42], "data_used[1] must be a string"),
+        (
+            "do_not_trade_if",
+            "FOMC announcement within 24 hours",
+            "do_not_trade_if must be a JSON array of strings",
+        ),
+        (
+            "do_not_trade_if",
+            42,
+            "do_not_trade_if must be a JSON array of strings",
+        ),
+        (
+            "do_not_trade_if",
+            ["FOMC announcement within 24 hours", 42],
+            "do_not_trade_if[1] must be a string",
+        ),
+        (
+            "max_loss.assumptions",
+            "No slippage beyond 10 bps",
+            "max_loss.assumptions must be a JSON array of strings",
+        ),
+        (
+            "max_loss.assumptions",
+            42,
+            "max_loss.assumptions must be a JSON array of strings",
+        ),
+        (
+            "max_loss.assumptions",
+            ["No slippage beyond 10 bps", 42],
+            "max_loss.assumptions[1] must be a string",
+        ),
+    ],
+)
+def test_from_dict_rejects_malformed_string_sequences(
+    trade_idea: TradeIdea,
+    field_path: str,
+    malformed_value: object,
+    message: str,
+) -> None:
+    payload = trade_idea.to_dict()
+    if field_path == "max_loss.assumptions":
+        payload["max_loss"]["assumptions"] = malformed_value
+    else:
+        payload[field_path] = malformed_value
+
+    with pytest.raises(ValueError, match=re.escape(message)):
+        TradeIdea.from_dict(payload)
+
+
+@pytest.mark.parametrize(
+    ("field_path", "malformed_value", "message"),
+    [
+        ("thesis", 42, "thesis must be a string"),
+        ("instrument", 42, "instrument must be a string"),
+        ("invalidation", 42, "invalidation must be a string"),
+        ("target_exit", 42, "target_exit must be a string"),
+        ("failure_mode", 42, "failure_mode must be a string"),
+        ("entry_zone.trigger", 42, "entry_zone.trigger must be a string"),
+        (
+            "sizing_recommendation.rationale",
+            42,
+            "sizing_recommendation.rationale must be a string",
+        ),
+        ("time_horizon.expected_hold", 42, "time_horizon.expected_hold must be a string"),
+        ("confidence.rationale", 42, "confidence.rationale must be a string"),
+    ],
+)
+def test_from_dict_rejects_malformed_scalar_strings(
+    trade_idea: TradeIdea,
+    field_path: str,
+    malformed_value: object,
+    message: str,
+) -> None:
+    payload = trade_idea.to_dict()
+    target = payload
+    parts = field_path.split(".")
+    for part in parts[:-1]:
+        target = target[part]
+        assert isinstance(target, dict)
+    target[parts[-1]] = malformed_value
+
+    with pytest.raises(ValueError, match=re.escape(message)):
+        TradeIdea.from_dict(payload)

@@ -1,0 +1,54 @@
+"""Regression tests for SQLite database repair."""
+
+from __future__ import annotations
+
+import sqlite3
+from pathlib import Path
+
+import pytest
+
+import gpt_trader.persistence.durability as durability
+
+
+def _sidecar_paths(database_path: Path) -> tuple[Path, Path]:
+    return (
+        database_path.with_name(f"{database_path.name}-wal"),
+        database_path.with_name(f"{database_path.name}-shm"),
+    )
+
+
+def _create_repair_fixture_database(database_path: Path) -> None:
+    with sqlite3.connect(str(database_path)) as connection:
+        connection.execute("CREATE TABLE repair_items (id INTEGER PRIMARY KEY, name TEXT)")
+        connection.execute("INSERT INTO repair_items VALUES (1, 'kept')")
+
+
+def test_repair_sqlite_database_aborts_when_backup_copy_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database_path = tmp_path / "events.db"
+    _create_repair_fixture_database(database_path)
+
+    def fail_copy(*_args: object, **_kwargs: object) -> None:
+        raise OSError("copy failed")
+
+    monkeypatch.setattr(durability.shutil, "copy2", fail_copy)
+
+    assert durability.repair_sqlite_database(database_path) is False
+    assert database_path.exists()
+    assert not database_path.with_suffix(".corrupted").exists()
+    with sqlite3.connect(str(database_path)) as connection:
+        assert connection.execute("SELECT name FROM repair_items").fetchone() == ("kept",)
+
+
+def test_repair_sqlite_database_removes_stale_wal_sidecars(tmp_path: Path) -> None:
+    database_path = tmp_path / "events.db"
+    _create_repair_fixture_database(database_path)
+    for sidecar_path in _sidecar_paths(database_path):
+        sidecar_path.write_bytes(b"stale")
+
+    assert durability.repair_sqlite_database(database_path) is True
+
+    assert all(not sidecar_path.exists() for sidecar_path in _sidecar_paths(database_path))
+    with sqlite3.connect(str(database_path)) as connection:
+        assert connection.execute("SELECT name FROM repair_items").fetchone() == ("kept",)

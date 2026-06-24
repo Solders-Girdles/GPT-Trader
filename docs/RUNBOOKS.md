@@ -393,9 +393,11 @@ tail -f ${COINBASE_TRADER_LOG_DIR:-var/logs}/coinbase_trader.log | grep --color=
 ### Emergency Stop
 
 If you need to immediately stop all trading, stop first and preserve evidence.
-Emergency stop is allowed only for an already-approved monitored lane or an
-active incident where the kill-switch expectation is explicit. It does not
-authorize restarting, position handoff, money movement, or order submission.
+Emergency stop is always allowed as the immediate safety mitigation, including
+for unexpected or out-of-policy live bots with no pre-existing incident packet.
+It does not authorize restarting, position handoff, money movement, or order
+submission; those follow-up actions still require the applicable approved
+runbook or decision packet.
 
 ```bash
 # 1. Stop the bot

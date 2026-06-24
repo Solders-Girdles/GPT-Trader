@@ -46,7 +46,7 @@ Do not treat existing live profiles or broker adapters as proof that a product s
 - **Spot Trading** - Implemented Coinbase spot paths; require explicit profile and readiness gates
 - **CFM Futures** - Implemented/gated US-regulated futures paths; require account, product, and risk verification
 - **INTX Perpetuals** - Implemented/gated international derivatives paths; require eligible-region/account verification
-- **AI-assisted execution** - Planning and approval-gated tickets only; live order submission requires an explicitly scoped approval decision before any order submission
+- **AI-assisted execution** - Planning and approval-gated tickets only; live order submission requires recorded human approval plus any explicitly scoped decision packet or runbook constraints before any order submission
 
 ## Environment Setup
 

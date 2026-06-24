@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6709,
-    "total_files": 793,
+    "total_tests": 6715,
+    "total_files": 794,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6544,
-    "asyncio": 373,
+    "unit": 6550,
+    "asyncio": 379,
     "parametrize": 189,
     "endpoints": 83,
     "property": 82,
@@ -821,6 +821,7 @@
     "tui": [
       "tests/unit/gpt_trader/tui/adapters/test_null_status_reporter.py",
       "tests/unit/gpt_trader/tui/demo/test_mock_data.py",
+      "tests/unit/gpt_trader/tui/managers/test_bot_lifecycle.py",
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py",
       "tests/unit/gpt_trader/tui/mixins/test_event_handlers_utils.py",
       "tests/unit/gpt_trader/tui/screens/test_alert_history.py",
@@ -44936,6 +44937,68 @@
         ],
         "docstring": "Performance dicts are deterministic with same seed.",
         "class": "TestGenerateStrategyDataPerformance"
+      }
+    ],
+    "tests/unit/gpt_trader/tui/managers/test_bot_lifecycle.py": [
+      {
+        "name": "TestBotLifecycleLiveStartGate::test_live_start_requires_confirmation_when_unconfirmed",
+        "line": 57,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBotLifecycleLiveStartGate"
+      },
+      {
+        "name": "TestBotLifecycleLiveStartGate::test_live_start_decline_prevents_bot_execution",
+        "line": 70,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBotLifecycleLiveStartGate"
+      },
+      {
+        "name": "TestBotLifecycleLiveStartGate::test_confirmed_live_start_does_not_prompt_again",
+        "line": 85,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBotLifecycleLiveStartGate"
+      },
+      {
+        "name": "TestBotLifecycleLiveStartGate::test_non_live_start_does_not_prompt",
+        "line": 97,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBotLifecycleLiveStartGate"
+      },
+      {
+        "name": "TestBotLifecycleLiveStartGate::test_paper_fallback_cross_checks_broker_live_mode",
+        "line": 110,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBotLifecycleLiveStartGate"
+      },
+      {
+        "name": "TestBotLifecycleLiveStartGate::test_mode_service_error_preserves_broker_live_mode",
+        "line": 123,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBotLifecycleLiveStartGate"
       }
     ],
     "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py": [

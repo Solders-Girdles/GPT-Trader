@@ -163,6 +163,7 @@ class TraderApp(
         self.data_source_mode: str = "demo"  # Will be set during on_mount
         self._initial_mode = initial_mode  # For mode selection flow
         self._demo_scenario = demo_scenario  # For demo mode
+        self._live_operation_confirmed: bool = False
 
         # Initialize State
         self.tui_state: TuiState = TuiState()

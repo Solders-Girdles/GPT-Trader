@@ -16,7 +16,6 @@ from gpt_trader.tui.responsive_state import ResponsiveState
 from gpt_trader.tui.screens import MainScreen
 from gpt_trader.tui.services import UpdateThrottler
 from gpt_trader.tui.services.worker_service import WorkerService
-from gpt_trader.tui.widgets import LiveWarningModal
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -49,6 +48,7 @@ class TraderAppLifecycleMixin:
         tui_state: Any
         _initial_mode: str | None
         _demo_scenario: str
+        _live_operation_confirmed: bool
         responsive_state: ResponsiveState
         terminal_width: int
         size: Any
@@ -144,6 +144,8 @@ class TraderAppLifecycleMixin:
         # Detect and set bot mode
         self.data_source_mode = self._detect_bot_mode()
         self.tui_state.data_source_mode = self.data_source_mode
+        if self.data_source_mode != "live":
+            self._live_operation_confirmed = False
         logger.debug("Bot mode detected: %s", self.data_source_mode)
         logger.debug(
             "System ready: StatusReporter available=%s",
@@ -152,12 +154,17 @@ class TraderAppLifecycleMixin:
 
         # Show live mode warning if bot was provided directly and is live mode
         # (mode selection flow already showed warning before creating bot)
-        if self.data_source_mode == "live" and self._initial_mode not in ("live", None):
-            result = await self.push_screen_wait(LiveWarningModal())
+        if (
+            self.data_source_mode == "live"
+            and self._initial_mode not in ("live", None)
+            and not self._live_operation_confirmed
+        ):
+            result = await self.mode_service.show_live_warning()
             if not result:
                 logger.info("User declined to continue in live mode")
                 self.exit()
                 return
+            self._live_operation_confirmed = True
 
         self.push_screen(MainScreen())
         self.log("TUI Started")

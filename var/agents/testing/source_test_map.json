@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 710,
-    "source_modules": 370,
+    "tests_scanned": 711,
+    "source_modules": 371,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1717,6 +1717,9 @@
       "tests/unit/gpt_trader/tui/test_log_manager.py",
       "tests/unit/gpt_trader/tui/test_log_manager_formatters.py",
       "tests/unit/gpt_trader/tui/widgets/test_logs.py"
+    ],
+    "gpt_trader.tui.managers.bot_lifecycle": [
+      "tests/unit/gpt_trader/tui/managers/test_bot_lifecycle.py"
     ],
     "gpt_trader.tui.managers.ui_coordinator": [
       "tests/unit/gpt_trader/tui/services/test_state_registry.py",
@@ -4358,6 +4361,9 @@
       "gpt_trader.tui.demo.demo_bot",
       "gpt_trader.tui.demo.mock_data"
     ],
+    "tests/unit/gpt_trader/tui/managers/test_bot_lifecycle.py": [
+      "gpt_trader.tui.managers.bot_lifecycle"
+    ],
     "tests/unit/gpt_trader/tui/mixins/test_event_handlers.py": [
       "gpt_trader.tui.events",
       "gpt_trader.tui.mixins",
@@ -5234,6 +5240,7 @@
     "gpt_trader.tui.events": "src/gpt_trader/tui/events.py",
     "gpt_trader.tui.formatting": "src/gpt_trader/tui/formatting.py",
     "gpt_trader.tui.log_manager": "src/gpt_trader/tui/log_manager.py",
+    "gpt_trader.tui.managers.bot_lifecycle": "src/gpt_trader/tui/managers/bot_lifecycle.py",
     "gpt_trader.tui.managers.ui_coordinator": "src/gpt_trader/tui/managers/ui_coordinator.py",
     "gpt_trader.tui.mixins": "src/gpt_trader/tui/mixins/__init__.py",
     "gpt_trader.tui.mixins.event_handlers": "src/gpt_trader/tui/mixins/event_handlers.py",

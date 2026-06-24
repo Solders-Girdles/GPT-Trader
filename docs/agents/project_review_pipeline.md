@@ -54,7 +54,8 @@ uv run local-ci --profile quick
 The scout may run narrower commands when there are no relevant changes since a
 recent run. It must not run real broker/API checks, canary operations, live
 trading commands, production preflight, or anything that assumes account
-capability unless a current owner-approved runbook explicitly opens that lane.
+capability unless a current `decision_needed` packet or explicitly approved
+runbook scopes that lane.
 
 After the cheap truth pass is green, choose exactly one discovery lane for the
 run. Rotate lanes across runs instead of scanning everything every hour.

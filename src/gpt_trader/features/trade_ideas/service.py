@@ -31,7 +31,7 @@ from gpt_trader.features.trade_ideas.budget import (
     RiskBudget,
     RiskBudgetLog,
 )
-from gpt_trader.features.trade_ideas.models import TradeIdea
+from gpt_trader.features.trade_ideas.models import TicketStatus, TicketVenue, TradeIdea
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
 from gpt_trader.features.trade_ideas.workflow import (
@@ -58,6 +58,10 @@ class UnknownTradeIdeaError(ValidationError):
 
 class DuplicateTradeIdeaError(ValidationError):
     """Raised when a new proposal reuses an existing decision_id."""
+
+
+class PreApprovalBrokerTicketError(ValidationError):
+    """Raised when a proposed record carries broker-specific ticket state."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -146,10 +150,12 @@ class TradeIdeaService:
 
     def validate_new_proposal(self, idea: TradeIdea) -> None:
         """Validate proposal lifecycle preconditions without writing state."""
+        self._require_default_preapproval_broker_ticket(idea)
         self._require_new_decision_id(idea.decision_id)
 
     def validate_resubmission(self, idea: TradeIdea) -> None:
         """Validate resubmission lifecycle preconditions without writing state."""
+        self._require_default_preapproval_broker_ticket(idea)
         self._require_idea(idea.decision_id)
         current_state = self._audit.current_state(idea.decision_id)
         if current_state is not TradeIdeaState.NEEDS_CHANGES:
@@ -466,6 +472,21 @@ class TradeIdeaService:
                 field="decision_id",
                 value=decision_id,
             )
+
+    def _require_default_preapproval_broker_ticket(self, idea: TradeIdea) -> None:
+        broker_ticket = idea.broker_ticket
+        if (
+            broker_ticket.venue is TicketVenue.NONE
+            and broker_ticket.status is TicketStatus.NOT_CREATED
+        ):
+            return
+        raise PreApprovalBrokerTicketError(
+            "Trade ideas entering proposed must omit broker_ticket or use "
+            "broker_ticket venue='none' and status='not_created' before human approval; "
+            f"got venue='{broker_ticket.venue.value}', status='{broker_ticket.status.value}'",
+            field="broker_ticket",
+            value=broker_ticket.to_dict(),
+        )
 
     def _review_started_at(self, decision_id: str) -> datetime | None:
         return self._review_started_at_from_events(tuple(self._audit.read_events(decision_id)))

@@ -33,6 +33,42 @@ def test_dry_run_renders_issue_body(tmp_path: Path, capsys) -> None:
     assert "agent-ready" in captured.out
 
 
+def test_invalid_blocked_by_entry_is_reported_before_rendering(tmp_path: Path, capsys) -> None:
+    packet = promoter.example_packet()
+    packet["routing"]["blocked_by"] = [123]
+    packet_path = tmp_path / "finding.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+
+    exit_code = promoter.main(["--packet", str(packet_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 2
+    assert "routing.blocked_by must contain only non-empty strings" in captured.err
+    assert captured.out == ""
+
+
+def test_blank_blocked_by_entry_is_reported() -> None:
+    packet = promoter.example_packet()
+    packet["routing"]["blocked_by"] = ["  "]
+
+    errors = promoter.validate_packet(packet)
+
+    assert "routing.blocked_by must contain only non-empty strings" in errors
+
+
+def test_dry_run_renders_valid_blocked_by_entries(tmp_path: Path, capsys) -> None:
+    packet = promoter.example_packet()
+    packet["routing"]["blocked_by"] = ["upstream decision packet", "review receipt"]
+    packet_path = tmp_path / "finding.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+
+    exit_code = promoter.main(["--packet", str(packet_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "- Blocked by: upstream decision packet, review receipt" in captured.out
+
+
 def test_invalid_candidate_type_is_reported() -> None:
     packet = promoter.example_packet()
     packet["routing"]["candidate_for"] = [{"not": "a string"}]

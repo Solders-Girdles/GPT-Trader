@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6723,
+    "total_tests": 6724,
     "total_files": 794,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6558,
+    "unit": 6559,
     "asyncio": 379,
     "parametrize": 189,
     "endpoints": 83,
@@ -60150,7 +60150,7 @@
         "docstring": ""
       },
       {
-        "name": "test_validate_agent_artifacts_reports_missing_indexed_file",
+        "name": "test_committed_agent_artifacts_index_matches_tree",
         "line": 148,
         "markers": [
           "unit"
@@ -60158,7 +60158,7 @@
         "docstring": ""
       },
       {
-        "name": "test_validate_agent_artifacts_reports_empty_source",
+        "name": "test_validate_agent_artifacts_reports_missing_indexed_file",
         "line": 157,
         "markers": [
           "unit"
@@ -60166,7 +60166,7 @@
         "docstring": ""
       },
       {
-        "name": "test_package_and_verify_agent_artifacts",
+        "name": "test_validate_agent_artifacts_reports_empty_source",
         "line": 166,
         "markers": [
           "unit"
@@ -60174,8 +60174,16 @@
         "docstring": ""
       },
       {
+        "name": "test_package_and_verify_agent_artifacts",
+        "line": 175,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_verify_agent_artifact_package_rejects_unsafe_path",
-        "line": 187,
+        "line": 196,
         "markers": [
           "unit"
         ],

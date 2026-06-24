@@ -1957,7 +1957,7 @@
       "components": null,
       "levels": [
         "DEBUG",
-        "INFO",
+        "ERROR",
         "WARNING"
       ],
       "occurrence_count": 6,
@@ -2207,6 +2207,7 @@
       "components": null,
       "levels": [
         "DEBUG",
+        "ERROR",
         "INFO"
       ],
       "occurrence_count": 4,
@@ -2550,6 +2551,7 @@
       "components": null,
       "levels": [
         "DEBUG",
+        "ERROR",
         "INFO"
       ],
       "occurrence_count": 7,
@@ -2594,8 +2596,8 @@
   "level_distribution": {
     "CRITICAL": 1,
     "DEBUG": 51,
-    "ERROR": 89,
-    "INFO": 126,
+    "ERROR": 97,
+    "INFO": 118,
     "WARNING": 76
   },
   "total_event_types": 135,

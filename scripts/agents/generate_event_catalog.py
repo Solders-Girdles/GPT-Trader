@@ -71,11 +71,19 @@ def scan_logging_calls(source_dir: Path) -> dict[str, Any]:
             status_match = re.search(r'status\s*=\s*["\']([^"\']+)["\']', context)
             status = status_match.group(1) if status_match else None
 
-            # Determine log level from context
+            # Determine log level from context. StructuredLogger.exception
+            # emits at ERROR level even though the method name differs.
             level = "INFO"
-            for lvl in ["debug", "info", "warning", "error", "critical"]:
-                if f".{lvl}(" in context.lower():
-                    level = lvl.upper()
+            for method, event_level in [
+                ("debug", "DEBUG"),
+                ("info", "INFO"),
+                ("warning", "WARNING"),
+                ("error", "ERROR"),
+                ("exception", "ERROR"),
+                ("critical", "CRITICAL"),
+            ]:
+                if f".{method}(" in context.lower():
+                    level = event_level
                     break
 
             # Find other keyword arguments

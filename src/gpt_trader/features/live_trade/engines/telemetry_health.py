@@ -35,7 +35,7 @@ to maintain real-time market state and detect connectivity issues.
 from __future__ import annotations
 
 import time
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.utilities import utc_now
@@ -59,8 +59,8 @@ def extract_mark_from_message(msg: dict[str, Any]) -> Decimal | None:
         if raw_mark is not None:
             mark = Decimal(str(raw_mark))
             return mark if mark > 0 else None
-    except Exception as exc:
-        logger.error(
+    except DecimalException as exc:
+        logger.exception(
             "Failed to extract mark from message",
             error_type=type(exc).__name__,
             error_message=str(exc),
@@ -83,7 +83,7 @@ def update_mark_and_metrics(
     if strategy_coordinator and hasattr(strategy_coordinator, "update_mark_window"):
         try:
             strategy_coordinator.update_mark_window(symbol, mark)
-        except Exception as exc:  # pragma: no cover - defensive logging
+        except Exception as exc:  # noqa: BLE001 - best-effort telemetry adapter callback
             logger.debug(
                 "Failed to update mark window",
                 error=str(exc),
@@ -126,7 +126,7 @@ def update_mark_and_metrics(
     if monitor is not None:
         try:
             monitor.record_update(symbol)
-        except Exception:  # pragma: no cover - defensive logging
+        except Exception:  # noqa: BLE001 - best-effort telemetry adapter callback
             logger.debug(
                 "Failed to record market update",
                 symbol=symbol,
@@ -145,7 +145,7 @@ def update_mark_and_metrics(
                 result = record_fn(symbol, timestamp)
                 if result is not None:
                     stored = result
-            except Exception:  # pragma: no cover - defensive logging
+            except Exception:  # noqa: BLE001 - best-effort risk-manager adapter callback
                 logger.exception(
                     "WS mark update bookkeeping failed",
                     symbol=symbol,
@@ -160,7 +160,7 @@ def update_mark_and_metrics(
                 last_updates = {}
                 setattr(risk_manager, "last_mark_update", last_updates)
             last_updates[symbol] = stored
-        except Exception:  # pragma: no cover - defensive logging
+        except Exception:  # noqa: BLE001 - best-effort risk-manager state persistence
             logger.debug(
                 "Failed to persist last mark update",
                 symbol=symbol,
@@ -174,7 +174,7 @@ def update_mark_and_metrics(
         last_emit = {}
         try:
             setattr(coordinator, "_mark_metric_last_emit", last_emit)
-        except Exception:
+        except Exception:  # noqa: BLE001 - coordinator may reject dynamic telemetry state
             last_emit = {}
 
     raw_interval = getattr(config, "status_interval", 60)

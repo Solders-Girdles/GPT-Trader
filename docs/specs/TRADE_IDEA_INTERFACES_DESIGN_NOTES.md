@@ -1,6 +1,6 @@
 ---
-status: draft
-last-updated: 2026-06-12
+status: current
+last-updated: 2026-06-24
 scope: Operator and agent interfaces over the trade_ideas slice
 audience: Implementation agents (Codex) and reviewers
 ---
@@ -25,14 +25,17 @@ already exists and is complete at the domain level:
 | `features/trade_ideas/store.py` | `TradeIdeaStore` — versioned records under record hash |
 | `features/trade_ideas/baseline.py`, `replay.py` | Baseline proposer and replay scoring |
 
-**The gap:** no human or agent can reach this service today. There is no CLI
-command, no TUI screen, and `TradeIdeaService` is constructed nowhere in
-production code (only tests). The approval workflow exists but has no door.
-The service docstring states the intent explicitly: *"interfaces such as CLI,
-TUI, or MCP servers must stay thin adapters over these methods."*
+**Current interface state:** the CLI door now exists. `gpt-trader ideas`
+constructs `TradeIdeaService` through the trade-ideas factory and exposes the
+agent-facing approval workflow: propose, list, show, approve, reject,
+request-changes, expire, resubmit, mark-submitted, mark-filled, budget, and
+audit. The remaining human-interface gap is the TUI review surface; MCP or other
+remote surfaces remain future work. The service docstring still states the
+adapter boundary explicitly: *"interfaces such as CLI, TUI, or MCP servers must
+stay thin adapters over these methods."*
 
-These notes define the two interface workstreams that close the gap, plus the
-shared wiring they both need.
+These notes preserve the interface decisions that shaped the implemented CLI
+and define the still-open TUI workstream.
 
 ## Design Principles
 
@@ -57,9 +60,10 @@ shared wiring they both need.
    request produces a `needs_changes` event; the revised record is a new
    version saved via `resubmit`.
 
-## Shared Decisions (Workstream 0 — prerequisite)
+## Shared Decisions (Workstream 0 — implemented)
 
-Both interfaces need the following; implement once, first.
+The CLI implements these decisions today. The TUI should reuse them instead of
+creating a parallel service or storage contract.
 
 ### Storage root
 
@@ -71,7 +75,7 @@ Both interfaces need the following; implement once, first.
 
 ### Service factory
 
-Add to `features/trade_ideas/service.py`:
+Implemented in `features/trade_ideas/service.py`:
 
 ```python
 DEFAULT_IDEAS_ROOT = Path("var/data/trade_ideas")
@@ -80,11 +84,10 @@ def create_trade_idea_service(root: Path | None = None) -> TradeIdeaService:
     """Resolve root (arg > GPT_TRADER_IDEAS_ROOT > default) and build the service."""
 ```
 
-Optionally expose a cached `trade_idea_service` property on
-`ApplicationContainer` (see `docs/DI_POLICY.md`); the CLI may construct the
-service directly via the factory since idea review has no broker or config
-dependency, but the container property is the long-term home once the
-proposer loop runs inside the bot.
+The CLI constructs the service directly through this factory because idea
+review has no broker or config dependency. A cached `trade_idea_service`
+property on `ApplicationContainer` remains a future option once a proposer loop
+runs inside the bot.
 
 ### Actor identity resolution
 
@@ -103,7 +106,7 @@ log. `actor_type` rules:
 
 ### Error mapping
 
-Add two members to `CliErrorCode` in `cli/response.py`:
+Implemented in `CliErrorCode` in `cli/response.py`:
 `POLICY_VIOLATION = "POLICY_VIOLATION"` and
 `IDEA_NOT_FOUND = "IDEA_NOT_FOUND"`.
 
@@ -119,13 +122,14 @@ Add two members to `CliErrorCode` in `cli/response.py`:
 
 | # | Spec | Depends on | Size |
 |---|------|-----------|------|
-| 0 | Shared wiring (this doc, "Shared Decisions") | — | S |
-| 1 | [`TRADE_IDEA_CLI_SPEC.md`](TRADE_IDEA_CLI_SPEC.md) — `gpt-trader ideas` command group | 0 | M |
-| 2 | [`TRADE_IDEA_TUI_REVIEW_SPEC.md`](TRADE_IDEA_TUI_REVIEW_SPEC.md) — Ideas review screen | 0 (not 1) | M |
+| 0 | Shared wiring (this doc, "Shared Decisions") | — | Implemented |
+| 1 | [`TRADE_IDEA_CLI_SPEC.md`](TRADE_IDEA_CLI_SPEC.md) — `gpt-trader ideas` command group | 0 | Implemented |
+| 2 | [`TRADE_IDEA_TUI_REVIEW_SPEC.md`](TRADE_IDEA_TUI_REVIEW_SPEC.md) — Ideas review screen | 0 (not 1) | Future |
 
-Workstreams 1 and 2 are independently mergeable. Ship 0+1 first: the CLI is
-the agent-facing surface and unblocks the AI-propose → human-approve loop
-end to end; the TUI improves the human half afterward.
+Workstreams 1 and 2 are independently mergeable. Workstreams 0+1 have shipped:
+the CLI is the agent-facing surface and unblocks the AI-propose -> human-approve
+loop end to end. The TUI improves the human review surface afterward and should
+not reimplement CLI or service behavior.
 
 ## Non-Goals (all workstreams)
 

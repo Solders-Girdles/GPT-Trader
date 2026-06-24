@@ -61533,7 +61533,7 @@
         "docstring": ""
       },
       {
-        "name": "test_trading_execution_findings_require_human_decision",
+        "name": "test_trading_execution_findings_require_decision_needed",
         "line": 13,
         "markers": [
           "unit"
@@ -61542,7 +61542,7 @@
       },
       {
         "name": "test_dry_run_renders_issue_body",
-        "line": 25,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -61550,7 +61550,7 @@
       },
       {
         "name": "test_invalid_candidate_type_is_reported",
-        "line": 38,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -61558,15 +61558,15 @@
       },
       {
         "name": "test_evidence_requires_command_path_or_url_anchor",
-        "line": 47,
+        "line": 45,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_human_gated_packet_is_not_agent_ready",
-        "line": 56,
+        "name": "test_decision_needed_packet_is_not_agent_ready",
+        "line": 54,
         "markers": [
           "unit"
         ],

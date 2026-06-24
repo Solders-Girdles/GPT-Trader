@@ -53,7 +53,9 @@ class TestGenerateReport:
 
         captured = capsys.readouterr()
         assert "READY" in captured.out
-        assert "System is READY for production trading" in captured.out
+        assert "Preflight evidence is READY for gate review" in captured.out
+        assert "production trading still requires the documented live gates" in captured.out
+        assert "System is READY for production trading" not in captured.out
 
     def test_returns_review_status_with_many_warnings(
         self, report_cwd: Path, capsys: pytest.CaptureFixture
@@ -110,7 +112,28 @@ class TestGenerateReport:
 
         captured = capsys.readouterr()
         assert "--dry-run" in captured.out
-        assert "tiny positions" in captured.out
+        assert "--reduce-only" in captured.out
+        assert "explicit approval" in captured.out
+        assert "active monitoring" in captured.out
+        assert "Begin live with: uv run gpt-trader run --profile canary" not in captured.out
+
+    def test_warn_only_output_is_marked_diagnostic_only(
+        self,
+        report_cwd: Path,
+        capsys: pytest.CaptureFixture,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("GPT_TRADER_PREFLIGHT_WARN_ONLY", "1")
+        checker = PreflightCheck(profile="prod")
+        checker.context.successes.append("Success")
+
+        generate_report(checker)
+
+        captured = capsys.readouterr()
+        report_data = _read_report(report_cwd)
+        assert "DIAGNOSTIC-ONLY MODE" in captured.out
+        assert "does not satisfy the live readiness gate" in captured.out
+        assert report_data["diagnostic_only"] is True
 
     def test_prints_recommendations_for_not_ready(
         self, report_cwd: Path, capsys: pytest.CaptureFixture
@@ -159,6 +182,7 @@ class TestGenerateReport:
         report_data = _read_report(report_cwd)
         assert report_data["profile"] == "prod"
         assert report_data["status"] == "READY"
+        assert report_data["diagnostic_only"] is False
         assert report_data["successes"] == 2
         assert report_data["warnings"] == 1
         assert report_data["errors"] == 0
@@ -227,6 +251,7 @@ class TestGenerateReport:
         payload = json.loads(sink.payloads[0])
         assert payload["profile"] == "prod"
         assert payload["status"] == "READY"
+        assert payload["diagnostic_only"] is False
 
     def test_prints_section_header(self, report_cwd: Path, capsys: pytest.CaptureFixture) -> None:
         checker = PreflightCheck()
@@ -294,6 +319,7 @@ class TestReportFormatting:
         assert report_data["timestamp"] == timestamp.isoformat()
         assert report_data["profile"] == "prod"
         assert report_data["status"] == "READY"
+        assert report_data["diagnostic_only"] is False
         assert report_data["details"]["successes"] == ["S1", "S2"]
         assert report_data["details"]["warnings"] == ["W1"]
         assert not list(report_cwd.glob("preflight_report_*.json"))

@@ -1373,7 +1373,10 @@
       "code_paths": [
         "src/gpt_trader/preflight/checks/diagnostics.py",
         "src/gpt_trader/preflight/checks/event_store.py",
-        "src/gpt_trader/preflight/checks/readiness.py"
+        "src/gpt_trader/preflight/checks/readiness.py",
+        "src/gpt_trader/preflight/cli.py",
+        "src/gpt_trader/preflight/diagnostics_bundle.py",
+        "src/gpt_trader/preflight/report.py"
       ],
       "code_references": [
         {
@@ -1390,6 +1393,26 @@
           "line": 15,
           "path": "src/gpt_trader/preflight/checks/readiness.py",
           "reader": "os.getenv"
+        },
+        {
+          "line": 69,
+          "path": "src/gpt_trader/preflight/cli.py",
+          "reader": "os.environ.get"
+        },
+        {
+          "line": 49,
+          "path": "src/gpt_trader/preflight/diagnostics_bundle.py",
+          "reader": "os.environ.get"
+        },
+        {
+          "line": 51,
+          "path": "src/gpt_trader/preflight/diagnostics_bundle.py",
+          "reader": "os.environ.get"
+        },
+        {
+          "line": 64,
+          "path": "src/gpt_trader/preflight/report.py",
+          "reader": "os.environ.get"
         }
       ],
       "in_env_template": false,

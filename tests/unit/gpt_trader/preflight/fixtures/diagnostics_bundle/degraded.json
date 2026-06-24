@@ -6,6 +6,7 @@
     "readiness": {
       "status": "NOT READY",
       "message": "System is NOT READY - critical issues must be resolved",
+      "diagnostic_only": false,
       "counts": {
         "pass": 2,
         "warn": 0,

@@ -261,9 +261,17 @@ class TestMain:
         cli_mocks.preflight_class.assert_called_once_with(verbose=True, profile="prod")
 
     def test_warn_only_sets_env_var(self, cli_mocks: CLIMocks) -> None:
+        observed_warn_only_values: list[str | None] = []
+        cli_mocks.checker.check_python_version.side_effect = (
+            lambda: observed_warn_only_values.append(
+                os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY")
+            )
+        )
+
         main(["--warn-only"])
 
-        assert os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY") == "1"
+        assert observed_warn_only_values == ["1"]
+        assert os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY") is None
 
     def test_generate_report_called_with_default_target(self, cli_mocks: CLIMocks) -> None:
         main([])

@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6717,
+    "total_tests": 6723,
     "total_files": 794,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6552,
+    "unit": 6558,
     "asyncio": 379,
     "parametrize": 189,
     "endpoints": 83,
@@ -41035,7 +41035,7 @@
       },
       {
         "name": "TestMain::test_generate_report_called_with_default_target",
-        "line": 268,
+        "line": 276,
         "markers": [
           "unit"
         ],
@@ -41044,7 +41044,7 @@
       },
       {
         "name": "TestMain::test_report_target_flag_passes_to_generate_report",
-        "line": 277,
+        "line": 285,
         "markers": [
           "unit"
         ],
@@ -41053,7 +41053,7 @@
       },
       {
         "name": "TestMain::test_diagnostics_bundle_mode_outputs_bundle",
-        "line": 286,
+        "line": 294,
         "markers": [
           "unit"
         ],
@@ -41062,7 +41062,7 @@
       },
       {
         "name": "TestMain::test_diagnostics_bundle_mode_handles_exceptions",
-        "line": 302,
+        "line": 310,
         "markers": [
           "unit"
         ],
@@ -41526,7 +41526,7 @@
     "tests/unit/gpt_trader/preflight/test_diagnostics_bundle.py": [
       {
         "name": "test_readiness_summary_empty",
-        "line": 23,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -41534,7 +41534,7 @@
       },
       {
         "name": "test_readiness_summary_partial",
-        "line": 31,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -41542,7 +41542,15 @@
       },
       {
         "name": "test_readiness_summary_all_passes",
-        "line": 46,
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_readiness_summary_warn_only_is_diagnostic_only",
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -41550,7 +41558,7 @@
       },
       {
         "name": "test_diagnostics_bundle_matches_fixture_healthy",
-        "line": 188,
+        "line": 205,
         "markers": [
           "unit"
         ],
@@ -41558,7 +41566,7 @@
       },
       {
         "name": "test_diagnostics_bundle_matches_fixture_partial",
-        "line": 218,
+        "line": 236,
         "markers": [
           "unit"
         ],
@@ -41566,7 +41574,23 @@
       },
       {
         "name": "test_diagnostics_bundle_matches_fixture_degraded",
-        "line": 238,
+        "line": 256,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_diagnostics_bundle_warn_only_reads_env",
+        "line": 282,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_diagnostics_bundle_warn_only_scopes_env_override",
+        "line": 294,
         "markers": [
           "unit"
         ],
@@ -41596,7 +41620,7 @@
       },
       {
         "name": "TestGenerateReport::test_returns_review_status_with_many_warnings",
-        "line": 58,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -41605,7 +41629,7 @@
       },
       {
         "name": "TestGenerateReport::test_returns_not_ready_status_with_errors",
-        "line": 74,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -41614,7 +41638,7 @@
       },
       {
         "name": "TestGenerateReport::test_prints_summary_counts",
-        "line": 90,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -41623,7 +41647,16 @@
       },
       {
         "name": "TestGenerateReport::test_prints_recommendations_for_ready",
-        "line": 103,
+        "line": 105,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestGenerateReport"
+      },
+      {
+        "name": "TestGenerateReport::test_warn_only_output_is_marked_diagnostic_only",
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -41632,7 +41665,7 @@
       },
       {
         "name": "TestGenerateReport::test_prints_recommendations_for_not_ready",
-        "line": 115,
+        "line": 138,
         "markers": [
           "unit"
         ],
@@ -41641,7 +41674,7 @@
       },
       {
         "name": "TestGenerateReport::test_prints_remediation_hints_for_failed_checks",
-        "line": 127,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -41650,7 +41683,7 @@
       },
       {
         "name": "TestGenerateReport::test_does_not_print_remediation_hints_when_ready",
-        "line": 141,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -41659,7 +41692,7 @@
       },
       {
         "name": "TestGenerateReport::test_saves_json_report",
-        "line": 152,
+        "line": 175,
         "markers": [
           "unit"
         ],
@@ -41668,7 +41701,7 @@
       },
       {
         "name": "TestGenerateReport::test_handles_file_save_error",
-        "line": 169,
+        "line": 193,
         "markers": [
           "unit"
         ],
@@ -41677,7 +41710,7 @@
       },
       {
         "name": "TestGenerateReport::test_stdout_target_emits_report",
-        "line": 192,
+        "line": 216,
         "markers": [
           "unit"
         ],
@@ -41686,7 +41719,7 @@
       },
       {
         "name": "TestGenerateReport::test_in_memory_sink_records_payload",
-        "line": 217,
+        "line": 241,
         "markers": [
           "unit"
         ],
@@ -41695,24 +41728,6 @@
       },
       {
         "name": "TestGenerateReport::test_prints_section_header",
-        "line": 231,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestGenerateReport"
-      },
-      {
-        "name": "TestGenerateReport::test_respects_explicit_report_path",
-        "line": 240,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestGenerateReport"
-      },
-      {
-        "name": "TestGenerateReport::test_report_dir_and_report_path_are_mutually_exclusive",
         "line": 256,
         "markers": [
           "unit"
@@ -41721,8 +41736,26 @@
         "class": "TestGenerateReport"
       },
       {
+        "name": "TestGenerateReport::test_respects_explicit_report_path",
+        "line": 265,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestGenerateReport"
+      },
+      {
+        "name": "TestGenerateReport::test_report_dir_and_report_path_are_mutually_exclusive",
+        "line": 281,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestGenerateReport"
+      },
+      {
         "name": "TestReportCalculations::test_total_checks_calculated_correctly",
-        "line": 271,
+        "line": 296,
         "markers": [
           "unit"
         ],
@@ -41731,7 +41764,7 @@
       },
       {
         "name": "TestReportFormatting::test_format_preflight_report_is_pure",
-        "line": 286,
+        "line": 311,
         "markers": [
           "unit"
         ],
@@ -41740,7 +41773,7 @@
       },
       {
         "name": "TestReportFormatting::test_evaluate_preflight_status_boundaries",
-        "line": 311,
+        "line": 337,
         "markers": [
           "parametrize",
           "unit"
@@ -41750,7 +41783,7 @@
       },
       {
         "name": "TestReportFormatting::test_report_path_for_timestamp_honors_output_dir",
-        "line": 325,
+        "line": 351,
         "markers": [
           "unit"
         ],
@@ -41759,7 +41792,7 @@
       },
       {
         "name": "TestReportHints::test_error_hints_reflect_known_checks",
-        "line": 338,
+        "line": 364,
         "markers": [
           "unit"
         ],
@@ -41768,7 +41801,7 @@
       },
       {
         "name": "TestReportHints::test_error_hints_use_generic_fallback",
-        "line": 353,
+        "line": 379,
         "markers": [
           "unit"
         ],
@@ -60624,7 +60657,7 @@
     "tests/unit/scripts/test_check_readiness_gate.py": [
       {
         "name": "test_evaluate_liveness_snapshot_reports_fallback_reason",
-        "line": 74,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -60632,7 +60665,7 @@
       },
       {
         "name": "test_main_passes_with_green_streak",
-        "line": 95,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -60640,7 +60673,15 @@
       },
       {
         "name": "test_main_fails_when_preflight_missing",
-        "line": 115,
+        "line": 118,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_fails_when_preflight_is_diagnostic_only",
+        "line": 153,
         "markers": [
           "unit"
         ],
@@ -60648,7 +60689,7 @@
       },
       {
         "name": "test_main_fails_when_pillar_not_green",
-        "line": 150,
+        "line": 182,
         "markers": [
           "unit"
         ],
@@ -60656,7 +60697,7 @@
       },
       {
         "name": "test_main_skips_when_no_reports",
-        "line": 179,
+        "line": 211,
         "markers": [
           "unit"
         ],
@@ -60664,7 +60705,7 @@
       },
       {
         "name": "test_main_require_reports_fails_without_reports",
-        "line": 196,
+        "line": 228,
         "markers": [
           "unit"
         ],
@@ -60672,7 +60713,7 @@
       },
       {
         "name": "test_main_scopes_daily_report_parsing_to_target_profile",
-        "line": 214,
+        "line": 246,
         "markers": [
           "unit"
         ],
@@ -60680,7 +60721,7 @@
       },
       {
         "name": "test_main_degrades_when_reports_are_stale",
-        "line": 242,
+        "line": 274,
         "markers": [
           "unit"
         ],
@@ -60688,7 +60729,7 @@
       },
       {
         "name": "test_main_strict_mode_fails_when_reports_are_stale",
-        "line": 271,
+        "line": 303,
         "markers": [
           "unit"
         ],
@@ -60696,7 +60737,7 @@
       },
       {
         "name": "test_find_latest_report_for_profile_prefers_newest_report_date",
-        "line": 302,
+        "line": 334,
         "markers": [
           "unit"
         ],
@@ -60729,8 +60770,16 @@
         "docstring": ""
       },
       {
-        "name": "test_main_json_output_skips_when_no_reports",
+        "name": "test_main_json_output_rejects_diagnostic_only_preflight",
         "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_json_output_skips_when_no_reports",
+        "line": 165,
         "markers": [
           "unit"
         ],

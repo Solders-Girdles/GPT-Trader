@@ -74,6 +74,7 @@ class FreshnessStatus:
 REASON_CODE_MISSING_DAILY_REPORT = "readiness_missing_daily_report"
 REASON_CODE_MISSING_PREFLIGHT_REPORT = "readiness_missing_preflight_report"
 REASON_CODE_PREFLIGHT_NOT_READY = "readiness_preflight_not_ready"
+REASON_CODE_PREFLIGHT_DIAGNOSTIC_ONLY = "readiness_preflight_diagnostic_only"
 REASON_CODE_NO_REPORTS = "readiness_no_daily_reports"
 REASON_CODE_REPORTS_STALE = "readiness_reports_stale"
 REASON_CODE_MARKET_DATA_MISSING_HEALTH = "readiness_market_data_missing_health"
@@ -218,6 +219,15 @@ def _parse_report_date(text: str | None) -> date | None:
         return datetime.strptime(text.strip(), "%Y-%m-%d").date()
     except ValueError:
         return None
+
+
+def _is_preflight_diagnostic_only(data: dict[str, Any]) -> bool:
+    value = data.get("diagnostic_only", False)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes"}
+    return False
 
 
 def _parse_timestamp(text: str | None) -> datetime | None:
@@ -621,6 +631,10 @@ def _evaluate_profile(
                 green = False
                 notes.append(f"preflight status {preflight_status}")
                 reason_codes.append(REASON_CODE_PREFLIGHT_NOT_READY)
+            if _is_preflight_diagnostic_only(preflight_entry.data):
+                green = False
+                notes.append("preflight report is diagnostic-only")
+                reason_codes.append(REASON_CODE_PREFLIGHT_DIAGNOSTIC_ONLY)
 
         day_reason_codes = _dedupe_reason_codes(reason_codes)
         evaluations.append(

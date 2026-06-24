@@ -5,7 +5,8 @@
   "bundle": {
     "readiness": {
       "status": "READY",
-      "message": "System is READY for production trading (with caution)",
+      "message": "Preflight evidence is READY for gate review; production trading still requires the documented live gates",
+      "diagnostic_only": false,
       "counts": {
         "pass": 2,
         "warn": 0,

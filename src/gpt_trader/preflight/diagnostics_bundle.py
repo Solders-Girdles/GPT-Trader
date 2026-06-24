@@ -46,21 +46,30 @@ def build_diagnostics_bundle(
 
     checker = PreflightCheck(verbose=verbose, profile=profile)
     context = checker.context
+    diagnostic_only = warn_only or os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY") == "1"
 
+    previous_warn_only = os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY")
     if warn_only:
         os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = "1"
 
-    with redirect_stdout(io.StringIO()):
-        for check_name in CHECK_NAMES:
-            check = getattr(checker, check_name, None)
-            if check is None:
-                continue
-            try:
-                check()
-            except Exception as exc:  # pragma: no cover - defensive safeguard
-                checker.log_error(f"{check_name} failed to run: {exc}")
+    try:
+        with redirect_stdout(io.StringIO()):
+            for check_name in CHECK_NAMES:
+                check = getattr(checker, check_name, None)
+                if check is None:
+                    continue
+                try:
+                    check()
+                except Exception as exc:  # pragma: no cover - defensive safeguard
+                    checker.log_error(f"{check_name} failed to run: {exc}")
+    finally:
+        if warn_only:
+            if previous_warn_only is None:
+                os.environ.pop("GPT_TRADER_PREFLIGHT_WARN_ONLY", None)
+            else:
+                os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = previous_warn_only
 
-    readiness = _format_readiness_payload(context.results)
+    readiness = _format_readiness_payload(context.results, diagnostic_only=diagnostic_only)
     bundle: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -75,7 +84,11 @@ def build_diagnostics_bundle(
     return bundle
 
 
-def _format_readiness_payload(results: list[PreflightResultPayload]) -> dict[str, Any]:
+def _format_readiness_payload(
+    results: list[PreflightResultPayload],
+    *,
+    diagnostic_only: bool = False,
+) -> dict[str, Any]:
     counts = {"pass": 0, "warn": 0, "fail": 0}
     for result in results:
         status = result.get("status")
@@ -92,6 +105,11 @@ def _format_readiness_payload(results: list[PreflightResultPayload]) -> dict[str
             warning_count=counts["warn"],
             error_count=counts["fail"],
         )
+    if diagnostic_only:
+        message = (
+            "DIAGNOSTIC-ONLY: warn-only results do not satisfy the live readiness gate. "
+            f"{message}"
+        )
 
     checks = []
     for result in results[:MAX_CHECKS]:
@@ -106,6 +124,7 @@ def _format_readiness_payload(results: list[PreflightResultPayload]) -> dict[str
     return {
         "status": status,
         "message": message,
+        "diagnostic_only": diagnostic_only,
         "counts": {
             "pass": counts["pass"],
             "warn": counts["warn"],

@@ -86,6 +86,45 @@ class BotLifecycleManager:
             return self._bot_worker.state == WorkerState.RUNNING
         return self._bot_task is not None and not self._bot_task.done()
 
+    def _detect_start_mode(self) -> str:
+        """Detect the current bot mode for start gating."""
+        bot = getattr(self.app, "bot", None)
+        mode_service = getattr(self.app, "mode_service", None)
+        if bot is not None and mode_service is not None:
+            try:
+                return str(mode_service.detect_bot_mode(bot))
+            except Exception as exc:
+                logger.warning("ModeService failed to classify bot before start: %s", exc)
+
+        mode = getattr(self.app, "data_source_mode", None)
+        if isinstance(mode, str) and mode:
+            return mode
+        return self.detect_bot_mode()
+
+    async def _ensure_live_operation_confirmed(self) -> bool:
+        """Require live-operation confirmation before starting live-capable bots."""
+        start_mode = self._detect_start_mode()
+        if start_mode != "live":
+            self.app._live_operation_confirmed = False
+            return True
+
+        if getattr(self.app, "_live_operation_confirmed", False):
+            return True
+
+        logger.warning("Live-operation confirmation required before starting bot")
+        should_continue = await self._show_live_mode_warning()
+        if not should_continue:
+            logger.info("User cancelled live bot start before execution")
+            notify_warning(
+                self.app,
+                "Live bot start cancelled before execution.",
+                title="Live Operation",
+            )
+            return False
+
+        self.app._live_operation_confirmed = True
+        return True
+
     async def toggle_bot(self) -> None:
         """Toggle bot running state (start/stop)."""
         try:
@@ -111,6 +150,9 @@ class BotLifecycleManager:
         Uses Worker-based execution if WorkerService is available,
         otherwise falls back to legacy asyncio.Task.
         """
+        if not await self._ensure_live_operation_confirmed():
+            return
+
         # Disable mode selector before start
         self._set_mode_selector_enabled(False)
 
@@ -277,6 +319,9 @@ class BotLifecycleManager:
             if not should_continue:
                 logger.info("User cancelled switch to live mode")
                 return False
+            self.app._live_operation_confirmed = True
+        else:
+            self.app._live_operation_confirmed = False
 
         # Show loading indicator
         self._set_mode_selector_loading(True)
@@ -335,6 +380,8 @@ class BotLifecycleManager:
 
             # Step 7: Update TUI state
             self.app.data_source_mode = self.detect_bot_mode()
+            if self.app.data_source_mode != "live":
+                self.app._live_operation_confirmed = False
 
             # Step 8: Reset UI state (fresh start)
             from gpt_trader.tui.state import TuiState

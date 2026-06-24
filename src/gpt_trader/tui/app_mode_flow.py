@@ -43,6 +43,7 @@ class TraderAppModeFlowMixin:
         lifecycle_manager: Any
         _demo_scenario: str
         _initial_mode: str | None
+        _live_operation_confirmed: bool
 
         def exit(self) -> None: ...
         def notify(self, message: str, **kwargs: Any) -> None: ...
@@ -263,6 +264,9 @@ class TraderAppModeFlowMixin:
                 logger.info("User declined live mode, showing mode selection")
                 self.push_screen(ModeSelectionScreen(), callback=self._handle_mode_selection)
                 return
+            self._live_operation_confirmed = True
+        else:
+            self._live_operation_confirmed = False
 
         # Create bot for saved mode
         logger.debug("Creating bot for saved mode: %s", mode)
@@ -303,6 +307,9 @@ class TraderAppModeFlowMixin:
                 logger.info("User declined to continue in live mode")
                 self.exit()
                 return
+            self._live_operation_confirmed = True
+        else:
+            self._live_operation_confirmed = False
 
         # Save mode preference for future launches
         self.mode_service.save_mode_preference(selected_mode)

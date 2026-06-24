@@ -21,6 +21,7 @@ Need the trading loop wired to a specific profile? The `run` command remains sup
 
 ```bash
 uv run gpt-trader run --profile dev --tui
+uv run gpt-trader run --profile prod --tui    # Direct live-capable starts re-confirm before bot start
 ```
 
 ## Technical Requirements
@@ -83,8 +84,10 @@ A scrolling log window showing the latest bot activities, errors, and signals.
 
 These shortcuts act on the bot launched in the current TUI session. Treat them as
 operator controls over an already-approved run, not a way to start unapproved
-live execution. The PANIC key takes a real action — verify state with the broker
-afterward.
+live execution. If the launched profile is live-capable and the current session
+has not already passed the live-operation confirmation, pressing `s` must pass
+that confirmation before the bot starts. The PANIC key takes a real action;
+verify state with the broker afterward.
 
 | Key | Action | Description |
 |-----|--------|-------------|

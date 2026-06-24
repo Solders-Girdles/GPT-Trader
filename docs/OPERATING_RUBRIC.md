@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-06-11
+last-updated: 2026-06-24
 ---
 
 This rubric defines what the bot must be able to do to "run successfully" as an
@@ -42,14 +42,21 @@ A stage is complete when every capability in it has its evidence.
 
 ### Stage 0 — Rails (in progress)
 
+These rails are the implemented evidence for the accepted pre-migration record,
+approval, audit, budget, eligibility, and operator-control triggers in the
+[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md). They
+do not settle venue/API/account capability, product expansion, or autonomous
+submission policy.
+
 | Capability | Evidence |
 |------------|----------|
-| Broker-neutral trade-idea record with thesis, invalidation, max loss, sizing, expiry | Unit-tested round-trip + record hashing (`features/trade_ideas/models.py`) |
-| Workflow where execution is impossible without approval | State-machine tests prove `submitted` is reachable only from `approved` |
-| Append-only audit trail pinning every action to a record version | Audit log rejects out-of-order or conflicting appends |
-| Eligibility gate encoding automatic rejection conditions | Ineligible ideas cannot be approved |
-| Versioned risk budget that agents can later renegotiate | Budget changes append to their own audited log; current budget is always derivable |
-| Policy module that encodes the autonomy mode | Approval by a non-human actor is refused in `human_approved_execution` mode |
+| Broker-neutral trade-idea record with thesis, invalidation, max loss, sizing, expiry | Unit-tested round-trip + record hashing (`src/gpt_trader/features/trade_ideas/models.py`) |
+| Workflow where execution is impossible without approval | `src/gpt_trader/features/trade_ideas/workflow.py` and its state-machine tests prove `submitted` is reachable only from `approved` |
+| Append-only audit trail pinning every action to a record version | `src/gpt_trader/features/trade_ideas/audit.py` rejects out-of-order or conflicting appends and verifies per-decision sequencing |
+| Eligibility gate encoding automatic rejection conditions | `src/gpt_trader/features/trade_ideas/eligibility.py` and `src/gpt_trader/features/trade_ideas/policy.py` keep ineligible ideas from approval |
+| Versioned risk budget that agents can later renegotiate | `src/gpt_trader/features/trade_ideas/budget.py` appends budget changes to their own audited log; the current budget is always derivable |
+| Policy module that encodes the autonomy mode | `src/gpt_trader/features/trade_ideas/policy.py` refuses non-human approval in `human_approved_execution` mode |
+| Operator can reject, expire, and amend tickets before execution | `src/gpt_trader/features/trade_ideas/service.py` exposes audited request-changes/resubmit, reject, cancel, expire, and expire-due paths before submission |
 
 ### Stage 1 — Human-approved loop
 

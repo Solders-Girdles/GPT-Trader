@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-06-11
+last-updated: 2026-06-24
 scope: AI-assisted trade research and execution migration
 ---
 
@@ -288,19 +288,24 @@ Until these are filled in, AI may produce research only or draft tickets marked
 
 ## Migration Trigger Checklist
 
-Do not migrate the existing bot into this shape until every item is complete:
+Do not migrate the existing bot into this shape until every row has no pending
+migration trigger. `Accepted` and `Implemented` rows are current evidence only;
+they do not authorize real broker/API calls, live trading commands, production
+preflight, money movement, or order submission.
 
-- [ ] Autonomy mode selected.
-- [ ] First asset and product universe selected.
-- [ ] Broker execution policy selected.
-- [ ] Numeric risk budget selected.
-- [ ] Required output schema accepted.
-- [ ] Approval workflow accepted.
-- [ ] Audit log format accepted.
-- [ ] Official venue/API capability review completed for any non-manual venue.
-- [ ] Strategy eligibility gate accepted.
-- [ ] Operator can reject, expire, and amend tickets before execution.
-- [ ] No unrestricted spot-only bot continuation remains in scope.
+| Trigger | Current Status | Evidence | Still Pending Before Migration |
+| --- | --- | --- | --- |
+| Autonomy mode selected | Accepted; current phase implemented | 2026-06-11 direction selected `human_approved_execution` as the validation phase and `bounded_autonomy` as the destination; `src/gpt_trader/features/trade_ideas/policy.py` enforces human approval in the current mode. | Any move to `bounded_autonomy` still needs a fresh decision packet plus strategy-envelope, kill-switch, and audit evidence. |
+| First asset and product universe selected | Accepted for current research scope | Coinbase spot plus CFM futures research are the accepted Coinbase-only lane. | Account, product, and API capability must be verified before any non-manual execution lane. |
+| Broker execution policy selected | Accepted for current phase; implemented in trade-idea rails | Broker-neutral records remain canonical; `src/gpt_trader/features/trade_ideas/workflow.py` and `src/gpt_trader/features/trade_ideas/service.py` only allow submission records after approval. | Any actual broker command lane still needs an explicit decision packet or approved runbook naming constraints and rollback/kill-switch expectations. |
+| Numeric risk budget selected | Accepted and implemented as the Stage 0 seed | `src/gpt_trader/features/trade_ideas/budget.py` seeds versioned risk budgets from the accepted rubric; `src/gpt_trader/features/trade_ideas/policy.py` checks approvals against the current budget. | Future strategy-envelope budgets and agent-renegotiated budget changes must stay audited and reviewable. |
+| Required output schema accepted | Implemented as typed broker-neutral record | `src/gpt_trader/features/trade_ideas/models.py` implements the trade-idea record fields, record hashing, and broker-neutral ticket envelope. | Schema publication or adapter-specific payload derivation remains separate migration work. |
+| Approval workflow accepted | Implemented in trade-idea rails | `src/gpt_trader/features/trade_ideas/workflow.py` defines the state machine; `src/gpt_trader/features/trade_ideas/service.py` applies policy before approval and submission records. | Execution adapters must continue to consume approved records without bypassing the workflow. |
+| Audit log format accepted | Implemented in trade-idea rails | `src/gpt_trader/features/trade_ideas/audit.py` implements append-only JSONL events pinned to record hashes and verifies per-decision sequencing. | Venue-specific external order identifiers can be recorded only after an approved submission lane exists. |
+| Official venue/API capability review completed for any non-manual venue | Pending | None in this framework authorizes account, venue, product, or API capability. | Complete a fresh venue/API/account capability review before non-manual Coinbase or other venue execution. |
+| Strategy eligibility gate accepted | Implemented in trade-idea rails | `src/gpt_trader/features/trade_ideas/eligibility.py` encodes automatic rejection conditions; `src/gpt_trader/features/trade_ideas/policy.py` blocks approval when eligibility or budget checks fail. | New product-specific eligibility rules need explicit evidence before expansion. |
+| Operator can reject, expire, and amend tickets before execution | Implemented in trade-idea rails | `src/gpt_trader/features/trade_ideas/service.py` supports request-changes/resubmit, reject, cancel, expire, and expire-due lifecycle paths before submission. | Any new operator surface must remain a thin adapter over the audited service path. |
+| No unrestricted spot-only bot continuation remains in scope | Accepted boundary | 2026-06-11 direction rejects unrestricted autonomous spot continuation. | Future spot work must stay research/approval-gated unless a new decision packet changes the scope. |
 
 ## Initial Decision Record
 
@@ -312,6 +317,12 @@ Do not migrate the existing bot into this shape until every item is complete:
 | Robinhood role | Out of scope | Accepted 2026-06-11 |
 | Internal architecture | Broker-neutral trade idea, risk, approval, and audit records | Accepted 2026-06-11 |
 | Existing spot bot | Do not migrate as unrestricted autonomous spot execution | Accepted 2026-06-11 |
+
+The durable project log mirrors these accepted decisions in
+[GPT-Trader Decision Log](GPT_TRADER_DECISION_LOG.md). The implemented Stage 0
+trade-idea rails are evidence for the accepted record, approval, audit,
+budget, eligibility, and operator-control triggers above; they are not evidence
+that venue/account/API capability has been verified.
 
 Once this table is accepted and the trigger checklist is filled, migration work
 can start with schemas and audit persistence before any execution adapter change.

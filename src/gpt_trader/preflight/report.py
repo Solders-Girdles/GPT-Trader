@@ -5,11 +5,12 @@ import os
 import sys
 import tempfile
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Mapping, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from gpt_trader.preflight.hints import DEFAULT_REMEDIATION_HINT
 
@@ -26,7 +27,7 @@ class FailureHint(TypedDict):
     check: str | None
 
 
-def _collect_failure_hints(context: "PreflightContext") -> list[FailureHint]:
+def _collect_failure_hints(context: PreflightContext) -> list[FailureHint]:
     hints: list[FailureHint] = []
     for result in context.results:
         if result["status"] != "fail":
@@ -51,19 +52,29 @@ def evaluate_preflight_status(
     """Return status label and message for the given totals."""
     if error_count == 0:
         if warning_count <= 3:
-            return "READY", "System is READY for production trading (with caution)"
+            return (
+                "READY",
+                "Preflight evidence is READY for gate review; production trading still requires the documented live gates",
+            )
         return "REVIEW", "System has warnings - review before proceeding"
     return "NOT READY", "System is NOT READY - critical issues must be resolved"
+
+
+def _warn_only_mode_enabled() -> bool:
+    return os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY") == "1"
 
 
 def format_preflight_report(
     checker: PreflightCheck,
     *,
     timestamp: datetime | None = None,
+    diagnostic_only: bool | None = None,
 ) -> dict[str, Any]:
     """Return report payload without IO side effects."""
     if timestamp is None:
         timestamp = datetime.now(timezone.utc)
+    if diagnostic_only is None:
+        diagnostic_only = _warn_only_mode_enabled()
 
     ctx = checker.context
     status, _message = evaluate_preflight_status(
@@ -81,6 +92,7 @@ def format_preflight_report(
         "successes": len(ctx.successes),
         "warnings": len(ctx.warnings),
         "errors": len(ctx.errors),
+        "diagnostic_only": diagnostic_only,
         "details": {
             "successes": list(ctx.successes),
             "warnings": list(ctx.warnings),
@@ -213,6 +225,7 @@ def generate_report(
     """Render terminal summary and persist JSON report."""
     ctx = checker.context
     failure_hints = _collect_failure_hints(ctx)
+    diagnostic_only = _warn_only_mode_enabled()
     checker.section_header("PREFLIGHT REPORT")
 
     print(f"\n{Colors.BOLD}Summary:{Colors.RESET}")
@@ -236,6 +249,13 @@ def generate_report(
     print(f"{color}{message}{Colors.RESET}")
     print(f"{Colors.BOLD}{color}{'=' * 70}{Colors.RESET}")
 
+    if diagnostic_only:
+        print(f"\n{Colors.BOLD}{Colors.YELLOW}DIAGNOSTIC-ONLY MODE{Colors.RESET}")
+        print(
+            "Warn-only preflight output is for investigation only and does not "
+            "satisfy the live readiness gate."
+        )
+
     if failure_hints:
         print(f"\n{Colors.BOLD}Remediation hints:{Colors.RESET}")
         for idx, hint in enumerate(failure_hints, start=1):
@@ -244,10 +264,13 @@ def generate_report(
     print(f"\n{Colors.BOLD}Recommendations:{Colors.RESET}")
     if status == "READY":
         print("1. Start with: uv run gpt-trader run --profile " f"{checker.profile} --dry-run")
-        print("2. Monitor for 1 hour in dry-run mode")
-        print(f"3. Begin live with: uv run gpt-trader run --profile {checker.profile}")
-        print("4. Use tiny positions (0.001 BTC) initially")
-        print("5. Monitor closely for first 24 hours")
+        print("2. Review dry-run evidence against the approved runbook and decision record")
+        print(
+            "3. Progress canary/prod live profiles with: uv run gpt-trader run --profile "
+            f"{checker.profile} --reduce-only"
+        )
+        print("4. Keep --dry-run or --reduce-only until explicit approval is recorded")
+        print("5. Remove safety flags only with active monitoring and rollback coverage")
     elif status == "REVIEW":
         print("1. Review all warnings above")
         print("2. Consider starting with paper trading: PERPS_PAPER=1")
@@ -260,7 +283,11 @@ def generate_report(
         print("4. Verify credentials and API connectivity")
 
     report_timestamp = timestamp or datetime.now(timezone.utc)
-    report_payload = format_preflight_report(checker, timestamp=report_timestamp)
+    report_payload = format_preflight_report(
+        checker,
+        timestamp=report_timestamp,
+        diagnostic_only=diagnostic_only,
+    )
     report_content = serialize_preflight_report(report_payload)
 
     sink_to_use = sink

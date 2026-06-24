@@ -24,6 +24,7 @@ def test_readiness_summary_empty() -> None:
     payload = _format_readiness_payload([])
 
     assert payload["status"] == "UNKNOWN"
+    assert payload["diagnostic_only"] is False
     assert payload["counts"]["total"] == 0
     assert payload["checks"] == []
 
@@ -37,6 +38,7 @@ def test_readiness_summary_partial() -> None:
     )
 
     assert payload["status"] == "NOT READY"
+    assert payload["diagnostic_only"] is False
     assert payload["counts"]["warn"] == 1
     assert payload["counts"]["fail"] == 1
     assert payload["counts"]["total"] == 2
@@ -51,7 +53,21 @@ def test_readiness_summary_all_passes() -> None:
     assert payload["status"] == "READY"
     assert payload["counts"]["pass"] == 2
     assert payload["counts"]["total"] == 2
-    assert payload["message"].startswith("System is READY")
+    assert payload["message"].startswith("Preflight evidence is READY")
+    assert "production trading" in payload["message"]
+    assert "System is READY for production trading" not in payload["message"]
+
+
+def test_readiness_summary_warn_only_is_diagnostic_only() -> None:
+    payload = _format_readiness_payload(
+        [_make_result("pass", "ok")],
+        diagnostic_only=True,
+    )
+
+    assert payload["status"] == "READY"
+    assert payload["diagnostic_only"] is True
+    assert payload["message"].startswith("DIAGNOSTIC-ONLY:")
+    assert "do not satisfy the live readiness gate" in payload["message"]
 
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures" / "diagnostics_bundle"
@@ -199,6 +215,7 @@ def test_diagnostics_bundle_matches_fixture_healthy(monkeypatch: pytest.MonkeyPa
     expected = _load_fixture("healthy.json")
 
     assert bundle == expected
+    assert "System is READY for production trading" not in bundle["bundle"]["readiness"]["message"]
     assert list(bundle["bundle"].keys()) == ["readiness", "config", "environment"]
     assert list(bundle["bundle"]["config"].keys()) == [
         "profile",
@@ -259,3 +276,15 @@ def test_diagnostics_bundle_matches_fixture_degraded(monkeypatch: pytest.MonkeyP
     )
     assert bundle["bundle"]["environment"]["cdp_credentials_present"] is True
     assert bundle["bundle"]["readiness"]["status"] == "NOT READY"
+
+
+def test_diagnostics_bundle_warn_only_reads_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    results = [_make_result("pass", "env ready", {"status_code": 200})]
+    monkeypatch.setenv("GPT_TRADER_PREFLIGHT_WARN_ONLY", "1")
+
+    bundle = _build_bundle(monkeypatch, results)
+
+    readiness = bundle["bundle"]["readiness"]
+    assert readiness["diagnostic_only"] is True
+    assert readiness["message"].startswith("DIAGNOSTIC-ONLY:")
+    assert "do not satisfy the live readiness gate" in readiness["message"]

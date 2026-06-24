@@ -145,6 +145,15 @@ def test_validate_agent_artifacts_accepts_complete_tree(tmp_path: Path) -> None:
     assert set(agent_artifacts.EXPECTED_RESOURCES).issubset(summary["resources"])
 
 
+def test_committed_agent_artifacts_index_matches_tree() -> None:
+    report, _ = agent_artifacts.validate_agent_artifacts(
+        agent_artifacts.DEFAULT_SOURCE_DIR,
+        quiet=True,
+    )
+
+    assert report.errors == []
+
+
 def test_validate_agent_artifacts_reports_missing_indexed_file(tmp_path: Path) -> None:
     source = _create_valid_agent_artifacts(tmp_path)
     (source / "schemas" / "risk_config_schema.json").unlink()

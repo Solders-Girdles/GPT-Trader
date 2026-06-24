@@ -1,32 +1,36 @@
 ---
-status: draft
-last-updated: 2026-06-12
+status: current
+last-updated: 2026-06-24
 workstream: 1 (see TRADE_IDEA_INTERFACES_DESIGN_NOTES.md)
-depends-on: Workstream 0 (service factory, error codes, actor resolution)
+depends-on: Workstream 0 (implemented service factory, error codes, actor resolution)
 ---
 
-# Implementation Spec: `gpt-trader ideas` CLI Command Group
+# Implemented Spec: `gpt-trader ideas` CLI Command Group
 
 ## Goal
 
 A complete, scriptable CLI surface over `TradeIdeaService` so that AI agents
 can propose trade-idea records and humans can review them, with JSON output
 for programmatic use. This is the first working door into the staged-autonomy
-workflow.
+workflow and is implemented in `src/gpt_trader/cli/commands/ideas.py`.
+
+This document is now a maintainer reference for the implemented CLI contract,
+not a request to build a new command group. Future work should update the
+current command and tests rather than duplicating the trade-ideas interface.
 
 ## Files
 
 | File | Action |
 |------|--------|
-| `src/gpt_trader/cli/commands/ideas.py` | New — command group |
-| `src/gpt_trader/cli/__init__.py` | Add `ideas.register(subparsers)` alongside existing registrations |
-| `src/gpt_trader/cli/response.py` | Add `POLICY_VIOLATION`, `IDEA_NOT_FOUND` to `CliErrorCode` |
-| `src/gpt_trader/features/trade_ideas/service.py` | Add `DEFAULT_IDEAS_ROOT`, `create_trade_idea_service()` factory |
-| `tests/unit/gpt_trader/cli/commands/test_ideas_*.py` | New tests (split by lifecycle/query/budget) |
+| `src/gpt_trader/cli/commands/ideas.py` | Implemented command group |
+| `src/gpt_trader/cli/__init__.py` | Registers `ideas.register(subparsers)` alongside existing commands |
+| `src/gpt_trader/cli/response.py` | Defines `POLICY_VIOLATION`, `IDEA_NOT_FOUND` in `CliErrorCode` |
+| `src/gpt_trader/features/trade_ideas/service.py` | Defines `DEFAULT_IDEAS_ROOT`, `create_trade_idea_service()` factory |
+| `tests/unit/gpt_trader/cli/commands/test_ideas_*.py` | Implemented CLI tests split by lifecycle/query/budget and focused integrity cases |
 
-Follow the structure of `cli/commands/controls.py`: a `register(subparsers)`
-function, one `_handle_*` per subcommand returning `CliResponse`, with
-`options.add_output_options(parser)` on every subcommand.
+The implementation follows the structure of `cli/commands/controls.py`: a
+`register(subparsers)` function, one `_handle_*` per subcommand returning
+`CliResponse`, with `options.add_output_options(parser)` on every subcommand.
 
 ## Common options
 
@@ -39,6 +43,12 @@ Every subcommand accepts:
 Every mutating subcommand accepts:
 
 - `--actor ID` — actor identity (default: `GPT_TRADER_ACTOR` env, then OS user)
+
+Current behavior is discoverable with:
+
+```bash
+uv run gpt-trader ideas --help
+```
 
 ## Command tree
 
@@ -127,17 +137,22 @@ Thin wrappers over `service.reject` / `service.request_changes` /
 
 - `ideas expire DECISION_ID` — expire one idea (service defaults for
   reason/actor unless overridden).
-- `ideas expire --sweep` — list all non-terminal views, expire each whose
-  `time_horizon.expires_at` is set and `<= now`. Report
-  `data["expired"]` = list of decision_ids; success even when zero matched
-  (`was_noop=True`). DECISION_ID and `--sweep` are mutually exclusive;
+- `ideas expire --sweep` — list all non-terminal views and expire each idea
+  that can legally transition to expired when either:
+  - `time_horizon.expires_at` is set and `<= now`; or
+  - the review deadline has elapsed under the current
+    `RiskBudget.max_review_latency_hours` policy.
+  The review-latency path can expire a far-future idea whose `expires_at` is
+  still later than `now` when the review queue exceeds the configured budget.
+  Report `data["expired"]` = list of decision_ids; success even when zero
+  matched (`was_noop=True`). DECISION_ID and `--sweep` are mutually exclusive;
   one is required.
 
 ### `ideas mark-submitted` / `ideas mark-filled`
 
 - Wrap `service.record_submission` / `service.record_fill`.
 - **These record manually executed tickets; they never touch a broker API.**
-  Help text must say so.
+  Help text says so, and this boundary must remain explicit in future changes.
 - `--venue` choices: `coinbase`, `manual` (no INTX-specific venue surface).
 
 ### `ideas budget show` / `ideas budget set`
@@ -177,7 +192,7 @@ mode returns the `CliResponse` envelope with `command="ideas <subcommand>"`.
 - Timestamps render ISO-8601 UTC.
 - Never print secrets; the audit contract forbids credentials in any record.
 
-## Test plan (tests/unit/gpt_trader/cli/commands/)
+## Implemented test plan (tests/unit/gpt_trader/cli/commands/)
 
 Use a `tmp_path`-rooted service via `--ideas-root` (no monkeypatching of
 globals needed; this is why the flag exists). Fixture helper builds a valid
@@ -194,8 +209,10 @@ Required cases:
 6. `approve` over-budget idea → exit 1, `POLICY_VIOLATION`, all violations in
    `data["violations"]` (assert ≥2 violations both present).
 7. `request-changes` → `resubmit` (revised record) → `approve` full loop.
-8. `reject`, `cancel`, `expire` single, `expire --sweep` (one stale + one
-   fresh idea: only stale expires; `was_noop` when none).
+8. `reject`, `cancel`, `expire` single, `expire --sweep` with explicit expiry
+   coverage (one stale + one fresh idea: only stale expires; `was_noop` when
+   none) plus review-latency sweep coverage for a far-future idea whose review
+   deadline exceeds `max_review_latency_hours`.
 9. `mark-submitted` then `mark-filled` with venue/external id recorded in
    audit events.
 10. `budget show` seeds defaults; `budget set --max-loss-per-idea-pct 2
@@ -208,12 +225,14 @@ Required cases:
 
 ## Acceptance criteria
 
-- [ ] `gpt-trader ideas --help` lists all subcommands with accurate help text.
-- [ ] Full loop works on a clean checkout with no env vars:
+- [x] `gpt-trader ideas --help` lists all subcommands with accurate help text.
+- [x] Full loop works on a clean checkout with no env vars:
       propose → list → show → approve → mark-submitted → mark-filled,
       and the audit log verifies afterward.
-- [ ] No import from `features/brokerages/` or `features/live_trade/` in
+- [x] No import from `features/brokerages/` or `features/live_trade/` in
       `ideas.py` (enforce by review; this surface must stay execution-free).
-- [ ] All policy violations reach the user; no first-error-only truncation.
-- [ ] `uv run agent-check`, `agent-naming`, `mypy`, `ruff`, `black` clean.
-- [ ] Test plan above implemented; `uv run pytest tests/unit -q` green.
+- [x] All policy violations reach the user; no first-error-only truncation.
+- [x] The focused `tests/unit/gpt_trader/cli/commands/test_ideas_*.py` suite
+      covers the implemented command group.
+- [ ] Re-run the repo-required quality bundle before merging any future change
+      that modifies this CLI or its tests.

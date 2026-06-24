@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-05-06
+last-updated: 2026-06-24
 ---
 
 All docs under `docs/` must be reachable from this index (directly or via other linked docs).
@@ -28,7 +28,7 @@ When adding a new doc, link it below in the best-fit section.
 | [Live Operations Guide](production.md) | Readiness-gated live operations, rollback, and emergency procedures |
 | [Readiness Checklist](READINESS.md) | Gates to move from paper to live trading |
 | [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) | AI-assisted trading autonomy, product, venue, approval, and audit gates |
-| [Trade-Idea Interface Design Notes](specs/TRADE_IDEA_INTERFACES_DESIGN_NOTES.md) | Proposed CLI/TUI workstreams for human-approved trade ideas |
+| [Trade-Idea Interface Design Notes](specs/TRADE_IDEA_INTERFACES_DESIGN_NOTES.md) | Implemented CLI and future TUI workstreams for human-approved trade ideas |
 | [Operating Rubric](OPERATING_RUBRIC.md) | Staged capabilities and graduation evidence for the autonomous entity |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [TUI Guide](TUI_GUIDE.md) | Launching and operating the terminal UI |

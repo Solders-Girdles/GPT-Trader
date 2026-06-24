@@ -26,7 +26,7 @@ CATEGORIES = {
     "tooling",
     "trading-readiness",
 }
-CANDIDATES = {"claw", "hermes", "codex-review", "human"}
+CANDIDATES = {"claw", "hermes", "codex-review", "decision"}
 EVIDENCE_ANCHOR_FIELDS = ("command", "path", "url")
 
 CUSTOM_LABELS = {
@@ -46,9 +46,9 @@ CUSTOM_LABELS = {
         "color": "006b75",
         "description": "Candidate for Hermes implementation",
     },
-    "needs-human-decision": {
+    "decision-needed": {
         "color": "d876e3",
-        "description": "Blocked on RJ or an explicit human gate",
+        "description": "Requires an explicit decision packet and agent recommendation",
     },
     "codex-review-feedback": {
         "color": "fbca04",
@@ -132,7 +132,7 @@ def example_packet() -> dict[str, Any]:
         "suggested_verification": ["uv run agent-regenerate --verify"],
         "routing": {
             "candidate_for": ["claw"],
-            "needs_human_decision": False,
+            "decision_needed": False,
             "blocked_by": [],
         },
     }
@@ -218,6 +218,7 @@ def validate_packet(packet: dict[str, Any]) -> list[str]:
         errors.append("routing must be an object")
         routing = {}
     candidates = routing.get("candidate_for")
+    normalized_candidates: set[str] = set()
     if not isinstance(candidates, list) or not candidates:
         errors.append("routing.candidate_for must be a non-empty list")
     else:
@@ -228,16 +229,19 @@ def validate_packet(packet: dict[str, Any]) -> list[str]:
             errors.append("routing.candidate_for must contain only strings")
             unknown_candidates: list[str] = []
         else:
-            unknown_candidates = sorted(set(candidates) - CANDIDATES)
+            normalized_candidates = set(candidates)
+            unknown_candidates = sorted(normalized_candidates - CANDIDATES)
         if unknown_candidates:
             errors.append(f"routing.candidate_for contains unknown values: {unknown_candidates}")
-    if not isinstance(routing.get("needs_human_decision"), bool):
-        errors.append("routing.needs_human_decision must be true or false")
-
-    if scope.get("touches_trading_execution") and not routing.get("needs_human_decision"):
+    if not isinstance(routing.get("decision_needed"), bool):
+        errors.append("routing.decision_needed must be true or false")
+    elif "decision" in normalized_candidates and not routing.get("decision_needed"):
         errors.append(
-            "scope.touches_trading_execution=true requires routing.needs_human_decision=true"
+            "routing.candidate_for includes decision requires routing.decision_needed=true"
         )
+
+    if scope.get("touches_trading_execution") and not routing.get("decision_needed"):
+        errors.append("scope.touches_trading_execution=true requires routing.decision_needed=true")
 
     blocked_by = routing.get("blocked_by", [])
     if blocked_by is not None and not isinstance(blocked_by, list):
@@ -261,9 +265,10 @@ def packet_labels(packet: dict[str, Any]) -> list[str]:
     routing = packet.get("routing", {})
     if isinstance(routing, dict):
         blocked_by = routing.get("blocked_by", [])
-        if not routing.get("needs_human_decision") and not blocked_by:
-            labels.add("agent-ready")
         candidates = routing.get("candidate_for", [])
+        decision_candidate = isinstance(candidates, list) and "decision" in candidates
+        if not routing.get("decision_needed") and not blocked_by and not decision_candidate:
+            labels.add("agent-ready")
         if isinstance(candidates, list):
             if "claw" in candidates:
                 labels.add("claw-candidate")
@@ -271,8 +276,8 @@ def packet_labels(packet: dict[str, Any]) -> list[str]:
                 labels.add("hermes-candidate")
             if "codex-review" in candidates:
                 labels.add("codex-review-feedback")
-        if routing.get("needs_human_decision"):
-            labels.add("needs-human-decision")
+        if routing.get("decision_needed") or decision_candidate:
+            labels.add("decision-needed")
 
     return sorted(labels)
 
@@ -397,7 +402,7 @@ def render_issue_body(packet: dict[str, Any], labels: list[str], missing_labels:
         "",
         "## Routing",
         f"- Candidate for: {', '.join(routing['candidate_for'])}",
-        f"- Needs human decision: `{str(routing['needs_human_decision']).lower()}`",
+        f"- Decision needed: `{str(routing['decision_needed']).lower()}`",
         f"- Blocked by: {', '.join(routing.get('blocked_by', [])) or 'none'}",
         "",
         "## Dedupe",

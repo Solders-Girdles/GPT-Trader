@@ -36,7 +36,7 @@ Touches trading execution: `false`
 ## Routing
 
 - Candidate for: claw
-- Needs human decision: `false`
+- Decision needed: `false`
 - Blocked by: none
 
 ## Dedupe

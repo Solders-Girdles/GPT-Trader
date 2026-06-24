@@ -10,16 +10,14 @@ def test_example_packet_is_valid() -> None:
     assert promoter.validate_packet(promoter.example_packet()) == []
 
 
-def test_trading_execution_findings_require_human_decision() -> None:
+def test_trading_execution_findings_require_decision_needed() -> None:
     packet = promoter.example_packet()
     packet["scope"]["touches_trading_execution"] = True
-    packet["routing"]["needs_human_decision"] = False
+    packet["routing"]["decision_needed"] = False
 
     errors = promoter.validate_packet(packet)
 
-    assert (
-        "scope.touches_trading_execution=true requires routing.needs_human_decision=true" in errors
-    )
+    assert "scope.touches_trading_execution=true requires routing.decision_needed=true" in errors
 
 
 def test_dry_run_renders_issue_body(tmp_path: Path, capsys) -> None:
@@ -53,12 +51,23 @@ def test_evidence_requires_command_path_or_url_anchor() -> None:
     assert "evidence[1] must include at least one anchor: command, path, url" in errors
 
 
-def test_human_gated_packet_is_not_agent_ready() -> None:
+def test_decision_needed_packet_is_not_agent_ready() -> None:
     packet = promoter.example_packet()
-    packet["routing"]["needs_human_decision"] = True
-    packet["routing"]["blocked_by"] = ["RJ venue decision"]
+    packet["routing"]["decision_needed"] = True
+    packet["routing"]["candidate_for"] = ["decision"]
+    packet["routing"]["blocked_by"] = ["live-start control decision"]
 
     labels = promoter.packet_labels(packet)
 
     assert "agent-ready" not in labels
-    assert "needs-human-decision" in labels
+    assert "decision-needed" in labels
+
+
+def test_decision_candidate_requires_decision_needed() -> None:
+    packet = promoter.example_packet()
+    packet["routing"]["candidate_for"] = ["decision"]
+    packet["routing"]["decision_needed"] = False
+
+    errors = promoter.validate_packet(packet)
+
+    assert "routing.candidate_for includes decision requires routing.decision_needed=true" in errors

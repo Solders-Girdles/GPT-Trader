@@ -2,7 +2,7 @@
 
 ---
 status: draft
-last-updated: 2026-06-22
+last-updated: 2026-06-24
 ---
 
 This document defines the recurring project-review pipeline for GPT-Trader. The
@@ -16,7 +16,7 @@ Hermes, and Codex review loops.
 - Promote only actionable, evidence-backed findings.
 - Use GitHub issues as the durable queue for Claw/Hermes implementation.
 - Preserve GPT-Trader safety boundaries around broker access, trading
-  execution, account capability, and human approval.
+  execution, account capability, and explicit decision records.
 - Feed PR review feedback back into implementation agents without broadening
   scope.
 
@@ -124,7 +124,7 @@ Required fields:
   ],
   "routing": {
     "candidate_for": ["claw"],
-    "needs_human_decision": false,
+    "decision_needed": false,
     "blocked_by": []
   }
 }
@@ -140,10 +140,11 @@ Allowed categories are `bug`, `ci`, `docs`, `architecture`, `tests`,
 `cleanup`, `security`, `trading-readiness`, and `tooling`.
 
 If `scope.touches_trading_execution` is true, the finding must either be
-docs/test-only and clearly execution-free, or `routing.needs_human_decision`
-must be true. Use `docs/PRE_MIGRATION_DECISION_FRAMEWORK.md` for anything that
-touches execution automation, broker adapters, venue support, account
-capability, or AI-assisted execution.
+docs/test-only and clearly execution-free, or `routing.decision_needed` must be
+true. Use `docs/PRE_MIGRATION_DECISION_FRAMEWORK.md` for anything that touches
+execution automation, broker adapters, venue support, account capability, or
+AI-assisted execution, and include enough context for a decision agent to
+recommend the next policy and implementation route.
 
 ## Stage 3: Promote
 
@@ -177,10 +178,10 @@ GitHub issues are the durable queue. These labels are routing signals:
 | Label | Meaning |
 | --- | --- |
 | `agent-review` | Finding came from the recurring GPT-Trader review lane |
-| `agent-ready` | Finding passed promotion gates, has no human/blocker gate, and is ready for implementation |
+| `agent-ready` | Finding passed promotion gates, has no decision/blocker gate, and is ready for implementation |
 | `claw-candidate` | Candidate for Claw implementation |
 | `hermes-candidate` | Candidate for Hermes implementation |
-| `needs-human-decision` | Blocked on RJ or an explicit human gate |
+| `decision-needed` | Requires an explicit decision packet and agent recommendation before implementation or execution |
 | `codex-review-feedback` | Follow-up from Codex review comments or checks |
 
 The promoter can create missing labels with `--create-labels`. If labels are
@@ -232,8 +233,9 @@ convert each actionable item into a bounded fix packet for the active executor:
 - verification command
 - stop condition
 
-If the feedback contradicts the issue acceptance criteria or crosses a human
-gate, label the issue or PR `needs-human-decision` and stop the automation loop.
+If the feedback contradicts the issue acceptance criteria or crosses an
+undecided policy boundary, label the issue or PR `decision-needed` and route a
+decision packet before implementation continues.
 
 ## Stage 7: Merge And Closeout
 

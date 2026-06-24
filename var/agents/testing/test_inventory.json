@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6708,
+    "total_tests": 6709,
     "total_files": 793,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6543,
+    "unit": 6544,
     "asyncio": 373,
     "parametrize": 189,
     "endpoints": 83,
@@ -61533,7 +61533,7 @@
         "docstring": ""
       },
       {
-        "name": "test_trading_execution_findings_require_human_decision",
+        "name": "test_trading_execution_findings_require_decision_needed",
         "line": 13,
         "markers": [
           "unit"
@@ -61542,7 +61542,7 @@
       },
       {
         "name": "test_dry_run_renders_issue_body",
-        "line": 25,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -61550,7 +61550,7 @@
       },
       {
         "name": "test_invalid_candidate_type_is_reported",
-        "line": 38,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -61558,15 +61558,23 @@
       },
       {
         "name": "test_evidence_requires_command_path_or_url_anchor",
-        "line": 47,
+        "line": 45,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_human_gated_packet_is_not_agent_ready",
-        "line": 56,
+        "name": "test_decision_needed_packet_is_not_agent_ready",
+        "line": 54,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_decision_candidate_requires_decision_needed",
+        "line": 66,
         "markers": [
           "unit"
         ],

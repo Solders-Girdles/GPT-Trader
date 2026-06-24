@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6724,
-    "total_files": 794,
+    "total_tests": 6729,
+    "total_files": 795,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6559,
+    "unit": 6564,
     "asyncio": 379,
-    "parametrize": 189,
+    "parametrize": 191,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -542,6 +542,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
@@ -32864,6 +32865,50 @@
         "name": "test_approval_count_ignores_unaudited_latest_for_nonapproved_records",
         "line": 50,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py": [
+      {
+        "name": "test_propose_accepts_omitted_broker_ticket",
+        "line": 27,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_accepts_explicit_default_broker_ticket",
+        "line": 34,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_rejects_preapproval_broker_ticket_before_mutation",
+        "line": 60,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_resubmit_accepts_explicit_default_broker_ticket",
+        "line": 80,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_resubmit_rejects_preapproval_broker_ticket_before_mutation",
+        "line": 110,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""

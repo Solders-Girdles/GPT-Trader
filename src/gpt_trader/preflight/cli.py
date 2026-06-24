@@ -66,41 +66,49 @@ def _run_preflight(args: PreflightCliArgs) -> int:
     if args.diagnostics_bundle:
         return _emit_diagnostics_bundle(args)
 
-    # Set warn-only env var if CLI flag is provided
+    previous_warn_only = os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY")
     if args.warn_only:
         os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = "1"
-    _header(profile_decision.profile)
 
-    checker = PreflightCheck(verbose=args.verbose, profile=profile_decision.profile)
     try:
-        check_functions = _resolve_preflight_checks(checker)
-    except PreflightCheckGraphError as exc:
-        checker.context.set_current_check("preflight_graph")
-        checker.log_error(str(exc))
-        checker.context.set_current_check(None)
-        checker.generate_report(
+        _header(profile_decision.profile)
+
+        checker = PreflightCheck(verbose=args.verbose, profile=profile_decision.profile)
+        try:
+            check_functions = _resolve_preflight_checks(checker)
+        except PreflightCheckGraphError as exc:
+            checker.context.set_current_check("preflight_graph")
+            checker.log_error(str(exc))
+            checker.context.set_current_check(None)
+            checker.generate_report(
+                report_dir=args.report_dir,
+                report_path=args.report_path,
+                report_target=args.report_target,
+            )
+            return 1
+
+        for check in check_functions:
+            check_name = getattr(check, "__name__", type(check).__name__)
+            checker.context.set_current_check(check_name)
+            try:
+                check()
+            except Exception as exc:  # pragma: no cover - defensive runtime safeguard
+                checker.log_error(f"Check failed with exception: {exc}")
+            finally:
+                checker.context.set_current_check(None)
+
+        success, _status = checker.generate_report(
             report_dir=args.report_dir,
             report_path=args.report_path,
             report_target=args.report_target,
         )
-        return 1
-
-    for check in check_functions:
-        check_name = getattr(check, "__name__", type(check).__name__)
-        checker.context.set_current_check(check_name)
-        try:
-            check()
-        except Exception as exc:  # pragma: no cover - defensive runtime safeguard
-            checker.log_error(f"Check failed with exception: {exc}")
-        finally:
-            checker.context.set_current_check(None)
-
-    success, _status = checker.generate_report(
-        report_dir=args.report_dir,
-        report_path=args.report_path,
-        report_target=args.report_target,
-    )
-    return 0 if success else 1
+        return 0 if success else 1
+    finally:
+        if args.warn_only:
+            if previous_warn_only is None:
+                os.environ.pop("GPT_TRADER_PREFLIGHT_WARN_ONLY", None)
+            else:
+                os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = previous_warn_only
 
 
 def _emit_diagnostics_bundle(args: PreflightCliArgs) -> int:

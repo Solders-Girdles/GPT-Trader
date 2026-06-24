@@ -48,18 +48,26 @@ def build_diagnostics_bundle(
     context = checker.context
     diagnostic_only = warn_only or os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY") == "1"
 
-    if diagnostic_only:
+    previous_warn_only = os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY")
+    if warn_only:
         os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = "1"
 
-    with redirect_stdout(io.StringIO()):
-        for check_name in CHECK_NAMES:
-            check = getattr(checker, check_name, None)
-            if check is None:
-                continue
-            try:
-                check()
-            except Exception as exc:  # pragma: no cover - defensive safeguard
-                checker.log_error(f"{check_name} failed to run: {exc}")
+    try:
+        with redirect_stdout(io.StringIO()):
+            for check_name in CHECK_NAMES:
+                check = getattr(checker, check_name, None)
+                if check is None:
+                    continue
+                try:
+                    check()
+                except Exception as exc:  # pragma: no cover - defensive safeguard
+                    checker.log_error(f"{check_name} failed to run: {exc}")
+    finally:
+        if warn_only:
+            if previous_warn_only is None:
+                os.environ.pop("GPT_TRADER_PREFLIGHT_WARN_ONLY", None)
+            else:
+                os.environ["GPT_TRADER_PREFLIGHT_WARN_ONLY"] = previous_warn_only
 
     readiness = _format_readiness_payload(context.results, diagnostic_only=diagnostic_only)
     bundle: dict[str, Any] = {

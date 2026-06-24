@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -288,3 +289,40 @@ def test_diagnostics_bundle_warn_only_reads_env(monkeypatch: pytest.MonkeyPatch)
     assert readiness["diagnostic_only"] is True
     assert readiness["message"].startswith("DIAGNOSTIC-ONLY:")
     assert "do not satisfy the live readiness gate" in readiness["message"]
+
+
+def test_diagnostics_bundle_warn_only_scopes_env_override(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    results = [_make_result("pass", "env ready", {"status_code": 200})]
+    context = _DummyContext(profile=PROFILE_NAME, results=results)
+    observed_warn_only_values: list[str | None] = []
+
+    class StubPreflightCheck:
+        def __init__(self, *, verbose: bool = False, profile: str = PROFILE_NAME) -> None:
+            self.verbose = verbose
+            self.profile = profile
+            self.context = context
+
+        def check_environment_variables(self) -> None:
+            observed_warn_only_values.append(os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY"))
+
+        def check_pretrade_diagnostics(self) -> None:
+            observed_warn_only_values.append(os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY"))
+
+        def check_readiness_report(self) -> None:
+            observed_warn_only_values.append(os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY"))
+
+    monkeypatch.delenv("GPT_TRADER_PREFLIGHT_WARN_ONLY", raising=False)
+    monkeypatch.setattr(
+        "gpt_trader.preflight.diagnostics_bundle.PreflightCheck",
+        StubPreflightCheck,
+    )
+    _patch_stable_environment(monkeypatch)
+
+    bundle = build_diagnostics_bundle(PROFILE_NAME, warn_only=True)
+
+    assert observed_warn_only_values == ["1", "1", "1"]
+    assert os.environ.get("GPT_TRADER_PREFLIGHT_WARN_ONLY") is None
+    assert bundle["bundle"]["readiness"]["diagnostic_only"] is True
+    assert bundle["bundle"]["config"]["warn_only"] is True

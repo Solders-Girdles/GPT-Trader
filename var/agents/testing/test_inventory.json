@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6708,
+    "total_tests": 6709,
     "total_files": 793,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6543,
+    "unit": 6544,
     "asyncio": 373,
     "parametrize": 189,
     "endpoints": 83,
@@ -61567,6 +61567,14 @@
       {
         "name": "test_decision_needed_packet_is_not_agent_ready",
         "line": 54,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_decision_candidate_requires_decision_needed",
+        "line": 66,
         "markers": [
           "unit"
         ],

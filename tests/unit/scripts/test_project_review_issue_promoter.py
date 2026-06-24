@@ -54,9 +54,20 @@ def test_evidence_requires_command_path_or_url_anchor() -> None:
 def test_decision_needed_packet_is_not_agent_ready() -> None:
     packet = promoter.example_packet()
     packet["routing"]["decision_needed"] = True
+    packet["routing"]["candidate_for"] = ["decision"]
     packet["routing"]["blocked_by"] = ["live-start control decision"]
 
     labels = promoter.packet_labels(packet)
 
     assert "agent-ready" not in labels
     assert "decision-needed" in labels
+
+
+def test_decision_candidate_requires_decision_needed() -> None:
+    packet = promoter.example_packet()
+    packet["routing"]["candidate_for"] = ["decision"]
+    packet["routing"]["decision_needed"] = False
+
+    errors = promoter.validate_packet(packet)
+
+    assert "routing.candidate_for includes decision requires routing.decision_needed=true" in errors

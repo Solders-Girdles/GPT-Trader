@@ -218,6 +218,7 @@ def validate_packet(packet: dict[str, Any]) -> list[str]:
         errors.append("routing must be an object")
         routing = {}
     candidates = routing.get("candidate_for")
+    normalized_candidates: set[str] = set()
     if not isinstance(candidates, list) or not candidates:
         errors.append("routing.candidate_for must be a non-empty list")
     else:
@@ -228,11 +229,16 @@ def validate_packet(packet: dict[str, Any]) -> list[str]:
             errors.append("routing.candidate_for must contain only strings")
             unknown_candidates: list[str] = []
         else:
-            unknown_candidates = sorted(set(candidates) - CANDIDATES)
+            normalized_candidates = set(candidates)
+            unknown_candidates = sorted(normalized_candidates - CANDIDATES)
         if unknown_candidates:
             errors.append(f"routing.candidate_for contains unknown values: {unknown_candidates}")
     if not isinstance(routing.get("decision_needed"), bool):
         errors.append("routing.decision_needed must be true or false")
+    elif "decision" in normalized_candidates and not routing.get("decision_needed"):
+        errors.append(
+            "routing.candidate_for includes decision requires routing.decision_needed=true"
+        )
 
     if scope.get("touches_trading_execution") and not routing.get("decision_needed"):
         errors.append("scope.touches_trading_execution=true requires routing.decision_needed=true")
@@ -259,9 +265,10 @@ def packet_labels(packet: dict[str, Any]) -> list[str]:
     routing = packet.get("routing", {})
     if isinstance(routing, dict):
         blocked_by = routing.get("blocked_by", [])
-        if not routing.get("decision_needed") and not blocked_by:
-            labels.add("agent-ready")
         candidates = routing.get("candidate_for", [])
+        decision_candidate = isinstance(candidates, list) and "decision" in candidates
+        if not routing.get("decision_needed") and not blocked_by and not decision_candidate:
+            labels.add("agent-ready")
         if isinstance(candidates, list):
             if "claw" in candidates:
                 labels.add("claw-candidate")
@@ -269,7 +276,7 @@ def packet_labels(packet: dict[str, Any]) -> list[str]:
                 labels.add("hermes-candidate")
             if "codex-review" in candidates:
                 labels.add("codex-review-feedback")
-        if routing.get("decision_needed"):
+        if routing.get("decision_needed") or decision_candidate:
             labels.add("decision-needed")
 
     return sorted(labels)

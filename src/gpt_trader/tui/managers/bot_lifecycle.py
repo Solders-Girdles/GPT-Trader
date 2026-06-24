@@ -101,6 +101,9 @@ class BotLifecycleManager:
                     return "live"
                 return service_mode
 
+        if lifecycle_mode == "live":
+            return "live"
+
         mode = getattr(self.app, "data_source_mode", None)
         if isinstance(mode, str) and mode:
             return mode

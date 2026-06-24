@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6714,
+    "total_tests": 6715,
     "total_files": 794,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6549,
-    "asyncio": 378,
+    "unit": 6550,
+    "asyncio": 379,
     "parametrize": 189,
     "endpoints": 83,
     "property": 82,
@@ -44983,6 +44983,16 @@
       {
         "name": "TestBotLifecycleLiveStartGate::test_paper_fallback_cross_checks_broker_live_mode",
         "line": 110,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBotLifecycleLiveStartGate"
+      },
+      {
+        "name": "TestBotLifecycleLiveStartGate::test_mode_service_error_preserves_broker_live_mode",
+        "line": 123,
         "markers": [
           "asyncio",
           "unit"

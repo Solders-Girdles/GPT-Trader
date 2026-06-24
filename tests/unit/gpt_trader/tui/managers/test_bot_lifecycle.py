@@ -118,3 +118,17 @@ class TestBotLifecycleLiveStartGate:
         app.push_screen_wait.assert_awaited_once()
         assert app._live_operation_confirmed is True
         worker_service.run_bot_async.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_mode_service_error_preserves_broker_live_mode(self) -> None:
+        app = _app_for_start_mode("paper", live_confirmed=False, broker=RealBroker())
+        app.mode_service.detect_bot_mode.side_effect = RuntimeError("mode service unavailable")
+        worker_service = _worker_service()
+
+        manager = BotLifecycleManager(app, worker_service=worker_service)
+
+        await manager.start_bot()
+
+        app.push_screen_wait.assert_awaited_once()
+        assert app._live_operation_confirmed is True
+        worker_service.run_bot_async.assert_called_once()

@@ -68,7 +68,10 @@ class LocalCIProfile:
 LOCAL_CI_PROFILES: dict[str, LocalCIProfile] = {
     "strict": LocalCIProfile(
         canonical_name="strict",
-        description="Strict profile mirrors the required CI checks, including the readiness gate and agent artifacts freshness steps.",
+        description=(
+            "Strict profile runs the local PR-readiness validation set plus local/live "
+            "readiness checks beyond GitHub pull_request CI."
+        ),
         readiness_enabled=True,
         readiness_skip_reason=None,
         agent_artifacts_enabled=True,
@@ -110,7 +113,10 @@ def find_repo_root(start_path: Path) -> Path:
 
 def parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Run local CI checks that mirror required GitHub Actions jobs."
+        description=(
+            "Run GPT-Trader local validation. The strict profile includes local/live "
+            "readiness evidence beyond GitHub pull_request CI."
+        )
     )
     parser.add_argument(
         "--include-snapshots",

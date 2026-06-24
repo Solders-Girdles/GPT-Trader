@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6733,
-    "total_files": 795,
+    "total_tests": 6734,
+    "total_files": 796,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6568,
+    "unit": 6569,
     "asyncio": 379,
     "parametrize": 191,
     "endpoints": 83,
@@ -782,6 +782,9 @@
     ],
     "test_feature_slice_scaffold.py": [
       "tests/unit/scripts/test_feature_slice_scaffold.py"
+    ],
+    "test_generate_event_catalog.py": [
+      "tests/unit/scripts/test_generate_event_catalog.py"
     ],
     "test_generate_test_inventory.py": [
       "tests/unit/scripts/test_generate_test_inventory.py"
@@ -61539,6 +61542,16 @@
       {
         "name": "test_refuses_overwrite",
         "line": 46,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_generate_event_catalog.py": [
+      {
+        "name": "test_exception_logging_counts_as_error_level",
+        "line": 6,
         "markers": [
           "unit"
         ],

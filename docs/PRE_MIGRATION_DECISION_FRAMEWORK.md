@@ -129,16 +129,17 @@ Automatic rejection conditions:
 
 | Product Lane | v1 Role | Notes |
 | --- | --- | --- |
-| Regulated futures research | Primary | Best fit for explicit invalidation, max loss, and multi-hour/multi-day theses |
-| Options research | Primary manual lane | Generate tickets and risk records; execute manually until API fit is proven |
-| Crypto futures | Secondary API-test lane | Use Coinbase CFM or another verified API lane only after account access, product metadata, and risk gates are verified |
-| Crypto spot | Research only by default | Do not migrate unrestricted spot automation into the new shape |
-| Event contracts | Later evaluation | Needs separate venue, liquidity, fee, and compliance review |
-| Mixed derivatives workbench | Later architecture target | Promote only after individual product lanes have compatible schemas and risk gates |
+| Coinbase CFM futures research | Current Coinbase-only lane | Best fit for explicit invalidation, max loss, and multi-hour/multi-day theses; API execution requires account, product, metadata, and risk-gate verification |
+| Coinbase spot research | Current Coinbase-only lane | Keep spot work research/approval-gated; do not migrate unrestricted spot automation into the new shape |
+| Options and manual derivatives | Future lane | Out of v1 scope until a later decision packet reopens the lane with product, venue, API/manual, risk, and account-capability evidence |
+| Non-Coinbase crypto futures or alternate API venues | Future lane | Requires a fresh venue/API/account capability review and decision packet before becoming a migration or execution target |
+| Event contracts | Future lane | Needs separate venue, liquidity, fee, compliance, and account-capability review |
+| Mixed derivatives workbench | Later architecture target | Promote only after individual product lanes have accepted schemas, risk gates, and execution boundaries |
 
-The first migrated system should optimize for futures and options research, with
-Coinbase futures as a narrow API canary only when the product and account gates
-are confirmed.
+The first migrated system should optimize for Coinbase spot plus Coinbase CFM
+futures research. Non-Coinbase venues, options or other manual derivatives, and
+alternate API lanes require a later decision packet or fresh capability review
+before they become active product scope.
 
 ## Decision 4: Broker Role
 
@@ -148,8 +149,8 @@ Brokers are venues, not the architecture.
 | --- | --- | --- |
 | Internal record | Canonical thesis, risk, approval, and audit state | Must be broker neutral |
 | Coinbase | API-capable crypto and CFM lane | Only for products the repo and account can verify |
-| Robinhood | Manual derivatives execution lane | Treat as manual unless official API coverage is proven |
-| Future adapters | Optional execution paths | Must adapt to the internal record, not reshape it |
+| Robinhood | Future/out-of-scope venue | Requires a later decision packet and official API/manual capability review before any migration work |
+| Future adapters | Future optional execution paths | Must adapt to the internal record, not reshape it; require a fresh decision packet and venue/API/account capability review |
 
 The internal system should model trade intent first. Broker-specific payloads are
 derived artifacts created after approval.

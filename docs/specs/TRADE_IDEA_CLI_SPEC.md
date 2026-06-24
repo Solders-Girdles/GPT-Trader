@@ -137,11 +137,11 @@ Thin wrappers over `service.reject` / `service.request_changes` /
 
 - `ideas expire DECISION_ID` — expire one idea (service defaults for
   reason/actor unless overridden).
-- `ideas expire --sweep` — list all non-terminal views, expire each whose
-  `time_horizon.expires_at` is set and `<= now`. Report
-  `data["expired"]` = list of decision_ids; success even when zero matched
-  (`was_noop=True`). DECISION_ID and `--sweep` are mutually exclusive;
-  one is required.
+- `ideas expire --sweep` — list all non-terminal views and expire each idea
+  whose `time_horizon.expires_at` is set and `<= now`, or whose review time
+  exceeds `RiskBudget.max_review_latency_hours`. Report `data["expired"]` =
+  list of decision_ids; success even when zero matched (`was_noop=True`).
+  DECISION_ID and `--sweep` are mutually exclusive; one is required.
 
 ### `ideas mark-submitted` / `ideas mark-filled`
 

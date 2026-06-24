@@ -88,18 +88,23 @@ class BotLifecycleManager:
 
     def _detect_start_mode(self) -> str:
         """Detect the current bot mode for start gating."""
+        lifecycle_mode = self.detect_bot_mode()
         bot = getattr(self.app, "bot", None)
         mode_service = getattr(self.app, "mode_service", None)
         if bot is not None and mode_service is not None:
             try:
-                return str(mode_service.detect_bot_mode(bot))
+                service_mode = str(mode_service.detect_bot_mode(bot))
             except Exception as exc:
                 logger.warning("ModeService failed to classify bot before start: %s", exc)
+            else:
+                if service_mode == "live" or lifecycle_mode == "live":
+                    return "live"
+                return service_mode
 
         mode = getattr(self.app, "data_source_mode", None)
         if isinstance(mode, str) and mode:
             return mode
-        return self.detect_bot_mode()
+        return lifecycle_mode
 
     async def _ensure_live_operation_confirmed(self) -> bool:
         """Require live-operation confirmation before starting live-capable bots."""

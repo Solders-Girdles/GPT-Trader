@@ -11,14 +11,26 @@ from textual.worker import WorkerState
 from gpt_trader.tui.managers.bot_lifecycle import BotLifecycleManager
 
 
+class PaperBroker:
+    pass
+
+
+class RealBroker:
+    pass
+
+
 def _app_for_start_mode(
     mode: str,
     *,
     live_confirmed: bool = False,
     warning_result: bool = True,
+    broker: object | None = None,
 ) -> MagicMock:
     app = MagicMock()
-    app.bot = MagicMock()
+    app.bot = SimpleNamespace(
+        running=False,
+        engine=SimpleNamespace(broker=broker or PaperBroker()),
+    )
     app.bot.running = False
     app.data_source_mode = mode
     app._live_operation_confirmed = live_confirmed
@@ -92,4 +104,17 @@ class TestBotLifecycleLiveStartGate:
 
         app.push_screen_wait.assert_not_awaited()
         assert app._live_operation_confirmed is False
+        worker_service.run_bot_async.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_paper_fallback_cross_checks_broker_live_mode(self) -> None:
+        app = _app_for_start_mode("paper", live_confirmed=False, broker=RealBroker())
+        worker_service = _worker_service()
+
+        manager = BotLifecycleManager(app, worker_service=worker_service)
+
+        await manager.start_bot()
+
+        app.push_screen_wait.assert_awaited_once()
+        assert app._live_operation_confirmed is True
         worker_service.run_bot_async.assert_called_once()

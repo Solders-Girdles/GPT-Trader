@@ -44,9 +44,12 @@ def _write_preflight_report(
     *,
     profile: str,
     fixture_name: str,
+    diagnostic_only: bool | None = None,
 ) -> Path:
     data = _load_fixture(fixture_name)
     data["profile"] = profile
+    if diagnostic_only is not None:
+        data["diagnostic_only"] = diagnostic_only
     timestamp = datetime.combine(report_date, time(1, 0), tzinfo=timezone.utc)
     data["timestamp"] = timestamp.isoformat().replace("+00:00", "Z")
     report_path = base_dir / f"preflight_report_{report_date.strftime('%Y%m%d')}_010000.json"
@@ -145,6 +148,35 @@ def test_main_fails_when_preflight_missing(tmp_path: Path, capsys) -> None:
     error_output = capsys.readouterr().err
     assert result == 1
     assert "missing preflight report" in error_output
+
+
+def test_main_fails_when_preflight_is_diagnostic_only(tmp_path: Path, capsys) -> None:
+    profile = "canary"
+    end_date = date(2026, 1, 17)
+    _setup_green_streak(tmp_path, profile, end_date)
+    _write_preflight_report(
+        tmp_path,
+        end_date,
+        profile=profile,
+        fixture_name="preflight_ready.json",
+        diagnostic_only=True,
+    )
+
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            profile,
+            "--daily-root",
+            str(tmp_path / "runtime_data"),
+            "--preflight-dir",
+            str(tmp_path),
+        ]
+    )
+
+    error_output = capsys.readouterr().err
+    assert result == 1
+    assert "preflight report is diagnostic-only" in error_output
+    assert "reason_codes=readiness_preflight_diagnostic_only" in error_output
 
 
 def test_main_fails_when_pillar_not_green(tmp_path: Path, capsys) -> None:

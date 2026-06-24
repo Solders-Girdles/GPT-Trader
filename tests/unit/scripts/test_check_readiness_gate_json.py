@@ -125,6 +125,43 @@ def test_main_json_output_reports_failures(tmp_path: Path, capsys) -> None:
     )
 
 
+def test_main_json_output_rejects_diagnostic_only_preflight(tmp_path: Path, capsys) -> None:
+    profile = "canary"
+    end_date = date(2026, 1, 17)
+    _setup_green_streak(tmp_path, profile, end_date)
+    _write_preflight_report(
+        tmp_path,
+        end_date,
+        profile=profile,
+        fixture_name="preflight_ready.json",
+        diagnostic_only=True,
+    )
+
+    result = check_readiness_gate.main(
+        [
+            "--profile",
+            profile,
+            "--daily-root",
+            str(tmp_path / "runtime_data"),
+            "--preflight-dir",
+            str(tmp_path),
+            "--json",
+        ]
+    )
+
+    output = capsys.readouterr()
+    payload = json.loads(output.out)
+    assert result == 1
+    assert payload["status"] == "FAILED"
+    assert payload["reason_codes"] == ["readiness_preflight_diagnostic_only"]
+    assert payload["days"][-1]["preflight_status"] == "READY"
+    assert payload["days"][-1]["green"] is False
+    assert payload["days"][-1]["reason_codes"] == ["readiness_preflight_diagnostic_only"]
+    assert any(
+        "preflight report is diagnostic-only" in reason for reason in payload["failure_reasons"]
+    )
+
+
 def test_main_json_output_skips_when_no_reports(tmp_path: Path, capsys) -> None:
     daily_root = tmp_path / "runtime_data"
     result = check_readiness_gate.main(

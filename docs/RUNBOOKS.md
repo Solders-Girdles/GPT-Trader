@@ -15,8 +15,10 @@ Use these runbooks under the
 [Live Readiness and Gated Operations Guide](production.md). The examples below
 support incident response; they do not by themselves approve live broker/API
 calls, account snapshots, product probes, canary or production preflight,
-restart actions, emergency stops, position recovery, money movement, or order
-submission.
+restart actions, position recovery, money movement, or order submission.
+Immediate emergency stops are the exception and remain allowed as the safety
+mitigation; follow-up live-operation lanes still require the applicable
+approved runbook or decision packet.
 
 Local file, log, config, and offline database checks are read-only diagnostics
 unless they are run against live state that an approved runbook scopes. Commands

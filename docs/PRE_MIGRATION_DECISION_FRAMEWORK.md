@@ -80,6 +80,9 @@ approval decision.
 broker/API, venue, account, or AI-assisted trading choices. It is not a
 terminal human-only stop. A decision packet may approve docs, code, tests,
 mock-only controls, or a scoped runbook when the evidence supports that route.
+In the current `human_approved_execution` phase, it may recommend or prepare a
+trade-ticket approval path, but it does not replace the human approval event
+required by runtime policy.
 
 That packet does not by itself authorize real broker/API calls, live trading
 commands, production preflight, canary operations, money movement, or order
@@ -218,13 +221,13 @@ typed model only after the decisions in this document are accepted.
 Minimum v1 workflow:
 
 1. AI creates a `proposed` trade idea record.
-2. A reviewer or decision agent checks strategy eligibility, data freshness, risk, and
+2. A human reviewer checks strategy eligibility, data freshness, risk, and
    do-not-trade conditions.
-3. The reviewer or decision packet either rejects the idea, requests changes,
-   or approves it.
+3. The human reviewer either rejects the idea, requests changes, or approves it.
 4. Approved ideas produce a broker-specific ticket.
-5. Execution is manual or explicitly triggered by an approval event scoped by a
-   decision packet or approved runbook.
+5. Execution is manual or explicitly triggered by the human approval event, and
+   any API command lane must also be scoped by a decision packet or approved
+   runbook.
 6. The result is appended to the audit log.
 
 Allowed states:
@@ -232,17 +235,16 @@ Allowed states:
 | State | Meaning |
 | --- | --- |
 | `proposed` | AI generated the record; no execution allowed |
-| `needs_changes` | Reviewer or decision packet requested edits or missing evidence |
-| `rejected` | Reviewer or decision packet rejected the idea; terminal |
-| `approved` | Approval decision accepted the ticket; execution may proceed by policy |
+| `needs_changes` | Human reviewer requested edits or missing evidence |
+| `rejected` | Human reviewer rejected the idea; terminal |
+| `approved` | Human approval decision accepted the ticket; execution may proceed by policy |
 | `submitted` | Order was manually entered or API-submitted after approval |
 | `filled` | Venue confirmed fill |
 | `cancelled` | Reviewer, operator, system, or venue cancelled before fill |
 | `expired` | Idea passed its review or execution deadline |
 
 Approval must be append-only. Do not overwrite the original thesis when a
-reviewer or decision packet changes the ticket; append a new event that explains
-the change.
+human reviewer changes the ticket; append a new event that explains the change.
 
 ## Audit Log Contract
 

@@ -105,26 +105,47 @@ bypass guards:
 
 ### Local CI Command
 
-For a fail-fast entrypoint that mirrors the required PR checks, run:
+For a fail-fast entrypoint that matches the local command set expected for
+required PR validation, run:
 
 ```bash
 make ci-required
 ```
 
 It runs lint/format, docs audits, mypy, agent artifacts freshness, the TUI CSS
-check, test guardrails, and core unit tests, stopping on the first failure.
-Use it when you want the required CI gates without optional suites.
+check, test guardrails, and core unit tests, stopping on the first failure. Use
+it when you want the PR-required validation surface without optional suites or
+local readiness evidence.
 
-Run the local CI command to mirror the required PR checks:
+Run the local CI command when you want the same PR-required validation set plus
+the repository's optional local profile controls:
 
 ```bash
 uv run local-ci
 ```
 
-This runs the same commands as CI (lint + format, docs audits, mypy, agent artifacts
-freshness, TUI CSS check, test guardrails, and core unit tests).
+This covers the same core validation categories used around PRs: lint + format,
+docs audits, mypy, agent artifacts freshness, TUI CSS check, test guardrails,
+and core unit tests. Profile-specific local checks can still differ from GitHub
+pull_request enforcement, especially around readiness evidence.
 
-The command now accepts `--profile`/`-p` to select either the default strict/full profile or the quick/dev profile. Strict (the default and the `full` alias) keeps the readiness gate and agent artifacts freshness checks so the local run mirrors the required PR gates, and the CLI prints the active profile plus the status of the readiness gate and agent-artifacts checks before executing any steps. Quick (aliased as `dev`) intentionally disables those two checks so you can run local CI without needing readiness reports or regenerating `var/agents`; the output still documents which checks were skipped and why. Run the strict profile before pushing or merging to ensure those gated checks execute locally.
+The command accepts `--profile`/`-p` to select either the default strict/full
+profile or the quick/dev profile. Strict (the default and the `full` alias) runs
+the PR-required local validation set, keeps agent artifacts freshness enabled,
+and adds the canary readiness gate as local/live readiness evidence. GitHub
+pull_request CI and `make ci-required` do not enforce that canary readiness gate.
+The CLI prints the active profile plus the status of the readiness gate and
+agent-artifacts checks before executing any steps. Quick (aliased as `dev`)
+intentionally disables those two checks so you can run local CI without needing
+readiness reports or regenerating `var/agents`; the output still documents which
+checks were skipped and why.
+
+| Command | Intended use | Readiness gate |
+| --- | --- | --- |
+| `make ci-required` | Local PR-required validation surface | Not run |
+| GitHub pull_request CI | Required PR validation in GitHub Actions | Not run |
+| `uv run local-ci` / strict/full | PR-required local validation plus local/live readiness evidence | Runs `scripts/ci/check_readiness_gate.py --profile canary --strict` |
+| `uv run local-ci --profile quick` | Fast development loop | Skipped with an explicit banner reason |
 
 Optional suites:
 
@@ -153,7 +174,7 @@ Need help diagnosing `uv run local-ci` failures? See the [Local CI troubleshooti
 
 ### Local CI troubleshooting
 
-Local CI (`make ci-required` / `uv run local-ci`) can report failures before the unit tests run. Two recurring causes are stale agent artifacts and readiness gate inputs. When you hit one of these failures, follow the sequence below before re-running the command.
+Local CI (`make ci-required` / `uv run local-ci`) can report failures before the unit tests run. Two recurring causes are stale agent artifacts and readiness gate inputs. The readiness gate applies to strict/full `uv run local-ci` and direct readiness checks, not to `make ci-required` or GitHub pull_request CI. When you hit one of these failures, follow the sequence below before re-running the command.
 
 #### 1. Agent artifacts freshness
 

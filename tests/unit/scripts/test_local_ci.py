@@ -52,6 +52,13 @@ def test_strict_profile_runs_readiness_and_agent_artifacts() -> None:
     assert artifacts_step.skip_reason is None
 
 
+def test_strict_profile_description_distinguishes_pr_and_readiness() -> None:
+    profile = local_ci.resolve_profile("strict")
+
+    assert "PR-required local validation set" in profile.description
+    assert "readiness checks that GitHub pull_request CI does not enforce" in profile.description
+
+
 def test_snapshot_step_expands_test_files_before_subprocess() -> None:
     args = _make_args("quick", include_snapshots=True)
     profile = local_ci.resolve_profile(args.profile)
@@ -73,3 +80,11 @@ def test_print_profile_banner_reports_alias_and_status(capsys) -> None:
     assert "Local CI profile: quick (alias 'dev')" in output
     assert "Readiness gate: disabled" in output
     assert "Agent artifacts freshness: disabled" in output
+
+
+def test_strict_profile_banner_distinguishes_pull_request_ci(capsys) -> None:
+    profile = local_ci.resolve_profile("strict")
+    local_ci.print_profile_banner("strict", profile)
+    output = capsys.readouterr().out
+    assert "PR-required local validation set" in output
+    assert "GitHub pull_request CI does not enforce" in output

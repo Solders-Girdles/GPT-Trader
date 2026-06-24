@@ -78,9 +78,18 @@ For testing without real API access, set `MOCK_BROKER=1` in `.env`.
 
 ### Local CI
 
-Run `uv run local-ci` (or `python -m gpt_trader.ci.local_ci`) with the default strict/full profile when you want to mirror the required PR checks. Strict/full keeps the readiness gate and agent artifacts freshness steps enabled so the local run mirrors CI; the CLI prints the selected profile and the readiness/artifact statuses before executing commands.
+Run `make ci-required` when you want the required PR validation surface that
+GitHub pull_request CI enforces locally. It runs lint/format, docs audits, type
+checks, agent artifact freshness, TUI CSS checks, test guardrails, and core unit
+tests. GitHub pull_request CI does not run the canary readiness gate.
 
-For faster loops without readiness reports or regenerating `var/agents`, use the quick/dev profile via `--profile quick` or `--profile dev`. That profile disables the readiness gate and agent artifacts freshness steps (the output notes which checks were skipped and why), but run the strict profile before pushing or merging to ensure those gated checks execute locally.
+Run `uv run local-ci` (or `python -m gpt_trader.ci.local_ci`) with the default
+strict/full profile when you also want local/live readiness evidence. Strict/full
+runs the PR-required local validation set plus the canary readiness gate and
+agent artifacts freshness; the CLI prints the selected profile and the
+readiness/artifact statuses before executing commands.
+
+For faster loops without readiness reports or regenerating `var/agents`, use the quick/dev profile via `--profile quick` or `--profile dev`. That profile disables the readiness gate and agent artifacts freshness steps (the output notes which checks were skipped and why). Run `make ci-required` for the PR-required validation surface, and run strict `uv run local-ci` when you need the additional local/live readiness gate before operational readiness work.
 
 ## GitHub Workflow
 

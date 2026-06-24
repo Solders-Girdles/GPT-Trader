@@ -243,4 +243,4 @@ class TestRecordSubmissionAttempt:
             )
 
         emit_metric_mock.assert_not_called()
-        mock_logger.error.assert_called_once()
+        mock_logger.exception.assert_called_once()

@@ -73,7 +73,7 @@ class OrderEventRecorder:
                 preview=preview,
             ).serialize()
         except OrderEventSchemaError as exc:  # pragma: no cover - defensive
-            logger.error(
+            logger.exception(
                 "Failed to normalize order preview payload",
                 error_type=type(exc).__name__,
                 error_message=str(exc),
@@ -97,8 +97,9 @@ class OrderEventRecorder:
                 side=side.value,
                 order_type=order_type.value,
             )
-        except Exception as exc:
-            logger.error(
+        # Monitoring telemetry is best-effort and must not fail order flow.
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
                 "Failed to log order preview event",
                 error_type=type(exc).__name__,
                 error_message=str(exc),
@@ -159,7 +160,7 @@ class OrderEventRecorder:
                 client_order_id=effective_order_id,
             ).serialize()
         except OrderEventSchemaError as exc:  # pragma: no cover - defensive
-            logger.error(
+            logger.exception(
                 "Failed to normalize order rejection payload",
                 error_type=type(exc).__name__,
                 error_message=str(exc),
@@ -182,8 +183,9 @@ class OrderEventRecorder:
                 to_status="REJECTED",
                 reason=normalized_reason,
             )
-        except Exception as exc:
-            logger.error(
+        # Monitoring telemetry is best-effort and must not fail order flow.
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
                 "Failed to log order rejection status change",
                 error_type=type(exc).__name__,
                 error_message=str(exc),
@@ -196,8 +198,9 @@ class OrderEventRecorder:
         """Record order decision trace to the event store."""
         try:
             self._event_store.append("order_decision_trace", trace.to_dict())
-        except Exception as exc:
-            logger.error(
+        # Decision trace recording is best-effort and must not fail order flow.
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
                 "Failed to record order decision trace",
                 error_type=type(exc).__name__,
                 error_message=str(exc),
@@ -226,7 +229,7 @@ class OrderEventRecorder:
                 price=price,
             ).serialize()
         except OrderEventSchemaError as exc:  # pragma: no cover - defensive
-            logger.error(
+            logger.exception(
                 "Failed to normalize order submission attempt payload",
                 error_type=type(exc).__name__,
                 error_message=str(exc),
@@ -250,8 +253,9 @@ class OrderEventRecorder:
                 quantity=float(quantity),
                 price=float(price) if price is not None else None,
             )
-        except Exception as exc:
-            logger.error(
+        # Monitoring telemetry is best-effort and must not fail order flow.
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
                 "Failed to log order submission attempt",
                 error_type=type(exc).__name__,
                 error_message=str(exc),
@@ -312,8 +316,9 @@ class OrderEventRecorder:
                 from_status=None,
                 to_status=normalized_status,
             )
-        except Exception as exc:
-            logger.error(
+        # Monitoring telemetry is best-effort and must not fail order flow.
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
                 "Failed to log order status change",
                 error_type=type(exc).__name__,
                 error_message=str(exc),
@@ -334,8 +339,9 @@ class OrderEventRecorder:
                 "status": normalized_status,
             }
             self._event_store.append_trade(self._bot_id, trade_payload)
-        except Exception as exc:
-            logger.error(
+        # Trade event persistence is best-effort and must not fail order flow.
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
                 "Failed to record trade event to event store",
                 error_type=type(exc).__name__,
                 error_message=str(exc),
@@ -371,8 +377,9 @@ class OrderEventRecorder:
                     "quantity": str(quantity),
                 },
             )
-        except Exception as store_exc:
-            logger.error(
+        # Failure telemetry is best-effort and must not fail cleanup.
+        except Exception as store_exc:  # noqa: BLE001
+            logger.exception(
                 "Failed to record order failure to event store",
                 error_type=type(store_exc).__name__,
                 error_message=str(store_exc),
@@ -409,8 +416,9 @@ class OrderEventRecorder:
                     "quantity": str(quantity),
                 },
             )
-        except Exception as exc:
-            logger.error(
+        # Rejection telemetry is best-effort and must not fail cleanup.
+        except Exception as exc:  # noqa: BLE001
+            logger.exception(
                 "Failed to record order rejection to event store",
                 error_type=type(exc).__name__,
                 error_message=str(exc),

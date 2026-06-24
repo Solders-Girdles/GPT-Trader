@@ -525,8 +525,9 @@ the gates in [Live Operations](production.md) and the
 
 The snippets below are illustrative config snapshots, not approval. Live
 profiles (`canary`, `prod`) only run after the gates in
-[Live Operations](production.md) are satisfied with a recorded approval decision
-or explicitly scoped runbook.
+[Live Operations](production.md) are satisfied with a recorded human approval
+decision. An approved runbook may scope the command lane and checks, but it
+does not replace the approval event required by the current runtime policy.
 
 ### Development Profile
 ```yaml

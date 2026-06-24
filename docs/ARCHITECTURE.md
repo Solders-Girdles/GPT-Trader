@@ -21,7 +21,7 @@ last-updated: 2026-01-24
 
 GPT-Trader is a Coinbase Advanced Trade oriented trading system with implemented **spot**, **CFM futures**, and gated **INTX perpetuals** paths. Treat these as implementation capabilities, not as blanket approval for live automation.
 
-For broader migration, the canonical planning gate is [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md). New AI-assisted execution work should start from `human_approved_execution`, broker-neutral trade records, explicit risk budgets, and verified venue/API/account capability.
+For broader migration, the canonical planning gate is [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md). New AI-assisted execution work should start from the current approval-gated execution phase (`human_approved_execution` compatibility label), broker-neutral trade records, explicit risk budgets, `decision-needed` packets for unresolved live-control choices, and verified venue/API/account capability.
 
 > 📘 **Trust reminder:** Confirm key details against current source + generated inventories (`var/agents/**`) before acting on them.
 
@@ -525,7 +525,8 @@ the gates in [Live Operations](production.md) and the
 
 The snippets below are illustrative config snapshots, not approval. Live
 profiles (`canary`, `prod`) only run after the gates in
-[Live Operations](production.md) are satisfied with recorded human approval.
+[Live Operations](production.md) are satisfied with a recorded approval decision
+or explicitly scoped runbook.
 
 ### Development Profile
 ```yaml

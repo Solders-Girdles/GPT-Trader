@@ -14,11 +14,13 @@ with the exploratory tables below, this section wins.
 - **Destination:** an autonomous trading entity — a bot that observes markets,
   does its own research, and manages funds inside machine-enforced limits
   (`bounded_autonomy`).
-- **Path:** `human_approved_execution` is the required validation phase, not the
-  end state. The AI side must first produce complete trade-idea records (thesis,
-  entry, invalidation, max loss, sizing) that a human approves. Autonomy is
-  granted per strategy envelope only after the approval-phase track record,
-  risk budgets, kill switches, and audit logs exist.
+- **Path:** the current approval-gated execution phase
+  (`human_approved_execution` compatibility label) is the required validation
+  phase, not the end state. The AI side must first produce complete trade-idea
+  records (thesis, entry, invalidation, max loss, sizing) that receive an
+  explicit approval decision. Autonomy is granted per strategy envelope only
+  after the approval-phase track record, risk budgets, kill switches, and audit
+  logs exist.
 - **Scope:** Coinbase only (spot + CFM futures). Options, Robinhood, and other
   venues are out of scope until the Coinbase lane works end to end.
 - **INTX perpetuals:** frozen — no new work or tests; remove INTX-only surfaces
@@ -58,28 +60,43 @@ otherwise.
 
 ## Recommendation
 
-The v1 migration target should be `human_approved_execution`.
+The v1 migration target should be approval-gated execution, currently named
+`human_approved_execution` in runtime and historical docs.
 
-AI may produce complete, broker-ready trade tickets, but a human approves,
-changes, rejects, or manually executes them. This preserves a clear operator
-decision point while creating the artifacts needed for future automation:
-thesis records, risk checks, approval history, and audit logs.
+AI may produce complete, broker-ready trade tickets, but an explicit approval
+decision changes, rejects, or releases them for manual or scoped API execution.
+This preserves a clear decision point while creating the artifacts needed for
+future automation: thesis records, risk checks, approval history, and audit
+logs.
 
 `bounded_autonomy` should be treated as a later milestone. It needs
 machine-enforced strategy envelopes, numeric risk budgets, kill-switch coverage,
-and proven auditability before any order can be submitted without human
-approval.
+and proven auditability before any order can be submitted without an explicit
+approval decision.
+
+## Decision Packet Alignment
+
+`decision-needed` is the pipeline route for unsettled policy, live-operation,
+broker/API, venue, account, or AI-assisted trading choices. It is not a
+terminal human-only stop. A decision packet may approve docs, code, tests,
+mock-only controls, or a scoped runbook when the evidence supports that route.
+
+That packet does not by itself authorize real broker/API calls, live trading
+commands, production preflight, canary operations, money movement, or order
+submission. Those command lanes require the packet or runbook to explicitly
+name the lane, constraints, verification boundary, and rollback/kill-switch
+expectations.
 
 ## Decision 1: Autonomy Boundary
 
 | Mode | AI May Produce | AI May Submit Orders | v1 Status |
 | --- | --- | --- | --- |
 | `research_only` | Research notes, theses, watchlists | No | Allowed, but too weak as the main target |
-| `human_approved_execution` | Broker-ready tickets and risk records | No, approval required first | Recommended default |
+| `human_approved_execution` | Broker-ready tickets and risk records | No, explicit approval required first | Recommended default compatibility label |
 | `bounded_autonomy` | Tickets inside pre-approved envelopes | Yes, only inside hard limits | Future milestone |
 
-Hard v1 rule: AI does not submit live orders. Any API execution lane must require
-an explicit human approval event first.
+Hard v1 rule: AI does not submit live orders. Any API execution lane must
+require an explicit approval event first.
 
 ## Decision 2: Strategy Eligibility
 
@@ -201,11 +218,13 @@ typed model only after the decisions in this document are accepted.
 Minimum v1 workflow:
 
 1. AI creates a `proposed` trade idea record.
-2. A reviewer checks strategy eligibility, data freshness, risk, and
+2. A reviewer or decision agent checks strategy eligibility, data freshness, risk, and
    do-not-trade conditions.
-3. The reviewer either rejects the idea, requests changes, or approves it.
+3. The reviewer or decision packet either rejects the idea, requests changes,
+   or approves it.
 4. Approved ideas produce a broker-specific ticket.
-5. Execution is manual or explicitly triggered by a human approval event.
+5. Execution is manual or explicitly triggered by an approval event scoped by a
+   decision packet or approved runbook.
 6. The result is appended to the audit log.
 
 Allowed states:
@@ -213,16 +232,17 @@ Allowed states:
 | State | Meaning |
 | --- | --- |
 | `proposed` | AI generated the record; no execution allowed |
-| `needs_changes` | Human requested edits or missing evidence |
-| `rejected` | Human rejected the idea; terminal |
-| `approved` | Human approved the ticket; execution may proceed by policy |
+| `needs_changes` | Reviewer or decision packet requested edits or missing evidence |
+| `rejected` | Reviewer or decision packet rejected the idea; terminal |
+| `approved` | Approval decision accepted the ticket; execution may proceed by policy |
 | `submitted` | Order was manually entered or API-submitted after approval |
 | `filled` | Venue confirmed fill |
-| `cancelled` | Human or venue cancelled before fill |
+| `cancelled` | Reviewer, operator, system, or venue cancelled before fill |
 | `expired` | Idea passed its review or execution deadline |
 
-Approval must be append-only. Do not overwrite the original thesis when a human
-changes the ticket; append a new event that explains the change.
+Approval must be append-only. Do not overwrite the original thesis when a
+reviewer or decision packet changes the ticket; append a new event that explains
+the change.
 
 ## Audit Log Contract
 
@@ -284,7 +304,7 @@ Do not migrate the existing bot into this shape until every item is complete:
 
 | Decision | Accepted Value | Status |
 | --- | --- | --- |
-| Autonomy mode | `human_approved_execution` now; `bounded_autonomy` is the accepted destination | Accepted 2026-06-11 |
+| Autonomy mode | Approval-gated execution (`human_approved_execution` compatibility label) now; `bounded_autonomy` is the accepted destination | Accepted 2026-06-11 |
 | Primary product universe | Coinbase spot + CFM futures research | Accepted 2026-06-11 |
 | API canary lane | Coinbase CFM only after account/product verification | Accepted 2026-06-11 |
 | Robinhood role | Out of scope | Accepted 2026-06-11 |

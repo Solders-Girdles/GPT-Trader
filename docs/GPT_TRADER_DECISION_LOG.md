@@ -2,11 +2,45 @@
 
 ---
 status: current
-last-updated: 2026-06-22
+last-updated: 2026-06-24
 ---
 
 Durable product and engineering direction for GPT-Trader. Use this log for
 decisions that should outlive chat, PR receipts, and local branch state.
+
+## 2026-06-11 — Accept Pre-Migration Direction And Trade-Idea Rails
+
+- **Status:** accepted direction; Stage 0 trade-idea rails implemented where
+  noted below
+- **Owner:** RJ
+- **Decision / direction:** Use the
+  [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) as
+  the execution-migration gate. The accepted path is approval-gated execution
+  (`human_approved_execution`) as the validation phase, with
+  `bounded_autonomy` only as a later destination. Coinbase spot plus CFM futures
+  research are the current Coinbase-only scope; Robinhood, options execution,
+  INTX-only work, and other venues stay out of scope unless a later decision
+  packet explicitly reopens them.
+- **Implemented evidence:** The trade-idea slice implements broker-neutral
+  records (`src/gpt_trader/features/trade_ideas/models.py`), the approval
+  workflow (`src/gpt_trader/features/trade_ideas/workflow.py`), append-only
+  audit events (`src/gpt_trader/features/trade_ideas/audit.py`), seeded
+  versioned risk budgets (`src/gpt_trader/features/trade_ideas/budget.py`),
+  eligibility and approval policy (`src/gpt_trader/features/trade_ideas/eligibility.py`,
+  `src/gpt_trader/features/trade_ideas/policy.py`), and operator lifecycle
+  controls (`src/gpt_trader/features/trade_ideas/service.py`).
+- **Safety boundary:** This decision does not authorize real broker/API calls,
+  live trading commands, production preflight, canary operations, credential
+  reads, money movement, or order submission. Any non-manual execution lane
+  still needs a decision packet or approved runbook that names the lane,
+  constraints, verification boundary, and rollback/kill-switch expectations.
+- **Still pending:** Official venue/API/account capability review for any
+  non-manual execution, product-specific migration envelopes, bounded-autonomy
+  strategy envelopes, kill-switch drills, and any policy change that would
+  allow submission without explicit approval.
+- **Rejected alternatives:** Do not migrate unrestricted spot-only automation
+  into the new shape. Do not use existing broker adapters or live profiles as
+  proof that a product or venue should be automated.
 
 ## 2026-06-22 — Continue Trade-Ideas CLI As The Active Discovery Lane
 

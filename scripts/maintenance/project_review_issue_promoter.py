@@ -244,8 +244,12 @@ def validate_packet(packet: dict[str, Any]) -> list[str]:
         errors.append("scope.touches_trading_execution=true requires routing.decision_needed=true")
 
     blocked_by = routing.get("blocked_by", [])
-    if blocked_by is not None and not isinstance(blocked_by, list):
+    if "blocked_by" in routing and not isinstance(blocked_by, list):
         errors.append("routing.blocked_by must be a list when present")
+    elif isinstance(blocked_by, list) and not all(
+        isinstance(blocker, str) and blocker.strip() for blocker in blocked_by
+    ):
+        errors.append("routing.blocked_by must contain only non-empty strings")
 
     return errors
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import json
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
 from gpt_trader.monitoring.alert_types import Alert, AlertSeverity
@@ -281,6 +282,7 @@ class FileNotificationBackend:
             return False
 
     def _append_to_file(self, line: str) -> None:
+        self._ensure_parent_directory()
         with open(self.file_path, "a") as f:
             f.write(line)
 
@@ -296,5 +298,9 @@ class FileNotificationBackend:
             return False
 
     def _check_file_writable(self) -> None:
+        self._ensure_parent_directory()
         with open(self.file_path, "a"):
             pass  # Just test if we can open for append
+
+    def _ensure_parent_directory(self) -> None:
+        Path(self.file_path).parent.mkdir(parents=True, exist_ok=True)

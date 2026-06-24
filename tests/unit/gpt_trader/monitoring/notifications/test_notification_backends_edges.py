@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from unittest.mock import Mock
 
 import pytest
@@ -51,16 +52,34 @@ async def test_file_backend_handles_json_serialization_failure(tmp_path) -> None
 
 
 @pytest.mark.asyncio
-async def test_file_backend_nested_path_without_parents_fails_cleanly(tmp_path) -> None:
+async def test_file_backend_nested_path_creates_parents_and_writes_jsonl(tmp_path) -> None:
     nested_path = tmp_path / "nested" / "alerts" / "out.jsonl"
     backend = FileNotificationBackend(file_path=str(nested_path))
     alert = Alert(
         severity=AlertSeverity.ERROR,
         title="Nested Path",
-        message="should fail without parent directories",
+        message="should create parent directories",
     )
 
     result = await backend.send(alert)
 
-    assert result is False
-    assert not nested_path.exists()
+    assert result is True
+    assert nested_path.parent.is_dir()
+    assert nested_path.exists()
+    lines = nested_path.read_text().splitlines()
+    assert len(lines) == 1
+    payload = json.loads(lines[0])
+    assert payload["title"] == "Nested Path"
+    assert payload["message"] == "should create parent directories"
+
+
+@pytest.mark.asyncio
+async def test_file_backend_test_connection_creates_missing_parents(tmp_path) -> None:
+    nested_path = tmp_path / "connection" / "alerts" / "out.jsonl"
+    backend = FileNotificationBackend(file_path=str(nested_path))
+
+    result = await backend.test_connection()
+
+    assert result is True
+    assert nested_path.parent.is_dir()
+    assert nested_path.exists()

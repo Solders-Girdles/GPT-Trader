@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-06-24
 ---
 
 This document establishes the naming conventions for the GPT-Trader codebase. Adherence to these standards ensures clarity, consistency, and maintainability across the repository.
@@ -57,6 +57,12 @@ The automated naming scan loads its banned pattern list from
 - Any new abbreviation requires maintainer approval; add to glossary when accepted.
 
 ## 4. Review & Enforcement
-- Incorporate naming checks into a dedicated agent preflight script (planned; not yet implemented).
+- Run the implemented naming scan with `uv run agent-naming`; the entrypoint
+  dispatches to `scripts/agents/naming_inventory.py` and loads its defaults from
+  `config/agents/naming_patterns.yaml`.
+- Use `uv run agent-naming --strict --quiet` for proof that the strict scan is
+  clean. The same strict command is wired as the local pre-commit
+  `naming-check` hook in `.pre-commit-config.yaml`; `make agent-naming` provides
+  the non-strict Makefile shortcut.
 - Require code review to flag deviations; reference this document in feedback.
 - Add a Definition of Done item: "Naming complies with standards or documented exception is provided."

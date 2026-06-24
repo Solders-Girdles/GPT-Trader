@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-23
+last-updated: 2026-06-24
 ---
 
 This glossary lists abbreviations approved for use in the GPT-Trader codebase.
@@ -74,8 +74,8 @@ response_qty = api_response["qty"]  # naming: allow
 ## Enforcement
 
 Naming standards are enforced via:
-- **Pre-commit hook**: Blocks commits with violations (use `SKIP=naming-check git commit` to bypass)
-- **CI check**: Generates reports uploaded as artifacts
+- **Pre-commit hook**: Blocks commits with violations through the `naming-check` hook (use `SKIP=naming-check git commit` to bypass)
+- **Agent command**: Run `uv run agent-naming --strict --quiet` for explicit strict-scan proof, or `make agent-naming` for the default local scan
 - **Code review**: Reviewers flag deviations
 
 See `docs/naming.md` for complete naming conventions.

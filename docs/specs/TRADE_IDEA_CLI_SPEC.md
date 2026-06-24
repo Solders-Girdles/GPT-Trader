@@ -138,10 +138,15 @@ Thin wrappers over `service.reject` / `service.request_changes` /
 - `ideas expire DECISION_ID` — expire one idea (service defaults for
   reason/actor unless overridden).
 - `ideas expire --sweep` — list all non-terminal views and expire each idea
-  whose `time_horizon.expires_at` is set and `<= now`, or whose review time
-  exceeds `RiskBudget.max_review_latency_hours`. Report `data["expired"]` =
-  list of decision_ids; success even when zero matched (`was_noop=True`).
-  DECISION_ID and `--sweep` are mutually exclusive; one is required.
+  that can legally transition to expired when either:
+  - `time_horizon.expires_at` is set and `<= now`; or
+  - the review deadline has elapsed under the current
+    `RiskBudget.max_review_latency_hours` policy.
+  The review-latency path can expire a far-future idea whose `expires_at` is
+  still later than `now` when the review queue exceeds the configured budget.
+  Report `data["expired"]` = list of decision_ids; success even when zero
+  matched (`was_noop=True`). DECISION_ID and `--sweep` are mutually exclusive;
+  one is required.
 
 ### `ideas mark-submitted` / `ideas mark-filled`
 
@@ -204,8 +209,10 @@ Required cases:
 6. `approve` over-budget idea → exit 1, `POLICY_VIOLATION`, all violations in
    `data["violations"]` (assert ≥2 violations both present).
 7. `request-changes` → `resubmit` (revised record) → `approve` full loop.
-8. `reject`, `cancel`, `expire` single, `expire --sweep` (one stale + one
-   fresh idea: only stale expires; `was_noop` when none).
+8. `reject`, `cancel`, `expire` single, `expire --sweep` with explicit expiry
+   coverage (one stale + one fresh idea: only stale expires; `was_noop` when
+   none) plus review-latency sweep coverage for a far-future idea whose review
+   deadline exceeds `max_review_latency_hours`.
 9. `mark-submitted` then `mark-filled` with venue/external id recorded in
    audit events.
 10. `budget show` seeds defaults; `budget set --max-loss-per-idea-pct 2

@@ -135,7 +135,13 @@ class TestFileNotificationBackend:
             Path(file_path).unlink(missing_ok=True)
 
     @pytest.mark.asyncio
-    async def test_test_connection_fails_for_invalid_path(self) -> None:
-        backend = FileNotificationBackend(file_path="/nonexistent/path/alerts.jsonl")
+    async def test_test_connection_fails_for_invalid_path(self, tmp_path) -> None:
+        blocking_file = tmp_path / "not-a-directory"
+        blocking_file.write_text("seed\n")
+        invalid_path = blocking_file / "alerts.jsonl"
+        backend = FileNotificationBackend(file_path=str(invalid_path))
+
         result = await backend.test_connection()
+
         assert result is False
+        assert blocking_file.read_text() == "seed\n"

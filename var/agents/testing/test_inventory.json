@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6734,
+    "total_tests": 6735,
     "total_files": 796,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6569,
-    "asyncio": 379,
+    "unit": 6570,
+    "asyncio": 380,
     "parametrize": 191,
     "endpoints": 83,
     "property": 82,
@@ -35235,7 +35235,7 @@
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_edges.py": [
       {
         "name": "test_console_backend_handles_empty_or_nonprintable_messages",
-        "line": 18,
+        "line": 19,
         "markers": [
           "asyncio",
           "parametrize",
@@ -35245,7 +35245,7 @@
       },
       {
         "name": "test_file_backend_handles_json_serialization_failure",
-        "line": 35,
+        "line": 36,
         "markers": [
           "asyncio",
           "unit"
@@ -35253,8 +35253,17 @@
         "docstring": ""
       },
       {
-        "name": "test_file_backend_nested_path_without_parents_fails_cleanly",
-        "line": 54,
+        "name": "test_file_backend_nested_path_creates_parents_and_writes_jsonl",
+        "line": 55,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_file_backend_test_connection_creates_missing_parents",
+        "line": 77,
         "markers": [
           "asyncio",
           "unit"

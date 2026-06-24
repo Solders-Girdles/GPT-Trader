@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6721,
+    "total_tests": 6723,
     "total_files": 794,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6556,
+    "unit": 6558,
     "asyncio": 379,
     "parametrize": 189,
     "endpoints": 83,
@@ -60657,7 +60657,7 @@
     "tests/unit/scripts/test_check_readiness_gate.py": [
       {
         "name": "test_evaluate_liveness_snapshot_reports_fallback_reason",
-        "line": 74,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -60665,7 +60665,7 @@
       },
       {
         "name": "test_main_passes_with_green_streak",
-        "line": 95,
+        "line": 98,
         "markers": [
           "unit"
         ],
@@ -60673,7 +60673,15 @@
       },
       {
         "name": "test_main_fails_when_preflight_missing",
-        "line": 115,
+        "line": 118,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_fails_when_preflight_is_diagnostic_only",
+        "line": 153,
         "markers": [
           "unit"
         ],
@@ -60681,7 +60689,7 @@
       },
       {
         "name": "test_main_fails_when_pillar_not_green",
-        "line": 150,
+        "line": 182,
         "markers": [
           "unit"
         ],
@@ -60689,7 +60697,7 @@
       },
       {
         "name": "test_main_skips_when_no_reports",
-        "line": 179,
+        "line": 211,
         "markers": [
           "unit"
         ],
@@ -60697,7 +60705,7 @@
       },
       {
         "name": "test_main_require_reports_fails_without_reports",
-        "line": 196,
+        "line": 228,
         "markers": [
           "unit"
         ],
@@ -60705,7 +60713,7 @@
       },
       {
         "name": "test_main_scopes_daily_report_parsing_to_target_profile",
-        "line": 214,
+        "line": 246,
         "markers": [
           "unit"
         ],
@@ -60713,7 +60721,7 @@
       },
       {
         "name": "test_main_degrades_when_reports_are_stale",
-        "line": 242,
+        "line": 274,
         "markers": [
           "unit"
         ],
@@ -60721,7 +60729,7 @@
       },
       {
         "name": "test_main_strict_mode_fails_when_reports_are_stale",
-        "line": 271,
+        "line": 303,
         "markers": [
           "unit"
         ],
@@ -60729,7 +60737,7 @@
       },
       {
         "name": "test_find_latest_report_for_profile_prefers_newest_report_date",
-        "line": 302,
+        "line": 334,
         "markers": [
           "unit"
         ],
@@ -60762,8 +60770,16 @@
         "docstring": ""
       },
       {
-        "name": "test_main_json_output_skips_when_no_reports",
+        "name": "test_main_json_output_rejects_diagnostic_only_preflight",
         "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_json_output_skips_when_no_reports",
+        "line": 165,
         "markers": [
           "unit"
         ],

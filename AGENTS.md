@@ -78,18 +78,20 @@ For testing without real API access, set `MOCK_BROKER=1` in `.env`.
 
 ### Local CI
 
-Run `make ci-required` when you want the required PR validation surface that
-GitHub pull_request CI enforces locally. It runs lint/format, docs audits, type
-checks, agent artifact freshness, TUI CSS checks, test guardrails, and core unit
-tests. GitHub pull_request CI does not run the canary readiness gate.
+Run `make ci-required` when you want the local PR-readiness command set. It runs
+lint/format, docs audits, type checks, agent artifact freshness, TUI CSS checks,
+test guardrails, and core unit tests, stopping on the first local failure.
+GitHub pull_request CI runs a related agent-freshness job, but stale artifacts
+are reported as non-blocking on pull requests. GitHub pull_request CI also does
+not run the canary readiness gate.
 
 Run `uv run local-ci` (or `python -m gpt_trader.ci.local_ci`) with the default
 strict/full profile when you also want local/live readiness evidence. Strict/full
-runs the PR-required local validation set plus the canary readiness gate and
+runs the local PR-readiness validation set plus the canary readiness gate and
 agent artifacts freshness; the CLI prints the selected profile and the
 readiness/artifact statuses before executing commands.
 
-For faster loops without readiness reports or regenerating `var/agents`, use the quick/dev profile via `--profile quick` or `--profile dev`. That profile disables the readiness gate and agent artifacts freshness steps (the output notes which checks were skipped and why). Run `make ci-required` for the PR-required validation surface, and run strict `uv run local-ci` when you need the additional local/live readiness gate before operational readiness work.
+For faster loops without readiness reports or regenerating `var/agents`, use the quick/dev profile via `--profile quick` or `--profile dev`. That profile disables the readiness gate and agent artifacts freshness steps (the output notes which checks were skipped and why). Run `make ci-required` for the local PR-readiness command set, and run strict `uv run local-ci` when you need the additional local/live readiness gate before operational readiness work.
 
 ## GitHub Workflow
 

@@ -69,8 +69,8 @@ LOCAL_CI_PROFILES: dict[str, LocalCIProfile] = {
     "strict": LocalCIProfile(
         canonical_name="strict",
         description=(
-            "Strict profile runs the PR-required local validation set plus local/live "
-            "readiness checks that GitHub pull_request CI does not enforce."
+            "Strict profile runs the local PR-readiness validation set plus local/live "
+            "readiness checks beyond GitHub pull_request CI."
         ),
         readiness_enabled=True,
         readiness_skip_reason=None,

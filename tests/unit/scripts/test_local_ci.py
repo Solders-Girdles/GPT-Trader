@@ -55,8 +55,8 @@ def test_strict_profile_runs_readiness_and_agent_artifacts() -> None:
 def test_strict_profile_description_distinguishes_pr_and_readiness() -> None:
     profile = local_ci.resolve_profile("strict")
 
-    assert "PR-required local validation set" in profile.description
-    assert "readiness checks that GitHub pull_request CI does not enforce" in profile.description
+    assert "local PR-readiness validation set" in profile.description
+    assert "readiness checks beyond GitHub pull_request CI" in profile.description
 
 
 def test_snapshot_step_expands_test_files_before_subprocess() -> None:
@@ -86,5 +86,5 @@ def test_strict_profile_banner_distinguishes_pull_request_ci(capsys) -> None:
     profile = local_ci.resolve_profile("strict")
     local_ci.print_profile_banner("strict", profile)
     output = capsys.readouterr().out
-    assert "PR-required local validation set" in output
-    assert "GitHub pull_request CI does not enforce" in output
+    assert "local PR-readiness validation set" in output
+    assert "readiness checks beyond GitHub pull_request CI" in output

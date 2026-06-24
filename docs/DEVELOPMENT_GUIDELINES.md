@@ -105,8 +105,7 @@ bypass guards:
 
 ### Local CI Command
 
-For a fail-fast entrypoint that matches the local command set expected for
-required PR validation, run:
+For a fail-fast entrypoint that matches the local PR-readiness command set, run:
 
 ```bash
 make ci-required
@@ -114,10 +113,11 @@ make ci-required
 
 It runs lint/format, docs audits, mypy, agent artifacts freshness, the TUI CSS
 check, test guardrails, and core unit tests, stopping on the first failure. Use
-it when you want the PR-required validation surface without optional suites or
-local readiness evidence.
+it when you want the local PR-readiness surface without optional suites or local
+readiness evidence. This local command fails on stale agent artifacts; GitHub
+pull_request CI reports stale artifacts as non-blocking instead.
 
-Run the local CI command when you want the same PR-required validation set plus
+Run the local CI command when you want the same local PR-readiness set plus
 the repository's optional local profile controls:
 
 ```bash
@@ -131,7 +131,7 @@ pull_request enforcement, especially around readiness evidence.
 
 The command accepts `--profile`/`-p` to select either the default strict/full
 profile or the quick/dev profile. Strict (the default and the `full` alias) runs
-the PR-required local validation set, keeps agent artifacts freshness enabled,
+the local PR-readiness validation set, keeps agent artifacts freshness enabled,
 and adds the canary readiness gate as local/live readiness evidence. GitHub
 pull_request CI and `make ci-required` do not enforce that canary readiness gate.
 The CLI prints the active profile plus the status of the readiness gate and
@@ -140,12 +140,12 @@ intentionally disables those two checks so you can run local CI without needing
 readiness reports or regenerating `var/agents`; the output still documents which
 checks were skipped and why.
 
-| Command | Intended use | Readiness gate |
-| --- | --- | --- |
-| `make ci-required` | Local PR-required validation surface | Not run |
-| GitHub pull_request CI | Required PR validation in GitHub Actions | Not run |
-| `uv run local-ci` / strict/full | PR-required local validation plus local/live readiness evidence | Runs `scripts/ci/check_readiness_gate.py --profile canary --strict` |
-| `uv run local-ci --profile quick` | Fast development loop | Skipped with an explicit banner reason |
+| Command | Intended use | Agent artifacts freshness | Readiness gate |
+| --- | --- | --- | --- |
+| `make ci-required` | Local PR-readiness validation surface | Blocking local step | Not run |
+| GitHub pull_request CI | GitHub PR validation in Actions | Non-blocking if stale on pull requests | Not run |
+| `uv run local-ci` / strict/full | Local PR-readiness validation plus local/live readiness evidence | Blocking local step | Runs `scripts/ci/check_readiness_gate.py --profile canary --strict` |
+| `uv run local-ci --profile quick` | Fast development loop | Skipped with an explicit banner reason | Skipped with an explicit banner reason |
 
 Optional suites:
 

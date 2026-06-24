@@ -6,6 +6,9 @@ from decimal import Decimal
 from typing import Any
 from unittest.mock import Mock
 
+import pytest
+
+import gpt_trader.features.live_trade.engines.telemetry_health as telemetry_health_module
 from gpt_trader.features.live_trade.engines.telemetry_health import (
     extract_mark_from_message,
     health_check,
@@ -72,6 +75,16 @@ class TestExtractMarkFromMessage:
         result = extract_mark_from_message(msg)
 
         assert result is None
+
+    def test_invalid_decimal_logs_exception_context(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        mock_logger = Mock()
+        monkeypatch.setattr(telemetry_health_module, "logger", mock_logger)
+
+        result = extract_mark_from_message({"last": "not_a_number"})
+
+        assert result is None
+        mock_logger.exception.assert_called_once()
+        assert mock_logger.exception.call_args.kwargs["operation"] == "extract_mark"
 
     def test_handles_bid_only(self) -> None:
         msg = {"bid": "100"}

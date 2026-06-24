@@ -101,14 +101,14 @@ class CoinbaseAccountManager:
                     )
                     snapshot_data["intx_collateral"] = collateral
                     freshness_data["intx_collateral"] = collateral_meta
-            except Exception as e:
-                logger.warning(f"Failed to get INTX data: {e}")
+            except Exception as error:  # noqa: BLE001 - snapshot must degrade on broker failures
+                logger.warning("Failed to get INTX data: %s", error, exc_info=error)
                 self._record_intx_fallback(
                     snapshot_data,
                     freshness_data,
-                    reason=str(e),
+                    reason=str(error),
                     status=self._FRESHNESS_ERROR,
-                    error_code=self._error_code_from_exception(e),
+                    error_code=self._error_code_from_exception(error),
                 )
 
         snapshot_data["freshness"] = freshness_data
@@ -125,19 +125,25 @@ class CoinbaseAccountManager:
     def _execute_snapshot_probe(self, key: str, probe_name: str) -> tuple[Any, dict[str, Any]]:
         try:
             probe = getattr(self.broker, probe_name)
-            if not callable(probe):
-                raise TypeError(f"{probe_name} is not callable")
-            result = probe()
-            return result, self._freshness_entry(self._FRESHNESS_FRESH)
-        except Exception as error:
-            logger.warning("Failed to collect %s: %s", key, error)
-            return (
-                self._snapshot_error_payload(error),
-                self._freshness_entry(
-                    self._FRESHNESS_ERROR,
-                    error_code=self._error_code_from_exception(error),
-                ),
-            )
+            if callable(probe):
+                result = probe()
+                return result, self._freshness_entry(self._FRESHNESS_FRESH)
+        except Exception as error:  # noqa: BLE001 - optional probes should not abort snapshot
+            return self._snapshot_probe_failure(key, error)
+
+        return self._snapshot_probe_failure(key, TypeError(f"{probe_name} is not callable"))
+
+    def _snapshot_probe_failure(
+        self, key: str, error: Exception
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        logger.warning("Failed to collect %s: %s", key, error, exc_info=error)
+        return (
+            self._snapshot_error_payload(error),
+            self._freshness_entry(
+                self._FRESHNESS_ERROR,
+                error_code=self._error_code_from_exception(error),
+            ),
+        )
 
     @staticmethod
     def _snapshot_error_payload(error: Exception) -> dict[str, Any]:
@@ -163,15 +169,20 @@ class CoinbaseAccountManager:
         try:
             balances = self.broker.get_intx_balances(portfolio_uuid)
             return balances, self._freshness_entry(self._FRESHNESS_FRESH), portfolio_uuid
-        except Exception as error:
-            logger.warning("Failed to collect intx_balances: %s", error)
+        except Exception as error:  # noqa: BLE001 - INTX balance probe is best-effort
+            logger.warning("Failed to collect intx_balances: %s", error, exc_info=error)
             refreshed_uuid = self.broker.resolve_intx_portfolio(refresh=True)
             if refreshed_uuid:
                 try:
                     balances = self.broker.get_intx_balances(refreshed_uuid)
                     return balances, self._freshness_entry(self._FRESHNESS_FRESH), refreshed_uuid
-                except Exception as retry_error:
-                    logger.warning("Retry failed for intx_balances: %s", retry_error)
+                except Exception as retry_error:  # noqa: BLE001
+                    # Retry is best-effort; failure returns deterministic metadata.
+                    logger.warning(
+                        "Retry failed for intx_balances: %s",
+                        retry_error,
+                        exc_info=retry_error,
+                    )
                     return (
                         [],
                         self._freshness_entry(
@@ -195,8 +206,8 @@ class CoinbaseAccountManager:
         try:
             value = fetcher()
             return value, self._freshness_entry(self._FRESHNESS_FRESH)
-        except Exception as error:
-            logger.warning("Failed to collect %s: %s", key, error)
+        except Exception as error:  # noqa: BLE001 - INTX sections should degrade independently
+            logger.warning("Failed to collect %s: %s", key, error, exc_info=error)
             return (
                 default,
                 self._freshness_entry(

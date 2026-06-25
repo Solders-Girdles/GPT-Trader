@@ -77,6 +77,27 @@ class TestConsoleNotificationBackend:
             console_logging_module._console_logger = None
 
     @pytest.mark.asyncio
+    async def test_send_default_sink_does_not_reuse_cached_stdout(self, capsys) -> None:
+        stale_stream = StringIO()
+        console_logging_module._console_logger = ConsoleLogger(output_stream=stale_stream)
+        try:
+            backend = ConsoleNotificationBackend(use_colors=False)
+            alert = Alert(
+                severity=AlertSeverity.WARNING,
+                title="Fresh Stdout Alert",
+                message="This should use the active stdout stream",
+            )
+
+            result = await backend.send(alert)
+
+            assert result is True
+            captured = capsys.readouterr()
+            assert "Fresh Stdout Alert" in captured.out
+            assert stale_stream.getvalue() == ""
+        finally:
+            console_logging_module._console_logger = None
+
+    @pytest.mark.asyncio
     async def test_send_filters_by_severity(self, capsys) -> None:
         backend = ConsoleNotificationBackend(min_severity=AlertSeverity.ERROR)
         alert = Alert(

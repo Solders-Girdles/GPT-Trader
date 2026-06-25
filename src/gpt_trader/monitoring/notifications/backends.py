@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any, Protocol
 
 from gpt_trader.monitoring.alert_types import Alert, AlertSeverity
-from gpt_trader.utilities.console_logging import get_console_logger
+from gpt_trader.utilities.console_logging import ConsoleLogger
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="notifications")
@@ -69,7 +69,7 @@ class ConsoleNotificationBackend:
 
         try:
             formatted = self._format_alert(alert)
-            output_sink = self.output_sink or get_console_logger()
+            output_sink = self.output_sink or ConsoleLogger()
             if not output_sink.write(formatted):
                 logger.error("Console notification output sink declined alert")
                 return False

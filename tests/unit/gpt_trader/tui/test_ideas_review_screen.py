@@ -196,3 +196,31 @@ async def test_filter_cycle_changes_visible_rows(service: TradeIdeaService) -> N
         await pilot.pause()
         assert table.row_count == 0
         assert "needs_changes" in _text(screen.query_one("#ideas-review-filter"))
+
+
+@pytest.mark.asyncio
+async def test_refresh_preserves_selected_visible_idea(service: TradeIdeaService) -> None:
+    first = build_trade_idea(decision_id="trade-20260612-001")
+    selected = build_trade_idea(decision_id="trade-20260612-002")
+    third = build_trade_idea(decision_id="trade-20260612-003")
+    service.propose(first, actor_id="idea-generator-v1")
+    service.propose(selected, actor_id="idea-generator-v1")
+    service.propose(third, actor_id="idea-generator-v1")
+
+    async with _app(service).run_test(size=(120, 36)) as pilot:
+        screen = await _push_ideas_screen(pilot)
+        table = screen.query_one("#ideas-review-table")
+        table.move_cursor(row=1)
+        screen._select_row_key(selected.decision_id)
+        await pilot.pause()
+
+        screen.refresh_views(notify=False)
+        await pilot.pause()
+
+        selected_row = table.get_row_at(table.cursor_row)
+        detail = _text(screen.query_one("#ideas-review-detail"))
+
+    assert screen._selected_decision_id == selected.decision_id
+    assert selected_row[0] == selected.decision_id
+    assert table.cursor_row == 1
+    assert selected.decision_id in detail

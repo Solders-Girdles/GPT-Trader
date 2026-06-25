@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6751,
+    "total_tests": 6752,
     "total_files": 798,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6586,
-    "asyncio": 389,
+    "unit": 6587,
+    "asyncio": 390,
     "parametrize": 191,
     "endpoints": 83,
     "property": 82,
@@ -50012,6 +50012,15 @@
       {
         "name": "test_filter_cycle_changes_visible_rows",
         "line": 180,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_refresh_preserves_selected_visible_idea",
+        "line": 202,
         "markers": [
           "asyncio",
           "unit"

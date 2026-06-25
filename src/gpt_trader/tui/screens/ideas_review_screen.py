@@ -295,12 +295,12 @@ class IdeasReviewScreen(Screen[None]):
             f"Filter: {self._filter_label(self.FILTERS[self._filter_index])} "
             f"({len(visible)} of {len(self._views)})"
         )
-        if visible and self._selected_decision_id not in {
-            view.idea.decision_id for view in visible
-        }:
-            self._selected_decision_id = visible[0].idea.decision_id
-            table.move_cursor(row=0)
-        elif not visible:
+        if visible:
+            visible_decision_ids = [view.idea.decision_id for view in visible]
+            if self._selected_decision_id not in visible_decision_ids:
+                self._selected_decision_id = visible_decision_ids[0]
+            table.move_cursor(row=visible_decision_ids.index(self._selected_decision_id))
+        else:
             self._selected_decision_id = None
         self._render_detail()
 

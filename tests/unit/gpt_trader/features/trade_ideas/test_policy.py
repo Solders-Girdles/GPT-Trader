@@ -56,6 +56,28 @@ def test_research_only_mode_blocks_all_approvals(trade_idea: TradeIdea) -> None:
     assert any("research_only" in violation for violation in found)
 
 
+def test_bounded_autonomy_ai_approval_fails_closed_until_envelopes_exist(
+    trade_idea: TradeIdea,
+) -> None:
+    policy = ApprovalPolicy(AutonomyMode.BOUNDED_AUTONOMY)
+
+    found = violations(trade_idea, policy=policy, actor_type=ActorType.AI)
+
+    assert found == [
+        "Autonomy mode 'bounded_autonomy' does not permit AI approvals until a "
+        "strategy envelope, kill-switch evidence, and audit evidence are modeled "
+        "or a later decision packet scopes a narrower exception"
+    ]
+
+
+def test_bounded_autonomy_human_approval_still_uses_existing_gates(
+    trade_idea: TradeIdea,
+) -> None:
+    policy = ApprovalPolicy(AutonomyMode.BOUNDED_AUTONOMY)
+
+    assert violations(trade_idea, policy=policy, actor_type=ActorType.HUMAN) == []
+
+
 def test_ineligible_idea_cannot_be_approved() -> None:
     idea = build_trade_idea(invalidation="")
 
@@ -189,7 +211,15 @@ def test_budget_changes_require_human_below_bounded_autonomy() -> None:
     assert policy.budget_change_violations(ActorType.AI) != []
 
 
-def test_bounded_autonomy_lets_agents_change_budgets() -> None:
+def test_bounded_autonomy_budget_changes_fail_closed_until_meta_envelope() -> None:
     policy = ApprovalPolicy(AutonomyMode.BOUNDED_AUTONOMY)
 
-    assert policy.budget_change_violations(ActorType.AI) == []
+    assert policy.budget_change_violations(ActorType.HUMAN) == []
+
+    found = policy.budget_change_violations(ActorType.AI)
+
+    assert found == [
+        "Autonomy mode 'bounded_autonomy' does not permit AI budget changes until "
+        "a budget meta-envelope is modeled or a later decision packet scopes a "
+        "narrower exception; got actor_type 'ai'"
+    ]

@@ -213,12 +213,32 @@ def verify_checksum(data: bytes | str | dict[str, Any], expected: str) -> bool:
     return actual == expected
 
 
+def _fsync_parent_directory(path: Path) -> None:
+    directory_flag = getattr(os, "O_DIRECTORY", None)
+    if directory_flag is None:
+        logger.debug("Skipping directory fsync because O_DIRECTORY is unavailable")
+        return
+
+    try:
+        dir_fd = os.open(path.parent, os.O_RDONLY | directory_flag)
+    except OSError as e:
+        logger.debug("Skipping directory fsync for %s: %s", path.parent, e)
+        return
+
+    try:
+        os.fsync(dir_fd)
+    except OSError as e:
+        logger.debug("Directory fsync failed for %s: %s", path.parent, e)
+    finally:
+        os.close(dir_fd)
+
+
 def atomic_write_file(path: Path, content: bytes | str, *, fsync: bool = True) -> None:
     """
-    Write file atomically using write-rename pattern.
+    Write file atomically using a write-replace pattern.
 
     Creates a temporary file in the same directory, writes content,
-    optionally fsyncs, then atomically renames to target path.
+    optionally fsyncs, then atomically replaces the target path.
 
     Args:
         path: Target file path
@@ -235,7 +255,7 @@ def atomic_write_file(path: Path, content: bytes | str, *, fsync: bool = True) -
     encoding = None if isinstance(content, bytes) else "utf-8"
 
     try:
-        # Create temp file in same directory for atomic rename
+        # Create temp file in same directory for atomic replacement
         fd, temp_path = tempfile.mkstemp(
             dir=path.parent,
             prefix=f".{path.name}.",
@@ -251,13 +271,9 @@ def atomic_write_file(path: Path, content: bytes | str, *, fsync: bool = True) -
             # Atomic replacement; unlike os.rename, this overwrites on Windows.
             os.replace(temp_path, path)
 
-            # Fsync directory to persist the rename
+            # Fsync directory to persist the replacement when supported.
             if fsync:
-                dir_fd = os.open(path.parent, os.O_RDONLY | os.O_DIRECTORY)
-                try:
-                    os.fsync(dir_fd)
-                finally:
-                    os.close(dir_fd)
+                _fsync_parent_directory(path)
 
         except Exception:
             # Clean up temp file on error

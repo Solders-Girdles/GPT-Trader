@@ -102,13 +102,26 @@ class TestFileNotificationBackend:
     async def test_test_connection_checks_writability(self) -> None:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
             file_path = f.name
+            f.write("seed\n")
 
         try:
             backend = FileNotificationBackend(file_path=file_path)
             result = await backend.test_connection()
             assert result is True
+            assert Path(file_path).read_text() == "seed\n"
         finally:
             Path(file_path).unlink(missing_ok=True)
+
+    @pytest.mark.asyncio
+    async def test_test_connection_checks_existing_target_directly(self, tmp_path: Path) -> None:
+        alert_path = tmp_path / "alerts.jsonl"
+        alert_path.mkdir()
+        backend = FileNotificationBackend(file_path=str(alert_path))
+
+        result = await backend.test_connection()
+
+        assert result is False
+        assert list(tmp_path.iterdir()) == [alert_path]
 
     @pytest.mark.asyncio
     async def test_test_connection_creates_parent_without_alert_file(self, tmp_path: Path) -> None:

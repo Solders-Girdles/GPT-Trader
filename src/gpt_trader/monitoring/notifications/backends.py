@@ -299,12 +299,18 @@ class FileNotificationBackend:
             return False
 
     def _check_file_writable(self) -> None:
+        path = Path(self.file_path)
         self._ensure_parent_directory()
-        parent = Path(self.file_path).parent
+        if path.exists():
+            with open(path, "a"):
+                pass
+            return
+
+        parent = path.parent
         with tempfile.NamedTemporaryFile(
             mode="a",
             dir=parent,
-            prefix=f".{Path(self.file_path).name}.connection-",
+            prefix=f".{path.name}.connection-",
             suffix=".tmp",
         ):
             pass

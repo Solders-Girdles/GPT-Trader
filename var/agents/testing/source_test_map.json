@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 712,
-    "source_modules": 371,
+    "tests_scanned": 714,
+    "source_modules": 372,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1292,7 +1292,9 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
-      "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
+      "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py",
+      "tests/unit/gpt_trader/tui/test_ideas_review_screen.py",
+      "tests/unit/gpt_trader/tui/test_snapshots_ideas_review.py"
     ],
     "gpt_trader.logging.correlation": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
@@ -1749,6 +1751,7 @@
     ],
     "gpt_trader.tui.screens": [
       "tests/unit/gpt_trader/tui/test_screen_flows_help.py",
+      "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py",
       "tests/unit/gpt_trader/tui/test_screens.py"
     ],
     "gpt_trader.tui.screens.alert_history": [
@@ -1761,6 +1764,10 @@
     "gpt_trader.tui.screens.help": [
       "tests/unit/gpt_trader/tui/test_screen_flows_help.py",
       "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py"
+    ],
+    "gpt_trader.tui.screens.ideas_review_screen": [
+      "tests/unit/gpt_trader/tui/test_ideas_review_screen.py",
+      "tests/unit/gpt_trader/tui/test_snapshots_ideas_review.py"
     ],
     "gpt_trader.tui.screens.main_screen": [
       "tests/unit/gpt_trader/tui/services/test_state_registry.py",
@@ -4564,6 +4571,10 @@
     "tests/unit/gpt_trader/tui/test_helpers.py": [
       "gpt_trader.tui"
     ],
+    "tests/unit/gpt_trader/tui/test_ideas_review_screen.py": [
+      "gpt_trader.features.trade_ideas",
+      "gpt_trader.tui.screens.ideas_review_screen"
+    ],
     "tests/unit/gpt_trader/tui/test_indicator_contributions.py": [
       "gpt_trader.tui.types"
     ],
@@ -4602,12 +4613,17 @@
     ],
     "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py": [
       "gpt_trader.tui.app",
+      "gpt_trader.tui.screens",
       "gpt_trader.tui.screens.help",
       "gpt_trader.tui.widgets"
     ],
     "tests/unit/gpt_trader/tui/test_screens.py": [
       "gpt_trader.tui.screens",
       "gpt_trader.tui.state"
+    ],
+    "tests/unit/gpt_trader/tui/test_snapshots_ideas_review.py": [
+      "gpt_trader.features.trade_ideas",
+      "gpt_trader.tui.screens.ideas_review_screen"
     ],
     "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py": [
       "gpt_trader.tui.app",
@@ -5255,6 +5271,7 @@
     "gpt_trader.tui.screens.alert_history": "src/gpt_trader/tui/screens/alert_history.py",
     "gpt_trader.tui.screens.api_setup_wizard": "src/gpt_trader/tui/screens/api_setup_wizard.py",
     "gpt_trader.tui.screens.help": "src/gpt_trader/tui/screens/help.py",
+    "gpt_trader.tui.screens.ideas_review_screen": "src/gpt_trader/tui/screens/ideas_review_screen.py",
     "gpt_trader.tui.screens.main_screen": "src/gpt_trader/tui/screens/main_screen.py",
     "gpt_trader.tui.screens.strategy_detail_screen": "src/gpt_trader/tui/screens/strategy_detail_screen.py",
     "gpt_trader.tui.screens.system_details_screen": "src/gpt_trader/tui/screens/system_details_screen.py",

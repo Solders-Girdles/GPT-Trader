@@ -102,7 +102,8 @@ class TraderApp(
         ("l", "focus_logs", "Focus Logs"),
         ("m", "show_market", "Market"),  # Changed from mode_info
         ("d", "show_details", "Details"),  # New: Details overlay
-        ("i", "show_mode_info", "Mode Info"),  # Moved from 'm' to 'i'
+        ("i", "show_mode_info", "Mode Info"),
+        Binding("I", "show_ideas", "Ideas", show=True),
         ("r", "reconnect_data", "Reconnect"),
         ("p", "panic", "PANIC"),
         ("t", "toggle_theme", "Toggle Theme"),

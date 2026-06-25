@@ -259,6 +259,46 @@ def test_persisted_closeout_rejects_stale_record_hash_against_current_event(
         )
 
 
+@pytest.mark.parametrize(
+    ("max_loss_override", "field_name", "message"),
+    [
+        ({"amount": "251"}, "max_loss.amount", "max_loss.amount expected '250'"),
+        ({"percent_of_account": "1.6"}, "max_loss.percent_of_account", "1.5"),
+        ({"assumptions": ["stale sizing note"]}, "max_loss.assumptions", "assumptions"),
+    ],
+)
+def test_persisted_closeout_rejects_current_event_with_stale_max_loss_snapshot(
+    service: TradeIdeaService,
+    max_loss_override: dict[str, object],
+    field_name: str,
+    message: str,
+) -> None:
+    idea = build_trade_idea()
+    service.propose(idea, actor_id="idea-generator-v1")
+    expired = service.expire(idea.decision_id)
+    current_max_loss = {
+        "amount": "250",
+        "percent_of_account": "1.5",
+        "assumptions": ["Fill at zone midpoint", "No slippage beyond 10 bps"],
+    }
+    _write_closeout_payload(
+        service,
+        expired,
+        max_loss={**current_max_loss, **max_loss_override},
+    )
+
+    with pytest.raises(CloseoutAttributionIntegrityError, match=message) as get_exc_info:
+        service.get(idea.decision_id)
+    context = get_exc_info.value.context
+    assert context["field"] == field_name
+    assert context["stored_terminal_event_id"] == expired.events[-1].event_id
+    assert context["current_terminal_event_id"] == expired.events[-1].event_id
+    assert context["stored_record_hash"] == expired.events[-1].record_hash
+    assert context["current_record_hash"] == expired.events[-1].record_hash
+    assert context["stored_max_loss"] == {**current_max_loss, **max_loss_override}
+    assert context["current_max_loss"] == current_max_loss
+
+
 def test_persisted_closeout_log_rejects_non_object_max_loss_with_line_context(
     service: TradeIdeaService,
 ) -> None:

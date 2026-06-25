@@ -87,6 +87,24 @@ def _utc_now() -> datetime:
     return datetime.now(UTC)
 
 
+def _max_loss_snapshot_for(idea: TradeIdea) -> MaxLossSnapshot:
+    return MaxLossSnapshot(
+        amount=idea.max_loss.amount,
+        percent_of_account=idea.max_loss.percent_of_account,
+        assumptions=idea.max_loss.assumptions,
+    )
+
+
+def _max_loss_snapshot_context(snapshot: MaxLossSnapshot) -> dict[str, object]:
+    return {
+        "amount": str(snapshot.amount) if snapshot.amount is not None else None,
+        "percent_of_account": (
+            str(snapshot.percent_of_account) if snapshot.percent_of_account is not None else None
+        ),
+        "assumptions": list(snapshot.assumptions),
+    }
+
+
 def resolve_ideas_root(root: Path | None = None) -> Path:
     """Resolve the trade-idea storage root from arg, environment, or default."""
     if root is not None:
@@ -476,7 +494,7 @@ class TradeIdeaService:
             idea=idea,
             state=state,
             events=events,
-            closeout_attribution=self._validated_closeout_attribution(decision_id, events),
+            closeout_attribution=self._validated_closeout_attribution(idea, events),
         )
 
     def list_views(self, state: TradeIdeaState | None = None) -> list[TradeIdeaView]:
@@ -504,20 +522,24 @@ class TradeIdeaService:
 
     def _validated_closeout_attribution(
         self,
-        decision_id: str,
+        idea: TradeIdea,
         events: tuple[AuditEvent, ...],
     ) -> CloseoutAttribution | None:
+        decision_id = idea.decision_id
         closeout = self._closeouts.get(decision_id)
         if closeout is None:
             return None
 
         current_event = events[-1]
+        current_max_loss = _max_loss_snapshot_for(idea)
         context = {
             "decision_id": decision_id,
             "stored_terminal_event_id": closeout.terminal_event_id,
             "current_terminal_event_id": current_event.event_id,
             "stored_record_hash": closeout.record_hash,
             "current_record_hash": current_event.record_hash,
+            "stored_max_loss": _max_loss_snapshot_context(closeout.max_loss),
+            "current_max_loss": _max_loss_snapshot_context(current_max_loss),
         }
         if current_event.after_state not in TERMINAL_STATES:
             raise CloseoutAttributionIntegrityError(
@@ -549,6 +571,38 @@ class TradeIdeaService:
                 f"Closeout attribution for decision_id '{decision_id}' does not match "
                 f"the current terminal audit event: {'; '.join(mismatch_details)}",
                 field=mismatch_field,
+                value=decision_id,
+                context=context,
+            )
+        max_loss_mismatch_details: list[str] = []
+        max_loss_mismatch_field = "max_loss"
+        if closeout.max_loss.amount != current_max_loss.amount:
+            max_loss_mismatch_field = "max_loss.amount"
+            max_loss_mismatch_details.append(
+                f"max_loss.amount expected '{current_max_loss.amount}' "
+                f"but found '{closeout.max_loss.amount}'"
+            )
+        if closeout.max_loss.percent_of_account != current_max_loss.percent_of_account:
+            if max_loss_mismatch_field == "max_loss":
+                max_loss_mismatch_field = "max_loss.percent_of_account"
+            max_loss_mismatch_details.append(
+                "max_loss.percent_of_account expected "
+                f"'{current_max_loss.percent_of_account}' "
+                f"but found '{closeout.max_loss.percent_of_account}'"
+            )
+        if closeout.max_loss.assumptions != current_max_loss.assumptions:
+            if max_loss_mismatch_field == "max_loss":
+                max_loss_mismatch_field = "max_loss.assumptions"
+            max_loss_mismatch_details.append(
+                f"max_loss.assumptions expected {list(current_max_loss.assumptions)!r} "
+                f"but found {list(closeout.max_loss.assumptions)!r}"
+            )
+        if max_loss_mismatch_details:
+            raise CloseoutAttributionIntegrityError(
+                f"Closeout attribution for decision_id '{decision_id}' does not match "
+                "the audited max-loss snapshot from the current terminal record: "
+                f"{'; '.join(max_loss_mismatch_details)}",
+                field=max_loss_mismatch_field,
                 value=decision_id,
                 context=context,
             )

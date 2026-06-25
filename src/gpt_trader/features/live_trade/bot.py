@@ -493,6 +493,14 @@ class TradingBot:
             ("client_order_id", "client_id", "client_oid"),
         )
         broker_status = self._extract_order_identifier(order, ("status",)) or status
+        filled_quantity = self._extract_order_decimal(
+            order,
+            ("filled_quantity", "filled_size", "fill_size", "filled_qty"),
+        )
+        average_fill_price = self._extract_order_decimal(
+            order,
+            ("average_filled_price", "average_fill_price", "avg_fill_price", "fill_price"),
+        )
         payload: dict[str, Any] = {
             "flatten_operation_id": flatten_operation_id,
             "symbol": str(symbol),
@@ -503,6 +511,10 @@ class TradingBot:
             "status": status,
             "broker_status": broker_status,
         }
+        if filled_quantity is not None:
+            payload["filled_quantity"] = str(filled_quantity)
+        if average_fill_price is not None:
+            payload["average_fill_price"] = str(average_fill_price)
         if order_id:
             payload["order_id"] = order_id
         if client_order_id:
@@ -538,7 +550,11 @@ class TradingBot:
         upsert = getattr(self._orders_store, "upsert_by_client_id", None)
         if not callable(upsert):
             return
-        status = self._emergency_close_store_status(payload.get("broker_status"))
+        filled_quantity = self._decimal_or_none(payload.get("filled_quantity"))
+        status = self._emergency_close_store_status(
+            payload.get("broker_status"),
+            filled_quantity_known=filled_quantity is not None,
+        )
         now = datetime.now(timezone.utc)
         metadata = {
             "source": "emergency_flatten",
@@ -556,8 +572,8 @@ class TradingBot:
             quantity=self._decimal_or_zero(payload.get("quantity")),
             price=None,
             status=status,
-            filled_quantity=Decimal("0"),
-            average_fill_price=None,
+            filled_quantity=filled_quantity or Decimal("0"),
+            average_fill_price=self._decimal_or_none(payload.get("average_fill_price")),
             created_at=now,
             updated_at=now,
             bot_id=str(getattr(self.config, "bot_id", "trading-bot")),
@@ -575,14 +591,24 @@ class TradingBot:
             )
 
     @staticmethod
-    def _emergency_close_store_status(status: Any) -> OrderStatus:
+    def _emergency_close_store_status(
+        status: Any,
+        *,
+        filled_quantity_known: bool,
+    ) -> OrderStatus:
         try:
-            return execution_status_for_store(
+            store_status = execution_status_for_store(
                 status,
                 context="emergency_flatten_close_order",
             )
         except ExecutionStatusCodecError:
             return OrderStatus.OPEN
+        if not filled_quantity_known and store_status in {
+            OrderStatus.FILLED,
+            OrderStatus.PARTIALLY_FILLED,
+        }:
+            return OrderStatus.OPEN
+        return store_status
 
     @staticmethod
     def _extract_order_identifier(order: Any | None, field_names: tuple[str, ...]) -> str | None:
@@ -601,15 +627,38 @@ class TradingBot:
         return None
 
     @staticmethod
+    def _extract_order_decimal(
+        order: Any | None,
+        field_names: tuple[str, ...],
+    ) -> Decimal | None:
+        if order is None:
+            return None
+        if isinstance(order, Mapping):
+            values = (order.get(field_name) for field_name in field_names)
+        else:
+            values = (getattr(order, field_name, None) for field_name in field_names)
+        for value in values:
+            decimal_value = TradingBot._decimal_or_none(value)
+            if decimal_value is not None:
+                return decimal_value
+        return None
+
+    @staticmethod
     def _stringify_order_value(value: Any) -> str:
         return str(getattr(value, "value", value))
 
     @staticmethod
-    def _decimal_or_zero(value: Any) -> Decimal:
+    def _decimal_or_none(value: Any) -> Decimal | None:
+        if value is None or value == "":
+            return None
         try:
-            return Decimal(str(value))
+            return Decimal(str(getattr(value, "value", value)))
         except Exception:
-            return Decimal("0")
+            return None
+
+    @staticmethod
+    def _decimal_or_zero(value: Any) -> Decimal:
+        return TradingBot._decimal_or_none(value) or Decimal("0")
 
     async def _notify_flatten_failure(self, details: dict[str, Any]) -> None:
         if self._notification_service is None:

@@ -41,7 +41,9 @@ async def test_flatten_and_stop_persists_submitted_close_order_audit(
         return_value={
             "order_id": "close-btc-123",
             "client_order_id": "client-close-btc-123",
-            "status": "OPEN",
+            "status": "FILLED",
+            "filled_size": "1",
+            "average_filled_price": "50000.12",
         }
     )
     event_store = Mock()
@@ -86,7 +88,9 @@ async def test_flatten_and_stop_persists_submitted_close_order_audit(
     assert audit_payload["quantity"] == "1"
     assert audit_payload["reduce_only"] is True
     assert audit_payload["status"] == "submitted"
-    assert audit_payload["broker_status"] == "OPEN"
+    assert audit_payload["broker_status"] == "FILLED"
+    assert audit_payload["filled_quantity"] == "1"
+    assert audit_payload["average_fill_price"] == "50000.12"
     assert audit_payload["order_id"] == "close-btc-123"
     assert audit_payload["client_order_id"] == "client-close-btc-123"
 
@@ -97,7 +101,9 @@ async def test_flatten_and_stop_persists_submitted_close_order_audit(
     assert order_record.symbol == "BTC-USD"
     assert order_record.side == "sell"
     assert order_record.order_type == "market"
-    assert order_record.status.value == "open"
+    assert order_record.status.value == "filled"
+    assert order_record.filled_quantity == Decimal("1")
+    assert order_record.average_fill_price == Decimal("50000.12")
     assert order_record.metadata["source"] == "emergency_flatten"
     assert order_record.metadata["flatten_operation_id"] == audit_payload["flatten_operation_id"]
 
@@ -172,3 +178,50 @@ async def test_flatten_and_stop_links_partial_failure_audit_events(
     payload = flatten_failure_events[0]
     assert payload["flatten_operation_id"] == flatten_operation_id
     assert payload["failed_closes"][0]["flatten_operation_id"] == flatten_operation_id
+
+
+@pytest.mark.asyncio
+async def test_flatten_and_stop_avoids_filled_record_without_fill_quantity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    broker = Mock()
+    broker.list_positions.return_value = [SimpleNamespace(symbol="BTC-USD", quantity=Decimal("1"))]
+    broker.place_order = Mock(
+        return_value={
+            "order_id": "close-btc-123",
+            "client_order_id": "client-close-btc-123",
+            "status": "FILLED",
+        }
+    )
+    event_store = Mock()
+    orders_store = Mock()
+    container = SimpleNamespace(
+        broker=broker,
+        risk_manager=Mock(),
+        event_store=event_store,
+        orders_store=orders_store,
+        notification_service=Mock(),
+    )
+    _install_mock_engine(monkeypatch)
+
+    bot = TradingBot(
+        config=BotConfig(symbols=["BTC-USD"], interval=1),
+        container=container,
+    )
+    bot._broker_calls = _DirectBrokerCalls()
+
+    await bot.flatten_and_stop()
+
+    orders_store.upsert_by_client_id.assert_called_once()
+    order_record = orders_store.upsert_by_client_id.call_args.args[0]
+    assert order_record.status.value == "open"
+    assert order_record.filled_quantity == Decimal("0")
+    assert order_record.average_fill_price is None
+    audit_payload = next(
+        call.args[1]
+        for call in event_store.append.call_args_list
+        if call.args[0] == "emergency_flatten_close_order"
+    )
+    assert audit_payload["broker_status"] == "FILLED"
+    assert "filled_quantity" not in audit_payload
+    assert "average_fill_price" not in audit_payload

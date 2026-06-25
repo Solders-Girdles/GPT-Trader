@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6792,
+    "total_tests": 6793,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6627,
-    "asyncio": 400,
+    "unit": 6628,
+    "asyncio": 401,
     "parametrize": 193,
     "endpoints": 83,
     "property": 82,
@@ -27198,7 +27198,16 @@
       },
       {
         "name": "test_flatten_and_stop_links_partial_failure_audit_events",
-        "line": 106,
+        "line": 112,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_flatten_and_stop_avoids_filled_record_without_fill_quantity",
+        "line": 184,
         "markers": [
           "asyncio",
           "unit"

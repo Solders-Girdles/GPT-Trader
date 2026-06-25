@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6819,
+    "total_tests": 6820,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6654,
+    "unit": 6655,
     "asyncio": 411,
     "parametrize": 195,
     "endpoints": 83,
@@ -43407,7 +43407,7 @@
         "class": "TestVaultFailures"
       },
       {
-        "name": "TestVaultFailures::test_vault_store_failure",
+        "name": "TestVaultFailures::test_paper_config_allows_local_ephemeral_key_and_vault_fallback",
         "line": 160,
         "markers": [
           "unit"
@@ -43416,8 +43416,17 @@
         "class": "TestVaultFailures"
       },
       {
+        "name": "TestVaultFailures::test_vault_store_failure",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestVaultFailures"
+      },
+      {
         "name": "TestVaultFailures::test_vault_retrieve_failure",
-        "line": 177,
+        "line": 197,
         "markers": [
           "unit"
         ],
@@ -43426,7 +43435,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_list_failure",
-        "line": 188,
+        "line": 208,
         "markers": [
           "unit"
         ],
@@ -43435,7 +43444,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_delete_failure",
-        "line": 200,
+        "line": 220,
         "markers": [
           "unit"
         ],
@@ -43444,7 +43453,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_environment_configuration",
-        "line": 214,
+        "line": 234,
         "markers": [
           "unit"
         ],
@@ -43453,7 +43462,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_missing_environment_variables",
-        "line": 231,
+        "line": 251,
         "markers": [
           "unit"
         ],

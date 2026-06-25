@@ -157,6 +157,26 @@ class TestVaultFailures:
         assert manager._vault_enabled is False
         assert manager._vault_client is None
 
+    def test_paper_config_allows_local_ephemeral_key_and_vault_fallback(
+        self,
+        secrets_runtime_settings: Any,
+        patched_require_fernet: None,
+        hvac_stub: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        config = secrets_runtime_settings.model_copy(update={"environment": "paper"})
+        monkeypatch.setenv("ENV", "development")
+        monkeypatch.delenv("GPT_TRADER_ENCRYPTION_KEY", raising=False)
+        monkeypatch.delenv("VAULT_ADDR", raising=False)
+        monkeypatch.delenv("VAULT_TOKEN", raising=False)
+
+        manager = SecretsManager(vault_enabled=True, config=config)
+
+        assert manager._environment == "paper"
+        assert manager._encryption_key_is_ephemeral is True
+        assert manager._vault_enabled is False
+        assert manager._vault_client is None
+
     def test_vault_store_failure(
         self,
         secrets_manager_with_vault: Any,

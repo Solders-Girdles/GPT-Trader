@@ -37,7 +37,7 @@ logger = get_logger(__name__, component="security")
 
 DEFAULT_DEVELOPMENT_VAULT_ADDRESS = "http://localhost:8200"
 FILE_SECRET_FALLBACK_ENVIRONMENT_VARIABLE = "GPT_TRADER_ALLOW_FILE_SECRET_FALLBACK"
-DEVELOPMENT_ENVIRONMENTS = frozenset({"development", "dev", "local", "test", "testing"})
+DEVELOPMENT_ENVIRONMENTS = frozenset({"development", "dev", "local", "paper", "test", "testing"})
 
 
 class VaultConfigurationError(RuntimeError):

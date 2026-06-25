@@ -102,9 +102,22 @@ class TestOrdersStore:
 
             monkeypatch.setattr(sqlite3, "connect", connect_with_generation_change)
 
-            store.initialize()
-            store.save_order(create_test_order(order_id="retry-order"))
+            errors: list[BaseException] = []
 
+            def save_with_generation_retry() -> None:
+                try:
+                    store.initialize()
+                    store.save_order(create_test_order(order_id="retry-order"))
+                except BaseException as exc:
+                    errors.append(exc)
+
+            worker = threading.Thread(target=save_with_generation_retry, daemon=True)
+            worker.start()
+            worker.join(timeout=2)
+
+            assert not worker.is_alive()
+            if errors:
+                raise errors[0]
             assert connect_count == 2
             assert store.get_order("retry-order") is not None
             store.close()

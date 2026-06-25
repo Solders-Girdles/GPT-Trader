@@ -39972,7 +39972,7 @@
       },
       {
         "name": "TestOrdersStore::test_save_and_get_order",
-        "line": 112,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -39981,15 +39981,6 @@
       },
       {
         "name": "TestOrdersStore::test_get_order_by_client_order_id",
-        "line": 127,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestOrdersStore"
-      },
-      {
-        "name": "TestOrdersStore::test_get_order_not_found",
         "line": 140,
         "markers": [
           "unit"
@@ -39998,8 +39989,17 @@
         "class": "TestOrdersStore"
       },
       {
+        "name": "TestOrdersStore::test_get_order_not_found",
+        "line": 153,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestOrdersStore"
+      },
+      {
         "name": "TestOrdersStore::test_save_order_upsert",
-        "line": 146,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -40008,7 +40008,7 @@
       },
       {
         "name": "TestOrdersStore::test_upsert_by_client_id_updates_order_id",
-        "line": 160,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -40017,7 +40017,7 @@
       },
       {
         "name": "TestOrdersStore::test_get_pending_orders",
-        "line": 182,
+        "line": 195,
         "markers": [
           "unit"
         ],
@@ -40026,15 +40026,6 @@
       },
       {
         "name": "TestOrdersStore::test_get_pending_orders_by_bot",
-        "line": 201,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestOrdersStore"
-      },
-      {
-        "name": "TestOrdersStore::test_get_orders_by_symbol",
         "line": 214,
         "markers": [
           "unit"
@@ -40043,7 +40034,7 @@
         "class": "TestOrdersStore"
       },
       {
-        "name": "TestOrdersStore::test_list_orders_filters_and_limit",
+        "name": "TestOrdersStore::test_get_orders_by_symbol",
         "line": 227,
         "markers": [
           "unit"
@@ -40052,8 +40043,17 @@
         "class": "TestOrdersStore"
       },
       {
+        "name": "TestOrdersStore::test_list_orders_filters_and_limit",
+        "line": 240,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestOrdersStore"
+      },
+      {
         "name": "TestOrdersStore::test_list_orders_requires_positive_limit",
-        "line": 267,
+        "line": 280,
         "markers": [
           "unit"
         ],
@@ -40062,7 +40062,7 @@
       },
       {
         "name": "TestOrdersStore::test_update_status",
-        "line": 273,
+        "line": 286,
         "markers": [
           "unit"
         ],
@@ -40071,7 +40071,7 @@
       },
       {
         "name": "TestOrdersStore::test_verify_integrity_valid",
-        "line": 293,
+        "line": 306,
         "markers": [
           "unit"
         ],
@@ -40080,7 +40080,7 @@
       },
       {
         "name": "TestOrdersStore::test_cleanup_old_orders",
-        "line": 304,
+        "line": 317,
         "markers": [
           "unit"
         ],
@@ -40089,7 +40089,7 @@
       },
       {
         "name": "TestOrdersStore::test_context_manager",
-        "line": 314,
+        "line": 327,
         "markers": [
           "unit"
         ],

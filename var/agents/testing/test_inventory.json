@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6795,
+    "total_tests": 6796,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6630,
+    "unit": 6631,
     "asyncio": 403,
     "parametrize": 193,
     "endpoints": 83,
@@ -16494,7 +16494,7 @@
         "class": "TestTickerCache"
       },
       {
-        "name": "TestTickerCache::test_cache_with_zero_ttl",
+        "name": "TestTickerCache::test_cache_with_zero_ttl_is_stale_immediately",
         "line": 122,
         "markers": [
           "unit"
@@ -16504,7 +16504,7 @@
       },
       {
         "name": "TestTickerCache::test_empty_symbol_string",
-        "line": 136,
+        "line": 138,
         "markers": [
           "unit"
         ],
@@ -16513,7 +16513,7 @@
       },
       {
         "name": "TestTickerCache::test_get_last_ticker_timestamp_empty_cache",
-        "line": 146,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -16522,7 +16522,7 @@
       },
       {
         "name": "TestTickerCache::test_get_last_ticker_timestamp_tracks_newest_value",
-        "line": 151,
+        "line": 153,
         "markers": [
           "unit"
         ],
@@ -16531,7 +16531,7 @@
       },
       {
         "name": "TestTickerCache::test_update_normalizes_naive_timestamp_to_utc",
-        "line": 161,
+        "line": 163,
         "markers": [
           "unit"
         ],
@@ -16539,8 +16539,17 @@
         "class": "TestTickerCache"
       },
       {
-        "name": "TestTickerServiceEdges::test_ticker_cache_stale_boundary",
-        "line": 178,
+        "name": "TestTickerServiceEdges::test_ticker_cache_fresh_just_before_ttl_boundary",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestTickerServiceEdges"
+      },
+      {
+        "name": "TestTickerServiceEdges::test_ticker_cache_stale_at_ttl_boundary",
+        "line": 190,
         "markers": [
           "unit"
         ],
@@ -16549,7 +16558,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_cache_stale_after_ttl",
-        "line": 188,
+        "line": 200,
         "markers": [
           "unit"
         ],
@@ -16558,7 +16567,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_service_start_creates_thread",
-        "line": 198,
+        "line": 210,
         "markers": [
           "unit"
         ],
@@ -16567,7 +16576,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_service_stop_joins_thread",
-        "line": 215,
+        "line": 227,
         "markers": [
           "unit"
         ],
@@ -16576,7 +16585,7 @@
       },
       {
         "name": "TestTickerServiceEdges::test_ticker_freshness_provider_not_advertised_until_cache_populated",
-        "line": 226,
+        "line": 238,
         "markers": [
           "unit"
         ],

@@ -119,15 +119,17 @@ class TestTickerCache:
 
         assert cache.is_stale("BTC-USD") is True
 
-    def test_cache_with_zero_ttl(self) -> None:
+    def test_cache_with_zero_ttl_is_stale_immediately(self) -> None:
         """Test cache with zero TTL (always stale)."""
-        cache = TickerCache(ttl_seconds=0)
+        base_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
+        clock = FakeClock(base_time)
+        cache = TickerCache(ttl_seconds=0, clock=clock)
         ticker = Ticker(
             symbol="BTC-USD",
             bid=50000.0,
             ask=50100.0,
             last=50050.0,
-            ts=utc_now(),
+            ts=base_time,
         )
         cache.update(ticker)
 
@@ -175,7 +177,17 @@ class TestTickerCache:
 class TestTickerServiceEdges:
     """Edge case tests for ticker service and cache."""
 
-    def test_ticker_cache_stale_boundary(self) -> None:
+    def test_ticker_cache_fresh_just_before_ttl_boundary(self) -> None:
+        base_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
+        clock = FakeClock(base_time)
+        cache = TickerCache(ttl_seconds=5, clock=clock)
+        cache.update(Ticker(symbol="BTC-USD", bid=1.0, ask=2.0, last=1.5, ts=base_time))
+
+        clock.advance(4.999)
+
+        assert cache.is_stale("BTC-USD") is False
+
+    def test_ticker_cache_stale_at_ttl_boundary(self) -> None:
         base_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
         clock = FakeClock(base_time)
         cache = TickerCache(ttl_seconds=5, clock=clock)
@@ -183,7 +195,7 @@ class TestTickerServiceEdges:
 
         clock.advance(5)
 
-        assert cache.is_stale("BTC-USD") is False
+        assert cache.is_stale("BTC-USD") is True
 
     def test_ticker_cache_stale_after_ttl(self) -> None:
         base_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)

@@ -63,6 +63,10 @@ from gpt_trader.features.trade_ideas.replay import (
     extract_numeric_scoring_levels,
     score_trade_idea,
 )
+from gpt_trader.features.trade_ideas.report import (
+    build_trade_idea_track_record_report,
+    format_trade_idea_track_record_report,
+)
 from gpt_trader.features.trade_ideas.service import (
     ACTOR_ENV_VAR,
     DEFAULT_IDEAS_ROOT,
@@ -148,9 +152,11 @@ __all__ = [
     "TradeIdeaStore",
     "TradeIdeaView",
     "UnknownTradeIdeaError",
+    "build_trade_idea_track_record_report",
     "create_trade_idea_service",
     "evaluate_eligibility",
     "extract_numeric_scoring_levels",
+    "format_trade_idea_track_record_report",
     "is_eligible",
     "is_safe_decision_id",
     "new_event_id",

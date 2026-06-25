@@ -248,8 +248,8 @@ def atomic_write_file(path: Path, content: bytes | str, *, fsync: bool = True) -
                     f.flush()
                     os.fsync(f.fileno())
 
-            # Atomic rename
-            os.rename(temp_path, path)
+            # Atomic replacement; unlike os.rename, this overwrites on Windows.
+            os.replace(temp_path, path)
 
             # Fsync directory to persist the rename
             if fsync:

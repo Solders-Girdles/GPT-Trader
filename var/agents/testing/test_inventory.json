@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6810,
+    "total_tests": 6811,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6645,
+    "unit": 6646,
     "asyncio": 411,
     "parametrize": 193,
     "endpoints": 83,
@@ -39525,7 +39525,7 @@
     "tests/unit/gpt_trader/persistence/test_durability.py": [
       {
         "name": "TestWriteResult::test_ok_result",
-        "line": 27,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -39534,7 +39534,7 @@
       },
       {
         "name": "TestWriteResult::test_fail_result",
-        "line": 34,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -39543,7 +39543,7 @@
       },
       {
         "name": "TestChecksum::test_compute_checksum_bytes",
-        "line": 44,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -39552,7 +39552,7 @@
       },
       {
         "name": "TestChecksum::test_compute_checksum_string",
-        "line": 49,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -39561,7 +39561,7 @@
       },
       {
         "name": "TestChecksum::test_compute_checksum_dict",
-        "line": 53,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -39570,7 +39570,7 @@
       },
       {
         "name": "TestChecksum::test_verify_checksum_valid",
-        "line": 62,
+        "line": 63,
         "markers": [
           "unit"
         ],
@@ -39579,7 +39579,7 @@
       },
       {
         "name": "TestChecksum::test_verify_checksum_invalid",
-        "line": 67,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -39588,7 +39588,7 @@
       },
       {
         "name": "TestAtomicFileWrite::test_atomic_write_file_bytes",
-        "line": 75,
+        "line": 76,
         "markers": [
           "unit"
         ],
@@ -39597,7 +39597,7 @@
       },
       {
         "name": "TestAtomicFileWrite::test_atomic_write_file_string",
-        "line": 83,
+        "line": 84,
         "markers": [
           "unit"
         ],
@@ -39606,7 +39606,7 @@
       },
       {
         "name": "TestAtomicFileWrite::test_atomic_write_file_creates_directories",
-        "line": 91,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -39615,7 +39615,16 @@
       },
       {
         "name": "TestAtomicFileWrite::test_atomic_write_file_overwrites",
-        "line": 98,
+        "line": 99,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestAtomicFileWrite"
+      },
+      {
+        "name": "TestAtomicFileWrite::test_atomic_write_file_overwrite_uses_replace",
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -39624,7 +39633,7 @@
       },
       {
         "name": "TestAtomicFileWrite::test_atomic_write_json",
-        "line": 106,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -39633,7 +39642,7 @@
       },
       {
         "name": "TestAtomicFileWrite::test_atomic_write_json_with_checksum",
-        "line": 117,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -39642,7 +39651,7 @@
       },
       {
         "name": "TestReadJsonWithChecksum::test_read_valid_json_with_checksum",
-        "line": 134,
+        "line": 162,
         "markers": [
           "unit"
         ],
@@ -39651,24 +39660,6 @@
       },
       {
         "name": "TestReadJsonWithChecksum::test_read_json_without_checksum",
-        "line": 145,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestReadJsonWithChecksum"
-      },
-      {
-        "name": "TestReadJsonWithChecksum::test_read_corrupted_json_detects_mismatch",
-        "line": 156,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestReadJsonWithChecksum"
-      },
-      {
-        "name": "TestReadJsonWithChecksum::test_read_invalid_json_raises_error",
         "line": 173,
         "markers": [
           "unit"
@@ -39677,8 +39668,26 @@
         "class": "TestReadJsonWithChecksum"
       },
       {
+        "name": "TestReadJsonWithChecksum::test_read_corrupted_json_detects_mismatch",
+        "line": 184,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestReadJsonWithChecksum"
+      },
+      {
+        "name": "TestReadJsonWithChecksum::test_read_invalid_json_raises_error",
+        "line": 201,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestReadJsonWithChecksum"
+      },
+      {
         "name": "TestSqliteIntegrity::test_check_integrity_valid_database",
-        "line": 185,
+        "line": 213,
         "markers": [
           "unit"
         ],
@@ -39687,7 +39696,7 @@
       },
       {
         "name": "TestSqliteIntegrity::test_check_integrity_nonexistent_database",
-        "line": 198,
+        "line": 226,
         "markers": [
           "unit"
         ],
@@ -39696,7 +39705,7 @@
       },
       {
         "name": "TestSqliteIntegrity::test_check_integrity_corrupted_file",
-        "line": 207,
+        "line": 235,
         "markers": [
           "unit"
         ],

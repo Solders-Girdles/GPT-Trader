@@ -7,18 +7,27 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+from collections.abc import Mapping
+from datetime import datetime, timezone
+from decimal import Decimal
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.runtime_ui_adapter import NullUIAdapter, RuntimeUIAdapter
 from gpt_trader.features.live_trade.engines.base import CoordinatorContext
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
+from gpt_trader.features.live_trade.execution.status_codec import (
+    ExecutionStatusCodecError,
+    execution_status_for_store,
+)
 from gpt_trader.features.live_trade.lifecycle import (
     TRADING_BOT_TRANSITIONS,
     LifecycleStateMachine,
     TradingBotState,
 )
 from gpt_trader.monitoring.alert_types import AlertSeverity
+from gpt_trader.persistence.orders_store import OrderRecord, OrderStatus
 from gpt_trader.utilities.async_tools import BoundedToThread
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -247,14 +256,19 @@ class TradingBot:
         even when guards would block normal trading.
         """
         self._preserve_flatten_failure_state = False
+        flatten_operation_id = f"flatten-{uuid4().hex}"
         self._transition_state(
             TradingBotState.STOPPING,
             reason="flatten_and_stop",
-            details={"bypass_reason": "emergency_shutdown"},
+            details={
+                "bypass_reason": "emergency_shutdown",
+                "flatten_operation_id": flatten_operation_id,
+            },
         )
         logger.warning(
             "EMERGENCY: Initiating Flatten & Stop",
             bypass_reason="emergency_shutdown",
+            flatten_operation_id=flatten_operation_id,
             operation="flatten_and_stop",
         )
         messages = ["Bot stopping."]
@@ -263,17 +277,37 @@ class TradingBot:
         if not self.broker:
             error = "No broker connection available."
             messages.append(f"Error: {error}")
+            logger.error(
+                "Emergency flatten cannot close positions without broker connection",
+                operation="flatten_and_stop",
+                flatten_operation_id=flatten_operation_id,
+                error=error,
+            )
             failed_closes.append(
                 {
+                    "flatten_operation_id": flatten_operation_id,
                     "symbol": "unknown",
                     "quantity": "unknown",
                     "error": error,
                 }
             )
+            self._record_emergency_close_audit(
+                flatten_operation_id=flatten_operation_id,
+                symbol="unknown",
+                side="unknown",
+                order_type="unknown",
+                quantity="unknown",
+                status="failed",
+                error=error,
+            )
             self._preserve_flatten_failure_state = True
             self._preserve_engine_broker_calls_on_shutdown()
             await self.engine.shutdown()
-            await self._handle_flatten_failure(failed_closes, messages)
+            await self._handle_flatten_failure(
+                failed_closes,
+                messages,
+                flatten_operation_id=flatten_operation_id,
+            )
             return messages
 
         try:
@@ -292,16 +326,61 @@ class TradingBot:
                 from gpt_trader.core import OrderSide, OrderType
 
                 for pos in positions:
+                    order_type: Any = OrderType.MARKET
+                    side: Any = "unknown"
                     try:
                         side = self._emergency_close_side(pos, OrderSide)
                         # Use absolute quantity for order
                         quantity = abs(pos.quantity)
 
-                        await self._place_reduce_only_emergency_close(
+                        order = await self._place_reduce_only_emergency_close(
                             symbol=pos.symbol,
                             side=side,
-                            order_type=OrderType.MARKET,
+                            order_type=order_type,
                             quantity=quantity,
+                        )
+                        close_error = self._emergency_close_rejection_error(order)
+                        if close_error is not None:
+                            logger.error(
+                                "Emergency close returned non-accepted broker status",
+                                operation="flatten_and_stop",
+                                flatten_operation_id=flatten_operation_id,
+                                symbol=pos.symbol,
+                                quantity=str(quantity),
+                                broker_status=self._extract_order_identifier(
+                                    order,
+                                    ("status",),
+                                ),
+                                error=close_error,
+                            )
+                            messages.append(f"Failed to close {pos.symbol}: {close_error}")
+                            failed_closes.append(
+                                {
+                                    "flatten_operation_id": flatten_operation_id,
+                                    "symbol": str(pos.symbol),
+                                    "quantity": str(quantity),
+                                    "error": close_error,
+                                }
+                            )
+                            self._record_emergency_close_audit(
+                                flatten_operation_id=flatten_operation_id,
+                                symbol=pos.symbol,
+                                side=side,
+                                order_type=order_type,
+                                quantity=quantity,
+                                status="failed",
+                                order=order,
+                                error=close_error,
+                            )
+                            continue
+                        self._record_emergency_close_audit(
+                            flatten_operation_id=flatten_operation_id,
+                            symbol=pos.symbol,
+                            side=side,
+                            order_type=order_type,
+                            quantity=quantity,
+                            status="submitted",
+                            order=order,
                         )
                         logger.info(
                             "Emergency close submitted",
@@ -310,6 +389,7 @@ class TradingBot:
                             reduce_only=True,
                             bypass_reason="emergency_shutdown",
                             operation="flatten_and_stop",
+                            flatten_operation_id=flatten_operation_id,
                         )
                         messages.append(
                             f"Submitted CLOSE for {pos.symbol} ({quantity}) reduce-only"
@@ -324,25 +404,57 @@ class TradingBot:
                                 quantity = str(abs(raw_quantity))
                             except TypeError:
                                 quantity = str(raw_quantity)
-                        logger.error(f"Failed to close {symbol}: {e}")
+                        logger.error(
+                            "Failed to close position during emergency flatten",
+                            operation="flatten_and_stop",
+                            flatten_operation_id=flatten_operation_id,
+                            symbol=symbol,
+                            quantity=quantity,
+                            error=str(e),
+                        )
                         messages.append(f"Failed to close {symbol}: {e}")
                         failed_closes.append(
                             {
+                                "flatten_operation_id": flatten_operation_id,
                                 "symbol": symbol,
                                 "quantity": quantity,
                                 "error": str(e),
                             }
                         )
+                        self._record_emergency_close_audit(
+                            flatten_operation_id=flatten_operation_id,
+                            symbol=symbol,
+                            side=side,
+                            order_type=order_type,
+                            quantity=quantity,
+                            status="failed",
+                            error=str(e),
+                        )
 
         except Exception as e:
-            logger.error(f"Flatten failed: {e}")
+            logger.error(
+                "Flatten failed",
+                operation="flatten_and_stop",
+                flatten_operation_id=flatten_operation_id,
+                error=str(e),
+            )
             messages.append(f"Critical Error during flatten: {e}")
             failed_closes.append(
                 {
+                    "flatten_operation_id": flatten_operation_id,
                     "symbol": "unknown",
                     "quantity": "unknown",
                     "error": str(e),
                 }
+            )
+            self._record_emergency_close_audit(
+                flatten_operation_id=flatten_operation_id,
+                symbol="unknown",
+                side="unknown",
+                order_type="unknown",
+                quantity="unknown",
+                status="failed",
+                error=str(e),
             )
 
         if failed_closes:
@@ -350,7 +462,11 @@ class TradingBot:
             self._preserve_engine_broker_calls_on_shutdown()
         await self.engine.shutdown()
         if failed_closes:
-            await self._handle_flatten_failure(failed_closes, messages)
+            await self._handle_flatten_failure(
+                failed_closes,
+                messages,
+                flatten_operation_id=flatten_operation_id,
+            )
             return messages
 
         self._shutdown_broker_calls()
@@ -363,6 +479,8 @@ class TradingBot:
         self,
         failed_closes: list[dict[str, str]],
         messages: list[str],
+        *,
+        flatten_operation_id: str,
     ) -> None:
         self._preserve_flatten_failure_state = True
         failed_symbols = [
@@ -371,6 +489,7 @@ class TradingBot:
             if failure.get("symbol") and failure["symbol"] != "unknown"
         ]
         details = {
+            "flatten_operation_id": flatten_operation_id,
             "failed_close_count": len(failed_closes),
             "failed_symbols": failed_symbols,
             "failed_closes": failed_closes,
@@ -387,6 +506,7 @@ class TradingBot:
         logger.critical(
             "Emergency flatten incomplete",
             operation="flatten_and_stop",
+            flatten_operation_id=flatten_operation_id,
             failed_close_count=len(failed_closes),
             failed_symbols=failed_symbols,
             monitoring_state=details["monitoring_state"],
@@ -410,8 +530,217 @@ class TradingBot:
             logger.error(
                 "Failed to record emergency flatten failure event",
                 operation="flatten_and_stop",
+                flatten_operation_id=details.get("flatten_operation_id"),
                 error=str(exc),
             )
+
+    def _record_emergency_close_audit(
+        self,
+        *,
+        flatten_operation_id: str,
+        symbol: Any,
+        side: Any,
+        order_type: Any,
+        quantity: Any,
+        status: str,
+        order: Any | None = None,
+        error: str | None = None,
+    ) -> None:
+        order_id = self._extract_order_identifier(order, ("id", "order_id"))
+        client_order_id = self._extract_order_identifier(
+            order,
+            ("client_order_id", "client_id", "client_oid"),
+        )
+        broker_status = self._extract_order_identifier(order, ("status",)) or status
+        filled_quantity = self._extract_order_decimal(
+            order,
+            ("filled_quantity", "filled_size", "fill_size", "filled_qty"),
+        )
+        average_fill_price = self._extract_order_decimal(
+            order,
+            ("average_filled_price", "average_fill_price", "avg_fill_price", "fill_price"),
+        )
+        payload: dict[str, Any] = {
+            "flatten_operation_id": flatten_operation_id,
+            "symbol": str(symbol),
+            "side": self._stringify_order_value(side),
+            "order_type": self._stringify_order_value(order_type),
+            "quantity": str(quantity),
+            "reduce_only": True,
+            "status": status,
+            "broker_status": broker_status,
+        }
+        if filled_quantity is not None:
+            payload["filled_quantity"] = str(filled_quantity)
+        if average_fill_price is not None:
+            payload["average_fill_price"] = str(average_fill_price)
+        if order_id:
+            payload["order_id"] = order_id
+        if client_order_id:
+            payload["client_order_id"] = client_order_id
+        if error:
+            payload["error"] = error
+
+        self._append_emergency_close_audit_event(payload)
+        if error is None:
+            self._persist_emergency_close_order(payload)
+
+    def _append_emergency_close_audit_event(self, payload: dict[str, Any]) -> None:
+        event_store = self._event_store
+        append = getattr(event_store, "append", None)
+        if not callable(append):
+            return
+        try:
+            append("emergency_flatten_close_order", payload)
+        except Exception as exc:
+            logger.error(
+                "Failed to record emergency flatten close-order audit event",
+                operation="flatten_and_stop",
+                error=str(exc),
+                flatten_operation_id=payload.get("flatten_operation_id"),
+                symbol=payload.get("symbol"),
+            )
+
+    def _persist_emergency_close_order(self, payload: dict[str, Any]) -> None:
+        order_id = payload.get("order_id") or payload.get("client_order_id")
+        if not order_id:
+            return
+        client_order_id = payload.get("client_order_id") or order_id
+        upsert = getattr(self._orders_store, "upsert_by_client_id", None)
+        if not callable(upsert):
+            return
+        filled_quantity = self._decimal_or_none(payload.get("filled_quantity"))
+        status = self._emergency_close_store_status(
+            payload.get("broker_status"),
+            filled_quantity_known=filled_quantity is not None and filled_quantity > 0,
+        )
+        now = datetime.now(timezone.utc)
+        metadata = {
+            "source": "emergency_flatten",
+            "flatten_operation_id": payload["flatten_operation_id"],
+            "reduce_only": True,
+            "audit_status": payload["status"],
+            "broker_status": payload.get("broker_status"),
+        }
+        record = OrderRecord(
+            order_id=str(order_id),
+            client_order_id=str(client_order_id),
+            symbol=str(payload["symbol"]),
+            side=str(payload["side"]).lower(),
+            order_type=str(payload["order_type"]).lower(),
+            quantity=self._decimal_or_zero(payload.get("quantity")),
+            price=None,
+            status=status,
+            filled_quantity=filled_quantity or Decimal("0"),
+            average_fill_price=self._decimal_or_none(payload.get("average_fill_price")),
+            created_at=now,
+            updated_at=now,
+            bot_id=self._emergency_close_bot_id(),
+            metadata=metadata,
+        )
+        try:
+            upsert(record)
+        except Exception as exc:
+            logger.error(
+                "Failed to persist emergency flatten close-order record",
+                operation="flatten_and_stop",
+                error=str(exc),
+                order_id=str(order_id),
+                client_order_id=str(client_order_id),
+            )
+
+    def _emergency_close_bot_id(self) -> str:
+        return str(self.context.bot_id or self.context.config.profile or "live")
+
+    @staticmethod
+    def _emergency_close_store_status(
+        status: Any,
+        *,
+        filled_quantity_known: bool,
+    ) -> OrderStatus:
+        try:
+            store_status = execution_status_for_store(
+                status,
+                context="emergency_flatten_close_order",
+            )
+        except ExecutionStatusCodecError:
+            return OrderStatus.OPEN
+        if not filled_quantity_known and store_status in {
+            OrderStatus.FILLED,
+            OrderStatus.PARTIALLY_FILLED,
+        }:
+            return OrderStatus.OPEN
+        return store_status
+
+    def _emergency_close_rejection_error(self, order: Any | None) -> str | None:
+        broker_status = self._extract_order_identifier(order, ("status",))
+        if broker_status is None:
+            return None
+        try:
+            store_status = execution_status_for_store(
+                broker_status,
+                context="emergency_flatten_close_order",
+            )
+        except ExecutionStatusCodecError:
+            return f"Broker returned unsupported emergency close status: {broker_status}"
+        if store_status in {
+            OrderStatus.CANCELLED,
+            OrderStatus.REJECTED,
+            OrderStatus.EXPIRED,
+            OrderStatus.FAILED,
+        }:
+            return f"Broker returned non-accepted emergency close status: {store_status.value}"
+        return None
+
+    @staticmethod
+    def _extract_order_identifier(order: Any | None, field_names: tuple[str, ...]) -> str | None:
+        if order is None:
+            return None
+        if isinstance(order, Mapping):
+            for field_name in field_names:
+                value = order.get(field_name)
+                if value is not None:
+                    return str(getattr(value, "value", value))
+            return None
+        for field_name in field_names:
+            value = getattr(order, field_name, None)
+            if value is not None:
+                return str(getattr(value, "value", value))
+        return None
+
+    @staticmethod
+    def _extract_order_decimal(
+        order: Any | None,
+        field_names: tuple[str, ...],
+    ) -> Decimal | None:
+        if order is None:
+            return None
+        if isinstance(order, Mapping):
+            values = (order.get(field_name) for field_name in field_names)
+        else:
+            values = (getattr(order, field_name, None) for field_name in field_names)
+        for value in values:
+            decimal_value = TradingBot._decimal_or_none(value)
+            if decimal_value is not None:
+                return decimal_value
+        return None
+
+    @staticmethod
+    def _stringify_order_value(value: Any) -> str:
+        return str(getattr(value, "value", value))
+
+    @staticmethod
+    def _decimal_or_none(value: Any) -> Decimal | None:
+        if value is None or value == "":
+            return None
+        try:
+            return Decimal(str(getattr(value, "value", value)))
+        except Exception:
+            return None
+
+    @staticmethod
+    def _decimal_or_zero(value: Any) -> Decimal:
+        return TradingBot._decimal_or_none(value) or Decimal("0")
 
     async def _notify_flatten_failure(self, details: dict[str, Any]) -> None:
         if self._notification_service is None:

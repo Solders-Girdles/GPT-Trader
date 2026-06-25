@@ -35,7 +35,7 @@ class TestTradingBotFlattenAndStop:
         broker.list_positions.return_value = [
             SimpleNamespace(symbol="BTC-USD", quantity=Decimal("1"))
         ]
-        broker.place_order = Mock()
+        broker.place_order = Mock(return_value=None)
 
         container = SimpleNamespace(
             broker=broker,
@@ -90,7 +90,7 @@ class TestTradingBotFlattenAndStop:
         broker.list_positions.return_value = [
             SimpleNamespace(symbol="BTC-USD", quantity=Decimal("-2"))
         ]
-        broker.place_order = Mock()
+        broker.place_order = Mock(return_value=None)
 
         container = SimpleNamespace(
             broker=broker,
@@ -140,7 +140,7 @@ class TestTradingBotFlattenAndStop:
         broker.list_positions.return_value = [
             SimpleNamespace(symbol="BTC-USD", quantity=Decimal("2"), side="short")
         ]
-        broker.place_order = Mock()
+        broker.place_order = Mock(return_value=None)
 
         container = SimpleNamespace(
             broker=broker,
@@ -331,12 +331,20 @@ class TestTradingBotFlattenAndStop:
         assert notify_kwargs["severity"] is AlertSeverity.CRITICAL
         assert notify_kwargs["force"] is True
         assert notify_kwargs["context"]["failed_symbols"] == ["ETH-USD"]
-        event_store.append.assert_called_once()
-        event_type, payload = event_store.append.call_args.args
-        assert event_type == "emergency_flatten_failed"
+        flatten_failure_events = [
+            call.args[1]
+            for call in event_store.append.call_args_list
+            if call.args[0] == "emergency_flatten_failed"
+        ]
+        assert len(flatten_failure_events) == 1
+        payload = flatten_failure_events[0]
+        flatten_operation_id = payload["flatten_operation_id"]
+        assert flatten_operation_id.startswith("flatten-")
+        assert payload["flatten_operation_id"] == flatten_operation_id
         assert payload["monitoring_state"] == "alerting_active_until_reconciliation"
         assert payload["failed_closes"] == [
             {
+                "flatten_operation_id": flatten_operation_id,
                 "symbol": "ETH-USD",
                 "quantity": "2",
                 "error": "venue rejected emergency close",

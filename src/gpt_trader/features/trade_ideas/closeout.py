@@ -46,6 +46,11 @@ def _decimal_or_none(value: Any, field: str) -> Decimal | None:
     return parsed
 
 
+def _validate_non_negative_decimal(value: Decimal | None, field: str) -> None:
+    if value is not None and value < 0:
+        raise ValueError(f"{field} must be non-negative")
+
+
 def _decimal_to_str(value: Decimal | None) -> str | None:
     if value is None:
         return None
@@ -92,6 +97,11 @@ class MaxLossSnapshot:
             self,
             "percent_of_account",
             _decimal_or_none(self.percent_of_account, "max_loss.percent_of_account"),
+        )
+        _validate_non_negative_decimal(self.amount, "max_loss.amount")
+        _validate_non_negative_decimal(
+            self.percent_of_account,
+            "max_loss.percent_of_account",
         )
 
     def to_dict(self) -> dict[str, Any]:

@@ -207,3 +207,47 @@ def test_persisted_closeout_log_rejects_non_object_max_loss_with_line_context(
         match="Closeout attribution log line 1 is malformed: max_loss must be a JSON object",
     ):
         service.list_views()
+
+
+@pytest.mark.parametrize(
+    ("field_name", "message"),
+    [
+        ("amount", "max_loss.amount must be non-negative"),
+        ("percent_of_account", "max_loss.percent_of_account must be non-negative"),
+    ],
+)
+def test_persisted_closeout_log_rejects_negative_max_loss_values_with_line_context(
+    service: TradeIdeaService,
+    field_name: str,
+    message: str,
+) -> None:
+    idea = build_trade_idea()
+    service.propose(idea, actor_id="idea-generator-v1")
+    expired = service.expire(idea.decision_id)
+    max_loss = {"amount": "250", "percent_of_account": "1.5", "assumptions": []}
+    max_loss[field_name] = "-1"
+    payload = {
+        "decision_id": idea.decision_id,
+        "timestamp": "2026-06-12T10:05:00+00:00",
+        "actor_type": "human",
+        "actor_id": "rj",
+        "terminal_event_id": expired.events[-1].event_id,
+        "record_hash": expired.events[-1].record_hash,
+        "resolution": CloseoutResolution.EXPIRY.value,
+        "realized_profit_loss_amount": None,
+        "realized_profit_loss_percent": None,
+        "realized_profit_loss_unavailable_reason": "Idea expired before entry fill",
+        "max_loss": max_loss,
+        "evidence": [],
+    }
+    service.closeout_log.path.parent.mkdir(parents=True, exist_ok=True)
+    service.closeout_log.path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    expected = f"Closeout attribution log line 1 is malformed: {message}"
+    with pytest.raises(CloseoutAttributionIntegrityError, match=expected) as log_exc_info:
+        service.closeout_log.read_records()
+    assert log_exc_info.value.context["field"] == "line"
+    assert log_exc_info.value.context["value"] == 1
+
+    with pytest.raises(CloseoutAttributionIntegrityError, match=expected):
+        service.get(idea.decision_id)

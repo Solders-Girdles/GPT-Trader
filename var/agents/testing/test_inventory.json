@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6763,
+    "total_tests": 6764,
     "total_files": 799,
     "markers_used": 16
   },
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6598,
+    "unit": 6599,
     "asyncio": 390,
-    "parametrize": 191,
+    "parametrize": 192,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -32994,6 +32994,15 @@
         "name": "test_persisted_closeout_log_rejects_non_object_max_loss_with_line_context",
         "line": 168,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_persisted_closeout_log_rejects_negative_max_loss_values_with_line_context",
+        "line": 219,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""

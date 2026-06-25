@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -168,12 +169,56 @@ def test_storage_default_uses_registry_runtime_dir(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     default_dir = tmp_path / "runtime_data" / "optimize"
+    legacy_dir = tmp_path / "home" / ".gpt_trader" / "optimize"
     monkeypatch.setattr(path_registry, "OPTIMIZATION_RUNS_DIR", default_dir)
+    monkeypatch.setattr(path_registry, "LEGACY_OPTIMIZATION_RUNS_DIR", legacy_dir)
 
     storage = OptimizationStorage()
 
     assert storage.base_dir == default_dir
+    assert storage.legacy_base_dir == legacy_dir
     assert default_dir.exists()
+    assert not legacy_dir.exists()
+
+
+def test_storage_load_run_falls_back_to_legacy_default_dir(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    default_dir = tmp_path / "runtime_data" / "optimize"
+    legacy_dir = tmp_path / "home" / ".gpt_trader" / "optimize"
+    monkeypatch.setattr(path_registry, "OPTIMIZATION_RUNS_DIR", default_dir)
+    monkeypatch.setattr(path_registry, "LEGACY_OPTIMIZATION_RUNS_DIR", legacy_dir)
+
+    run = _make_run()
+    run.run_id = "legacy-run"
+    run_dir = legacy_dir / run.run_id
+    run_dir.mkdir(parents=True)
+    (run_dir / "results.json").write_text(json_payload(run))
+
+    storage = OptimizationStorage()
+    loaded = storage.load_run("legacy-run")
+
+    assert loaded is not None
+    assert loaded.run_id == "legacy-run"
+
+
+def test_storage_explicit_base_dir_does_not_use_legacy_default_dir(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    explicit_dir = tmp_path / "custom"
+    legacy_dir = tmp_path / "home" / ".gpt_trader" / "optimize"
+    monkeypatch.setattr(path_registry, "LEGACY_OPTIMIZATION_RUNS_DIR", legacy_dir)
+
+    run = _make_run()
+    run.run_id = "legacy-run"
+    run_dir = legacy_dir / run.run_id
+    run_dir.mkdir(parents=True)
+    (run_dir / "results.json").write_text(json_payload(run))
+
+    storage = OptimizationStorage(base_dir=explicit_dir)
+
+    assert storage.legacy_base_dir is None
+    assert storage.load_run("legacy-run") is None
 
 
 def test_storage_load_run_missing_and_invalid_json(tmp_path: Path) -> None:
@@ -217,3 +262,32 @@ def test_storage_list_runs_sorted_by_started_at(tmp_path: Path) -> None:
 
     assert runs[0]["run_id"] == "run-new"
     assert runs[1]["run_id"] == "run-old"
+
+
+def test_storage_list_runs_includes_legacy_default_dir(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    default_dir = tmp_path / "runtime_data" / "optimize"
+    legacy_dir = tmp_path / "home" / ".gpt_trader" / "optimize"
+    monkeypatch.setattr(path_registry, "OPTIMIZATION_RUNS_DIR", default_dir)
+    monkeypatch.setattr(path_registry, "LEGACY_OPTIMIZATION_RUNS_DIR", legacy_dir)
+
+    current = _make_run()
+    current.run_id = "run-current"
+    current.started_at = datetime(2024, 1, 2, 12, 0, tzinfo=timezone.utc)
+    legacy = _make_run()
+    legacy.run_id = "run-legacy"
+    legacy.started_at = datetime(2024, 1, 1, 12, 0, tzinfo=timezone.utc)
+
+    for base_dir, run in ((default_dir, current), (legacy_dir, legacy)):
+        run_dir = base_dir / run.run_id
+        run_dir.mkdir(parents=True)
+        (run_dir / "results.json").write_text(json_payload(run))
+
+    runs = OptimizationStorage().list_runs()
+
+    assert [run["run_id"] for run in runs] == ["run-current", "run-legacy"]
+
+
+def json_payload(run: OptimizationRun) -> str:
+    return json.dumps(run.to_dict())

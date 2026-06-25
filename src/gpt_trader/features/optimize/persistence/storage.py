@@ -140,8 +140,12 @@ class OptimizationStorage:
         Args:
             base_dir: Base directory for storage. Defaults to path_registry.OPTIMIZATION_RUNS_DIR
         """
+        using_default_dir = base_dir is None
         self.base_dir = (
             Path(base_dir) if base_dir is not None else path_registry.OPTIMIZATION_RUNS_DIR
+        )
+        self.legacy_base_dir = (
+            path_registry.LEGACY_OPTIMIZATION_RUNS_DIR if using_default_dir else None
         )
 
         self.base_dir.mkdir(parents=True, exist_ok=True)
@@ -178,6 +182,10 @@ class OptimizationStorage:
             OptimizationRun object or None if not found
         """
         file_path = self.base_dir / run_id / "results.json"
+        if not file_path.exists() and self.legacy_base_dir is not None:
+            legacy_file_path = self.legacy_base_dir / run_id / "results.json"
+            if legacy_file_path.exists():
+                file_path = legacy_file_path
 
         if not file_path.exists():
             return None
@@ -198,27 +206,41 @@ class OptimizationStorage:
             List of run summaries
         """
         runs = []
-        for run_dir in self.base_dir.iterdir():
-            if run_dir.is_dir():
+        seen_run_ids = set()
+        search_dirs = [self.base_dir]
+        if self.legacy_base_dir is not None:
+            search_dirs.append(self.legacy_base_dir)
+
+        for base_dir in search_dirs:
+            if not base_dir.exists():
+                continue
+            for run_dir in base_dir.iterdir():
+                if not run_dir.is_dir():
+                    continue
                 file_path = run_dir / "results.json"
-                if file_path.exists():
-                    try:
-                        with open(file_path) as f:
-                            # Read only start of file for metadata if possible,
-                            # but JSON requires full load. For large files this is slow.
-                            # Optimization: Store metadata.json separately.
-                            # For now, just load and catch errors.
-                            data = json.load(f)
-                            runs.append(
-                                {
-                                    "run_id": data["run_id"],
-                                    "study_name": data["study_name"],
-                                    "started_at": data["started_at"],
-                                    "best_value": data.get("best_objective_value"),
-                                }
-                            )
-                    except Exception:
-                        continue
+                if not file_path.exists():
+                    continue
+                try:
+                    with open(file_path) as f:
+                        # Read only start of file for metadata if possible,
+                        # but JSON requires full load. For large files this is slow.
+                        # Optimization: Store metadata.json separately.
+                        # For now, just load and catch errors.
+                        data = json.load(f)
+                        run_id = data["run_id"]
+                        if run_id in seen_run_ids:
+                            continue
+                        seen_run_ids.add(run_id)
+                        runs.append(
+                            {
+                                "run_id": run_id,
+                                "study_name": data["study_name"],
+                                "started_at": data["started_at"],
+                                "best_value": data.get("best_objective_value"),
+                            }
+                        )
+                except Exception:
+                    continue
 
         # Sort by start time descending
         runs.sort(key=lambda x: x["started_at"], reverse=True)

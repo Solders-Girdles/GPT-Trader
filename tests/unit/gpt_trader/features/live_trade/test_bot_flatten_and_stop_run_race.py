@@ -44,6 +44,32 @@ class _RunningEngine:
         await asyncio.sleep(0)
 
 
+class _ShutdownHookEngine:
+    def __init__(self) -> None:
+        self.started = asyncio.Event()
+        self.shutdown_calls = 0
+        self.on_shutdown: Mock | None = None
+        self._task: asyncio.Task[None] | None = None
+
+    async def start_background_tasks(self) -> list[asyncio.Task[None]]:
+        self._task = asyncio.create_task(self._background_task())
+        self.started.set()
+        return [self._task]
+
+    async def _background_task(self) -> None:
+        await asyncio.Event().wait()
+
+    def cancel_background_task(self) -> None:
+        if self._task is not None and not self._task.done():
+            self._task.cancel()
+
+    async def shutdown(self) -> None:
+        self.shutdown_calls += 1
+        if self.on_shutdown is not None:
+            self.on_shutdown()
+        await asyncio.sleep(0)
+
+
 @pytest.mark.asyncio
 async def test_flatten_and_stop_preserves_error_when_run_cleanup_races(
     monkeypatch: pytest.MonkeyPatch,
@@ -87,6 +113,49 @@ async def test_flatten_and_stop_preserves_error_when_run_cleanup_races(
 
     assert any("Emergency flatten incomplete" in msg for msg in messages)
     assert engine.shutdown_calls >= 2
+    assert bot.state is TradingBotState.ERROR
+    assert bot._lifecycle.last_transition is not None
+    assert bot._lifecycle.last_transition.reason == "flatten_and_stop_failed"
+    bot._broker_calls.shutdown.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_run_cleanup_rechecks_flatten_failure_after_engine_shutdown(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    config = BotConfig(symbols=["BTC-USD"], interval=1)
+    broker = Mock()
+    container = SimpleNamespace(
+        broker=broker,
+        risk_manager=Mock(),
+        event_store=Mock(),
+        orders_store=Mock(),
+        notification_service=Mock(),
+        health_state=Mock(),
+    )
+
+    engine = _ShutdownHookEngine()
+    monkeypatch.setattr(bot_module, "TradingEngine", MagicMock(return_value=engine))
+
+    bot = TradingBot(config=config, container=container)
+    bot._broker_calls = _DirectBrokerCalls()
+
+    def mark_flatten_failure() -> None:
+        bot._preserve_flatten_failure_state = True
+        bot._transition_state(
+            TradingBotState.ERROR,
+            reason="flatten_and_stop_failed",
+            details={"failed_close_count": 1},
+        )
+
+    engine.on_shutdown = Mock(side_effect=mark_flatten_failure)
+
+    run_task = asyncio.create_task(bot.run(single_cycle=False))
+    await engine.started.wait()
+    engine.cancel_background_task()
+    await asyncio.wait_for(run_task, timeout=1)
+
+    assert engine.on_shutdown.called
     assert bot.state is TradingBotState.ERROR
     assert bot._lifecycle.last_transition is not None
     assert bot._lifecycle.last_transition.reason == "flatten_and_stop_failed"

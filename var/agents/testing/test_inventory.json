@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6788,
+    "total_tests": 6789,
     "total_files": 802,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6623,
-    "asyncio": 396,
+    "unit": 6624,
+    "asyncio": 397,
     "parametrize": 193,
     "endpoints": 83,
     "property": 82,
@@ -27179,7 +27179,16 @@
     "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py": [
       {
         "name": "test_flatten_and_stop_preserves_error_when_run_cleanup_races",
-        "line": 48,
+        "line": 74,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_cleanup_rechecks_flatten_failure_after_engine_shutdown",
+        "line": 123,
         "markers": [
           "asyncio",
           "unit"

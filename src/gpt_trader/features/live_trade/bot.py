@@ -217,6 +217,7 @@ class TradingBot:
             else:
                 self._transition_state(TradingBotState.STOPPING, reason="shutdown_start")
             await self.engine.shutdown()
+            preserve_flatten_failure = self._preserve_flatten_failure_state
             if preserve_flatten_failure:
                 logger.warning(
                     "Bot shutdown left broker calls active for flatten reconciliation",

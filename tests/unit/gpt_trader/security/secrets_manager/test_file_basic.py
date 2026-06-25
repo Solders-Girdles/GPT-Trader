@@ -60,9 +60,9 @@ class TestFileBasics:
 
         expected_file = secrets_dir / "brokers_coinbase.enc"
         assert not expected_file.exists()
+        assert "Failed to store secret" in caplog.messages
         assert any(
-            "File-backed secret storage requires GPT_TRADER_ENCRYPTION_KEY" in message
-            for message in caplog.messages
+            getattr(record, "error_type", None) == "RuntimeError" for record in caplog.records
         )
         assert "dummy-api-key" not in caplog.text
 

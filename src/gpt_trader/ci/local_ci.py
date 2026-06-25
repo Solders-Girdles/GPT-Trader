@@ -278,7 +278,7 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
         ),
         PlannedStep(
             label="Check triage backlog",
-            command=["make", "test-triage-check"],
+            command=["uv", "run", "python", "scripts/maintenance/test_legacy_triage.py", "--check"],
         ),
         PlannedStep(
             label="Unit tests (core)",

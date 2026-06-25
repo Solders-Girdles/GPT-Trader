@@ -71,6 +71,22 @@ def test_snapshot_step_expands_test_files_before_subprocess() -> None:
     assert any("test_snapshots_main_screen.py" in part for part in snapshot_step.command)
 
 
+def test_triage_backlog_step_uses_portable_python_command() -> None:
+    args = _make_args("quick")
+    profile = local_ci.resolve_profile(args.profile)
+    steps = local_ci.build_steps(profile, args)
+
+    triage_step = _find_step(steps, "Check triage backlog")
+
+    assert triage_step.command == [
+        "uv",
+        "run",
+        "python",
+        "scripts/maintenance/test_legacy_triage.py",
+        "--check",
+    ]
+
+
 def test_print_profile_banner_reports_alias_and_status(capsys) -> None:
     selection = "dev"
     profile = local_ci.resolve_profile(selection)

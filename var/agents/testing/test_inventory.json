@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6822,
+    "total_tests": 6823,
     "total_files": 804,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6657,
+    "unit": 6658,
     "asyncio": 411,
     "parametrize": 195,
     "endpoints": 83,
@@ -62459,7 +62459,7 @@
         "docstring": ""
       },
       {
-        "name": "test_print_profile_banner_reports_alias_and_status",
+        "name": "test_triage_backlog_step_uses_portable_python_command",
         "line": 74,
         "markers": [
           "unit"
@@ -62467,8 +62467,16 @@
         "docstring": ""
       },
       {
+        "name": "test_print_profile_banner_reports_alias_and_status",
+        "line": 90,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_strict_profile_banner_distinguishes_pull_request_ci",
-        "line": 85,
+        "line": 101,
         "markers": [
           "unit"
         ],

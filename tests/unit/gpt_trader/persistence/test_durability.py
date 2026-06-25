@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
+import gpt_trader.persistence.durability as durability
 from gpt_trader.persistence.durability import (
     CorruptionError,
     WriteResult,
@@ -102,6 +103,33 @@ class TestAtomicFileWrite:
 
             atomic_write_file(path, "updated")
             assert path.read_text() == "updated"
+
+    def test_atomic_write_file_overwrite_uses_replace(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        replace_calls: list[tuple[Path, Path]] = []
+        original_replace = durability.os.replace
+
+        def replace_spy(src: str | Path, dst: str | Path) -> None:
+            replace_calls.append((Path(src), Path(dst)))
+            original_replace(src, dst)
+
+        def rename_disallowed(src: str | Path, dst: str | Path) -> None:
+            raise AssertionError(f"unexpected os.rename call: {src} -> {dst}")
+
+        monkeypatch.setattr(durability.os, "replace", replace_spy)
+        monkeypatch.setattr(durability.os, "rename", rename_disallowed)
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "test.txt"
+            path.write_text("original")
+
+            atomic_write_file(path, "updated")
+
+            assert path.read_text() == "updated"
+            assert replace_calls
+            assert replace_calls[0][1] == path
+            assert not list(path.parent.glob(f".{path.name}.*.tmp"))
 
     def test_atomic_write_json(self) -> None:
         with TemporaryDirectory() as tmpdir:

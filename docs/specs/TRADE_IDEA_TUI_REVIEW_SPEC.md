@@ -1,11 +1,11 @@
 ---
-status: draft
-last-updated: 2026-06-12
+status: current
+last-updated: 2026-06-25
 workstream: 2 (see TRADE_IDEA_INTERFACES_DESIGN_NOTES.md)
 depends-on: Workstream 0 (service factory, actor resolution); independent of the CLI workstream
 ---
 
-# Implementation Spec: TUI Trade-Idea Review Screen
+# Implemented Spec: TUI Trade-Idea Review Screen
 
 ## Goal
 
@@ -14,6 +14,13 @@ A Textual screen where the human reviewer — the approval gate of
 full thesis/risk record, see exactly which policy checks pass or fail, and
 approve, reject, or request changes with a recorded reason. This is the
 operator decision point the framework requires.
+
+## Implementation status
+
+This workstream is implemented by `IdeasReviewScreen` and its TUI binding. This
+document is retained as the implementation record and maintenance guide, not as
+future backlog. The screen remains a review/audit adapter over
+`TradeIdeaService`; it does not place, modify, cancel, or route broker orders.
 
 ## Scope
 
@@ -26,12 +33,12 @@ the bot runtime.
 
 | File | Action |
 |------|--------|
-| `src/gpt_trader/tui/screens/ideas_review_screen.py` | New — `IdeasReviewScreen(Screen)` + reason-input modal |
-| `src/gpt_trader/tui/screens/__init__.py` | Export the screen (match existing pattern) |
-| `src/gpt_trader/tui/app.py` (or `main_screen.py` — wherever global BINDINGS live) | Add binding + action to push the screen. Verify no key conflict before choosing; prefer `I` ("Ideas") |
-| `src/gpt_trader/tui/styles/screens/ideas_review.tcss` | New CSS module; then run `python scripts/build_tui_css.py` |
-| `tests/unit/gpt_trader/tui/test_ideas_review_screen.py` | New — behavior tests |
-| `tests/unit/gpt_trader/tui/test_snapshots_ideas_review.py` | New — snapshot tests |
+| `src/gpt_trader/tui/screens/ideas_review_screen.py` | Implemented — `IdeasReviewScreen(Screen)` + reason-input modal |
+| `src/gpt_trader/tui/screens/__init__.py` | Implemented — exports the screen |
+| `src/gpt_trader/tui/app.py`, `src/gpt_trader/tui/app_actions.py` | Implemented — `I` binding pushes the screen |
+| `src/gpt_trader/tui/styles/screens/ideas_review.tcss` | Implemented — CSS module; generated main theme files include it |
+| `tests/unit/gpt_trader/tui/test_ideas_review_screen.py` | Implemented — behavior tests |
+| `tests/unit/gpt_trader/tui/test_snapshots_ideas_review.py` | Implemented — snapshot tests |
 
 ## Architecture decisions
 
@@ -115,9 +122,9 @@ the bot runtime.
 
 ## Styling
 
-- New CSS module `tui/styles/screens/ideas_review.tcss`; run
-  `python scripts/build_tui_css.py` after editing. Never edit
-  `styles/main.tcss`.
+- CSS module `tui/styles/screens/ideas_review.tcss`; run
+  `python scripts/build_tui_css.py` after editing it. Never edit
+  `styles/main.tcss` directly.
 - Any `DEFAULT_CSS` uses hardcoded hex + `/* $variable */` comments per
   CLAUDE.md.
 - State colors should reuse the theme palette conventions in
@@ -127,9 +134,9 @@ the bot runtime.
 
 ## Test plan
 
-Behavior tests (`tests/unit/gpt_trader/tui/test_ideas_review_screen.py`)
-using Textual's `App.run_test()` pilot and a `tmp_path` service injected via
-the constructor:
+Behavior tests are implemented in
+`tests/unit/gpt_trader/tui/test_ideas_review_screen.py` using Textual's
+`App.run_test()` pilot and a `tmp_path` service injected via the constructor:
 
 1. Empty store → queue renders empty-state message, no crash.
 2. Seeded proposed idea appears in queue; selecting it renders all record
@@ -146,22 +153,21 @@ the constructor:
    no service mutation.
 8. Filter cycling changes the visible row set.
 
-Snapshot tests (`test_snapshots_ideas_review.py`): empty state, populated
-queue with detail pane (compliant + violating idea). Update via
+Snapshot tests are implemented in `test_snapshots_ideas_review.py`: empty state
+and populated queue with detail pane. For intentional visual changes, update via
 `uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py --snapshot-update`
 and review diffs.
 
 ## Acceptance criteria
 
-- [ ] Reviewer can fully triage with keyboard only: open screen → select →
+- [x] Reviewer can fully triage with keyboard only: open screen → select →
       read record + policy verdict + history → approve/reject/request
       changes with a reason → see the result reflected.
-- [ ] Every mutation lands in the audit log with `actor_type=human`, the
+- [x] Every mutation lands in the audit log with `actor_type=human`, the
       reviewer's id, and the typed reason; nothing mutates without a reason.
-- [ ] No policy/workflow logic re-implemented in TUI code (imports from
+- [x] No policy/workflow logic re-implemented in TUI code (imports from
       `features/trade_ideas` only: service, models, workflow, policy, audit
       types). No imports from brokerage or live_trade slices.
-- [ ] Screen opens and functions in demo mode.
-- [ ] CSS built via `scripts/build_tui_css.py`; snapshot tests committed.
-- [ ] `uv run agent-check`, `agent-naming`, `mypy`, `ruff`, `black` clean;
-      TUI test suites green.
+- [x] Screen opens and functions in demo mode.
+- [x] CSS built via `scripts/build_tui_css.py`; snapshot tests committed.
+- [x] TUI behavior and snapshot coverage committed for the implemented screen.

@@ -21,8 +21,8 @@ Output:
 from __future__ import annotations
 
 import argparse
+import ast
 import json
-import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -53,45 +53,56 @@ def scan_logging_calls(source_dir: Path) -> dict[str, Any]:
         except Exception:
             continue
 
-        # Extract operation= patterns
-        operation_pattern = r'operation\s*=\s*["\']([^"\']+)["\']'
-        for match in re.finditer(operation_pattern, content):
-            operation = match.group(1)
+        try:
+            tree = ast.parse(content, filename=str(py_file))
+        except SyntaxError:
+            continue
 
-            # Find the surrounding context
-            start = max(0, match.start() - 200)
-            end = min(len(content), match.end() + 100)
-            context = content[start:end]
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
 
-            # Extract component if present
-            component_match = re.search(r'component\s*=\s*["\']([^"\']+)["\']', context)
-            component = component_match.group(1) if component_match else None
+            keyword_values = {
+                keyword.arg: keyword.value for keyword in node.keywords if keyword.arg is not None
+            }
+            operation_value = keyword_values.get("operation")
+            if not isinstance(operation_value, ast.Constant) or not isinstance(
+                operation_value.value, str
+            ):
+                continue
 
-            # Extract status if present
-            status_match = re.search(r'status\s*=\s*["\']([^"\']+)["\']', context)
-            status = status_match.group(1) if status_match else None
+            operation = operation_value.value
+            component_value = keyword_values.get("component")
+            component = (
+                component_value.value
+                if isinstance(component_value, ast.Constant)
+                and isinstance(component_value.value, str)
+                else None
+            )
+            status_value = keyword_values.get("status")
+            status = (
+                status_value.value
+                if isinstance(status_value, ast.Constant) and isinstance(status_value.value, str)
+                else None
+            )
 
-            # Determine log level from context. StructuredLogger.exception
-            # emits at ERROR level even though the method name differs.
+            # StructuredLogger.exception emits at ERROR level even though the
+            # method name differs.
             level = "INFO"
-            for method, event_level in [
-                ("debug", "DEBUG"),
-                ("info", "INFO"),
-                ("warning", "WARNING"),
-                ("error", "ERROR"),
-                ("exception", "ERROR"),
-                ("critical", "CRITICAL"),
-            ]:
-                if f".{method}(" in context.lower():
-                    level = event_level
-                    break
+            func = node.func
+            if isinstance(func, ast.Attribute):
+                method = func.attr.lower()
+                level = {
+                    "debug": "DEBUG",
+                    "info": "INFO",
+                    "warning": "WARNING",
+                    "error": "ERROR",
+                    "exception": "ERROR",
+                    "critical": "CRITICAL",
+                }.get(method, level)
 
-            # Find other keyword arguments
-            kwarg_pattern = r"(\w+)\s*="
-            kwargs = set(re.findall(kwarg_pattern, context))
-            # Filter out common non-field kwargs
+            kwargs = set(keyword_values)
             kwargs -= {"operation", "component", "status", "extra", "exc_info"}
-
             sorted_kwargs = sorted(kwargs)
 
             operations[operation].append(
@@ -100,7 +111,7 @@ def scan_logging_calls(source_dir: Path) -> dict[str, Any]:
                     "component": component,
                     "status": status,
                     "level": level,
-                    "fields": sorted_kwargs[:10],  # Limit fields (deterministic)
+                    "fields": sorted_kwargs,
                 }
             )
 

@@ -156,9 +156,6 @@
   "events": {
     "account_telemetry": {
       "common_fields": [
-        "indent",
-        "int",
-        "server_time",
         "stage"
       ],
       "components": null,
@@ -178,7 +175,6 @@
       "common_fields": [
         "invalid_value",
         "ip_count",
-        "iption",
         "service"
       ],
       "components": null,
@@ -195,7 +191,6 @@
     "api_health_guard": {
       "common_fields": [
         "details",
-        "guard_name",
         "reasons"
       ],
       "components": null,
@@ -210,7 +205,6 @@
     },
     "bot_bootstrap": {
       "common_fields": [
-        "container",
         "stage"
       ],
       "components": null,
@@ -227,8 +221,7 @@
       "common_fields": [
         "latency_seconds",
         "outcome",
-        "reason",
-        "stage"
+        "reason"
       ],
       "components": null,
       "levels": [
@@ -242,8 +235,6 @@
     },
     "cancel_order": {
       "common_fields": [
-        "__all__",
-        "allow_idempotent",
         "client_order_id",
         "error_message",
         "error_type",
@@ -282,9 +273,7 @@
       "common_fields": [
         "expected",
         "path",
-        "stored",
-        "stored_checksum",
-        "valid"
+        "stored"
       ],
       "components": null,
       "levels": [
@@ -313,7 +302,6 @@
     },
     "collateral_update": {
       "common_fields": [
-        "_last_collateral_available",
         "current",
         "delta",
         "previous"
@@ -332,13 +320,11 @@
       "common_fields": [
         "error_message",
         "error_type",
-        "symbol",
-        "unrealized"
+        "symbol"
       ],
       "components": null,
       "levels": [
-        "ERROR",
-        "INFO"
+        "ERROR"
       ],
       "occurrence_count": 3,
       "source_files": [
@@ -364,9 +350,9 @@
     },
     "config_guardian": {
       "common_fields": [
+        "error",
         "event_count",
         "monitor",
-        "result",
         "stage",
         "user_id",
         "validator"
@@ -384,10 +370,7 @@
       "statuses": null
     },
     "cycle": {
-      "common_fields": [
-        "_connection_status",
-        "broker"
-      ],
+      "common_fields": [],
       "components": null,
       "levels": [
         "ERROR"
@@ -396,16 +379,12 @@
       "source_files": [
         "features/live_trade/engines/strategy.py"
       ],
-      "statuses": [
-        "DISCONNECTED"
-      ]
+      "statuses": null
     },
     "daily_tracking": {
       "common_fields": [
-        "broker",
         "equity",
         "error_message",
-        "quity",
         "stage"
       ],
       "components": null,
@@ -439,11 +418,8 @@
     },
     "database_init": {
       "common_fields": [
-        "_initialized",
-        "connection",
         "issues",
-        "path",
-        "schema"
+        "path"
       ],
       "components": null,
       "levels": [
@@ -463,12 +439,9 @@
         "error",
         "original",
         "path",
-        "removed",
         "sidecar",
         "table",
-        "tables_recovered",
-        "tion",
-        "up_path"
+        "tables_recovered"
       ],
       "components": null,
       "levels": [
@@ -484,11 +457,7 @@
     },
     "degradation": {
       "common_fields": [
-        "None",
-        "_broker_failures",
-        "_global_pause",
         "allow_reduce_only",
-        "ause",
         "cancelled_orders",
         "consecutive_failures",
         "cooldown_seconds",
@@ -498,7 +467,9 @@
         "new_reason",
         "reason",
         "side",
-        "stage"
+        "stage",
+        "symbol",
+        "threshold"
       ],
       "components": null,
       "levels": [
@@ -514,19 +485,17 @@
     },
     "derivatives_discovery": {
       "common_fields": [
-        "None",
         "balance_summary_keys",
         "cfm_accessible",
         "error",
         "intx_accessible",
         "intx_enabled",
-        "intx_portfolio",
+        "portfolio_details_keys",
         "portfolio_uuid",
         "portfolios_count",
         "reduce_only_required",
         "requested_market",
         "stage",
-        "tfolios",
         "us_enabled"
       ],
       "components": null,
@@ -543,14 +512,12 @@
     },
     "derivatives_product_discovery": {
       "common_fields": [
-        "base_max_size",
         "error",
-        "error_message",
         "futures",
         "perpetuals",
-        "raw_product_data",
         "stage",
-        "symbol"
+        "symbol",
+        "total"
       ],
       "components": null,
       "levels": [
@@ -566,9 +533,7 @@
     },
     "disable_rule": {
       "common_fields": [
-        "enabled",
-        "service",
-        "updated_at"
+        "service"
       ],
       "components": null,
       "levels": [
@@ -582,9 +547,7 @@
     },
     "enable_rule": {
       "common_fields": [
-        "enabled",
-        "service",
-        "updated_at"
+        "service"
       ],
       "components": null,
       "levels": [
@@ -597,9 +560,7 @@
       "statuses": null
     },
     "encryption_init": {
-      "common_fields": [
-        "encryption_key"
-      ],
+      "common_fields": [],
       "components": null,
       "levels": [
         "WARNING"
@@ -614,6 +575,7 @@
     },
     "enforce_slippage_guard": {
       "common_fields": [
+        "consecutive_failures",
         "error_message",
         "error_type",
         "side",
@@ -648,8 +610,6 @@
     },
     "event_store": {
       "common_fields": [
-        "__all__",
-        "active_strategies",
         "error_message",
         "error_type",
         "event_type",
@@ -672,7 +632,6 @@
     "execute_order": {
       "common_fields": [
         "client_order_id",
-        "leverage",
         "sleep_fn"
       ],
       "components": null,
@@ -704,8 +663,7 @@
     },
     "fetch_total_equity": {
       "common_fields": [
-        "error_type",
-        "result"
+        "error_type"
       ],
       "components": null,
       "levels": [
@@ -736,9 +694,8 @@
     "flatten_and_stop": {
       "common_fields": [
         "bypass_reason",
-        "details",
-        "messages",
         "quantity",
+        "reduce_only",
         "symbol"
       ],
       "components": null,
@@ -755,12 +712,15 @@
     "get_candles": {
       "common_fields": [
         "gaps",
+        "granularity",
+        "score",
         "spikes",
+        "symbol",
         "volume_anomalies"
       ],
       "components": null,
       "levels": [
-        "INFO"
+        "ERROR"
       ],
       "occurrence_count": 1,
       "source_files": [
@@ -911,12 +871,11 @@
     },
     "guard_alert": {
       "common_fields": [
+        "error",
         "guard_name",
-        "json",
+        "payload",
         "severity",
-        "stage",
-        "time_provider",
-        "timeout"
+        "stage"
       ],
       "components": null,
       "levels": [
@@ -931,10 +890,10 @@
     },
     "guard_manager": {
       "common_fields": [
-        "alert",
-        "bool",
+        "alert_message",
+        "error",
         "guard_name",
-        "log_method",
+        "handler",
         "severity",
         "stage"
       ],
@@ -969,8 +928,7 @@
     },
     "health_assessment": {
       "common_fields": [
-        "error",
-        "health_state"
+        "error"
       ],
       "components": null,
       "levels": [
@@ -984,9 +942,7 @@
     },
     "health_check": {
       "common_fields": [
-        "details",
         "error",
-        "healthy",
         "latency_ms"
       ],
       "components": null,
@@ -1001,8 +957,7 @@
     },
     "health_check_planner": {
       "common_fields": [
-        "error",
-        "key"
+        "error"
       ],
       "components": null,
       "levels": [
@@ -1016,8 +971,6 @@
     },
     "health_check_runner": {
       "common_fields": [
-        "_running",
-        "_task",
         "error",
         "interval_seconds"
       ],
@@ -1038,7 +991,8 @@
       ],
       "components": null,
       "levels": [
-        "DEBUG"
+        "DEBUG",
+        "WARNING"
       ],
       "occurrence_count": 2,
       "source_files": [
@@ -1051,8 +1005,7 @@
         "error_message",
         "error_type",
         "host",
-        "port",
-        "reason"
+        "port"
       ],
       "components": null,
       "levels": [
@@ -1067,10 +1020,7 @@
       "statuses": null
     },
     "health_server_stop": {
-      "common_fields": [
-        "_server",
-        "running"
-      ],
+      "common_fields": [],
       "components": null,
       "levels": [
         "INFO"
@@ -1083,8 +1033,7 @@
     },
     "health_signals": {
       "common_fields": [
-        "error",
-        "summary"
+        "error"
       ],
       "components": null,
       "levels": [
@@ -1098,13 +1047,9 @@
     },
     "init_tracing": {
       "common_fields": [
-        "_tracer",
-        "_tracing_enabled",
         "enabled",
         "endpoint",
-        "er",
         "error",
-        "processor",
         "service_name"
       ],
       "components": null,
@@ -1120,12 +1065,12 @@
     },
     "lifecycle_transition": {
       "common_fields": [
-        "_last_transition",
-        "_state",
+        "details",
         "entity",
         "forced",
         "from_state",
-        "wed"
+        "reason",
+        "to_state"
       ],
       "components": null,
       "levels": [
@@ -1140,9 +1085,17 @@
     },
     "liquidation_monitor": {
       "common_fields": [
+        "current_price",
+        "distance_bps",
+        "distance_pct",
+        "entry_price",
+        "error",
+        "leverage",
+        "liquidation_price",
         "position_count",
+        "position_side",
+        "position_size",
         "reason",
-        "risk",
         "risk_level",
         "stage",
         "symbol"
@@ -1338,9 +1291,9 @@
       "common_fields": [
         "alert_threshold",
         "alert_type",
-        "client",
         "client_provided",
-        "monitor",
+        "error",
+        "liquidation_buffer",
         "stage"
       ],
       "components": null,
@@ -1356,7 +1309,6 @@
     },
     "order_audit": {
       "common_fields": [
-        "audit_task",
         "open_order_count",
         "stage"
       ],
@@ -1412,7 +1364,6 @@
       "common_fields": [
         "action",
         "error_message",
-        "failure_detail",
         "position_state",
         "quantity",
         "reason",
@@ -1422,7 +1373,9 @@
       ],
       "components": null,
       "levels": [
-        "INFO"
+        "ERROR",
+        "INFO",
+        "WARNING"
       ],
       "occurrence_count": 10,
       "source_files": [
@@ -1432,10 +1385,8 @@
     },
     "order_preview": {
       "common_fields": [
-        "broker",
         "consecutive_failures",
         "error",
-        "preview_broker",
         "stage"
       ],
       "components": null,
@@ -1455,7 +1406,6 @@
         "error_type",
         "open_order_count",
         "order_id",
-        "pending",
         "recovered_order_count",
         "stage",
         "unknown_bot_order_count"
@@ -1491,15 +1441,17 @@
     "order_rejected": {
       "common_fields": [
         "client_order_id",
-        "payload",
         "price",
+        "quantity",
         "reason",
         "reason_detail",
-        "stage"
+        "side",
+        "stage",
+        "symbol"
       ],
       "components": null,
       "levels": [
-        "INFO"
+        "WARNING"
       ],
       "occurrence_count": 1,
       "source_files": [
@@ -1520,7 +1472,8 @@
       "components": null,
       "levels": [
         "ERROR",
-        "INFO"
+        "INFO",
+        "WARNING"
       ],
       "occurrence_count": 4,
       "source_files": [
@@ -1532,24 +1485,25 @@
       "common_fields": [
         "attempt",
         "client_order_id",
+        "delay_seconds",
         "error_message",
         "error_type",
-        "ide",
         "max_attempts",
         "order_id",
         "order_type",
         "price",
         "quantity",
-        "r_id",
         "reason",
         "reason_detail",
         "reduce_only",
-        "side"
+        "side",
+        "stage"
       ],
       "components": null,
       "levels": [
         "ERROR",
-        "INFO"
+        "INFO",
+        "WARNING"
       ],
       "occurrence_count": 13,
       "source_files": [
@@ -1561,7 +1515,6 @@
     },
     "order_suppressed": {
       "common_fields": [
-        "None",
         "error_message",
         "error_type"
       ],
@@ -1593,8 +1546,6 @@
     },
     "orders_init": {
       "common_fields": [
-        "_initialized",
-        "es",
         "issues",
         "path"
       ],
@@ -1611,10 +1562,8 @@
     },
     "orders_store_init": {
       "common_fields": [
-        "_orders_store",
         "error_message",
-        "error_type",
-        "orders_store"
+        "error_type"
       ],
       "components": null,
       "levels": [
@@ -1662,7 +1611,6 @@
     },
     "pnl_process_fill": {
       "common_fields": [
-        "bool",
         "error_message",
         "error_type"
       ],
@@ -1695,11 +1643,9 @@
     "profile_load": {
       "common_fields": [
         "details",
-        "exception",
+        "error",
         "path",
-        "payload",
-        "profile",
-        "schema"
+        "profile"
       ],
       "components": null,
       "levels": [
@@ -1728,6 +1674,7 @@
     },
     "read_from_cache": {
       "common_fields": [
+        "cache_path",
         "error_message",
         "error_type",
         "granularity",
@@ -1745,10 +1692,8 @@
     },
     "readiness_update": {
       "common_fields": [
-        "bool",
         "ready",
-        "reason",
-        "str"
+        "reason"
       ],
       "components": null,
       "levels": [
@@ -1848,8 +1793,6 @@
     },
     "reduce_only": {
       "common_fields": [
-        "_msg",
-        "reduce_only",
         "side",
         "stage",
         "symbol"
@@ -1950,7 +1893,6 @@
     "runtime_start": {
       "common_fields": [
         "config_digest",
-        "expected",
         "path",
         "reason"
       ],
@@ -1968,9 +1910,7 @@
     },
     "save_order": {
       "common_fields": [
-        "checksum",
         "error",
-        "error_msg",
         "order_id"
       ],
       "components": null,
@@ -1988,7 +1928,6 @@
       "common_fields": [
         "error_message",
         "error_type",
-        "loop",
         "stage"
       ],
       "components": null,
@@ -2016,10 +1955,7 @@
       ]
     },
     "secret_store": {
-      "common_fields": [
-        "path",
-        "secret"
-      ],
+      "common_fields": [],
       "components": null,
       "levels": [
         "ERROR",
@@ -2035,9 +1971,7 @@
       ]
     },
     "shutdown": {
-      "common_fields": [
-        "running"
-      ],
+      "common_fields": [],
       "components": null,
       "levels": [
         "INFO"
@@ -2050,13 +1984,12 @@
     },
     "shutdown_tracing": {
       "common_fields": [
-        "_tracer",
-        "error",
-        "provider"
+        "error"
       ],
       "components": null,
       "levels": [
-        "INFO"
+        "INFO",
+        "WARNING"
       ],
       "occurrence_count": 2,
       "source_files": [
@@ -2082,8 +2015,7 @@
     },
     "status_reporter": {
       "common_fields": [
-        "error",
-        "result"
+        "error"
       ],
       "components": null,
       "levels": [
@@ -2093,14 +2025,10 @@
       "source_files": [
         "monitoring/status_reporter.py"
       ],
-      "statuses": [
-        "fail"
-      ]
+      "statuses": null
     },
     "status_write": {
       "common_fields": [
-        "cls",
-        "ent",
         "error"
       ],
       "components": null,
@@ -2121,7 +2049,7 @@
       ],
       "components": null,
       "levels": [
-        "INFO"
+        "ERROR"
       ],
       "occurrence_count": 1,
       "source_files": [
@@ -2145,9 +2073,7 @@
     },
     "submit": {
       "common_fields": [
-        "ds",
         "latency_seconds",
-        "nt_id",
         "outcome",
         "reason"
       ],
@@ -2162,9 +2088,7 @@
       "statuses": null
     },
     "suspicious_activity": {
-      "common_fields": [
-        "avg_size"
-      ],
+      "common_fields": [],
       "components": null,
       "levels": [
         "WARNING"
@@ -2180,8 +2104,6 @@
     "system_monitor_metrics": {
       "common_fields": [
         "error",
-        "indent",
-        "nent",
         "stage"
       ],
       "components": null,
@@ -2198,9 +2120,6 @@
       "common_fields": [
         "change_count",
         "error",
-        "last_positions",
-        "side",
-        "size",
         "stage",
         "symbol"
       ],
@@ -2227,8 +2146,8 @@
       ],
       "components": null,
       "levels": [
-        "ERROR",
-        "INFO"
+        "DEBUG",
+        "ERROR"
       ],
       "occurrence_count": 2,
       "source_files": [
@@ -2238,21 +2157,12 @@
     },
     "telemetry_stream": {
       "common_fields": [
-        "__all__",
-        "_loop_task_handle",
-        "_stream_task",
-        "_ws_stop",
-        "broker",
         "configured_level",
-        "coro",
-        "ctx",
         "error",
-        "handler_state",
-        "ion",
-        "level",
-        "loop",
-        "nfig",
-        "risk_manager"
+        "stage",
+        "stream_level",
+        "symbol",
+        "symbols"
       ],
       "components": null,
       "levels": [
@@ -2308,10 +2218,7 @@
       "common_fields": [
         "error_message",
         "error_type",
-        "last",
-        "symbol",
-        "ts",
-        "ts_raw"
+        "symbol"
       ],
       "components": null,
       "levels": [
@@ -2326,7 +2233,6 @@
     "update_status": {
       "common_fields": [
         "error",
-        "error_msg",
         "order_id"
       ],
       "components": null,
@@ -2342,10 +2248,8 @@
     },
     "upsert_order": {
       "common_fields": [
-        "checksum",
         "client_order_id",
         "error",
-        "error_msg",
         "order_id"
       ],
       "components": null,
@@ -2365,10 +2269,8 @@
         "error_type",
         "order_id",
         "reason",
-        "rest_service",
         "stage",
-        "symbol",
-        "symbols"
+        "symbol"
       ],
       "components": null,
       "levels": [
@@ -2399,7 +2301,6 @@
     },
     "user_events": {
       "common_fields": [
-        "broker",
         "stage"
       ],
       "components": null,
@@ -2431,9 +2332,9 @@
     },
     "validate_ip": {
       "common_fields": [
+        "allowed_ips",
         "client_ip",
         "matched_rule",
-        "rule_exists",
         "service"
       ],
       "components": null,
@@ -2455,7 +2356,7 @@
       ],
       "components": null,
       "levels": [
-        "INFO"
+        "WARNING"
       ],
       "occurrence_count": 1,
       "source_files": [
@@ -2464,12 +2365,10 @@
       "statuses": null
     },
     "vault_init": {
-      "common_fields": [
-        "_vault_enabled"
-      ],
+      "common_fields": [],
       "components": null,
       "levels": [
-        "DEBUG",
+        "ERROR",
         "INFO",
         "WARNING"
       ],
@@ -2487,6 +2386,7 @@
     },
     "verify_integrity": {
       "common_fields": [
+        "expected",
         "order_id",
         "stored"
       ],
@@ -2503,7 +2403,6 @@
     "write_event": {
       "common_fields": [
         "error",
-        "error_msg",
         "event_type",
         "row_id"
       ],
@@ -2520,6 +2419,7 @@
     },
     "write_to_cache": {
       "common_fields": [
+        "cache_path",
         "error_message",
         "error_type",
         "granularity",
@@ -2537,22 +2437,23 @@
     },
     "ws_health": {
       "common_fields": [
-        "60",
-        "_ws_health_task",
         "connected",
-        "e_stale",
         "error",
         "gap_count",
         "heartbeat_stale",
+        "message_stale",
         "pause_seconds",
+        "reason",
         "reconnect_count",
-        "stage"
+        "stage",
+        "stale_age_seconds"
       ],
       "components": null,
       "levels": [
         "DEBUG",
         "ERROR",
-        "INFO"
+        "INFO",
+        "WARNING"
       ],
       "occurrence_count": 7,
       "source_files": [
@@ -2562,43 +2463,43 @@
     }
   },
   "field_frequency": {
-    "_stream_task": 4,
-    "_tracer": 4,
     "action": 10,
-    "broker": 8,
+    "attempt": 4,
     "client_ip": 4,
-    "client_order_id": 12,
-    "consecutive_failures": 5,
-    "details": 5,
-    "error": 45,
-    "error_message": 92,
-    "error_msg": 5,
+    "client_order_id": 19,
+    "consecutive_failures": 6,
+    "details": 4,
+    "error": 56,
+    "error_message": 90,
     "error_type": 84,
     "event_type": 5,
-    "granularity": 5,
-    "guard_name": 10,
+    "granularity": 6,
+    "guard_name": 9,
     "issue_type": 4,
     "latency_seconds": 5,
+    "max_attempts": 4,
     "mode": 4,
-    "order_id": 23,
+    "order_id": 28,
+    "order_type": 3,
     "outcome": 5,
-    "path": 14,
+    "path": 12,
     "portfolio_id": 4,
     "price": 4,
-    "quantity": 7,
-    "reason": 23,
+    "quantity": 8,
+    "reason": 25,
     "service": 9,
     "severity": 4,
-    "side": 25,
-    "stage": 168,
-    "symbol": 77
+    "side": 26,
+    "stage": 167,
+    "symbol": 81,
+    "timestamp": 4
   },
   "level_distribution": {
     "CRITICAL": 1,
-    "DEBUG": 52,
-    "ERROR": 97,
-    "INFO": 118,
-    "WARNING": 76
+    "DEBUG": 49,
+    "ERROR": 108,
+    "INFO": 91,
+    "WARNING": 95
   },
   "total_event_types": 135,
   "version": "1.0"

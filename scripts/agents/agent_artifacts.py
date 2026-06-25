@@ -8,6 +8,7 @@ import gzip
 import hashlib
 import json
 import os
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -90,8 +91,73 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _iter_source_files(source_dir: Path) -> list[Path]:
-    return sorted(path for path in source_dir.rglob("*") if path.is_file())
+def _git_root_for(path: Path) -> Path | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None
+
+    root = result.stdout.strip()
+    return Path(root) if root else None
+
+
+def _gitignored_files(paths: list[Path], *, git_root: Path) -> set[Path]:
+    resolved_git_root = git_root.resolve()
+    relative_paths: list[str] = []
+    path_by_relative: dict[str, Path] = {}
+    for path in paths:
+        try:
+            relative = path.resolve().relative_to(resolved_git_root).as_posix()
+        except ValueError:
+            return set()
+        relative_paths.append(relative)
+        path_by_relative[relative] = path
+
+    if not relative_paths:
+        return set()
+
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(git_root), "check-ignore", "--stdin"],
+            input="\n".join(relative_paths) + "\n",
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        return set()
+
+    if result.returncode not in {0, 1}:
+        return set()
+
+    return {
+        path_by_relative[relative]
+        for relative in result.stdout.splitlines()
+        if relative in path_by_relative
+    }
+
+
+def _iter_source_files(
+    source_dir: Path,
+    *,
+    indexed_files: set[str] | None = None,
+) -> list[Path]:
+    files = sorted(path for path in source_dir.rglob("*") if path.is_file())
+    git_root = _git_root_for(source_dir)
+    if git_root is None:
+        return files
+
+    ignored = _gitignored_files(files, git_root=git_root)
+    return [
+        path
+        for path in files
+        if path not in ignored
+        or (indexed_files is not None and _relative_posix(path, source_dir) in indexed_files)
+    ]
 
 
 def _relative_posix(path: Path, base: Path) -> str:
@@ -124,6 +190,25 @@ def _resource_files(resources: dict[str, Any], report: ValidationReport) -> set[
                 report.error(f"Resource {resource_name!r} contains an invalid file entry")
                 continue
             indexed_files.add(PurePosixPath(resource_path, file_name).as_posix())
+    return indexed_files
+
+
+def _indexed_files_from_root_index(root_index: dict[str, Any]) -> set[str]:
+    indexed_files: set[str] = {"index.json"}
+    resources = root_index.get("resources")
+    if not isinstance(resources, dict):
+        return indexed_files
+
+    for resource_payload in resources.values():
+        if not isinstance(resource_payload, dict):
+            continue
+        resource_path = resource_payload.get("path")
+        files = resource_payload.get("files")
+        if not isinstance(resource_path, str) or not isinstance(files, list):
+            continue
+        for file_name in files:
+            if isinstance(file_name, str) and file_name.strip():
+                indexed_files.add(PurePosixPath(resource_path, file_name).as_posix())
     return indexed_files
 
 
@@ -179,7 +264,7 @@ def _validate_root_index(source_dir: Path, report: ValidationReport) -> dict[str
     indexed_files = _resource_files(resources, report)
     actual_files = {
         _relative_posix(path, source_dir)
-        for path in _iter_source_files(source_dir)
+        for path in _iter_source_files(source_dir, indexed_files=indexed_files)
         if path.name != ".gitkeep"
     }
     unindexed = sorted(
@@ -278,12 +363,15 @@ def validate_agent_artifacts(
         return report, {}
 
     root_index = _validate_root_index(source_dir, report)
+    indexed_files = _indexed_files_from_root_index(root_index)
     _validate_expected_content(source_dir, report)
+    files = _iter_source_files(source_dir, indexed_files=indexed_files)
 
     total_bytes = sum(path.stat().st_size for path in files)
     summary = {
         "source_dir": str(source_dir),
         "file_count": len(files),
+        "indexed_files": sorted(indexed_files),
         "total_bytes": total_bytes,
         "resources": (
             sorted(root_index.get("resources", {}).keys())
@@ -299,9 +387,13 @@ def validate_agent_artifacts(
     return report, summary
 
 
-def _manifest_files(source_dir: Path, package_prefix: str) -> list[dict[str, Any]]:
+def _manifest_files(
+    source_dir: Path,
+    package_prefix: str,
+    indexed_files: set[str],
+) -> list[dict[str, Any]]:
     entries: list[dict[str, Any]] = []
-    for path in _iter_source_files(source_dir):
+    for path in _iter_source_files(source_dir, indexed_files=indexed_files):
         relative = _relative_posix(path, source_dir)
         archive_path = PurePosixPath(package_prefix, relative).as_posix()
         entries.append(
@@ -314,12 +406,17 @@ def _manifest_files(source_dir: Path, package_prefix: str) -> list[dict[str, Any
     return entries
 
 
-def _write_tar_gz(source_dir: Path, package_path: Path, package_prefix: str) -> None:
+def _write_tar_gz(
+    source_dir: Path,
+    package_path: Path,
+    package_prefix: str,
+    indexed_files: set[str],
+) -> None:
     package_path.parent.mkdir(parents=True, exist_ok=True)
     with package_path.open("wb") as raw_handle:
         with gzip.GzipFile(fileobj=raw_handle, mode="wb", mtime=0) as gzip_handle:
             with tarfile.open(fileobj=gzip_handle, mode="w") as archive:
-                for path in _iter_source_files(source_dir):
+                for path in _iter_source_files(source_dir, indexed_files=indexed_files):
                     relative = _relative_posix(path, source_dir)
                     archive_name = PurePosixPath(package_prefix, relative).as_posix()
                     info = archive.gettarinfo(str(path), arcname=archive_name)
@@ -352,8 +449,9 @@ def package_agent_artifacts(
     package_path = output_dir / DEFAULT_PACKAGE_NAME
     manifest_path = output_dir / DEFAULT_MANIFEST_NAME
 
-    _write_tar_gz(source_dir, package_path, package_prefix)
-    manifest_files = _manifest_files(source_dir, package_prefix)
+    indexed_files = set(summary["indexed_files"])
+    _write_tar_gz(source_dir, package_path, package_prefix, indexed_files)
+    manifest_files = _manifest_files(source_dir, package_prefix, indexed_files)
     manifest = {
         "schema_version": "1.0",
         "created_at_unix": int(time.time()),

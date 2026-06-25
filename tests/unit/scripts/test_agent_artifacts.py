@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import tarfile
 from pathlib import Path
 
@@ -161,6 +162,69 @@ def test_validate_agent_artifacts_reports_missing_indexed_file(tmp_path: Path) -
     report, _ = agent_artifacts.validate_agent_artifacts(source, quiet=True)
 
     assert any("risk_config_schema.json" in error for error in report.errors)
+
+
+def test_validate_agent_artifacts_ignores_gitignored_residue_but_reports_nonignored(
+    tmp_path: Path,
+) -> None:
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    (tmp_path / ".gitignore").write_text("naming_inventory.json\n", encoding="utf-8")
+    source = _create_valid_agent_artifacts(tmp_path)
+    _write_json(source / "naming_inventory.json", {"local_report": True})
+
+    report, _ = agent_artifacts.validate_agent_artifacts(source, quiet=True)
+
+    assert report.errors == []
+
+    _write_json(source / "unindexed_artifact.json", {"contract_drift": True})
+    report, _ = agent_artifacts.validate_agent_artifacts(source, quiet=True)
+
+    assert any("unindexed_artifact.json" in error for error in report.errors)
+    assert not any("naming_inventory.json" in error for error in report.errors)
+
+
+def test_package_preserves_indexed_gitignored_artifact_without_residue(
+    tmp_path: Path,
+) -> None:
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    (tmp_path / ".gitignore").write_text(
+        "*.csv\nnaming_inventory.json\n",
+        encoding="utf-8",
+    )
+    source = _create_valid_agent_artifacts(tmp_path)
+    root_index_path = source / "index.json"
+    root_index = json.loads(root_index_path.read_text(encoding="utf-8"))
+    root_index["resources"]["testing"]["files"].append("data.csv")
+    _write_json(root_index_path, root_index)
+    _write_text(source / "testing" / "data.csv", "symbol,price\nBTC,1\n")
+    _write_json(source / "naming_inventory.json", {"local_report": True})
+    output_dir = tmp_path / "dist"
+
+    report, summary = agent_artifacts.validate_agent_artifacts(source, quiet=True)
+    package_status = agent_artifacts.package_agent_artifacts(
+        source,
+        output_dir,
+        git_sha="abc123",
+    )
+    verify_status = agent_artifacts.verify_agent_artifact_package(
+        output_dir / agent_artifacts.DEFAULT_PACKAGE_NAME,
+        output_dir / agent_artifacts.DEFAULT_MANIFEST_NAME,
+    )
+
+    assert report.errors == []
+    assert "testing/data.csv" in summary["indexed_files"]
+    manifest = json.loads((output_dir / agent_artifacts.DEFAULT_MANIFEST_NAME).read_text())
+    manifest_paths = {entry["path"] for entry in manifest["files"]}
+    with tarfile.open(output_dir / agent_artifacts.DEFAULT_PACKAGE_NAME, "r:gz") as archive:
+        tar_paths = {member.name for member in archive.getmembers() if member.isfile()}
+    indexed_artifact = "var/agents/testing/data.csv"
+    ignored_residue = "var/agents/naming_inventory.json"
+    assert package_status == 0
+    assert verify_status == 0
+    assert indexed_artifact in manifest_paths
+    assert indexed_artifact in tar_paths
+    assert ignored_residue not in manifest_paths
+    assert ignored_residue not in tar_paths
 
 
 def test_validate_agent_artifacts_reports_empty_source(tmp_path: Path) -> None:

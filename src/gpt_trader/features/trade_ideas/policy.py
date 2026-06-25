@@ -32,6 +32,18 @@ class PolicyViolationError(ValidationError):
         self.violations = violations or []
 
 
+BOUNDED_AUTONOMY_NON_HUMAN_APPROVAL_VIOLATION = (
+    "Autonomy mode 'bounded_autonomy' does not permit non-human approvals until a "
+    "strategy envelope, kill-switch evidence, and audit evidence are modeled "
+    "or a later decision packet scopes a narrower exception"
+)
+BOUNDED_AUTONOMY_NON_HUMAN_BUDGET_CHANGE_VIOLATION = (
+    "Autonomy mode 'bounded_autonomy' does not permit non-human budget changes "
+    "until a budget meta-envelope is modeled or a later decision packet scopes "
+    "a narrower exception"
+)
+
+
 class ApprovalPolicy:
     """Checks workflow actions against the active autonomy mode and budget."""
 
@@ -62,6 +74,14 @@ class ApprovalPolicy:
                     "Autonomy mode 'human_approved_execution' requires a human approver; "
                     f"got actor_type '{actor_type.value}'"
                 )
+        elif (
+            self._autonomy_mode is AutonomyMode.BOUNDED_AUTONOMY
+            and actor_type is not ActorType.HUMAN
+        ):
+            violations.append(
+                BOUNDED_AUTONOMY_NON_HUMAN_APPROVAL_VIOLATION
+                + f"; got actor_type '{actor_type.value}'"
+            )
 
         violations.extend(evaluate_eligibility(idea))
 
@@ -125,12 +145,16 @@ class ApprovalPolicy:
     def budget_change_violations(self, actor_type: ActorType) -> list[str]:
         """Budget renegotiation rules for the current autonomy mode.
 
-        Agents may *propose* budget changes at any stage; in the current modes
-        only a human can enact one. Bounded autonomy will relax this within a
-        meta-envelope.
+        Agents may *propose* budget changes at any stage; until a budget
+        meta-envelope is modeled, only a human can enact one.
         """
         if self._autonomy_mode is AutonomyMode.BOUNDED_AUTONOMY:
-            return []
+            if actor_type is ActorType.HUMAN:
+                return []
+            return [
+                BOUNDED_AUTONOMY_NON_HUMAN_BUDGET_CHANGE_VIOLATION
+                + f"; got actor_type '{actor_type.value}'"
+            ]
         if actor_type is not ActorType.HUMAN:
             return [
                 f"Autonomy mode '{self._autonomy_mode.value}' requires a human to enact "

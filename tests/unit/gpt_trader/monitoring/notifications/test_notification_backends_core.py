@@ -111,6 +111,18 @@ class TestFileNotificationBackend:
             Path(file_path).unlink(missing_ok=True)
 
     @pytest.mark.asyncio
+    async def test_test_connection_creates_parent_without_alert_file(self, tmp_path: Path) -> None:
+        alert_path = tmp_path / "nested" / "alerts.jsonl"
+        backend = FileNotificationBackend(file_path=str(alert_path))
+
+        result = await backend.test_connection()
+
+        assert result is True
+        assert alert_path.parent.is_dir()
+        assert not alert_path.exists()
+        assert list(alert_path.parent.iterdir()) == []
+
+    @pytest.mark.asyncio
     async def test_test_connection_offloads_file_check_to_thread(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

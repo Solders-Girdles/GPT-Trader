@@ -74,7 +74,7 @@ async def test_file_backend_nested_path_creates_parents_and_writes_jsonl(tmp_pat
 
 
 @pytest.mark.asyncio
-async def test_file_backend_test_connection_creates_missing_parents(tmp_path) -> None:
+async def test_file_backend_test_connection_creates_parent_without_alert_file(tmp_path) -> None:
     nested_path = tmp_path / "connection" / "alerts" / "out.jsonl"
     backend = FileNotificationBackend(file_path=str(nested_path))
 
@@ -82,4 +82,5 @@ async def test_file_backend_test_connection_creates_missing_parents(tmp_path) ->
 
     assert result is True
     assert nested_path.parent.is_dir()
-    assert nested_path.exists()
+    assert not nested_path.exists()
+    assert list(nested_path.parent.iterdir()) == []

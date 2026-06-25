@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6796,
+    "total_tests": 6797,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6631,
-    "asyncio": 403,
+    "unit": 6632,
+    "asyncio": 404,
     "parametrize": 193,
     "endpoints": 83,
     "property": 82,
@@ -35602,7 +35602,7 @@
         "class": "TestFileNotificationBackend"
       },
       {
-        "name": "TestFileNotificationBackend::test_test_connection_offloads_file_check_to_thread",
+        "name": "TestFileNotificationBackend::test_test_connection_creates_parent_without_alert_file",
         "line": 114,
         "markers": [
           "asyncio",
@@ -35612,8 +35612,18 @@
         "class": "TestFileNotificationBackend"
       },
       {
+        "name": "TestFileNotificationBackend::test_test_connection_offloads_file_check_to_thread",
+        "line": 126,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestFileNotificationBackend"
+      },
+      {
         "name": "TestFileNotificationBackend::test_test_connection_fails_for_invalid_path",
-        "line": 138,
+        "line": 150,
         "markers": [
           "asyncio",
           "unit"
@@ -35652,7 +35662,7 @@
         "docstring": ""
       },
       {
-        "name": "test_file_backend_test_connection_creates_missing_parents",
+        "name": "test_file_backend_test_connection_creates_parent_without_alert_file",
         "line": 77,
         "markers": [
           "asyncio",

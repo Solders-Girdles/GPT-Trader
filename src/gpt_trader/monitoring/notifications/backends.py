@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -299,8 +300,14 @@ class FileNotificationBackend:
 
     def _check_file_writable(self) -> None:
         self._ensure_parent_directory()
-        with open(self.file_path, "a"):
-            pass  # Just test if we can open for append
+        parent = Path(self.file_path).parent
+        with tempfile.NamedTemporaryFile(
+            mode="a",
+            dir=parent,
+            prefix=f".{Path(self.file_path).name}.connection-",
+            suffix=".tmp",
+        ):
+            pass
 
     def _ensure_parent_directory(self) -> None:
         Path(self.file_path).parent.mkdir(parents=True, exist_ok=True)

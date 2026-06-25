@@ -1,6 +1,6 @@
 ---
 status: current
-last-updated: 2026-06-24
+last-updated: 2026-06-25
 scope: Operator and agent interfaces over the trade_ideas slice
 audience: Implementation agents (Codex) and reviewers
 ---
@@ -25,17 +25,19 @@ already exists and is complete at the domain level:
 | `features/trade_ideas/store.py` | `TradeIdeaStore` — versioned records under record hash |
 | `features/trade_ideas/baseline.py`, `replay.py` | Baseline proposer and replay scoring |
 
-**Current interface state:** the CLI door now exists. `gpt-trader ideas`
-constructs `TradeIdeaService` through the trade-ideas factory and exposes the
-agent-facing approval workflow: propose, list, show, approve, reject,
-request-changes, expire, resubmit, mark-submitted, mark-filled, budget, and
-audit. The remaining human-interface gap is the TUI review surface; MCP or other
-remote surfaces remain future work. The service docstring still states the
-adapter boundary explicitly: *"interfaces such as CLI, TUI, or MCP servers must
-stay thin adapters over these methods."*
+**Current interface state:** the CLI and TUI review surfaces now exist.
+`gpt-trader ideas` constructs `TradeIdeaService` through the trade-ideas factory
+and exposes the agent-facing approval workflow: propose, list, show, approve,
+reject, request-changes, expire, resubmit, mark-submitted, mark-filled, budget,
+and audit. The TUI `IdeasReviewScreen` is the implemented human review surface:
+it lists proposed ideas, renders record details, previews policy violations, and
+records approve, reject, request-changes, and expire decisions through
+`TradeIdeaService`. MCP or other remote surfaces remain future work. The service
+docstring still states the adapter boundary explicitly: *"interfaces such as CLI,
+TUI, or MCP servers must stay thin adapters over these methods."*
 
-These notes preserve the interface decisions that shaped the implemented CLI
-and define the still-open TUI workstream.
+These notes preserve the interface decisions that shaped the implemented CLI and
+TUI surfaces. They are not a request to re-promote the TUI review workstream.
 
 ## Design Principles
 
@@ -124,12 +126,14 @@ Implemented in `CliErrorCode` in `cli/response.py`:
 |---|------|-----------|------|
 | 0 | Shared wiring (this doc, "Shared Decisions") | — | Implemented |
 | 1 | [`TRADE_IDEA_CLI_SPEC.md`](TRADE_IDEA_CLI_SPEC.md) — `gpt-trader ideas` command group | 0 | Implemented |
-| 2 | [`TRADE_IDEA_TUI_REVIEW_SPEC.md`](TRADE_IDEA_TUI_REVIEW_SPEC.md) — Ideas review screen | 0 (not 1) | Future |
+| 2 | [`TRADE_IDEA_TUI_REVIEW_SPEC.md`](TRADE_IDEA_TUI_REVIEW_SPEC.md) — Ideas review screen | 0 (not 1) | Implemented |
 
-Workstreams 1 and 2 are independently mergeable. Workstreams 0+1 have shipped:
-the CLI is the agent-facing surface and unblocks the AI-propose -> human-approve
-loop end to end. The TUI improves the human review surface afterward and should
-not reimplement CLI or service behavior.
+Workstreams 1 and 2 were independently mergeable and have both shipped.
+Workstreams 0+1 provide the agent-facing CLI surface and unblock the
+AI-propose -> human-approve loop end to end. Workstream 2 provides the
+keyboard-driven human review surface without reimplementing CLI or service
+behavior. Future interface work should start from these shipped adapters and
+must not treat the TUI review screen as an open backlog item.
 
 ## Non-Goals (all workstreams)
 

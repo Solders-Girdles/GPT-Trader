@@ -265,33 +265,23 @@ class TradingBot:
                         # Use absolute quantity for order
                         quantity = abs(pos.quantity)
 
-                        # Direct broker call bypasses guard stack intentionally
-                        if broker_calls is not None and asyncio.iscoroutinefunction(
-                            getattr(broker_calls, "__call__", None)
-                        ):
-                            await broker_calls(
-                                self.broker.place_order,
-                                pos.symbol,
-                                side,
-                                OrderType.MARKET,
-                                quantity,
-                            )
-                        else:
-                            await asyncio.to_thread(
-                                self.broker.place_order,
-                                pos.symbol,
-                                side,
-                                OrderType.MARKET,
-                                quantity,
-                            )
+                        await self._place_reduce_only_emergency_close(
+                            symbol=pos.symbol,
+                            side=side,
+                            order_type=OrderType.MARKET,
+                            quantity=quantity,
+                        )
                         logger.info(
                             "Emergency close submitted",
                             symbol=pos.symbol,
                             quantity=str(quantity),
+                            reduce_only=True,
                             bypass_reason="emergency_shutdown",
                             operation="flatten_and_stop",
                         )
-                        messages.append(f"Submitted CLOSE for {pos.symbol} ({quantity})")
+                        messages.append(
+                            f"Submitted CLOSE for {pos.symbol} ({quantity}) reduce-only"
+                        )
                     except Exception as e:
                         logger.error(f"Failed to close {pos.symbol}: {e}")
                         messages.append(f"Failed to close {pos.symbol}: {e}")
@@ -304,6 +294,38 @@ class TradingBot:
         self._shutdown_broker_calls()
         self._transition_state(TradingBotState.STOPPED, reason="flatten_and_stop_complete")
         return messages
+
+    async def _place_reduce_only_emergency_close(
+        self,
+        *,
+        symbol: str,
+        side: Any,
+        order_type: Any,
+        quantity: Any,
+    ) -> Any:
+        if self.broker is None:
+            raise RuntimeError("No broker connection available.")
+
+        order_kwargs = {
+            "symbol": symbol,
+            "side": side,
+            "order_type": order_type,
+            "quantity": quantity,
+            "reduce_only": True,
+        }
+        broker_calls = getattr(self, "_broker_calls", None)
+
+        try:
+            if broker_calls is not None and asyncio.iscoroutinefunction(
+                getattr(broker_calls, "__call__", None)
+            ):
+                return await broker_calls(self.broker.place_order, **order_kwargs)
+            return await asyncio.to_thread(self.broker.place_order, **order_kwargs)
+        except TypeError as exc:
+            raise RuntimeError(
+                "Broker rejected reduce-only emergency close order; "
+                "refusing non-reduce-only fallback."
+            ) from exc
 
     async def shutdown(self) -> None:
         """Alias for stop() to match CLI interface."""

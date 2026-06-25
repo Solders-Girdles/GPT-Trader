@@ -739,7 +739,7 @@
         "details",
         "messages",
         "quantity",
-        "symbol"
+        "reduce_only"
       ],
       "components": null,
       "levels": [
@@ -2591,7 +2591,7 @@
     "severity": 4,
     "side": 25,
     "stage": 168,
-    "symbol": 77
+    "symbol": 76
   },
   "level_distribution": {
     "CRITICAL": 1,

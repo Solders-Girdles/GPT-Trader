@@ -139,6 +139,11 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
   ✓ ideas report OK (3 ideas, approval_rate=33.33%, closeout_coverage=66.67%)
   ```
 
+  When `proposal_volume.by_month` has buckets, text output also includes a
+  compact `Monthly` section with one line per month showing idea count, approval
+  rate, closeout coverage, and realized P/L amount. Empty stores and reports
+  without monthly buckets omit the section while still returning success.
+
 ### `ideas approve DECISION_ID --reason TEXT`
 
 - `actor_type` hard-coded `HUMAN`. `--reason` required and non-empty.

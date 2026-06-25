@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -180,6 +181,21 @@ class TestFileNotificationBackend:
         assert alert_path.parent.is_dir()
         assert not alert_path.exists()
         assert list(alert_path.parent.iterdir()) == []
+
+    @pytest.mark.asyncio
+    async def test_test_connection_handles_long_missing_file_name_without_alert_file(
+        self, tmp_path: Path
+    ) -> None:
+        name_max = os.pathconf(tmp_path, "PC_NAME_MAX")
+        suffix = ".jsonl"
+        alert_path = tmp_path / f"{'a' * (name_max - len(suffix))}{suffix}"
+        backend = FileNotificationBackend(file_path=str(alert_path))
+
+        result = await backend.test_connection()
+
+        assert result is True
+        assert not alert_path.exists()
+        assert list(tmp_path.iterdir()) == []
 
     @pytest.mark.asyncio
     async def test_test_connection_offloads_file_check_to_thread(

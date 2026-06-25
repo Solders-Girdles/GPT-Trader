@@ -25,6 +25,7 @@ COLORS = {
 }
 RESET = "\033[0m"
 BOLD = "\033[1m"
+FILE_CONNECTION_PROBE_PREFIX = ".connection-"
 
 
 @dataclass
@@ -313,16 +314,16 @@ class FileNotificationBackend:
             target = path.readlink()
             if not target.is_absolute():
                 target = path.parent / target
-            self._check_directory_writable(target.parent, target.name)
+            self._check_directory_writable(target.parent)
             return
 
-        self._check_directory_writable(path.parent, path.name)
+        self._check_directory_writable(path.parent)
 
-    def _check_directory_writable(self, parent: Path, file_name: str) -> None:
+    def _check_directory_writable(self, parent: Path) -> None:
         with tempfile.NamedTemporaryFile(
             mode="a",
             dir=parent,
-            prefix=f".{file_name}.connection-",
+            prefix=FILE_CONNECTION_PROBE_PREFIX,
             suffix=".tmp",
         ):
             pass

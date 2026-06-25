@@ -34,6 +34,7 @@ from gpt_trader.features.trade_ideas.budget import (
 )
 from gpt_trader.features.trade_ideas.closeout import (
     CloseoutAttribution,
+    CloseoutAttributionIntegrityError,
     CloseoutAttributionLog,
     CloseoutResolution,
     MaxLossSnapshot,
@@ -457,8 +458,7 @@ class TradeIdeaService:
         return self._closeouts.append(record)
 
     def get_closeout_attribution(self, decision_id: str) -> CloseoutAttribution | None:
-        self._require_idea(decision_id)
-        return self._closeouts.get(decision_id)
+        return self.get(decision_id).closeout_attribution
 
     # -- queries -----------------------------------------------------------
 
@@ -476,7 +476,7 @@ class TradeIdeaService:
             idea=idea,
             state=state,
             events=events,
-            closeout_attribution=self._closeouts.get(decision_id),
+            closeout_attribution=self._validated_closeout_attribution(decision_id, events),
         )
 
     def list_views(self, state: TradeIdeaState | None = None) -> list[TradeIdeaView]:
@@ -501,6 +501,58 @@ class TradeIdeaService:
         for event in self._audit.read_events():
             latest_events[event.decision_id] = event
         return latest_events
+
+    def _validated_closeout_attribution(
+        self,
+        decision_id: str,
+        events: tuple[AuditEvent, ...],
+    ) -> CloseoutAttribution | None:
+        closeout = self._closeouts.get(decision_id)
+        if closeout is None:
+            return None
+
+        current_event = events[-1]
+        context = {
+            "decision_id": decision_id,
+            "stored_terminal_event_id": closeout.terminal_event_id,
+            "current_terminal_event_id": current_event.event_id,
+            "stored_record_hash": closeout.record_hash,
+            "current_record_hash": current_event.record_hash,
+        }
+        if current_event.after_state not in TERMINAL_STATES:
+            raise CloseoutAttributionIntegrityError(
+                f"Closeout attribution for decision_id '{decision_id}' cannot be current "
+                f"because latest audit state is '{current_event.after_state.value}', "
+                "not terminal",
+                field="after_state",
+                value=current_event.after_state.value,
+                context=context,
+            )
+
+        mismatch_details: list[str] = []
+        mismatch_field = "closeout_attribution"
+        if closeout.terminal_event_id != current_event.event_id:
+            mismatch_field = "terminal_event_id"
+            mismatch_details.append(
+                f"terminal_event_id expected '{current_event.event_id}' "
+                f"but found '{closeout.terminal_event_id}'"
+            )
+        if closeout.record_hash != current_event.record_hash:
+            if mismatch_field == "closeout_attribution":
+                mismatch_field = "record_hash"
+            mismatch_details.append(
+                f"record_hash expected '{current_event.record_hash}' "
+                f"but found '{closeout.record_hash}'"
+            )
+        if mismatch_details:
+            raise CloseoutAttributionIntegrityError(
+                f"Closeout attribution for decision_id '{decision_id}' does not match "
+                f"the current terminal audit event: {'; '.join(mismatch_details)}",
+                field=mismatch_field,
+                value=decision_id,
+                context=context,
+            )
+        return closeout
 
     def _require_idea(self, decision_id: str) -> TradeIdea:
         try:

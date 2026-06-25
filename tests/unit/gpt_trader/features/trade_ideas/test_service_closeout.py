@@ -17,6 +17,7 @@ from gpt_trader.features.trade_ideas import (
     InvalidTransitionError,
     TradeIdeaService,
     TradeIdeaState,
+    TradeIdeaView,
     UnknownTradeIdeaError,
 )
 
@@ -27,6 +28,39 @@ def service(tmp_path: Path) -> TradeIdeaService:
         tmp_path / "trade_ideas",
         now_factory=lambda: datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
     )
+
+
+def _write_closeout_payload(
+    service: TradeIdeaService,
+    view: TradeIdeaView,
+    **overrides: object,
+) -> None:
+    max_loss = view.idea.max_loss
+    payload: dict[str, object] = {
+        "decision_id": view.idea.decision_id,
+        "timestamp": "2026-06-12T10:05:00+00:00",
+        "actor_type": "human",
+        "actor_id": "rj",
+        "terminal_event_id": view.events[-1].event_id,
+        "record_hash": view.events[-1].record_hash,
+        "resolution": CloseoutResolution.EXPIRY.value,
+        "realized_profit_loss_amount": None,
+        "realized_profit_loss_percent": None,
+        "realized_profit_loss_unavailable_reason": "Idea expired before entry fill",
+        "max_loss": {
+            "amount": str(max_loss.amount) if max_loss.amount is not None else None,
+            "percent_of_account": (
+                str(max_loss.percent_of_account)
+                if max_loss.percent_of_account is not None
+                else None
+            ),
+            "assumptions": list(max_loss.assumptions),
+        },
+        "evidence": [],
+    }
+    payload.update(overrides)
+    service.closeout_log.path.parent.mkdir(parents=True, exist_ok=True)
+    service.closeout_log.path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
 
 
 def test_record_closeout_attribution_for_filled_idea(service: TradeIdeaService) -> None:
@@ -163,6 +197,66 @@ def test_record_closeout_attribution_rejects_malformed_numeric_payload(
         )
 
     assert service.get_closeout_attribution(idea.decision_id) is None
+
+
+def test_persisted_closeout_rejects_stale_terminal_event_id_against_current_event(
+    service: TradeIdeaService,
+) -> None:
+    idea = build_trade_idea()
+    service.propose(idea, actor_id="idea-generator-v1")
+    expired = service.expire(idea.decision_id)
+    _write_closeout_payload(service, expired, terminal_event_id="evt-stale")
+
+    with pytest.raises(
+        CloseoutAttributionIntegrityError,
+        match="terminal_event_id expected",
+    ) as get_exc_info:
+        service.get(idea.decision_id)
+    assert get_exc_info.value.context["field"] == "terminal_event_id"
+    assert get_exc_info.value.context["stored_terminal_event_id"] == "evt-stale"
+    assert get_exc_info.value.context["current_terminal_event_id"] == expired.events[-1].event_id
+
+    with pytest.raises(CloseoutAttributionIntegrityError, match="terminal_event_id expected"):
+        service.list_views()
+    with pytest.raises(CloseoutAttributionIntegrityError, match="terminal_event_id expected"):
+        service.get_closeout_attribution(idea.decision_id)
+    with pytest.raises(CloseoutAttributionIntegrityError, match="terminal_event_id expected"):
+        service.record_closeout_attribution(
+            idea.decision_id,
+            actor_id="rj",
+            resolution=CloseoutResolution.EXPIRY,
+            realized_profit_loss_unavailable_reason="Idea expired before entry fill",
+        )
+
+
+def test_persisted_closeout_rejects_stale_record_hash_against_current_event(
+    service: TradeIdeaService,
+) -> None:
+    idea = build_trade_idea()
+    service.propose(idea, actor_id="idea-generator-v1")
+    expired = service.expire(idea.decision_id)
+    _write_closeout_payload(service, expired, record_hash="stale-record-hash")
+
+    with pytest.raises(
+        CloseoutAttributionIntegrityError,
+        match="record_hash expected",
+    ) as get_exc_info:
+        service.get(idea.decision_id)
+    assert get_exc_info.value.context["field"] == "record_hash"
+    assert get_exc_info.value.context["stored_record_hash"] == "stale-record-hash"
+    assert get_exc_info.value.context["current_record_hash"] == expired.events[-1].record_hash
+
+    with pytest.raises(CloseoutAttributionIntegrityError, match="record_hash expected"):
+        service.list_views()
+    with pytest.raises(CloseoutAttributionIntegrityError, match="record_hash expected"):
+        service.get_closeout_attribution(idea.decision_id)
+    with pytest.raises(CloseoutAttributionIntegrityError, match="record_hash expected"):
+        service.record_closeout_attribution(
+            idea.decision_id,
+            actor_id="rj",
+            resolution=CloseoutResolution.EXPIRY,
+            realized_profit_loss_unavailable_reason="Idea expired before entry fill",
+        )
 
 
 def test_persisted_closeout_log_rejects_non_object_max_loss_with_line_context(

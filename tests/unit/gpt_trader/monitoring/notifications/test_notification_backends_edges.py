@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from io import StringIO
 from unittest.mock import Mock
 
 import pytest
@@ -12,12 +13,17 @@ from gpt_trader.monitoring.notifications.backends import (
     ConsoleNotificationBackend,
     FileNotificationBackend,
 )
+from gpt_trader.utilities.console_logging import ConsoleLogger
 
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("message", ["", "\x00\x01"])
 async def test_console_backend_handles_empty_or_nonprintable_messages(message: str, capsys) -> None:
-    backend = ConsoleNotificationBackend(use_colors=False)
+    output_stream = StringIO()
+    backend = ConsoleNotificationBackend(
+        use_colors=False,
+        output_sink=ConsoleLogger(output_stream=output_stream),
+    )
     alert = Alert(
         severity=AlertSeverity.WARNING,
         title="Edge Message",
@@ -29,7 +35,8 @@ async def test_console_backend_handles_empty_or_nonprintable_messages(message: s
 
     assert result is True
     captured = capsys.readouterr()
-    assert "Edge Message" in captured.out
+    assert captured.out == ""
+    assert "Edge Message" in output_stream.getvalue()
 
 
 @pytest.mark.asyncio

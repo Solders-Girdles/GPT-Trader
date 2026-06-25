@@ -7,9 +7,10 @@ import json
 import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from gpt_trader.monitoring.alert_types import Alert, AlertSeverity
+from gpt_trader.utilities.console_logging import get_console_logger
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="notifications")
@@ -28,6 +29,14 @@ BOLD = "\033[1m"
 FILE_CONNECTION_PROBE_PREFIX = ".connection-"
 
 
+class ConsoleOutputSink(Protocol):
+    """Minimal project console output surface used by notification backends."""
+
+    def write(self, message: str) -> bool:
+        """Emit a preformatted user-facing message."""
+        ...
+
+
 @dataclass
 class ConsoleNotificationBackend:
     """
@@ -40,6 +49,7 @@ class ConsoleNotificationBackend:
     enabled: bool = True
     use_colors: bool = True
     min_severity: AlertSeverity = AlertSeverity.WARNING
+    output_sink: ConsoleOutputSink | None = None
 
     @property
     def name(self) -> str:
@@ -59,7 +69,10 @@ class ConsoleNotificationBackend:
 
         try:
             formatted = self._format_alert(alert)
-            print(formatted)
+            output_sink = self.output_sink or get_console_logger()
+            if not output_sink.write(formatted):
+                logger.error("Console notification output sink declined alert")
+                return False
             return True
         except Exception as e:
             logger.error(f"Console notification failed: {e}")

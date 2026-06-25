@@ -225,3 +225,96 @@ async def test_flatten_and_stop_avoids_filled_record_without_fill_quantity(
     assert audit_payload["broker_status"] == "FILLED"
     assert "filled_quantity" not in audit_payload
     assert "average_fill_price" not in audit_payload
+
+
+@pytest.mark.asyncio
+async def test_flatten_and_stop_threads_operation_id_into_failure_logs(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    logger = Mock()
+    monkeypatch.setattr(bot_module, "logger", logger)
+    event_store = Mock()
+    notification_service = Mock()
+    notification_service.notify = AsyncMock(return_value=True)
+    container = SimpleNamespace(
+        broker=None,
+        risk_manager=Mock(),
+        event_store=event_store,
+        orders_store=Mock(),
+        notification_service=notification_service,
+    )
+    _install_mock_engine(monkeypatch)
+
+    bot = TradingBot(
+        config=BotConfig(symbols=["BTC-USD"], interval=1),
+        container=container,
+    )
+
+    await bot.flatten_and_stop()
+
+    flatten_operation_id = logger.warning.call_args.kwargs["flatten_operation_id"]
+    assert flatten_operation_id.startswith("flatten-")
+    assert logger.error.call_args_list[0].kwargs["flatten_operation_id"] == flatten_operation_id
+    assert logger.critical.call_args.kwargs["flatten_operation_id"] == flatten_operation_id
+    failure_payload = next(
+        call.args[1]
+        for call in event_store.append.call_args_list
+        if call.args[0] == "emergency_flatten_failed"
+    )
+    assert failure_payload["flatten_operation_id"] == flatten_operation_id
+
+
+@pytest.mark.asyncio
+async def test_flatten_and_stop_treats_rejected_close_response_as_failed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    broker = Mock()
+    broker.list_positions.return_value = [SimpleNamespace(symbol="BTC-USD", quantity=Decimal("1"))]
+    broker.place_order = Mock(
+        return_value={
+            "order_id": "close-btc-rejected",
+            "client_order_id": "client-close-btc-rejected",
+            "status": "REJECTED",
+        }
+    )
+    event_store = Mock()
+    orders_store = Mock()
+    notification_service = Mock()
+    notification_service.notify = AsyncMock(return_value=True)
+    container = SimpleNamespace(
+        broker=broker,
+        risk_manager=Mock(),
+        event_store=event_store,
+        orders_store=orders_store,
+        notification_service=notification_service,
+    )
+    _install_mock_engine(monkeypatch)
+
+    bot = TradingBot(
+        config=BotConfig(symbols=["BTC-USD"], interval=1),
+        container=container,
+    )
+    bot._broker_calls = _DirectBrokerCalls()
+
+    messages = await bot.flatten_and_stop()
+
+    assert any("non-accepted emergency close status: rejected" in msg for msg in messages)
+    orders_store.upsert_by_client_id.assert_not_called()
+    close_order_event = next(
+        call.args[1]
+        for call in event_store.append.call_args_list
+        if call.args[0] == "emergency_flatten_close_order"
+    )
+    assert close_order_event["status"] == "failed"
+    assert close_order_event["broker_status"] == "REJECTED"
+    assert close_order_event["order_id"] == "close-btc-rejected"
+    assert close_order_event["client_order_id"] == "client-close-btc-rejected"
+    flatten_failure_event = next(
+        call.args[1]
+        for call in event_store.append.call_args_list
+        if call.args[0] == "emergency_flatten_failed"
+    )
+    assert flatten_failure_event["failed_symbols"] == ["BTC-USD"]
+    assert flatten_failure_event["failed_closes"][0]["error"] == (
+        "Broker returned non-accepted emergency close status: rejected"
+    )

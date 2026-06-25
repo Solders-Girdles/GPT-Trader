@@ -256,23 +256,33 @@ class TradingBot:
         even when guards would block normal trading.
         """
         self._preserve_flatten_failure_state = False
+        flatten_operation_id = f"flatten-{uuid4().hex}"
         self._transition_state(
             TradingBotState.STOPPING,
             reason="flatten_and_stop",
-            details={"bypass_reason": "emergency_shutdown"},
+            details={
+                "bypass_reason": "emergency_shutdown",
+                "flatten_operation_id": flatten_operation_id,
+            },
         )
         logger.warning(
             "EMERGENCY: Initiating Flatten & Stop",
             bypass_reason="emergency_shutdown",
+            flatten_operation_id=flatten_operation_id,
             operation="flatten_and_stop",
         )
         messages = ["Bot stopping."]
         failed_closes: list[dict[str, str]] = []
-        flatten_operation_id = f"flatten-{uuid4().hex}"
 
         if not self.broker:
             error = "No broker connection available."
             messages.append(f"Error: {error}")
+            logger.error(
+                "Emergency flatten cannot close positions without broker connection",
+                operation="flatten_and_stop",
+                flatten_operation_id=flatten_operation_id,
+                error=error,
+            )
             failed_closes.append(
                 {
                     "flatten_operation_id": flatten_operation_id,
@@ -329,6 +339,40 @@ class TradingBot:
                             order_type=order_type,
                             quantity=quantity,
                         )
+                        close_error = self._emergency_close_rejection_error(order)
+                        if close_error is not None:
+                            logger.error(
+                                "Emergency close returned non-accepted broker status",
+                                operation="flatten_and_stop",
+                                flatten_operation_id=flatten_operation_id,
+                                symbol=pos.symbol,
+                                quantity=str(quantity),
+                                broker_status=self._extract_order_identifier(
+                                    order,
+                                    ("status",),
+                                ),
+                                error=close_error,
+                            )
+                            messages.append(f"Failed to close {pos.symbol}: {close_error}")
+                            failed_closes.append(
+                                {
+                                    "flatten_operation_id": flatten_operation_id,
+                                    "symbol": str(pos.symbol),
+                                    "quantity": str(quantity),
+                                    "error": close_error,
+                                }
+                            )
+                            self._record_emergency_close_audit(
+                                flatten_operation_id=flatten_operation_id,
+                                symbol=pos.symbol,
+                                side=side,
+                                order_type=order_type,
+                                quantity=quantity,
+                                status="failed",
+                                order=order,
+                                error=close_error,
+                            )
+                            continue
                         self._record_emergency_close_audit(
                             flatten_operation_id=flatten_operation_id,
                             symbol=pos.symbol,
@@ -345,6 +389,7 @@ class TradingBot:
                             reduce_only=True,
                             bypass_reason="emergency_shutdown",
                             operation="flatten_and_stop",
+                            flatten_operation_id=flatten_operation_id,
                         )
                         messages.append(
                             f"Submitted CLOSE for {pos.symbol} ({quantity}) reduce-only"
@@ -359,7 +404,14 @@ class TradingBot:
                                 quantity = str(abs(raw_quantity))
                             except TypeError:
                                 quantity = str(raw_quantity)
-                        logger.error(f"Failed to close {symbol}: {e}")
+                        logger.error(
+                            "Failed to close position during emergency flatten",
+                            operation="flatten_and_stop",
+                            flatten_operation_id=flatten_operation_id,
+                            symbol=symbol,
+                            quantity=quantity,
+                            error=str(e),
+                        )
                         messages.append(f"Failed to close {symbol}: {e}")
                         failed_closes.append(
                             {
@@ -380,7 +432,12 @@ class TradingBot:
                         )
 
         except Exception as e:
-            logger.error(f"Flatten failed: {e}")
+            logger.error(
+                "Flatten failed",
+                operation="flatten_and_stop",
+                flatten_operation_id=flatten_operation_id,
+                error=str(e),
+            )
             messages.append(f"Critical Error during flatten: {e}")
             failed_closes.append(
                 {
@@ -449,6 +506,7 @@ class TradingBot:
         logger.critical(
             "Emergency flatten incomplete",
             operation="flatten_and_stop",
+            flatten_operation_id=flatten_operation_id,
             failed_close_count=len(failed_closes),
             failed_symbols=failed_symbols,
             monitoring_state=details["monitoring_state"],
@@ -472,6 +530,7 @@ class TradingBot:
             logger.error(
                 "Failed to record emergency flatten failure event",
                 operation="flatten_and_stop",
+                flatten_operation_id=details.get("flatten_operation_id"),
                 error=str(exc),
             )
 
@@ -609,6 +668,26 @@ class TradingBot:
         }:
             return OrderStatus.OPEN
         return store_status
+
+    def _emergency_close_rejection_error(self, order: Any | None) -> str | None:
+        broker_status = self._extract_order_identifier(order, ("status",))
+        if broker_status is None:
+            return None
+        try:
+            store_status = execution_status_for_store(
+                broker_status,
+                context="emergency_flatten_close_order",
+            )
+        except ExecutionStatusCodecError:
+            return f"Broker returned unsupported emergency close status: {broker_status}"
+        if store_status in {
+            OrderStatus.CANCELLED,
+            OrderStatus.REJECTED,
+            OrderStatus.EXPIRED,
+            OrderStatus.FAILED,
+        }:
+            return f"Broker returned non-accepted emergency close status: {store_status.value}"
+        return None
 
     @staticmethod
     def _extract_order_identifier(order: Any | None, field_names: tuple[str, ...]) -> str | None:

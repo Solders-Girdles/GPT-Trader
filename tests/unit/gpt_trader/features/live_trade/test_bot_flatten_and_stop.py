@@ -35,7 +35,7 @@ class TestTradingBotFlattenAndStop:
         broker.list_positions.return_value = [
             SimpleNamespace(symbol="BTC-USD", quantity=Decimal("1"))
         ]
-        broker.place_order = Mock()
+        broker.place_order = Mock(return_value=None)
 
         container = SimpleNamespace(
             broker=broker,
@@ -90,7 +90,7 @@ class TestTradingBotFlattenAndStop:
         broker.list_positions.return_value = [
             SimpleNamespace(symbol="BTC-USD", quantity=Decimal("-2"))
         ]
-        broker.place_order = Mock()
+        broker.place_order = Mock(return_value=None)
 
         container = SimpleNamespace(
             broker=broker,
@@ -140,7 +140,7 @@ class TestTradingBotFlattenAndStop:
         broker.list_positions.return_value = [
             SimpleNamespace(symbol="BTC-USD", quantity=Decimal("2"), side="short")
         ]
-        broker.place_order = Mock()
+        broker.place_order = Mock(return_value=None)
 
         container = SimpleNamespace(
             broker=broker,

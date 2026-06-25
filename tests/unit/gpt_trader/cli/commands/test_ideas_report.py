@@ -51,6 +51,13 @@ def _run_json(capsys: pytest.CaptureFixture[str], argv: list[str]) -> tuple[int,
     return exit_code, json.loads(output)
 
 
+def _run_text(capsys: pytest.CaptureFixture[str], argv: list[str]) -> tuple[int, str]:
+    exit_code = cli.main(argv)
+    output = capsys.readouterr().out
+    assert output
+    return exit_code, output
+
+
 def _snapshot_files(root: Path) -> dict[str, str]:
     if not root.exists():
         return {}
@@ -78,6 +85,23 @@ def test_report_empty_store_returns_zero_counts(
     assert data["workflow"]["approval_rate_pct"] == "0.00"
     assert data["closeouts"]["terminal_count"] == 0
     assert data["closeouts"]["missing_closeout_count"] == 0
+
+
+def test_report_empty_store_text_omits_monthly_section_and_stays_read_only(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "ideas"
+
+    exit_code, output = _run_text(
+        capsys,
+        ["ideas", "report", "--ideas-root", str(root), "--format", "text"],
+    )
+
+    assert exit_code == 0
+    assert "ideas report OK (0 ideas, approval_rate=0.00%, closeout_coverage=0.00%)" in output
+    assert "Monthly" not in output
+    assert _snapshot_files(root) == {}
 
 
 def test_report_summarizes_workflow_quality_closeouts_and_profit_loss(
@@ -169,6 +193,52 @@ def test_report_summarizes_workflow_quality_closeouts_and_profit_loss(
     assert profit_loss["average_amount"] == "125.50"
     assert profit_loss["max_loss_comparison"]["total_max_loss_amount"] == "250"
     assert profit_loss["max_loss_comparison"]["total_realized_to_max_loss_ratio"] == "0.5020"
+
+
+def test_report_text_includes_monthly_trend_buckets_and_is_read_only(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "ideas"
+    current_time = [datetime(2026, 5, 8, 12, 0, tzinfo=UTC)]
+    service = TradeIdeaService(root, now_factory=lambda: current_time[0])
+
+    filled = _idea("trade-report-may-filled")
+    service.propose(filled, actor_id="idea-generator-v1")
+    service.approve(filled.decision_id, actor_id="rj", reason="Risk verified")
+    service.record_submission(filled.decision_id, actor_id="operator", venue="manual")
+    service.record_fill(filled.decision_id, actor_id="operator", venue="manual")
+    service.record_closeout_attribution(
+        filled.decision_id,
+        actor_id="rj",
+        resolution=CloseoutResolution.THESIS_TARGET,
+        realized_profit_loss_amount=Decimal("125.50"),
+        realized_profit_loss_percent=Decimal("2.4"),
+        evidence=("broker-statement:manual",),
+    )
+
+    current_time[0] = datetime(2026, 6, 4, 12, 0, tzinfo=UTC)
+    rejected = _idea("trade-report-june-rejected")
+    service.propose(rejected, actor_id="idea-generator-v1")
+    service.reject(rejected.decision_id, actor_id="rj", reason="Setup invalidated")
+    before = _snapshot_files(root)
+    expected_june_line = (
+        "2026-06: ideas=1, approval_rate=0.00%, " "closeout_coverage=0.00%, realized_profit_loss=0"
+    )
+
+    exit_code, output = _run_text(
+        capsys,
+        ["ideas", "report", "--ideas-root", str(root), "--format", "text"],
+    )
+
+    assert exit_code == 0
+    assert "Monthly" in output
+    assert (
+        "2026-05: ideas=1, approval_rate=100.00%, "
+        "closeout_coverage=100.00%, realized_profit_loss=125.50"
+    ) in output
+    assert expected_june_line in output
+    assert _snapshot_files(root) == before
 
 
 def test_report_missing_closeout_coverage_lists_terminal_ids(

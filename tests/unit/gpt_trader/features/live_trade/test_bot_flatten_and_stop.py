@@ -162,3 +162,52 @@ class TestTradingBotFlattenAndStop:
         broker.place_order.assert_called_once()
         assert broker.place_order.call_args.kwargs["reduce_only"] is True
         engine.shutdown.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_flatten_and_stop_preserves_unrelated_type_errors(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from decimal import Decimal
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+
+        from gpt_trader.app.config import BotConfig
+
+        class _DirectBrokerCalls:
+            async def __call__(self, fn, *args, **kwargs):
+                return fn(*args, **kwargs)
+
+        def fail_for_unrelated_payload_bug(**kwargs):
+            assert kwargs["reduce_only"] is True
+            raise TypeError("quantity payload must be Decimal")
+
+        config = BotConfig(symbols=["BTC-USD"], interval=1)
+        broker = Mock()
+        broker.list_positions.return_value = [
+            SimpleNamespace(symbol="BTC-USD", quantity=Decimal("1"))
+        ]
+        broker.place_order = Mock(side_effect=fail_for_unrelated_payload_bug)
+
+        container = SimpleNamespace(
+            broker=broker,
+            risk_manager=Mock(),
+            event_store=Mock(),
+            orders_store=Mock(),
+            notification_service=Mock(),
+        )
+
+        engine = AsyncMock()
+        engine.shutdown = AsyncMock()
+        mock_engine = MagicMock(return_value=engine)
+        monkeypatch.setattr(bot_module, "TradingEngine", mock_engine)
+
+        bot = TradingBot(config=config, container=container)
+        bot._broker_calls = _DirectBrokerCalls()
+
+        messages = await bot.flatten_and_stop()
+
+        assert any("quantity payload must be Decimal" in msg for msg in messages)
+        assert not any("refusing non-reduce-only fallback" in msg for msg in messages)
+        broker.place_order.assert_called_once()
+        assert broker.place_order.call_args.kwargs["reduce_only"] is True
+        engine.shutdown.assert_called_once()

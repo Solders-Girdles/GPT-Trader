@@ -322,10 +322,19 @@ class TradingBot:
                 return await broker_calls(self.broker.place_order, **order_kwargs)
             return await asyncio.to_thread(self.broker.place_order, **order_kwargs)
         except TypeError as exc:
+            if not self._is_unsupported_reduce_only_type_error(exc):
+                raise
             raise RuntimeError(
                 "Broker rejected reduce-only emergency close order; "
                 "refusing non-reduce-only fallback."
             ) from exc
+
+    @staticmethod
+    def _is_unsupported_reduce_only_type_error(exc: TypeError) -> bool:
+        message = str(exc).lower()
+        return "reduce_only" in message and (
+            "unexpected keyword" in message or "unexpected argument" in message
+        )
 
     async def shutdown(self) -> None:
         """Alias for stop() to match CLI interface."""

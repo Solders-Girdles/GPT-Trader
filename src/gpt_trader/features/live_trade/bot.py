@@ -17,6 +17,7 @@ from gpt_trader.features.live_trade.lifecycle import (
     LifecycleStateMachine,
     TradingBotState,
 )
+from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.utilities.async_tools import BoundedToThread
 from gpt_trader.utilities.logging_patterns import get_logger
 
@@ -236,11 +237,21 @@ class TradingBot:
             bypass_reason="emergency_shutdown",
             operation="flatten_and_stop",
         )
-        messages = ["Bot stopped."]
+        messages = ["Bot stopping."]
+        failed_closes: list[dict[str, str]] = []
 
         if not self.broker:
-            messages.append("Error: No broker connection available.")
+            error = "No broker connection available."
+            messages.append(f"Error: {error}")
+            failed_closes.append(
+                {
+                    "symbol": "unknown",
+                    "quantity": "unknown",
+                    "error": error,
+                }
+            )
             await self.engine.shutdown()
+            await self._handle_flatten_failure(failed_closes, messages)
             return messages
 
         try:
@@ -282,17 +293,123 @@ class TradingBot:
                             f"Submitted CLOSE for {pos.symbol} ({quantity}) reduce-only"
                         )
                     except Exception as e:
-                        logger.error(f"Failed to close {pos.symbol}: {e}")
-                        messages.append(f"Failed to close {pos.symbol}: {e}")
+                        symbol = str(getattr(pos, "symbol", "unknown"))
+                        raw_quantity: Any = getattr(pos, "quantity", None)
+                        if raw_quantity is None:
+                            quantity = "unknown"
+                        else:
+                            try:
+                                quantity = str(abs(raw_quantity))
+                            except TypeError:
+                                quantity = str(raw_quantity)
+                        logger.error(f"Failed to close {symbol}: {e}")
+                        messages.append(f"Failed to close {symbol}: {e}")
+                        failed_closes.append(
+                            {
+                                "symbol": symbol,
+                                "quantity": quantity,
+                                "error": str(e),
+                            }
+                        )
 
         except Exception as e:
             logger.error(f"Flatten failed: {e}")
             messages.append(f"Critical Error during flatten: {e}")
+            failed_closes.append(
+                {
+                    "symbol": "unknown",
+                    "quantity": "unknown",
+                    "error": str(e),
+                }
+            )
 
         await self.engine.shutdown()
+        if failed_closes:
+            await self._handle_flatten_failure(failed_closes, messages)
+            return messages
+
         self._shutdown_broker_calls()
         self._transition_state(TradingBotState.STOPPED, reason="flatten_and_stop_complete")
+        messages.append("Bot stopped.")
         return messages
+
+    async def _handle_flatten_failure(
+        self,
+        failed_closes: list[dict[str, str]],
+        messages: list[str],
+    ) -> None:
+        failed_symbols = [
+            failure["symbol"]
+            for failure in failed_closes
+            if failure.get("symbol") and failure["symbol"] != "unknown"
+        ]
+        details = {
+            "failed_close_count": len(failed_closes),
+            "failed_symbols": failed_symbols,
+            "failed_closes": failed_closes,
+            "operator_action": (
+                "Verify remaining exposure and reconcile positions before treating "
+                "emergency flatten as complete."
+            ),
+            "monitoring_state": "alerting_active_until_reconciliation",
+        }
+        messages.append(
+            "Emergency flatten incomplete; monitoring/alerting remain active until "
+            "positions are reconciled."
+        )
+        logger.critical(
+            "Emergency flatten incomplete",
+            operation="flatten_and_stop",
+            failed_close_count=len(failed_closes),
+            failed_symbols=failed_symbols,
+            monitoring_state=details["monitoring_state"],
+        )
+        self._record_flatten_failure_event(details)
+        await self._notify_flatten_failure(details)
+        self._transition_state(
+            TradingBotState.ERROR,
+            reason="flatten_and_stop_failed",
+            details=details,
+        )
+
+    def _record_flatten_failure_event(self, details: dict[str, Any]) -> None:
+        event_store = self._event_store
+        append = getattr(event_store, "append", None)
+        if not callable(append):
+            return
+        try:
+            append("emergency_flatten_failed", details)
+        except Exception as exc:
+            logger.error(
+                "Failed to record emergency flatten failure event",
+                operation="flatten_and_stop",
+                error=str(exc),
+            )
+
+    async def _notify_flatten_failure(self, details: dict[str, Any]) -> None:
+        if self._notification_service is None:
+            return
+        failed_symbols = details.get("failed_symbols") or ["unknown"]
+        try:
+            await self._notification_service.notify(
+                title="Emergency flatten incomplete",
+                message=(
+                    "Emergency flatten did not close all positions. Failed symbols: "
+                    f"{', '.join(failed_symbols)}. Verify remaining exposure before "
+                    "treating flatten as complete."
+                ),
+                severity=AlertSeverity.CRITICAL,
+                source="TradingBot",
+                category="emergency_flatten",
+                context=details,
+                force=True,
+            )
+        except Exception as exc:
+            logger.error(
+                "Failed to send emergency flatten failure notification",
+                operation="flatten_and_stop",
+                error=str(exc),
+            )
 
     async def _place_reduce_only_emergency_close(
         self,

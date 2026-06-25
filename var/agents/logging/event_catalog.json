@@ -694,16 +694,22 @@
     "flatten_and_stop": {
       "common_fields": [
         "bypass_reason",
+        "error",
+        "failed_close_count",
+        "failed_symbols",
+        "monitoring_state",
         "quantity",
         "reduce_only",
         "symbol"
       ],
       "components": null,
       "levels": [
+        "CRITICAL",
+        "ERROR",
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 2,
+      "occurrence_count": 5,
       "source_files": [
         "features/live_trade/bot.py"
       ],
@@ -2469,7 +2475,7 @@
     "client_order_id": 19,
     "consecutive_failures": 6,
     "details": 4,
-    "error": 56,
+    "error": 58,
     "error_message": 90,
     "error_type": 84,
     "event_type": 5,
@@ -2495,9 +2501,9 @@
     "timestamp": 4
   },
   "level_distribution": {
-    "CRITICAL": 1,
+    "CRITICAL": 2,
     "DEBUG": 49,
-    "ERROR": 108,
+    "ERROR": 110,
     "INFO": 91,
     "WARNING": 95
   },

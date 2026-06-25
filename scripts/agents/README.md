@@ -49,6 +49,7 @@ uv run agent-tests --source gpt_trader.cli
 uv run agent-tests --source gpt_trader.cli --source-files
 uv run agent-risk --with-docs
 uv run agent-naming
+uv run agent-naming --strict --quiet
 uv run agent-health
 uv run agent-regenerate
 uv run agent-regenerate --only testing
@@ -57,7 +58,10 @@ uv run agent-artifacts package
 uv run agent-artifacts verify-package
 ```
 
-Naming defaults are loaded from `config/agents/naming_patterns.yaml`.
+`agent-naming` dispatches to `scripts/agents/naming_inventory.py`; defaults are
+loaded from `config/agents/naming_patterns.yaml`. Strict naming enforcement is
+wired through the local pre-commit `naming-check` hook, and the current GitHub CI
+workflow does not run a direct naming scan step.
 
 ## Artifact Publication
 

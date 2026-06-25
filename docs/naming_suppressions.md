@@ -2,7 +2,7 @@
 
 ---
 status: current
-last-updated: 2026-01-31
+last-updated: 2026-06-24
 ---
 
 This document explains **how the naming-standards check works**, what it enforces, and
@@ -12,9 +12,19 @@ The goal is to keep naming consistent **without** turning every PR into a rename
 
 ## What enforces naming
 
-CI runs a strict naming scan via:
+The strict naming gate today is the local pre-commit `naming-check` hook in
+`.pre-commit-config.yaml`, which runs:
 
 - `uv run python scripts/agents/naming_inventory.py --strict --quiet`
+
+The equivalent first-class agent command is:
+
+- `uv run agent-naming --strict --quiet`
+
+`make agent-naming` runs the default non-strict scan for local review. The
+current GitHub CI workflow does not include a direct naming scan step; use the
+pre-commit hook or the strict `agent-naming` command when a PR needs explicit
+naming-compliance evidence.
 
 The banned/flagged patterns are defined in:
 

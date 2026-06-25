@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import tarfile
 from pathlib import Path
 
@@ -161,6 +162,25 @@ def test_validate_agent_artifacts_reports_missing_indexed_file(tmp_path: Path) -
     report, _ = agent_artifacts.validate_agent_artifacts(source, quiet=True)
 
     assert any("risk_config_schema.json" in error for error in report.errors)
+
+
+def test_validate_agent_artifacts_ignores_gitignored_residue_but_reports_nonignored(
+    tmp_path: Path,
+) -> None:
+    subprocess.run(["git", "init"], cwd=tmp_path, check=True, capture_output=True)
+    (tmp_path / ".gitignore").write_text("naming_inventory.json\n", encoding="utf-8")
+    source = _create_valid_agent_artifacts(tmp_path)
+    _write_json(source / "naming_inventory.json", {"local_report": True})
+
+    report, _ = agent_artifacts.validate_agent_artifacts(source, quiet=True)
+
+    assert report.errors == []
+
+    _write_json(source / "unindexed_artifact.json", {"contract_drift": True})
+    report, _ = agent_artifacts.validate_agent_artifacts(source, quiet=True)
+
+    assert any("unindexed_artifact.json" in error for error in report.errors)
+    assert not any("naming_inventory.json" in error for error in report.errors)
 
 
 def test_validate_agent_artifacts_reports_empty_source(tmp_path: Path) -> None:

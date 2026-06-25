@@ -8,6 +8,7 @@ import gzip
 import hashlib
 import json
 import os
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -90,8 +91,64 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _git_root_for(path: Path) -> Path | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        return None
+
+    root = result.stdout.strip()
+    return Path(root) if root else None
+
+
+def _gitignored_files(paths: list[Path], *, git_root: Path) -> set[Path]:
+    resolved_git_root = git_root.resolve()
+    relative_paths: list[str] = []
+    path_by_relative: dict[str, Path] = {}
+    for path in paths:
+        try:
+            relative = path.resolve().relative_to(resolved_git_root).as_posix()
+        except ValueError:
+            return set()
+        relative_paths.append(relative)
+        path_by_relative[relative] = path
+
+    if not relative_paths:
+        return set()
+
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(git_root), "check-ignore", "--stdin"],
+            input="\n".join(relative_paths) + "\n",
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        return set()
+
+    if result.returncode not in {0, 1}:
+        return set()
+
+    return {
+        path_by_relative[relative]
+        for relative in result.stdout.splitlines()
+        if relative in path_by_relative
+    }
+
+
 def _iter_source_files(source_dir: Path) -> list[Path]:
-    return sorted(path for path in source_dir.rglob("*") if path.is_file())
+    files = sorted(path for path in source_dir.rglob("*") if path.is_file())
+    git_root = _git_root_for(source_dir)
+    if git_root is None:
+        return files
+
+    ignored = _gitignored_files(files, git_root=git_root)
+    return [path for path in files if path not in ignored]
 
 
 def _relative_posix(path: Path, base: Path) -> str:

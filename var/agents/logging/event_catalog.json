@@ -1977,14 +1977,18 @@
       ]
     },
     "shutdown": {
-      "common_fields": [],
+      "common_fields": [
+        "reason"
+      ],
       "components": null,
       "levels": [
-        "INFO"
+        "INFO",
+        "WARNING"
       ],
-      "occurrence_count": 1,
+      "occurrence_count": 3,
       "source_files": [
-        "cli/commands/run.py"
+        "cli/commands/run.py",
+        "features/live_trade/bot.py"
       ],
       "statuses": null
     },
@@ -2492,7 +2496,7 @@
     "portfolio_id": 4,
     "price": 4,
     "quantity": 8,
-    "reason": 25,
+    "reason": 27,
     "service": 9,
     "severity": 4,
     "side": 26,
@@ -2505,7 +2509,7 @@
     "DEBUG": 49,
     "ERROR": 110,
     "INFO": 91,
-    "WARNING": 95
+    "WARNING": 97
   },
   "total_event_types": 135,
   "version": "1.0"

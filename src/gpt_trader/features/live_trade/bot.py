@@ -54,6 +54,7 @@ class TradingBot:
             transitions=TRADING_BOT_TRANSITIONS,
             logger=logger,
         )
+        self._preserve_flatten_failure_state = False
 
         # Get services directly from container (legacy registry removed)
         self.broker: BrokerProtocol | None = container.broker
@@ -206,13 +207,29 @@ class TradingBot:
             except Exception:
                 pass
             logger.info("Bot shutting down...")
-            self._transition_state(TradingBotState.STOPPING, reason="shutdown_start")
+            preserve_flatten_failure = self._preserve_flatten_failure_state
+            if preserve_flatten_failure:
+                logger.warning(
+                    "Bot shutdown preserving emergency flatten failure state",
+                    operation="shutdown",
+                    reason="flatten_and_stop_failed",
+                )
+            else:
+                self._transition_state(TradingBotState.STOPPING, reason="shutdown_start")
             await self.engine.shutdown()
-            self._shutdown_broker_calls()
-            self._transition_state(TradingBotState.STOPPED, reason="shutdown_complete")
+            if preserve_flatten_failure:
+                logger.warning(
+                    "Bot shutdown left broker calls active for flatten reconciliation",
+                    operation="shutdown",
+                    reason="flatten_and_stop_failed",
+                )
+            else:
+                self._shutdown_broker_calls()
+                self._transition_state(TradingBotState.STOPPED, reason="shutdown_complete")
             logger.info("Bot shutdown complete.")
 
     async def stop(self) -> None:
+        self._preserve_flatten_failure_state = False
         self._transition_state(TradingBotState.STOPPING, reason="stop_called")
         await self.engine.shutdown()
         self._shutdown_broker_calls()
@@ -227,6 +244,7 @@ class TradingBot:
         (TradingEngine.submit_order) because emergency closures must succeed
         even when guards would block normal trading.
         """
+        self._preserve_flatten_failure_state = False
         self._transition_state(
             TradingBotState.STOPPING,
             reason="flatten_and_stop",
@@ -250,6 +268,7 @@ class TradingBot:
                     "error": error,
                 }
             )
+            self._preserve_flatten_failure_state = True
             await self.engine.shutdown()
             await self._handle_flatten_failure(failed_closes, messages)
             return messages
@@ -323,12 +342,15 @@ class TradingBot:
                 }
             )
 
+        if failed_closes:
+            self._preserve_flatten_failure_state = True
         await self.engine.shutdown()
         if failed_closes:
             await self._handle_flatten_failure(failed_closes, messages)
             return messages
 
         self._shutdown_broker_calls()
+        self._preserve_flatten_failure_state = False
         self._transition_state(TradingBotState.STOPPED, reason="flatten_and_stop_complete")
         messages.append("Bot stopped.")
         return messages
@@ -338,6 +360,7 @@ class TradingBot:
         failed_closes: list[dict[str, str]],
         messages: list[str],
     ) -> None:
+        self._preserve_flatten_failure_state = True
         failed_symbols = [
             failure["symbol"]
             for failure in failed_closes

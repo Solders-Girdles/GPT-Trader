@@ -9,6 +9,7 @@ from .api_setup_wizard import APISetupWizardScreen
 from .credential_validation_screen import CredentialValidationScreen
 from .details_screen import DetailsScreen
 from .full_logs_screen import FullLogsScreen
+from .ideas_review_screen import IdeasReviewScreen
 from .main_screen import MainScreen
 from .market_screen import MarketScreen
 from .mode_selection import ModeSelectionScreen
@@ -21,6 +22,7 @@ __all__ = [
     "CredentialValidationScreen",
     "DetailsScreen",
     "FullLogsScreen",
+    "IdeasReviewScreen",
     "MainScreen",
     "MarketScreen",
     "ModeSelectionScreen",

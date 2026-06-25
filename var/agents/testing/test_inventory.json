@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6740,
-    "total_files": 796,
+    "total_tests": 6751,
+    "total_files": 798,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6575,
-    "asyncio": 380,
+    "unit": 6586,
+    "asyncio": 389,
     "parametrize": 191,
     "endpoints": 83,
     "property": 82,
@@ -876,6 +876,7 @@
       "tests/unit/gpt_trader/tui/test_events_widget_handlers.py",
       "tests/unit/gpt_trader/tui/test_formatting.py",
       "tests/unit/gpt_trader/tui/test_helpers.py",
+      "tests/unit/gpt_trader/tui/test_ideas_review_screen.py",
       "tests/unit/gpt_trader/tui/test_indicator_contributions.py",
       "tests/unit/gpt_trader/tui/test_log_manager.py",
       "tests/unit/gpt_trader/tui/test_log_manager_formatters.py",
@@ -886,6 +887,7 @@
       "tests/unit/gpt_trader/tui/test_screen_flows_help.py",
       "tests/unit/gpt_trader/tui/test_screen_flows_quick_navigation_and_state.py",
       "tests/unit/gpt_trader/tui/test_screens.py",
+      "tests/unit/gpt_trader/tui/test_snapshots_ideas_review.py",
       "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py",
       "tests/unit/gpt_trader/tui/test_snapshots_modals.py",
       "tests/unit/gpt_trader/tui/test_snapshots_portfolio_overlays.py",
@@ -49943,6 +49945,80 @@
         "docstring": "Test @safe_update handles tracker failures gracefully."
       }
     ],
+    "tests/unit/gpt_trader/tui/test_ideas_review_screen.py": [
+      {
+        "name": "test_empty_store_renders_empty_state",
+        "line": 50,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_populated_queue_renders_detail_and_policy",
+        "line": 61,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_policy_violations_are_listed",
+        "line": 78,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approve_flow_records_human_reason",
+        "line": 92,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approve_refusal_keeps_state_unchanged",
+        "line": 118,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reject_and_request_changes_record_events",
+        "line": 139,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_terminal_state_action_is_noop",
+        "line": 161,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_filter_cycle_changes_visible_rows",
+        "line": 180,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/tui/test_indicator_contributions.py": [
       {
         "name": "TestIndicatorContribution::test_is_bullish_positive_contribution",
@@ -50718,6 +50794,16 @@
         ],
         "docstring": "Test that pressing 'i' opens the mode info modal.",
         "class": "TestModeInfoFlow"
+      },
+      {
+        "name": "TestModeInfoFlow::test_ideas_review_opens_on_shift_i",
+        "line": 217,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "Test that pressing 'I' opens the trade-idea review screen.",
+        "class": "TestModeInfoFlow"
       }
     ],
     "tests/unit/gpt_trader/tui/test_screens.py": [
@@ -50729,6 +50815,26 @@
         ],
         "docstring": "Test that update_ui correctly sets screen state for StateRegistry broadcast.\n\nWith the StateRegistry pattern, update_ui() sets self.state which triggers\nwatch_state() -> StateRegistry.broadcast(). Widgets that implement StateObserver\nreceive updates via their on_state_updated() method rather than direct property\nassignment from MainScreen.",
         "class": "TestMainScreen"
+      }
+    ],
+    "tests/unit/gpt_trader/tui/test_snapshots_ideas_review.py": [
+      {
+        "name": "TestIdeasReviewSnapshots::test_empty_ideas_review_screen",
+        "line": 32,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIdeasReviewSnapshots"
+      },
+      {
+        "name": "TestIdeasReviewSnapshots::test_populated_ideas_review_screen",
+        "line": 43,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIdeasReviewSnapshots"
       }
     ],
     "tests/unit/gpt_trader/tui/test_snapshots_main_screen.py": [

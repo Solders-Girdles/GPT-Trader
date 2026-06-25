@@ -212,3 +212,19 @@ class TestModeInfoFlow:
 
             assert len(app.screen_stack) > initial_stack_size
             assert isinstance(app.screen, ModeInfoModal)
+
+    @pytest.mark.asyncio
+    async def test_ideas_review_opens_on_shift_i(self, mock_bot_with_status):
+        """Test that pressing 'I' opens the trade-idea review screen."""
+        app = TraderApp(bot=mock_bot_with_status)
+
+        async with app.run_test() as pilot:
+            from gpt_trader.tui.screens import IdeasReviewScreen
+
+            initial_stack_size = len(app.screen_stack)
+
+            await pilot.press("I")
+            await pilot.pause()
+
+            assert len(app.screen_stack) > initial_stack_size
+            assert isinstance(app.screen, IdeasReviewScreen)

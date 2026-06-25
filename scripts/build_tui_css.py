@@ -61,6 +61,7 @@ CSS_MODULE_ORDER = [
     "screens/help.tcss",
     "screens/credential_validation.tcss",
     "screens/api_setup_wizard.tcss",
+    "screens/ideas_review.tcss",
     # NOTE: main_screen.tcss removed - it defined a conflicting 3-column grid
     # that overwrote the 4x4 Bento grid from workspace.tcss. The tile spans
     # in workspace.tcss are designed for the 4x4 grid.

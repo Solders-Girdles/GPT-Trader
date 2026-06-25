@@ -306,11 +306,20 @@ class FileNotificationBackend:
                 pass
             return
 
-        parent = path.parent
+        if path.is_symlink():
+            target = path.readlink()
+            if not target.is_absolute():
+                target = path.parent / target
+            self._check_directory_writable(target.parent, target.name)
+            return
+
+        self._check_directory_writable(path.parent, path.name)
+
+    def _check_directory_writable(self, parent: Path, file_name: str) -> None:
         with tempfile.NamedTemporaryFile(
             mode="a",
             dir=parent,
-            prefix=f".{path.name}.connection-",
+            prefix=f".{file_name}.connection-",
             suffix=".tmp",
         ):
             pass

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6820,
-    "total_files": 803,
+    "total_tests": 6822,
+    "total_files": 804,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6655,
+    "unit": 6657,
     "asyncio": 411,
     "parametrize": 195,
     "endpoints": 83,
@@ -684,6 +684,7 @@
       "tests/unit/gpt_trader/security/secrets_manager/test_file_concurrency.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_key_rotation_basic.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_key_rotation_scenarios.py",
+      "tests/unit/gpt_trader/security/secrets_manager/test_log_redaction.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_vault_basic.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_vault_failures.py",
       "tests/unit/gpt_trader/security/security_validator/test_convenience_wrappers.py",
@@ -43264,6 +43265,24 @@
         ],
         "docstring": "",
         "class": "TestKeyRotationScenarios"
+      }
+    ],
+    "tests/unit/gpt_trader/security/secrets_manager/test_log_redaction.py": [
+      {
+        "name": "test_file_store_and_load_logs_redact_secret_namespace_and_file_path",
+        "line": 24,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_file_read_error_logs_redact_secret_namespace_and_os_error_path",
+        "line": 54,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/security/secrets_manager/test_vault_basic.py": [

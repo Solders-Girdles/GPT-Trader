@@ -9,6 +9,7 @@ with explicit encrypted file fallback outside development.
 import base64
 
 # Removed unused imports - Fernet handles encryption directly
+import hashlib
 import json
 import os
 import threading
@@ -38,6 +39,7 @@ logger = get_logger(__name__, component="security")
 DEFAULT_DEVELOPMENT_VAULT_ADDRESS = "http://localhost:8200"
 FILE_SECRET_FALLBACK_ENVIRONMENT_VARIABLE = "GPT_TRADER_ALLOW_FILE_SECRET_FALLBACK"
 DEVELOPMENT_ENVIRONMENTS = frozenset({"development", "dev", "local", "paper", "test", "testing"})
+LOG_FINGERPRINT_LENGTH = 12
 
 
 class VaultConfigurationError(RuntimeError):
@@ -152,6 +154,18 @@ class SecretsManager:
         if isinstance(payload, dict):
             return dict(payload)
         return None
+
+    @staticmethod
+    def _fingerprint_for_log(value: str) -> str:
+        return hashlib.sha256(value.encode("utf-8")).hexdigest()[:LOG_FINGERPRINT_LENGTH]
+
+    @classmethod
+    def _secret_log_ref(cls, path: str) -> str:
+        return f"secret:{cls._fingerprint_for_log(str(path))}"
+
+    @classmethod
+    def _encrypted_file_log_ref(cls, file_path: Path) -> str:
+        return f"encrypted-file:{cls._fingerprint_for_log(str(file_path))}"
 
     def _current_environment(self) -> str:
         if self._config is not None:
@@ -380,17 +394,21 @@ class SecretsManager:
                         path=path, secret=validated_secret
                     )
                     logger.info(
-                        f"Secret stored in Vault: {path}",
+                        "Secret stored in Vault",
                         operation="secret_store",
                         status="success",
+                        storage_backend="vault",
+                        secret_ref=self._secret_log_ref(path),
                     )
                 else:
                     # Fallback to encrypted file
                     self._store_to_file(path, validated_secret)
                     logger.info(
-                        f"Secret stored in encrypted file: {path}",
+                        "Secret stored in encrypted file",
                         operation="secret_store",
                         status="success",
+                        storage_backend="encrypted_file",
+                        secret_ref=self._secret_log_ref(path),
                     )
 
                 # Update cache
@@ -399,9 +417,11 @@ class SecretsManager:
 
             except Exception as e:
                 logger.error(
-                    f"Failed to store secret: {e}",
+                    "Failed to store secret",
                     operation="secret_store",
                     status="error",
+                    error_type=type(e).__name__,
+                    secret_ref=self._secret_log_ref(path),
                 )
                 return False
 
@@ -438,9 +458,11 @@ class SecretsManager:
 
             except Exception as e:
                 logger.error(
-                    f"Failed to retrieve secret: {e}",
+                    "Failed to retrieve secret",
                     operation="secret_retrieve",
                     status="error",
+                    error_type=type(e).__name__,
+                    secret_ref=self._secret_log_ref(path),
                 )
 
             return None
@@ -449,11 +471,17 @@ class SecretsManager:
         """Store secret to encrypted file"""
         self._require_durable_file_key()
         secrets_dir = self._secrets_dir
-        logger.debug(f"Using secrets directory: {secrets_dir}")
+        secret_ref = self._secret_log_ref(path)
+        logger.debug("Using encrypted file storage directory", secret_ref=secret_ref)
         secrets_dir.mkdir(parents=True, exist_ok=True)
 
         file_path = secrets_dir / f"{path.replace('/', '_')}.enc"
-        logger.debug(f"Storing secret to file: {file_path}")
+        file_ref = self._encrypted_file_log_ref(file_path)
+        logger.debug(
+            "Storing secret to encrypted file",
+            secret_ref=secret_ref,
+            encrypted_file_ref=file_ref,
+        )
 
         # Encrypt data
         cipher = self._require_cipher()
@@ -462,16 +490,31 @@ class SecretsManager:
 
         # Write to file
         file_path.write_bytes(encrypted)
-        logger.debug(f"Successfully wrote {len(encrypted)} bytes to {file_path}")
+        logger.debug(
+            "Successfully wrote encrypted secret file",
+            byte_count=len(encrypted),
+            secret_ref=secret_ref,
+            encrypted_file_ref=file_ref,
+        )
 
     def _load_from_file(self, path: str) -> dict[str, Any] | None:
         """Load secret from encrypted file"""
         secrets_dir = self._secrets_dir
         file_path = secrets_dir / f"{path.replace('/', '_')}.enc"
-        logger.debug(f"Loading secret from file: {file_path}")
+        secret_ref = self._secret_log_ref(path)
+        file_ref = self._encrypted_file_log_ref(file_path)
+        logger.debug(
+            "Loading secret from encrypted file",
+            secret_ref=secret_ref,
+            encrypted_file_ref=file_ref,
+        )
 
         if not file_path.exists():
-            logger.debug(f"Secret file does not exist: {file_path}")
+            logger.debug(
+                "Encrypted secret file does not exist",
+                secret_ref=secret_ref,
+                encrypted_file_ref=file_ref,
+            )
             return None
 
         try:
@@ -479,30 +522,59 @@ class SecretsManager:
             cipher = self._require_cipher()
             try:
                 encrypted = file_path.read_bytes()
-                logger.debug(f"Read {len(encrypted)} bytes from {file_path}")
+                logger.debug(
+                    "Read encrypted secret file",
+                    byte_count=len(encrypted),
+                    secret_ref=secret_ref,
+                    encrypted_file_ref=file_ref,
+                )
             except OSError as exc:
-                logger.error("Failed to read file %s: %s", path, exc)
+                logger.error(
+                    "Failed to read encrypted secret file",
+                    error_type=type(exc).__name__,
+                    secret_ref=secret_ref,
+                    encrypted_file_ref=file_ref,
+                )
                 return None
 
             try:
                 decrypted = cipher.decrypt(encrypted)
             except Exception as exc:
-                logger.error("Failed to decrypt file %s: %s", path, exc)
+                logger.error(
+                    "Failed to decrypt encrypted secret file",
+                    error_type=type(exc).__name__,
+                    secret_ref=secret_ref,
+                    encrypted_file_ref=file_ref,
+                )
                 return None
 
             try:
                 payload = json.loads(decrypted.decode())
-                logger.debug(f"Successfully decrypted and loaded secret from {file_path}")
+                logger.debug(
+                    "Successfully decrypted and loaded secret",
+                    secret_ref=secret_ref,
+                    encrypted_file_ref=file_ref,
+                )
                 result = self._as_secret_dict(payload)
                 # Handle empty dict case - ensure we return {} instead of None
                 if result is None and payload == {}:
                     return {}
                 return result
             except ValueError as exc:
-                logger.error("Invalid JSON in file %s: %s", path, exc)
+                logger.error(
+                    "Invalid JSON in encrypted secret file",
+                    error_type=type(exc).__name__,
+                    secret_ref=secret_ref,
+                    encrypted_file_ref=file_ref,
+                )
                 return None
         except Exception as e:
-            logger.error(f"Unexpected error loading secret {path}: {e}")
+            logger.error(
+                "Unexpected error loading secret",
+                error_type=type(e).__name__,
+                secret_ref=secret_ref,
+                encrypted_file_ref=file_ref,
+            )
             return None
 
     def rotate_key(self, path: str) -> bool:
@@ -538,9 +610,8 @@ class SecretsManager:
                 logger.error(
                     "Failed to store rotated secret",
                     error_type=type(exc).__name__,
-                    error_message=str(exc),
                     operation="rotate_key",
-                    path=path,
+                    secret_ref=self._secret_log_ref(path),
                 )
                 return False
 
@@ -561,7 +632,13 @@ class SecretsManager:
                 return True
 
             except Exception as e:
-                logger.error(f"Failed to delete secret: {e}")
+                logger.error(
+                    "Failed to delete secret",
+                    operation="secret_delete",
+                    status="error",
+                    error_type=type(e).__name__,
+                    secret_ref=self._secret_log_ref(path),
+                )
                 return False
 
     def list_secrets(self) -> list[str]:

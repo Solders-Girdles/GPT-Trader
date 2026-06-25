@@ -95,6 +95,7 @@
       "check_ip",
       "encryption_init",
       "enforce_slippage_guard",
+      "secret_delete",
       "secret_retrieve",
       "secret_store",
       "suspicious_activity",
@@ -1852,9 +1853,8 @@
     },
     "rotate_key": {
       "common_fields": [
-        "error_message",
         "error_type",
-        "path"
+        "secret_ref"
       ],
       "components": null,
       "levels": [
@@ -1950,8 +1950,28 @@
       ],
       "statuses": null
     },
+    "secret_delete": {
+      "common_fields": [
+        "error_type",
+        "secret_ref"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "security/secrets_manager.py"
+      ],
+      "statuses": [
+        "error"
+      ]
+    },
     "secret_retrieve": {
-      "common_fields": [],
+      "common_fields": [
+        "error_type",
+        "secret_ref"
+      ],
       "components": null,
       "levels": [
         "ERROR"
@@ -1965,7 +1985,11 @@
       ]
     },
     "secret_store": {
-      "common_fields": [],
+      "common_fields": [
+        "error_type",
+        "secret_ref",
+        "storage_backend"
+      ],
       "components": null,
       "levels": [
         "ERROR",
@@ -2489,8 +2513,8 @@
     "details": 4,
     "environment": 12,
     "error": 64,
-    "error_message": 90,
-    "error_type": 84,
+    "error_message": 89,
+    "error_type": 87,
     "event_type": 5,
     "flatten_operation_id": 9,
     "granularity": 6,
@@ -2501,13 +2525,13 @@
     "mode": 4,
     "order_id": 29,
     "outcome": 5,
-    "path": 12,
+    "path": 11,
     "portfolio_id": 4,
     "price": 4,
     "quantity": 10,
     "reason": 27,
+    "secret_ref": 6,
     "service": 9,
-    "severity": 4,
     "side": 26,
     "stage": 167,
     "symbol": 84
@@ -2515,10 +2539,10 @@
   "level_distribution": {
     "CRITICAL": 2,
     "DEBUG": 49,
-    "ERROR": 121,
+    "ERROR": 122,
     "INFO": 90,
     "WARNING": 101
   },
-  "total_event_types": 135,
+  "total_event_types": 136,
   "version": "1.0"
 }

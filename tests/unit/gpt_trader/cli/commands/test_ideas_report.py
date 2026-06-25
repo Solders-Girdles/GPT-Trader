@@ -192,6 +192,53 @@ def test_report_missing_closeout_coverage_lists_terminal_ids(
     assert closeouts["missing_closeout_decision_ids"] == ["trade-report-no-closeout"]
 
 
+def test_report_classifies_percent_only_closeout_outcomes_without_amount_totals(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "ideas"
+    service = _service(root)
+
+    for decision_id, realized_percent in (
+        ("trade-report-percent-profit", Decimal("4.5")),
+        ("trade-report-percent-loss", Decimal("-1.25")),
+        ("trade-report-percent-flat", Decimal("0")),
+    ):
+        idea = _idea(decision_id)
+        service.propose(idea, actor_id="idea-generator-v1")
+        service.approve(decision_id, actor_id="rj", reason="Risk verified")
+        service.record_submission(decision_id, actor_id="operator", venue="manual")
+        service.record_fill(decision_id, actor_id="operator", venue="manual")
+        service.record_closeout_attribution(
+            decision_id,
+            actor_id="rj",
+            resolution=CloseoutResolution.THESIS_TARGET,
+            realized_profit_loss_percent=realized_percent,
+        )
+
+    exit_code, response = _run_json(capsys, ["ideas", "report", *_root_args(root)])
+
+    assert exit_code == 0
+    closeouts = response["data"]["closeouts"]
+    assert closeouts["outcome_distribution"] == {
+        "flat": 1,
+        "loss": 1,
+        "profit": 1,
+        "unavailable": 0,
+    }
+    profit_loss = closeouts["realized_profit_loss"]
+    assert profit_loss["available_amount_count"] == 0
+    assert profit_loss["total_amount"] == "0"
+    assert profit_loss["average_amount"] is None
+    assert profit_loss["max_loss_comparison"] == {
+        "by_decision_id": [],
+        "comparable_count": 0,
+        "total_max_loss_amount": "0",
+        "total_realized_amount": "0",
+        "total_realized_to_max_loss_ratio": None,
+    }
+
+
 def test_report_is_read_only_and_does_not_seed_budget(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

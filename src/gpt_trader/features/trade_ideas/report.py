@@ -234,16 +234,13 @@ def _closeout_summary(views: list[TradeIdeaView]) -> dict[str, Any]:
         resolution_counts[closeout.resolution.value] += 1
         realized_amount = closeout.realized_profit_loss_amount
         if realized_amount is None:
-            outcome_distribution["unavailable"] += 1
+            outcome_distribution[
+                _realized_profit_loss_outcome(closeout.realized_profit_loss_percent)
+            ] += 1
         else:
             available_amount_count += 1
             total_amount += realized_amount
-            if realized_amount > 0:
-                outcome_distribution["profit"] += 1
-            elif realized_amount < 0:
-                outcome_distribution["loss"] += 1
-            else:
-                outcome_distribution["flat"] += 1
+            outcome_distribution[_realized_profit_loss_outcome(realized_amount)] += 1
 
         max_loss_amount = closeout.max_loss.amount
         if realized_amount is not None and max_loss_amount is not None and max_loss_amount > 0:
@@ -297,6 +294,16 @@ def _closeout_summary(views: list[TradeIdeaView]) -> dict[str, Any]:
             },
         },
     }
+
+
+def _realized_profit_loss_outcome(value: Decimal | None) -> str:
+    if value is None:
+        return "unavailable"
+    if value > 0:
+        return "profit"
+    if value < 0:
+        return "loss"
+    return "flat"
 
 
 def _monthly_summary(views: list[TradeIdeaView]) -> dict[str, dict[str, Any]]:

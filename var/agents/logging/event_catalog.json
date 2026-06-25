@@ -2379,21 +2379,25 @@
       "statuses": null
     },
     "vault_init": {
-      "common_fields": [],
+      "common_fields": [
+        "environment"
+      ],
       "components": null,
       "levels": [
         "ERROR",
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 5,
+      "occurrence_count": 13,
       "source_files": [
         "security/secrets_manager.py"
       ],
       "statuses": [
+        "address_missing",
         "connected",
         "dependency_missing",
         "error",
+        "insecure_address",
         "token_missing",
         "unauthenticated"
       ]
@@ -2483,6 +2487,7 @@
     "client_order_id": 20,
     "consecutive_failures": 6,
     "details": 4,
+    "environment": 12,
     "error": 64,
     "error_message": 90,
     "error_type": 84,
@@ -2505,15 +2510,14 @@
     "severity": 4,
     "side": 26,
     "stage": 167,
-    "symbol": 84,
-    "timestamp": 4
+    "symbol": 84
   },
   "level_distribution": {
     "CRITICAL": 2,
     "DEBUG": 49,
-    "ERROR": 116,
-    "INFO": 91,
-    "WARNING": 97
+    "ERROR": 121,
+    "INFO": 90,
+    "WARNING": 101
   },
   "total_event_types": 135,
   "version": "1.0"

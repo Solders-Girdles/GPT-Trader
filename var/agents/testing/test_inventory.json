@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6813,
+    "total_tests": 6820,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6648,
+    "unit": 6655,
     "asyncio": 411,
-    "parametrize": 193,
+    "parametrize": 195,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -43343,7 +43343,72 @@
     "tests/unit/gpt_trader/security/secrets_manager/test_vault_failures.py": [
       {
         "name": "TestVaultFailures::test_vault_authentication_failure",
-        "line": 15,
+        "line": 20,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestVaultFailures"
+      },
+      {
+        "name": "TestVaultFailures::test_production_missing_vault_token_fails_closed",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestVaultFailures"
+      },
+      {
+        "name": "TestVaultFailures::test_production_vault_authentication_failure_fails_closed",
+        "line": 51,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestVaultFailures"
+      },
+      {
+        "name": "TestVaultFailures::test_production_requires_https_vault_addr",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestVaultFailures"
+      },
+      {
+        "name": "TestVaultFailures::test_production_file_fallback_requires_explicit_opt_in",
+        "line": 80,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestVaultFailures"
+      },
+      {
+        "name": "TestVaultFailures::test_config_environment_drives_non_development_vault_fail_closed",
+        "line": 111,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestVaultFailures"
+      },
+      {
+        "name": "TestVaultFailures::test_config_development_alias_allows_ephemeral_key_and_vault_fallback",
+        "line": 139,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestVaultFailures"
+      },
+      {
+        "name": "TestVaultFailures::test_paper_config_allows_local_ephemeral_key_and_vault_fallback",
+        "line": 160,
         "markers": [
           "unit"
         ],
@@ -43352,7 +43417,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_store_failure",
-        "line": 32,
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -43361,7 +43426,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_retrieve_failure",
-        "line": 49,
+        "line": 197,
         "markers": [
           "unit"
         ],
@@ -43370,7 +43435,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_list_failure",
-        "line": 60,
+        "line": 208,
         "markers": [
           "unit"
         ],
@@ -43379,7 +43444,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_delete_failure",
-        "line": 72,
+        "line": 220,
         "markers": [
           "unit"
         ],
@@ -43388,7 +43453,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_environment_configuration",
-        "line": 86,
+        "line": 234,
         "markers": [
           "unit"
         ],
@@ -43397,7 +43462,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_missing_environment_variables",
-        "line": 103,
+        "line": 251,
         "markers": [
           "unit"
         ],

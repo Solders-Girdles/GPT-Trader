@@ -36,6 +36,16 @@ Legacy keys (Exchange keys and the retired `COINBASE_API_KEY_NAME` /
 
 - `GPT_TRADER_ENCRYPTION_KEY` (required outside development if using SecretsManager)
 - `VAULT_ADDR` / `VAULT_TOKEN` (required to enable Vault storage)
+- `GPT_TRADER_ALLOW_FILE_SECRET_FALLBACK=1` (explicit non-development opt-in
+  for encrypted file storage when Vault is unavailable or unauthenticated)
+
+`VAULT_ADDR` defaults to `http://localhost:8200` only for development-style
+environments. Outside development, set `VAULT_ADDR` explicitly to an `https://`
+Vault endpoint and provide a valid `VAULT_TOKEN`; the secrets manager fails
+closed instead of downgrading to local encrypted files. Encrypted file storage
+remains available for local development and for intentional non-development
+fallback when `GPT_TRADER_ALLOW_FILE_SECRET_FALLBACK=1` is set with a durable
+`GPT_TRADER_ENCRYPTION_KEY`.
 
 ### IP allowlist (optional, recommended for production)
 

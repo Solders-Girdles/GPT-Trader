@@ -3,7 +3,7 @@
   "summary": {
     "code_only": 138,
     "template_only": 0,
-    "total": 177
+    "total": 178
   },
   "variables": [
     {
@@ -761,7 +761,12 @@
       ],
       "code_references": [
         {
-          "line": 90,
+          "line": 104,
+          "path": "src/gpt_trader/security/secrets_manager.py",
+          "reader": "os.getenv"
+        },
+        {
+          "line": 159,
           "path": "src/gpt_trader/security/secrets_manager.py",
           "reader": "os.getenv"
         }
@@ -860,6 +865,29 @@
       "name": "GPT_TRADER_ADAPTIVE_THROTTLE",
       "template_default": "",
       "template_references": []
+    },
+    {
+      "code_paths": [
+        "src/gpt_trader/security/secrets_manager.py"
+      ],
+      "code_references": [
+        {
+          "line": 86,
+          "path": "src/gpt_trader/security/secrets_manager.py",
+          "reader": "parse_bool_env"
+        }
+      ],
+      "in_env_template": true,
+      "name": "GPT_TRADER_ALLOW_FILE_SECRET_FALLBACK",
+      "template_default": "0",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "0",
+          "line": 93
+        }
+      ]
     },
     {
       "code_paths": [
@@ -1027,7 +1055,7 @@
       ],
       "code_references": [
         {
-          "line": 86,
+          "line": 100,
           "path": "src/gpt_trader/security/secrets_manager.py",
           "reader": "os.getenv"
         }
@@ -3227,7 +3255,7 @@
       ],
       "code_references": [
         {
-          "line": 150,
+          "line": 300,
           "path": "src/gpt_trader/security/secrets_manager.py",
           "reader": "os.getenv"
         }
@@ -3240,7 +3268,7 @@
           "comment": "",
           "commented_out": false,
           "default": "http://localhost:8200",
-          "line": 88
+          "line": 91
         }
       ]
     },
@@ -3250,7 +3278,7 @@
       ],
       "code_references": [
         {
-          "line": 151,
+          "line": 327,
           "path": "src/gpt_trader/security/secrets_manager.py",
           "reader": "os.getenv"
         }
@@ -3263,7 +3291,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 89
+          "line": 92
         }
       ]
     },

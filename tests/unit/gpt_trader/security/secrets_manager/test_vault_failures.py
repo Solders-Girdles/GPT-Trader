@@ -2,11 +2,16 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pytest
 
-from gpt_trader.security.secrets_manager import SecretsManager
+from gpt_trader.security.secrets_manager import (
+    FILE_SECRET_FALLBACK_ENVIRONMENT_VARIABLE,
+    SecretsManager,
+    VaultConfigurationError,
+)
 
 
 class TestVaultFailures:
@@ -28,6 +33,73 @@ class TestVaultFailures:
         # When auth fails, vault_enabled is set to False to fall back to file storage.
         # The client reference may still exist but won't be used.
         assert manager._vault_enabled is False
+
+    def test_production_missing_vault_token_fails_closed(
+        self,
+        secrets_runtime_settings: Any,
+        patched_require_fernet: None,
+        hvac_stub: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("ENV", "production")
+        monkeypatch.setenv("VAULT_ADDR", "https://vault.example.com")
+        monkeypatch.delenv("VAULT_TOKEN", raising=False)
+
+        with pytest.raises(VaultConfigurationError, match="VAULT_TOKEN"):
+            SecretsManager(vault_enabled=True, config=secrets_runtime_settings)
+
+    def test_production_vault_authentication_failure_fails_closed(
+        self,
+        secrets_runtime_settings: Any,
+        patched_require_fernet: None,
+        hvac_stub: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        hvac_stub.set_authenticated(False)
+        monkeypatch.setenv("ENV", "production")
+        monkeypatch.setenv("VAULT_TOKEN", "test-token")
+        monkeypatch.setenv("VAULT_ADDR", "https://vault.example.com")
+
+        with pytest.raises(VaultConfigurationError, match="Vault authentication failed"):
+            SecretsManager(vault_enabled=True, config=secrets_runtime_settings)
+
+    def test_production_requires_https_vault_addr(
+        self,
+        secrets_runtime_settings: Any,
+        patched_require_fernet: None,
+        hvac_stub: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        monkeypatch.setenv("ENV", "production")
+        monkeypatch.setenv("VAULT_TOKEN", "test-token")
+        monkeypatch.setenv("VAULT_ADDR", "http://vault.local")
+
+        with pytest.raises(VaultConfigurationError, match="https://"):
+            SecretsManager(vault_enabled=True, config=secrets_runtime_settings)
+
+    def test_production_file_fallback_requires_explicit_opt_in(
+        self,
+        secrets_runtime_settings: Any,
+        patched_require_fernet: None,
+        hvac_stub: Any,
+        monkeypatch: pytest.MonkeyPatch,
+        secrets_dir: Path,
+    ) -> None:
+        hvac_stub.set_authenticated(False)
+        monkeypatch.setenv("ENV", "production")
+        monkeypatch.setenv("VAULT_TOKEN", "test-token")
+        monkeypatch.setenv("VAULT_ADDR", "https://vault.example.com")
+        monkeypatch.setenv(FILE_SECRET_FALLBACK_ENVIRONMENT_VARIABLE, "1")
+
+        manager = SecretsManager(
+            vault_enabled=True,
+            config=secrets_runtime_settings,
+            secrets_dir=secrets_dir,
+        )
+
+        assert manager._vault_enabled is False
+        assert manager.store_secret("test/secret", {"key": "value"}) is True
+        assert (secrets_dir / "test_secret.enc").exists()
 
     def test_vault_store_failure(
         self,

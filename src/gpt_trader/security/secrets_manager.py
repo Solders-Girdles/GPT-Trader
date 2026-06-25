@@ -3,7 +3,7 @@ Secrets Manager for GPT-Trader
 
 Provides secure storage and retrieval of sensitive data including API keys,
 database credentials, and encryption keys. Supports HashiCorp Vault integration
-with encrypted file fallback.
+with explicit encrypted file fallback outside development.
 """
 
 import base64
@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.app.config import BotConfig
 from gpt_trader.config import path_registry
+from gpt_trader.config.config_utilities import parse_bool_env
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
@@ -33,6 +34,14 @@ except ImportError:  # pragma: no cover - degrade gracefully
     _RuntimeFernet = None
 
 logger = get_logger(__name__, component="security")
+
+DEFAULT_DEVELOPMENT_VAULT_ADDRESS = "http://localhost:8200"
+FILE_SECRET_FALLBACK_ENVIRONMENT_VARIABLE = "GPT_TRADER_ALLOW_FILE_SECRET_FALLBACK"
+DEVELOPMENT_ENVIRONMENTS = frozenset({"development", "dev", "local", "test", "testing"})
+
+
+class VaultConfigurationError(RuntimeError):
+    """Raised when Vault is required but cannot be initialised safely."""
 
 
 def _require_fernet() -> type[FernetType]:
@@ -73,6 +82,11 @@ class SecretsManager:
         self._vault_client: Any | None = None
         self._vault_enabled = vault_enabled
         self._config = config
+        self._environment = self._current_environment()
+        self._allow_file_secret_fallback = parse_bool_env(
+            FILE_SECRET_FALLBACK_ENVIRONMENT_VARIABLE,
+            default=False,
+        )
         self._secrets_dir = (
             Path(secrets_dir) if secrets_dir is not None else path_registry.USER_SECRETS_DIR
         )
@@ -140,6 +154,165 @@ class SecretsManager:
             return dict(payload)
         return None
 
+    @staticmethod
+    def _current_environment() -> str:
+        return os.getenv("ENV", "development").strip().lower() or "development"
+
+    def _is_development_environment(self) -> bool:
+        return self._environment in DEVELOPMENT_ENVIRONMENTS
+
+    def _file_secret_fallback_allowed(self) -> bool:
+        return self._is_development_environment() or self._allow_file_secret_fallback
+
+    def _disable_vault_for_file_storage(self) -> None:
+        self._vault_enabled = False
+        self._vault_client = None
+
+    def _raise_vault_configuration_error(self, reason: str) -> None:
+        raise VaultConfigurationError(
+            f"{reason}. Vault-backed storage is required in environment "
+            f"'{self._environment}'. Set VAULT_ADDR to an https:// Vault endpoint "
+            f"and VAULT_TOKEN to a valid token, or set "
+            f"{FILE_SECRET_FALLBACK_ENVIRONMENT_VARIABLE}=1 to intentionally use "
+            "encrypted file storage."
+        )
+
+    def _vault_address_missing(self) -> None:
+        reason = "VAULT_ADDR must be set outside development"
+        if self._file_secret_fallback_allowed():
+            logger.warning(
+                f"{reason}; using encrypted file storage",
+                operation="vault_init",
+                status="address_missing",
+                environment=self._environment,
+            )
+            self._disable_vault_for_file_storage()
+            return
+
+        logger.error(
+            f"{reason}; encrypted file fallback is disabled",
+            operation="vault_init",
+            status="address_missing",
+            environment=self._environment,
+        )
+        self._raise_vault_configuration_error(reason)
+
+    def _vault_address_insecure(self) -> None:
+        reason = "VAULT_ADDR must use https:// outside development"
+        if self._file_secret_fallback_allowed():
+            logger.warning(
+                f"{reason}; using encrypted file storage",
+                operation="vault_init",
+                status="insecure_address",
+                environment=self._environment,
+            )
+            self._disable_vault_for_file_storage()
+            return
+
+        logger.error(
+            f"{reason}; encrypted file fallback is disabled",
+            operation="vault_init",
+            status="insecure_address",
+            environment=self._environment,
+        )
+        self._raise_vault_configuration_error(reason)
+
+    def _vault_token_missing(self) -> None:
+        reason = "VAULT_TOKEN must be set when Vault is enabled"
+        if self._file_secret_fallback_allowed():
+            logger.warning(
+                f"{reason}; using encrypted file storage",
+                operation="vault_init",
+                status="token_missing",
+                environment=self._environment,
+            )
+            self._disable_vault_for_file_storage()
+            return
+
+        logger.error(
+            f"{reason}; encrypted file fallback is disabled",
+            operation="vault_init",
+            status="token_missing",
+            environment=self._environment,
+        )
+        self._raise_vault_configuration_error(reason)
+
+    def _vault_unauthenticated(self) -> None:
+        reason = "Vault authentication failed"
+        if self._file_secret_fallback_allowed():
+            logger.warning(
+                f"{reason}; using encrypted file storage",
+                operation="vault_init",
+                status="unauthenticated",
+                environment=self._environment,
+            )
+            self._disable_vault_for_file_storage()
+            return
+
+        logger.error(
+            f"{reason}; encrypted file fallback is disabled",
+            operation="vault_init",
+            status="unauthenticated",
+            environment=self._environment,
+        )
+        self._raise_vault_configuration_error(reason)
+
+    def _vault_dependency_missing(self) -> None:
+        reason = "hvac is not installed"
+        if self._file_secret_fallback_allowed():
+            logger.warning(
+                f"{reason}; using encrypted file storage",
+                operation="vault_init",
+                status="dependency_missing",
+                environment=self._environment,
+            )
+            self._disable_vault_for_file_storage()
+            return
+
+        logger.error(
+            f"{reason}; encrypted file fallback is disabled",
+            operation="vault_init",
+            status="dependency_missing",
+            environment=self._environment,
+        )
+        self._raise_vault_configuration_error(reason)
+
+    def _vault_initialization_error(self, reason: str) -> None:
+        if self._file_secret_fallback_allowed():
+            logger.warning(
+                f"{reason}; using encrypted file storage",
+                operation="vault_init",
+                status="error",
+                environment=self._environment,
+            )
+            self._disable_vault_for_file_storage()
+            return
+
+        logger.error(
+            f"{reason}; encrypted file fallback is disabled",
+            operation="vault_init",
+            status="error",
+            environment=self._environment,
+        )
+        self._raise_vault_configuration_error(reason)
+
+    def _resolve_vault_address(self) -> str | None:
+        vault_address = os.getenv("VAULT_ADDR")
+        if not vault_address:
+            if self._is_development_environment():
+                return DEFAULT_DEVELOPMENT_VAULT_ADDRESS
+            self._vault_address_missing()
+            return None
+
+        vault_address = vault_address.strip()
+        if not self._is_development_environment() and not vault_address.lower().startswith(
+            "https://"
+        ):
+            self._vault_address_insecure()
+            return None
+
+        return vault_address
+
     def _initialize_vault(self) -> None:
         """Initialize HashiCorp Vault connection"""
         try:
@@ -147,7 +320,10 @@ class SecretsManager:
 
             logger.debug("Successfully imported hvac module")
 
-            vault_addr = os.getenv("VAULT_ADDR", "http://localhost:8200")
+            vault_addr = self._resolve_vault_address()
+            if not self._vault_enabled or vault_addr is None:
+                return
+
             vault_token = os.getenv("VAULT_TOKEN")
             logger.debug(
                 f"Vault config - addr: {vault_addr}, token: {'*' * len(vault_token) if vault_token else 'None'}"
@@ -165,40 +341,18 @@ class SecretsManager:
                     )
                     logger.debug("Vault authentication successful, keeping vault enabled")
                 else:
-                    logger.warning(
-                        "Vault authentication failed, using file fallback",
-                        operation="vault_init",
-                        status="unauthenticated",
-                    )
-                    logger.debug("Setting vault_enabled to False due to authentication failure")
-                    self._vault_enabled = False
+                    self._vault_unauthenticated()
             else:
-                logger.info(
-                    "Vault token not found, using file storage",
-                    operation="vault_init",
-                    status="token_missing",
-                )
-                logger.debug("Setting vault_enabled to False due to missing token")
-                self._vault_enabled = False
+                self._vault_token_missing()
 
         except ImportError:
-            logger.warning(
-                "hvac not installed, using file storage",
-                operation="vault_init",
-                status="dependency_missing",
-            )
-            logger.debug("Setting vault_enabled to False due to missing hvac module")
-            self._vault_enabled = False
+            self._vault_dependency_missing()
         except Exception as e:
-            logger.error(
-                f"Vault initialization failed: {e}",
-                operation="vault_init",
-                status="error",
+            if isinstance(e, VaultConfigurationError):
+                raise
+            self._vault_initialization_error(
+                f"Vault initialization failed: {type(e).__name__}: {e}"
             )
-            logger.debug(
-                f"Setting vault_enabled to False due to exception: {type(e).__name__}: {e}"
-            )
-            self._vault_enabled = False
 
     def store_secret(self, path: str, secret: dict[str, Any] | Any) -> bool:
         """

@@ -694,16 +694,22 @@
     "flatten_and_stop": {
       "common_fields": [
         "bypass_reason",
+        "error",
+        "failed_close_count",
+        "failed_symbols",
+        "monitoring_state",
         "quantity",
         "reduce_only",
         "symbol"
       ],
       "components": null,
       "levels": [
+        "CRITICAL",
+        "ERROR",
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 2,
+      "occurrence_count": 5,
       "source_files": [
         "features/live_trade/bot.py"
       ],
@@ -1971,14 +1977,18 @@
       ]
     },
     "shutdown": {
-      "common_fields": [],
+      "common_fields": [
+        "reason"
+      ],
       "components": null,
       "levels": [
-        "INFO"
+        "INFO",
+        "WARNING"
       ],
-      "occurrence_count": 1,
+      "occurrence_count": 3,
       "source_files": [
-        "cli/commands/run.py"
+        "cli/commands/run.py",
+        "features/live_trade/bot.py"
       ],
       "statuses": null
     },
@@ -2469,7 +2479,7 @@
     "client_order_id": 19,
     "consecutive_failures": 6,
     "details": 4,
-    "error": 56,
+    "error": 58,
     "error_message": 90,
     "error_type": 84,
     "event_type": 5,
@@ -2486,7 +2496,7 @@
     "portfolio_id": 4,
     "price": 4,
     "quantity": 8,
-    "reason": 25,
+    "reason": 27,
     "service": 9,
     "severity": 4,
     "side": 26,
@@ -2495,11 +2505,11 @@
     "timestamp": 4
   },
   "level_distribution": {
-    "CRITICAL": 1,
+    "CRITICAL": 2,
     "DEBUG": 49,
-    "ERROR": 108,
+    "ERROR": 110,
     "INFO": 91,
-    "WARNING": 95
+    "WARNING": 97
   },
   "total_event_types": 135,
   "version": "1.0"

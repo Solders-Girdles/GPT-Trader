@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 718,
+    "tests_scanned": 719,
     "source_modules": 372,
     "unresolved_modules": 3
   },
@@ -60,6 +60,7 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_sizing_and_trend_filter.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_zscore_and_signals.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py",
       "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols.py",
       "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py",
@@ -814,6 +815,7 @@
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py"
     ],
@@ -987,6 +989,8 @@
       "tests/unit/gpt_trader/features/live_trade/test_indicators_atr.py"
     ],
     "gpt_trader.features.live_trade.lifecycle": [
+      "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py",
       "tests/unit/gpt_trader/features/live_trade/test_lifecycle.py"
     ],
     "gpt_trader.features.live_trade.risk": [
@@ -1331,6 +1335,7 @@
       "tests/unit/gpt_trader/monitoring/test_health_checks_runner.py"
     ],
     "gpt_trader.monitoring.alert_types": [
+      "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
       "tests/unit/gpt_trader/features/live_trade/test_guard_errors.py",
       "tests/unit/gpt_trader/monitoring/guards/test_builtins_behaviour.py",
       "tests/unit/gpt_trader/monitoring/guards/test_builtins_edge_cases.py",
@@ -3665,7 +3670,14 @@
     "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py": [
       "gpt_trader.app.config",
       "gpt_trader.core",
-      "gpt_trader.features.live_trade.bot"
+      "gpt_trader.features.live_trade.bot",
+      "gpt_trader.features.live_trade.lifecycle",
+      "gpt_trader.monitoring.alert_types"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py": [
+      "gpt_trader.app.config",
+      "gpt_trader.features.live_trade.bot",
+      "gpt_trader.features.live_trade.lifecycle"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py": [
       "gpt_trader.features.live_trade.bot"

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6786,
-    "total_files": 801,
+    "total_tests": 6790,
+    "total_files": 802,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6621,
-    "asyncio": 394,
+    "unit": 6625,
+    "asyncio": 398,
     "parametrize": 193,
     "endpoints": 83,
     "property": 82,
@@ -475,6 +475,7 @@
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_cfm_risk.py",
@@ -20345,8 +20346,17 @@
         "docstring": "Test that health check runner starts/stops with engine lifecycle."
       },
       {
+        "name": "test_shutdown_preserves_broker_calls_when_requested",
+        "line": 67,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_positions_to_risk_format",
-        "line": 68,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -20354,7 +20364,7 @@
       },
       {
         "name": "test_risk_manager_receives_dict_format",
-        "line": 89,
+        "line": 103,
         "markers": [
           "asyncio",
           "unit"
@@ -20363,7 +20373,7 @@
       },
       {
         "name": "test_runtime_guard_sweep_calls_guard_manager",
-        "line": 136,
+        "line": 150,
         "markers": [
           "asyncio",
           "unit"
@@ -20372,7 +20382,7 @@
       },
       {
         "name": "test_runtime_guard_sweep_skips_without_guard_manager",
-        "line": 154,
+        "line": 168,
         "markers": [
           "asyncio",
           "unit"
@@ -20381,7 +20391,7 @@
       },
       {
         "name": "test_runtime_guard_sweep_uses_config_interval",
-        "line": 170,
+        "line": 184,
         "markers": [
           "asyncio",
           "unit"
@@ -20390,7 +20400,7 @@
       },
       {
         "name": "test_runtime_guard_sweep_handles_exceptions",
-        "line": 192,
+        "line": 206,
         "markers": [
           "asyncio",
           "unit"
@@ -20399,7 +20409,7 @@
       },
       {
         "name": "test_unfilled_order_alert_emitted_once",
-        "line": 216,
+        "line": 230,
         "markers": [
           "asyncio",
           "unit"
@@ -27116,7 +27126,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py": [
       {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_closes_positions_and_shuts_down",
-        "line": 17,
+        "line": 19,
         "markers": [
           "asyncio",
           "unit"
@@ -27126,7 +27136,7 @@
       },
       {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_uses_reduce_only_buy_for_short_positions",
-        "line": 69,
+        "line": 74,
         "markers": [
           "asyncio",
           "unit"
@@ -27136,7 +27146,7 @@
       },
       {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_uses_position_side_for_abs_quantity_shorts",
-        "line": 119,
+        "line": 124,
         "markers": [
           "asyncio",
           "unit"
@@ -27146,7 +27156,7 @@
       },
       {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_refuses_non_reduce_only_fallback",
-        "line": 169,
+        "line": 174,
         "markers": [
           "asyncio",
           "unit"
@@ -27156,13 +27166,43 @@
       },
       {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_preserves_unrelated_type_errors",
-        "line": 217,
+        "line": 222,
         "markers": [
           "asyncio",
           "unit"
         ],
         "docstring": "",
         "class": "TestTradingBotFlattenAndStop"
+      },
+      {
+        "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_partial_close_failure_keeps_alerting_active",
+        "line": 271,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestTradingBotFlattenAndStop"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py": [
+      {
+        "name": "test_flatten_and_stop_preserves_error_when_run_cleanup_races",
+        "line": 74,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_cleanup_rechecks_flatten_failure_after_engine_shutdown",
+        "line": 123,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py": [

@@ -200,6 +200,7 @@ class TradingEngine(BaseEngine):
             )
 
         self._broker_calls = broker_calls
+        self._preserve_broker_calls_on_shutdown = False
 
         # Initialize equity calculator (extracted for reusability)
         self._equity_calculator = EquityCalculator(
@@ -246,6 +247,9 @@ class TradingEngine(BaseEngine):
         self._init_guard_stack()
         self._user_event_handler: Any | None = None
         self._init_user_event_handler()
+
+    def preserve_broker_calls_on_shutdown(self) -> None:
+        self._preserve_broker_calls_on_shutdown = True
 
     def _init_guard_stack(self) -> None:
         """Initialize StateCollector, OrderValidator, OrderSubmitter for pre-trade guards."""
@@ -3402,7 +3406,7 @@ class TradingEngine(BaseEngine):
         await self._status_reporter.stop()
         await self._heartbeat.stop()
         shutdown = getattr(self._broker_calls, "shutdown", None)
-        if callable(shutdown):
+        if callable(shutdown) and not self._preserve_broker_calls_on_shutdown:
             shutdown()
         await super().shutdown()
         self._transition_state(EngineState.STOPPED, reason="shutdown_complete")

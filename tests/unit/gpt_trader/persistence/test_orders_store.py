@@ -63,17 +63,40 @@ class TestOrdersStore:
                 with pytest.raises(sqlite3.ProgrammingError, match="closed"):
                     connection.execute("SELECT 1")
 
+    def test_worker_thread_connection_closes_when_thread_exits(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            store.initialize()
+            worker_connections: list[sqlite3.Connection] = []
+
+            def save_in_worker() -> None:
+                store.save_order(create_test_order(order_id="worker-exit-order"))
+                worker_connections.append(store._get_connection())
+
+            worker = threading.Thread(target=save_in_worker)
+            worker.start()
+            worker.join()
+
+            assert len(worker_connections) == 1
+            with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+                worker_connections[0].execute("SELECT 1")
+
+            store.close()
+
     def test_reconnect_in_same_generation_keeps_previous_handle_registered(self) -> None:
         with TemporaryDirectory() as tmpdir:
             store = OrdersStore(tmpdir)
             store.initialize()
             first_connection = store._get_connection()
-            del store._local.connection
+            first_holder = store._local.connection_holder
+            del store._local.connection_holder
             del store._local.connection_generation
 
             second_connection = store._get_connection()
+            second_holder = store._local.connection_holder
 
             assert first_connection is not second_connection
+            assert first_holder is not second_holder
             assert len(store._connections) == 2
 
             store.close()

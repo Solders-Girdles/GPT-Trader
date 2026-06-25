@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6808,
+    "total_tests": 6809,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6643,
+    "unit": 6644,
     "asyncio": 411,
     "parametrize": 193,
     "endpoints": 83,
@@ -39953,7 +39953,7 @@
         "class": "TestOrdersStore"
       },
       {
-        "name": "TestOrdersStore::test_reconnect_in_same_generation_keeps_previous_handle_registered",
+        "name": "TestOrdersStore::test_worker_thread_connection_closes_when_thread_exits",
         "line": 66,
         "markers": [
           "unit"
@@ -39962,8 +39962,17 @@
         "class": "TestOrdersStore"
       },
       {
+        "name": "TestOrdersStore::test_reconnect_in_same_generation_keeps_previous_handle_registered",
+        "line": 86,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestOrdersStore"
+      },
+      {
         "name": "TestOrdersStore::test_connection_generation_retry_releases_lock_before_reconnect",
-        "line": 85,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -39972,7 +39981,7 @@
       },
       {
         "name": "TestOrdersStore::test_save_and_get_order",
-        "line": 125,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -39981,7 +39990,7 @@
       },
       {
         "name": "TestOrdersStore::test_get_order_by_client_order_id",
-        "line": 140,
+        "line": 163,
         "markers": [
           "unit"
         ],
@@ -39990,7 +39999,7 @@
       },
       {
         "name": "TestOrdersStore::test_get_order_not_found",
-        "line": 153,
+        "line": 176,
         "markers": [
           "unit"
         ],
@@ -39999,7 +40008,7 @@
       },
       {
         "name": "TestOrdersStore::test_save_order_upsert",
-        "line": 159,
+        "line": 182,
         "markers": [
           "unit"
         ],
@@ -40008,7 +40017,7 @@
       },
       {
         "name": "TestOrdersStore::test_upsert_by_client_id_updates_order_id",
-        "line": 173,
+        "line": 196,
         "markers": [
           "unit"
         ],
@@ -40017,7 +40026,7 @@
       },
       {
         "name": "TestOrdersStore::test_get_pending_orders",
-        "line": 195,
+        "line": 218,
         "markers": [
           "unit"
         ],
@@ -40026,7 +40035,7 @@
       },
       {
         "name": "TestOrdersStore::test_get_pending_orders_by_bot",
-        "line": 214,
+        "line": 237,
         "markers": [
           "unit"
         ],
@@ -40035,7 +40044,7 @@
       },
       {
         "name": "TestOrdersStore::test_get_orders_by_symbol",
-        "line": 227,
+        "line": 250,
         "markers": [
           "unit"
         ],
@@ -40044,7 +40053,7 @@
       },
       {
         "name": "TestOrdersStore::test_list_orders_filters_and_limit",
-        "line": 240,
+        "line": 263,
         "markers": [
           "unit"
         ],
@@ -40053,7 +40062,7 @@
       },
       {
         "name": "TestOrdersStore::test_list_orders_requires_positive_limit",
-        "line": 280,
+        "line": 303,
         "markers": [
           "unit"
         ],
@@ -40062,7 +40071,7 @@
       },
       {
         "name": "TestOrdersStore::test_update_status",
-        "line": 286,
+        "line": 309,
         "markers": [
           "unit"
         ],
@@ -40071,7 +40080,7 @@
       },
       {
         "name": "TestOrdersStore::test_verify_integrity_valid",
-        "line": 306,
+        "line": 329,
         "markers": [
           "unit"
         ],
@@ -40080,7 +40089,7 @@
       },
       {
         "name": "TestOrdersStore::test_cleanup_old_orders",
-        "line": 317,
+        "line": 340,
         "markers": [
           "unit"
         ],
@@ -40089,7 +40098,7 @@
       },
       {
         "name": "TestOrdersStore::test_context_manager",
-        "line": 327,
+        "line": 350,
         "markers": [
           "unit"
         ],

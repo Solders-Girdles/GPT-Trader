@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6790,
-    "total_files": 802,
+    "total_tests": 6792,
+    "total_files": 803,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6625,
-    "asyncio": 398,
+    "unit": 6627,
+    "asyncio": 400,
     "parametrize": 193,
     "endpoints": 83,
     "property": 82,
@@ -475,6 +475,7 @@
       "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_audit.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py",
@@ -27183,6 +27184,26 @@
         ],
         "docstring": "",
         "class": "TestTradingBotFlattenAndStop"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_audit.py": [
+      {
+        "name": "test_flatten_and_stop_persists_submitted_close_order_audit",
+        "line": 33,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_flatten_and_stop_links_partial_failure_audit_events",
+        "line": 106,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py": [

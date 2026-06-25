@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 719,
+    "tests_scanned": 720,
     "source_modules": 372,
     "unresolved_modules": 3
   },
@@ -60,6 +60,7 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_sizing_and_trend_filter.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_zscore_and_signals.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_audit.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py",
       "tests/unit/gpt_trader/features/live_trade/test_strategy_factory.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols.py",
@@ -466,6 +467,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_validation_preview.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_audit.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_time_windows.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
@@ -815,6 +817,7 @@
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_audit.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_initialization.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py"
@@ -3673,6 +3676,11 @@
       "gpt_trader.features.live_trade.bot",
       "gpt_trader.features.live_trade.lifecycle",
       "gpt_trader.monitoring.alert_types"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_audit.py": [
+      "gpt_trader.app.config",
+      "gpt_trader.core",
+      "gpt_trader.features.live_trade.bot"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py": [
       "gpt_trader.app.config",

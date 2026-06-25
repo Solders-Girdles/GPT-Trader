@@ -124,6 +124,19 @@ class TestFileNotificationBackend:
         assert list(tmp_path.iterdir()) == [alert_path]
 
     @pytest.mark.asyncio
+    async def test_test_connection_rejects_trailing_separator_file_path(
+        self, tmp_path: Path
+    ) -> None:
+        alert_path = tmp_path / "alerts.jsonl"
+        alert_path.write_text("seed\n")
+        backend = FileNotificationBackend(file_path=f"{alert_path}/")
+
+        result = await backend.test_connection()
+
+        assert result is False
+        assert alert_path.read_text() == "seed\n"
+
+    @pytest.mark.asyncio
     async def test_test_connection_checks_broken_symlink_target_parent(
         self, tmp_path: Path
     ) -> None:

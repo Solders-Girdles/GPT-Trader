@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6800,
+    "total_tests": 6801,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6635,
-    "asyncio": 407,
+    "unit": 6636,
+    "asyncio": 408,
     "parametrize": 193,
     "endpoints": 83,
     "property": 82,
@@ -35612,7 +35612,7 @@
         "class": "TestFileNotificationBackend"
       },
       {
-        "name": "TestFileNotificationBackend::test_test_connection_checks_broken_symlink_target_parent",
+        "name": "TestFileNotificationBackend::test_test_connection_rejects_trailing_separator_file_path",
         "line": 127,
         "markers": [
           "asyncio",
@@ -35622,8 +35622,18 @@
         "class": "TestFileNotificationBackend"
       },
       {
+        "name": "TestFileNotificationBackend::test_test_connection_checks_broken_symlink_target_parent",
+        "line": 140,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestFileNotificationBackend"
+      },
+      {
         "name": "TestFileNotificationBackend::test_test_connection_checks_missing_symlink_target_without_creating_it",
-        "line": 142,
+        "line": 155,
         "markers": [
           "asyncio",
           "unit"
@@ -35633,7 +35643,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_creates_parent_without_alert_file",
-        "line": 160,
+        "line": 173,
         "markers": [
           "asyncio",
           "unit"
@@ -35643,7 +35653,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_offloads_file_check_to_thread",
-        "line": 172,
+        "line": 185,
         "markers": [
           "asyncio",
           "unit"
@@ -35653,7 +35663,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_fails_for_invalid_path",
-        "line": 196,
+        "line": 209,
         "markers": [
           "asyncio",
           "unit"

@@ -299,10 +299,13 @@ class FileNotificationBackend:
             return False
 
     def _check_file_writable(self) -> None:
+        if self.file_path.endswith(("/", "\\")):
+            raise IsADirectoryError(self.file_path)
+
         path = Path(self.file_path)
         self._ensure_parent_directory()
         if path.exists():
-            with open(path, "a"):
+            with open(self.file_path, "a"):
                 pass
             return
 

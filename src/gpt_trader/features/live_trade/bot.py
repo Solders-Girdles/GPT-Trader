@@ -260,8 +260,7 @@ class TradingBot:
 
                 for pos in positions:
                     try:
-                        # Determine closing side
-                        side = OrderSide.SELL if pos.quantity > 0 else OrderSide.BUY
+                        side = self._emergency_close_side(pos, OrderSide)
                         # Use absolute quantity for order
                         quantity = abs(pos.quantity)
 
@@ -335,6 +334,18 @@ class TradingBot:
         return "reduce_only" in message and (
             "unexpected keyword" in message or "unexpected argument" in message
         )
+
+    @staticmethod
+    def _emergency_close_side(position: Any, order_side: Any) -> Any:
+        position_side = getattr(position, "side", None)
+        side_value = getattr(position_side, "value", position_side)
+        if isinstance(side_value, str):
+            normalized_side = side_value.strip().lower()
+            if normalized_side in {"long", "buy"}:
+                return order_side.SELL
+            if normalized_side in {"short", "sell"}:
+                return order_side.BUY
+        return order_side.SELL if position.quantity > 0 else order_side.BUY
 
     async def shutdown(self) -> None:
         """Alias for stop() to match CLI interface."""

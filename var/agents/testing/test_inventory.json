@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6785,
+    "total_tests": 6786,
     "total_files": 801,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6620,
-    "asyncio": 393,
+    "unit": 6621,
+    "asyncio": 394,
     "parametrize": 193,
     "endpoints": 83,
     "property": 82,
@@ -27135,7 +27135,7 @@
         "class": "TestTradingBotFlattenAndStop"
       },
       {
-        "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_refuses_non_reduce_only_fallback",
+        "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_uses_position_side_for_abs_quantity_shorts",
         "line": 119,
         "markers": [
           "asyncio",
@@ -27145,8 +27145,18 @@
         "class": "TestTradingBotFlattenAndStop"
       },
       {
+        "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_refuses_non_reduce_only_fallback",
+        "line": 169,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestTradingBotFlattenAndStop"
+      },
+      {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_preserves_unrelated_type_errors",
-        "line": 167,
+        "line": 217,
         "markers": [
           "asyncio",
           "unit"

@@ -187,11 +187,12 @@ async def test_flatten_and_stop_avoids_filled_record_without_fill_quantity(
     broker = Mock()
     broker.list_positions.return_value = [SimpleNamespace(symbol="BTC-USD", quantity=Decimal("1"))]
     broker.place_order = Mock(
-        return_value={
-            "order_id": "close-btc-123",
-            "client_order_id": "client-close-btc-123",
-            "status": "FILLED",
-        }
+        return_value=SimpleNamespace(
+            id="close-btc-123",
+            client_order_id="client-close-btc-123",
+            status="FILLED",
+            filled_quantity=Decimal("0"),
+        )
     )
     event_store = Mock()
     orders_store = Mock()
@@ -223,7 +224,7 @@ async def test_flatten_and_stop_avoids_filled_record_without_fill_quantity(
         if call.args[0] == "emergency_flatten_close_order"
     )
     assert audit_payload["broker_status"] == "FILLED"
-    assert "filled_quantity" not in audit_payload
+    assert audit_payload["filled_quantity"] == "0"
     assert "average_fill_price" not in audit_payload
 
 

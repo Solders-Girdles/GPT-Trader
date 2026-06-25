@@ -612,7 +612,7 @@ class TradingBot:
         filled_quantity = self._decimal_or_none(payload.get("filled_quantity"))
         status = self._emergency_close_store_status(
             payload.get("broker_status"),
-            filled_quantity_known=filled_quantity is not None,
+            filled_quantity_known=filled_quantity is not None and filled_quantity > 0,
         )
         now = datetime.now(timezone.utc)
         metadata = {

@@ -9,7 +9,10 @@ from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 from gpt_trader.features.trade_ideas import (
     BrokerTicket,
+    CloseoutAttribution,
+    CloseoutResolution,
     MaxLoss,
+    MaxLossSnapshot,
     TicketStatus,
     TicketVenue,
     TimeHorizon,
@@ -179,3 +182,68 @@ def test_from_dict_rejects_malformed_scalar_strings(
 
     with pytest.raises(ValueError, match=re.escape(message)):
         TradeIdea.from_dict(payload)
+
+
+def test_closeout_attribution_round_trip_preserves_record() -> None:
+    record = CloseoutAttribution(
+        decision_id="trade-20260612-001",
+        timestamp=datetime.fromisoformat("2026-06-12T10:05:00+00:00"),
+        actor_type="human",
+        actor_id="rj",
+        terminal_event_id="evt-terminal",
+        record_hash="record-hash",
+        resolution=CloseoutResolution.THESIS_TARGET,
+        realized_profit_loss_amount=Decimal("125.50"),
+        realized_profit_loss_percent=Decimal("2.4"),
+        max_loss=MaxLossSnapshot(
+            amount=Decimal("250"),
+            percent_of_account=Decimal("1.5"),
+            assumptions=("Fill at zone midpoint",),
+        ),
+        evidence=("broker-statement:abc",),
+    )
+
+    payload = record.to_dict()
+    restored = CloseoutAttribution.from_dict(payload)
+
+    assert payload["realized_profit_loss_amount"] == "125.50"
+    assert payload["realized_profit_loss_percent"] == "2.4"
+    assert payload["max_loss"]["amount"] == "250"
+    assert restored == record
+
+
+def test_closeout_attribution_rejects_malformed_numeric_payload() -> None:
+    payload = {
+        "decision_id": "trade-20260612-001",
+        "timestamp": "2026-06-12T10:05:00+00:00",
+        "actor_type": "human",
+        "actor_id": "rj",
+        "terminal_event_id": "evt-terminal",
+        "record_hash": "record-hash",
+        "resolution": CloseoutResolution.INVALIDATION.value,
+        "realized_profit_loss_amount": "not-a-decimal",
+        "realized_profit_loss_percent": None,
+        "realized_profit_loss_unavailable_reason": "",
+        "max_loss": {"amount": "250", "percent_of_account": "1.5", "assumptions": []},
+        "evidence": [],
+    }
+
+    with pytest.raises(ValueError, match="realized_profit_loss_amount must be a finite decimal"):
+        CloseoutAttribution.from_dict(payload)
+
+
+def test_closeout_attribution_requires_profit_loss_or_unavailable_reason() -> None:
+    with pytest.raises(
+        ValueError,
+        match=re.escape("realized profit/loss requires amount, percent, or an unavailable reason"),
+    ):
+        CloseoutAttribution(
+            decision_id="trade-20260612-001",
+            timestamp=datetime.fromisoformat("2026-06-12T10:05:00+00:00"),
+            actor_type="human",
+            actor_id="rj",
+            terminal_event_id="evt-terminal",
+            record_hash="record-hash",
+            resolution=CloseoutResolution.EXPIRY,
+            max_loss=MaxLossSnapshot(amount=Decimal("250")),
+        )

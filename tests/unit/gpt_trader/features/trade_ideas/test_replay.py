@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
@@ -12,6 +13,7 @@ from gpt_trader.features.trade_ideas import (
     TimeHorizon,
     TradeDirection,
     TradeIdea,
+    TradeIdeaService,
     score_trade_idea,
 )
 
@@ -298,3 +300,25 @@ def test_score_trade_idea_excludes_candles_that_extend_past_expiry() -> None:
 
     assert result.outcome is ReplayOutcome.NO_FUTURE_DATA
     assert result.bars_evaluated == 0
+
+
+def test_replay_scoring_does_not_mutate_live_closeout_records(tmp_path: Path) -> None:
+    idea = scoreable_idea()
+    service = TradeIdeaService(
+        tmp_path / "trade_ideas",
+        now_factory=lambda: AS_OF,
+    )
+    service.propose(idea, actor_id="idea-generator-v1")
+
+    result = score_trade_idea(
+        idea,
+        as_of=AS_OF,
+        future_candles=(
+            candle(0, high="103", low="100", close="102"),
+            candle(1, high="114", low="101", close="113"),
+        ),
+    )
+
+    assert result.outcome is ReplayOutcome.TARGET_HIT
+    assert service.get_closeout_attribution(idea.decision_id) is None
+    assert not service.closeout_log.path.exists()

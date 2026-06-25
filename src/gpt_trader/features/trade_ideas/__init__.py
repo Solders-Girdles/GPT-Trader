@@ -25,6 +25,14 @@ from gpt_trader.features.trade_ideas.budget import (
     RiskBudget,
     RiskBudgetLog,
 )
+from gpt_trader.features.trade_ideas.closeout import (
+    CloseoutAttribution,
+    CloseoutAttributionIntegrityError,
+    CloseoutAttributionLog,
+    CloseoutResolution,
+    DuplicateCloseoutAttributionError,
+    MaxLossSnapshot,
+)
 from gpt_trader.features.trade_ideas.eligibility import evaluate_eligibility, is_eligible
 from gpt_trader.features.trade_ideas.models import (
     AutonomyMode,
@@ -87,6 +95,7 @@ __all__ = [
     "ACTOR_ENV_VAR",
     "DEFAULT_RISK_BUDGET",
     "DEFAULT_IDEAS_ROOT",
+    "DuplicateCloseoutAttributionError",
     "DuplicateTradeIdeaError",
     "IDEAS_ROOT_ENV_VAR",
     "TERMINAL_STATES",
@@ -101,12 +110,17 @@ __all__ = [
     "BrokerTicket",
     "BudgetIntegrityError",
     "BudgetLogEntry",
+    "CloseoutAttribution",
+    "CloseoutAttributionIntegrityError",
+    "CloseoutAttributionLog",
+    "CloseoutResolution",
     "Confidence",
     "ConfidenceLabel",
     "EntryZone",
     "InvalidTransitionError",
     "MarketSnapshot",
     "MaxLoss",
+    "MaxLossSnapshot",
     "PreApprovalBrokerTicketError",
     "PolicyViolationError",
     "ProductType",

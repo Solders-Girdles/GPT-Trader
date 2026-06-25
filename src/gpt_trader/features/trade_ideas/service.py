@@ -13,8 +13,9 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from decimal import InvalidOperation
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from typing import cast
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import (
@@ -31,10 +32,17 @@ from gpt_trader.features.trade_ideas.budget import (
     RiskBudget,
     RiskBudgetLog,
 )
+from gpt_trader.features.trade_ideas.closeout import (
+    CloseoutAttribution,
+    CloseoutAttributionLog,
+    CloseoutResolution,
+    MaxLossSnapshot,
+)
 from gpt_trader.features.trade_ideas.models import TicketStatus, TicketVenue, TradeIdea
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
 from gpt_trader.features.trade_ideas.workflow import (
+    TERMINAL_STATES,
     InvalidTransitionError,
     TradeIdeaState,
     validate_transition,
@@ -71,6 +79,7 @@ class TradeIdeaView:
     idea: TradeIdea
     state: TradeIdeaState
     events: tuple[AuditEvent, ...]
+    closeout_attribution: CloseoutAttribution | None = None
 
 
 def _utc_now() -> datetime:
@@ -107,6 +116,7 @@ class TradeIdeaService:
     ) -> None:
         self._store = TradeIdeaStore(root / "records")
         self._audit = TradeIdeaAuditLog(root / "audit.jsonl")
+        self._closeouts = CloseoutAttributionLog(root / "closeout_attributions.jsonl")
         self._budget_log = RiskBudgetLog(root / "risk_budget.jsonl")
         self._policy = policy or ApprovalPolicy()
         self._now = now_factory
@@ -114,6 +124,10 @@ class TradeIdeaService:
     @property
     def audit_log(self) -> TradeIdeaAuditLog:
         return self._audit
+
+    @property
+    def closeout_log(self) -> CloseoutAttributionLog:
+        return self._closeouts
 
     # -- budget ----------------------------------------------------------
 
@@ -393,6 +407,59 @@ class TradeIdeaService:
         )
         return self.get(decision_id)
 
+    def record_closeout_attribution(
+        self,
+        decision_id: str,
+        *,
+        actor_id: str,
+        resolution: CloseoutResolution | str,
+        realized_profit_loss_amount: object = None,
+        realized_profit_loss_percent: object = None,
+        realized_profit_loss_unavailable_reason: str = "",
+        evidence: tuple[str, ...] = (),
+        actor_type: ActorType = ActorType.HUMAN,
+    ) -> CloseoutAttribution:
+        """Record why a terminal idea resolved and its realized profit/loss evidence."""
+        view = self.get(decision_id)
+        if view.state not in TERMINAL_STATES:
+            raise InvalidTransitionError(
+                f"Trade idea '{decision_id}' must be terminal before closeout attribution; "
+                f"got '{view.state.value}'",
+                field="after_state",
+                value=view.state.value,
+            )
+
+        terminal_event = view.events[-1]
+        record = CloseoutAttribution(
+            decision_id=decision_id,
+            timestamp=self._now(),
+            actor_type=actor_type.value,
+            actor_id=actor_id,
+            terminal_event_id=terminal_event.event_id,
+            record_hash=terminal_event.record_hash,
+            resolution=CloseoutResolution(resolution),
+            realized_profit_loss_amount=cast(
+                Decimal | None,
+                realized_profit_loss_amount,
+            ),
+            realized_profit_loss_percent=cast(
+                Decimal | None,
+                realized_profit_loss_percent,
+            ),
+            realized_profit_loss_unavailable_reason=realized_profit_loss_unavailable_reason,
+            max_loss=MaxLossSnapshot(
+                amount=view.idea.max_loss.amount,
+                percent_of_account=view.idea.max_loss.percent_of_account,
+                assumptions=view.idea.max_loss.assumptions,
+            ),
+            evidence=evidence,
+        )
+        return self._closeouts.append(record)
+
+    def get_closeout_attribution(self, decision_id: str) -> CloseoutAttribution | None:
+        self._require_idea(decision_id)
+        return self._closeouts.get(decision_id)
+
     # -- queries -----------------------------------------------------------
 
     def get(self, decision_id: str) -> TradeIdeaView:
@@ -405,7 +472,12 @@ class TradeIdeaService:
                 value=decision_id,
             )
         state = events[-1].after_state
-        return TradeIdeaView(idea=idea, state=state, events=events)
+        return TradeIdeaView(
+            idea=idea,
+            state=state,
+            events=events,
+            closeout_attribution=self._closeouts.get(decision_id),
+        )
 
     def list_views(self, state: TradeIdeaState | None = None) -> list[TradeIdeaView]:
         views = [self.get(decision_id) for decision_id in self._store.list_decision_ids()]

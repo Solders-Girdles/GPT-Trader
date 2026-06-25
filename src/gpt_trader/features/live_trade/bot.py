@@ -6,6 +6,7 @@ Acts as the main entry point runner.
 from __future__ import annotations
 
 import asyncio
+import inspect
 from typing import TYPE_CHECKING, Any
 
 from gpt_trader.app.config import BotConfig
@@ -270,6 +271,7 @@ class TradingBot:
                 }
             )
             self._preserve_flatten_failure_state = True
+            self._preserve_engine_broker_calls_on_shutdown()
             await self.engine.shutdown()
             await self._handle_flatten_failure(failed_closes, messages)
             return messages
@@ -345,6 +347,7 @@ class TradingBot:
 
         if failed_closes:
             self._preserve_flatten_failure_state = True
+            self._preserve_engine_broker_calls_on_shutdown()
         await self.engine.shutdown()
         if failed_closes:
             await self._handle_flatten_failure(failed_closes, messages)
@@ -498,6 +501,15 @@ class TradingBot:
             shutdown = getattr(broker_calls, "shutdown", None)
             if callable(shutdown):
                 shutdown()
+
+    def _preserve_engine_broker_calls_on_shutdown(self) -> None:
+        preserve = getattr(self.engine, "preserve_broker_calls_on_shutdown", None)
+        if callable(preserve):
+            result = preserve()
+            if inspect.isawaitable(result):
+                close = getattr(result, "close", None)
+                if callable(close):
+                    close()
 
     def execute_decision(
         self,

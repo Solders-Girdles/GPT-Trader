@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from decimal import Decimal
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -27,8 +27,6 @@ def test_health_check_runner_initialized(engine):
 @pytest.mark.asyncio
 async def test_health_check_runner_started_and_stopped(engine, monkeypatch):
     """Test that health check runner starts/stops with engine lifecycle."""
-    from unittest.mock import AsyncMock
-
     start_mock = AsyncMock()
     stop_mock = AsyncMock()
 
@@ -63,6 +61,22 @@ async def test_health_check_runner_started_and_stopped(engine, monkeypatch):
 
     await engine.shutdown()
     stop_mock.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_shutdown_preserves_broker_calls_when_requested(engine):
+    broker_calls = MagicMock()
+    broker_calls.shutdown = MagicMock()
+    engine._broker_calls = broker_calls
+    engine._heartbeat.stop = AsyncMock()
+    engine._status_reporter.stop = AsyncMock()
+    engine._system_maintenance.stop = AsyncMock()
+    engine._health_check_runner.stop = AsyncMock()
+
+    engine.preserve_broker_calls_on_shutdown()
+    await engine.shutdown()
+
+    broker_calls.shutdown.assert_not_called()
 
 
 def test_positions_to_risk_format(engine):

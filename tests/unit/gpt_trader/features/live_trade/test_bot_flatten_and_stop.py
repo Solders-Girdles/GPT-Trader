@@ -47,6 +47,7 @@ class TestTradingBotFlattenAndStop:
 
         engine = AsyncMock()
         engine.shutdown = AsyncMock()
+        engine.preserve_broker_calls_on_shutdown = MagicMock()
         mock_engine = MagicMock(return_value=engine)
         monkeypatch.setattr(bot_module, "TradingEngine", mock_engine)
 
@@ -322,6 +323,7 @@ class TestTradingBotFlattenAndStop:
         assert any("Emergency flatten incomplete" in msg for msg in messages)
         assert bot.state is TradingBotState.ERROR
         assert bot.running is False
+        engine.preserve_broker_calls_on_shutdown.assert_called_once()
         engine.shutdown.assert_called_once()
         bot._broker_calls.shutdown.assert_not_called()
         notification_service.notify.assert_awaited_once()

@@ -5,6 +5,9 @@ from decimal import Decimal
 from pathlib import Path
 from unittest.mock import MagicMock
 
+import pytest
+
+from gpt_trader.config import path_registry
 from gpt_trader.features.optimize.persistence.storage import OptimizationRun, OptimizationStorage
 from gpt_trader.features.optimize.runner.batch_runner import TrialResult
 from gpt_trader.features.optimize.types import (
@@ -159,6 +162,18 @@ def test_storage_save_run_writes_results_file(tmp_path: Path) -> None:
 
     assert file_path == tmp_path / "run-save" / "results.json"
     assert file_path.exists()
+
+
+def test_storage_default_uses_registry_runtime_dir(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    default_dir = tmp_path / "runtime_data" / "optimize"
+    monkeypatch.setattr(path_registry, "OPTIMIZATION_RUNS_DIR", default_dir)
+
+    storage = OptimizationStorage()
+
+    assert storage.base_dir == default_dir
+    assert default_dir.exists()
 
 
 def test_storage_load_run_missing_and_invalid_json(tmp_path: Path) -> None:

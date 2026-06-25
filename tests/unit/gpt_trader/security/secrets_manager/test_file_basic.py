@@ -7,6 +7,11 @@ import os
 from pathlib import Path
 from typing import Any
 
+import pytest
+
+from gpt_trader.app.config import BotConfig
+from gpt_trader.config import path_registry
+
 
 class TestFileBasics:
     """Verify core CRUD operations on encrypted files."""
@@ -102,6 +107,29 @@ class TestFileBasics:
 
         secrets_dir = tmp_path / ".gpt_trader" / "secrets"
         assert secrets_dir.exists() and secrets_dir.is_dir()
+
+    def test_default_file_storage_uses_registry_secret_dir(
+        self,
+        secrets_bot_config: BotConfig,
+        patched_require_fernet: None,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        from cryptography.fernet import Fernet
+
+        from gpt_trader.security.secrets_manager import SecretsManager
+
+        default_dir = tmp_path / ".gpt_trader" / "secrets"
+        monkeypatch.setattr(path_registry, "USER_SECRETS_DIR", default_dir)
+        monkeypatch.setenv("VAULT_TOKEN", "")
+        monkeypatch.setenv("ENV", "development")
+        monkeypatch.setenv("GPT_TRADER_ENCRYPTION_KEY", Fernet.generate_key().decode())
+
+        manager = SecretsManager(vault_enabled=False, config=secrets_bot_config)
+        manager.store_secret("test/default", {"key": "value"})
+
+        assert manager._secrets_dir == default_dir
+        assert (default_dir / "test_default.enc").exists()
 
     def test_file_encryption_roundtrip(
         self, secrets_manager_with_fallback: Any, sample_secrets: dict[str, dict[str, Any]]

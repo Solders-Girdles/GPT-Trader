@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from gpt_trader.config import path_registry
 from gpt_trader.features.optimize.runner.batch_runner import TrialResult
 from gpt_trader.features.optimize.types import OptimizationConfig
 from gpt_trader.utilities.logging_patterns import get_logger
@@ -129,7 +130,7 @@ class OptimizationStorage:
     """
     Manages persistence of optimization runs.
 
-    Saves results to ~/.gpt_trader/optimize/
+    Saves results to the repo-local optimization runtime directory by default.
     """
 
     def __init__(self, base_dir: Path | None = None):
@@ -137,12 +138,11 @@ class OptimizationStorage:
         Initialize storage.
 
         Args:
-            base_dir: Base directory for storage. Defaults to ~/.gpt_trader/optimize
+            base_dir: Base directory for storage. Defaults to path_registry.OPTIMIZATION_RUNS_DIR
         """
-        if base_dir is None:
-            self.base_dir = Path.home() / ".gpt_trader" / "optimize"
-        else:
-            self.base_dir = Path(base_dir)
+        self.base_dir = (
+            Path(base_dir) if base_dir is not None else path_registry.OPTIMIZATION_RUNS_DIR
+        )
 
         self.base_dir.mkdir(parents=True, exist_ok=True)
 

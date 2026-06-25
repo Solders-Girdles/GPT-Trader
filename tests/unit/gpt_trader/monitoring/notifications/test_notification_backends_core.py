@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -102,13 +103,99 @@ class TestFileNotificationBackend:
     async def test_test_connection_checks_writability(self) -> None:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".jsonl", delete=False) as f:
             file_path = f.name
+            f.write("seed\n")
 
         try:
             backend = FileNotificationBackend(file_path=file_path)
             result = await backend.test_connection()
             assert result is True
+            assert Path(file_path).read_text() == "seed\n"
         finally:
             Path(file_path).unlink(missing_ok=True)
+
+    @pytest.mark.asyncio
+    async def test_test_connection_checks_existing_target_directly(self, tmp_path: Path) -> None:
+        alert_path = tmp_path / "alerts.jsonl"
+        alert_path.mkdir()
+        backend = FileNotificationBackend(file_path=str(alert_path))
+
+        result = await backend.test_connection()
+
+        assert result is False
+        assert list(tmp_path.iterdir()) == [alert_path]
+
+    @pytest.mark.asyncio
+    async def test_test_connection_rejects_trailing_separator_file_path(
+        self, tmp_path: Path
+    ) -> None:
+        alert_path = tmp_path / "alerts.jsonl"
+        alert_path.write_text("seed\n")
+        backend = FileNotificationBackend(file_path=f"{alert_path}/")
+
+        result = await backend.test_connection()
+
+        assert result is False
+        assert alert_path.read_text() == "seed\n"
+
+    @pytest.mark.asyncio
+    async def test_test_connection_checks_broken_symlink_target_parent(
+        self, tmp_path: Path
+    ) -> None:
+        target_path = tmp_path / "missing-target-parent" / "alerts.jsonl"
+        alert_path = tmp_path / "alerts-link.jsonl"
+        alert_path.symlink_to(target_path)
+        backend = FileNotificationBackend(file_path=str(alert_path))
+
+        result = await backend.test_connection()
+
+        assert result is False
+        assert alert_path.is_symlink()
+        assert not target_path.parent.exists()
+
+    @pytest.mark.asyncio
+    async def test_test_connection_checks_missing_symlink_target_without_creating_it(
+        self, tmp_path: Path
+    ) -> None:
+        target_parent = tmp_path / "target-parent"
+        target_parent.mkdir()
+        target_path = target_parent / "alerts.jsonl"
+        alert_path = tmp_path / "alerts-link.jsonl"
+        alert_path.symlink_to(target_path)
+        backend = FileNotificationBackend(file_path=str(alert_path))
+
+        result = await backend.test_connection()
+
+        assert result is True
+        assert alert_path.is_symlink()
+        assert not target_path.exists()
+        assert list(target_parent.iterdir()) == []
+
+    @pytest.mark.asyncio
+    async def test_test_connection_creates_parent_without_alert_file(self, tmp_path: Path) -> None:
+        alert_path = tmp_path / "nested" / "alerts.jsonl"
+        backend = FileNotificationBackend(file_path=str(alert_path))
+
+        result = await backend.test_connection()
+
+        assert result is True
+        assert alert_path.parent.is_dir()
+        assert not alert_path.exists()
+        assert list(alert_path.parent.iterdir()) == []
+
+    @pytest.mark.asyncio
+    async def test_test_connection_handles_long_missing_file_name_without_alert_file(
+        self, tmp_path: Path
+    ) -> None:
+        name_max = os.pathconf(tmp_path, "PC_NAME_MAX")
+        suffix = ".jsonl"
+        alert_path = tmp_path / f"{'a' * (name_max - len(suffix))}{suffix}"
+        backend = FileNotificationBackend(file_path=str(alert_path))
+
+        result = await backend.test_connection()
+
+        assert result is True
+        assert not alert_path.exists()
+        assert list(tmp_path.iterdir()) == []
 
     @pytest.mark.asyncio
     async def test_test_connection_offloads_file_check_to_thread(

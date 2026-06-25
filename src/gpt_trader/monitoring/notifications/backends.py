@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,7 @@ COLORS = {
 }
 RESET = "\033[0m"
 BOLD = "\033[1m"
+FILE_CONNECTION_PROBE_PREFIX = ".connection-"
 
 
 @dataclass
@@ -298,9 +300,33 @@ class FileNotificationBackend:
             return False
 
     def _check_file_writable(self) -> None:
+        if self.file_path.endswith(("/", "\\")):
+            raise IsADirectoryError(self.file_path)
+
+        path = Path(self.file_path)
         self._ensure_parent_directory()
-        with open(self.file_path, "a"):
-            pass  # Just test if we can open for append
+        if path.exists():
+            with open(self.file_path, "a"):
+                pass
+            return
+
+        if path.is_symlink():
+            target = path.readlink()
+            if not target.is_absolute():
+                target = path.parent / target
+            self._check_directory_writable(target.parent)
+            return
+
+        self._check_directory_writable(path.parent)
+
+    def _check_directory_writable(self, parent: Path) -> None:
+        with tempfile.NamedTemporaryFile(
+            mode="a",
+            dir=parent,
+            prefix=FILE_CONNECTION_PROBE_PREFIX,
+            suffix=".tmp",
+        ):
+            pass
 
     def _ensure_parent_directory(self) -> None:
         Path(self.file_path).parent.mkdir(parents=True, exist_ok=True)

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6767,
-    "total_files": 799,
+    "total_tests": 6772,
+    "total_files": 800,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6602,
+    "unit": 6607,
     "asyncio": 390,
     "parametrize": 193,
     "endpoints": 83,
@@ -211,6 +211,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
@@ -9262,6 +9263,48 @@
       {
         "name": "test_help_lists_ideas_subcommands",
         "line": 221,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_report.py": [
+      {
+        "name": "test_report_empty_store_returns_zero_counts",
+        "line": 64,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_summarizes_workflow_quality_closeouts_and_profit_loss",
+        "line": 83,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_missing_closeout_coverage_lists_terminal_ids",
+        "line": 174,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_classifies_percent_only_closeout_outcomes_without_amount_totals",
+        "line": 195,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_is_read_only_and_does_not_seed_budget",
+        "line": 242,
         "markers": [
           "unit"
         ],

@@ -33,6 +33,10 @@ from gpt_trader.features.trade_ideas import (
     is_safe_decision_id,
     resolve_trade_idea_actor_id,
 )
+from gpt_trader.features.trade_ideas.report import (
+    build_trade_idea_track_record_report,
+    format_trade_idea_track_record_report,
+)
 
 VENUE_CHOICES = ("coinbase", "manual")
 BUDGET_FIELDS = (
@@ -112,6 +116,17 @@ def register(subparsers: Any) -> None:
     show.add_argument("decision_id", help="Trade idea decision identifier")
     show.add_argument("--events", action="store_true", help="Include audit history")
     show.set_defaults(handler=_handle_show, subcommand="show")
+
+    report = ideas_subparsers.add_parser(
+        "report",
+        help="Summarize proposal quality, workflow rates, and closeout coverage",
+        description=(
+            "Read-only track-record report over local trade-idea records, audit events, "
+            "and closeout attribution. This command never contacts a broker or account."
+        ),
+    )
+    _add_common_options(report)
+    report.set_defaults(handler=_handle_report, subcommand="report")
 
     approve = ideas_subparsers.add_parser("approve", help="Approve a proposed trade idea")
     _add_common_options(approve)
@@ -417,6 +432,18 @@ def _handle_show(args: Namespace) -> CliResponse:
     payload = _view_record(view, include_events=args.events)
     text = _record_text(payload, include_events=args.events)
     return _success(command, args, payload, text)
+
+
+def _handle_report(args: Namespace) -> CliResponse:
+    command = "ideas report"
+    try:
+        payload = build_trade_idea_track_record_report(_service(args))
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    text = format_trade_idea_track_record_report(payload)
+    idea_count = payload["proposal_volume"]["idea_count"]
+    return _success(command, args, payload, text, was_noop=idea_count == 0)
 
 
 def _handle_approve(args: Namespace) -> CliResponse:

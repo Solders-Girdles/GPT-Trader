@@ -58,6 +58,7 @@ gpt-trader ideas
 ├── resubmit         --file PATH | --stdin   [--actor-type {ai,human}] [--reason TEXT]
 ├── list             [--state STATE]
 ├── show             DECISION_ID [--events]
+├── report
 ├── approve          DECISION_ID --reason TEXT
 ├── reject           DECISION_ID --reason TEXT
 ├── request-changes  DECISION_ID --reason TEXT
@@ -114,6 +115,29 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
   (`[e.to_dict() for e in view.events]`).
 - Text: field-per-line record rendering; with `--events`, a chronological
   `timestamp  actor_type/actor_id  action  before→after  reason` table.
+
+### `ideas report`
+
+- Read-only track-record report over the local `--ideas-root` records, audit
+  events, and closeout attribution log. It does not call broker, account,
+  venue, preflight, canary, or live-trading surfaces.
+- Empty stores return success with zero counts and `was_noop=True`.
+- JSON `data` contains:
+  - `proposal_volume`: idea count, proposal event count, resubmission count,
+    and monthly volume/approval/closeout buckets.
+  - `workflow`: lifecycle event counts, current-state counts, ever-approved /
+    submitted / filled counts, and rates.
+  - `quality`: eligibility and approval-policy quality counts evaluated
+    read-only against stored records and the default risk-budget constants,
+    without seeding `risk_budget.jsonl`.
+  - `closeouts`: terminal closeout coverage, missing terminal closeout ids,
+    resolution counts, profit/loss outcome distribution, and realized P/L
+    versus max-loss comparisons when closeout records include numeric data.
+- Text starts with:
+
+  ```text
+  ✓ ideas report OK (3 ideas, approval_rate=33.33%, closeout_coverage=66.67%)
+  ```
 
 ### `ideas approve DECISION_ID --reason TEXT`
 
@@ -205,21 +229,23 @@ Required cases:
 2. `propose` with missing required field → `INVALID_ARGUMENT`, names field.
 3. `list` empty store → success, empty list. `list --state proposed` filters.
 4. `show` unknown id → `IDEA_NOT_FOUND`. `show --events` includes history.
-5. `approve` happy path → state `approved`, human actor in audit event.
-6. `approve` over-budget idea → exit 1, `POLICY_VIOLATION`, all violations in
+5. `report` empty store, normal records, missing closeout coverage, JSON
+   output, and read-only behavior that does not create `risk_budget.jsonl`.
+6. `approve` happy path → state `approved`, human actor in audit event.
+7. `approve` over-budget idea → exit 1, `POLICY_VIOLATION`, all violations in
    `data["violations"]` (assert ≥2 violations both present).
-7. `request-changes` → `resubmit` (revised record) → `approve` full loop.
-8. `reject`, `cancel`, `expire` single, `expire --sweep` with explicit expiry
+8. `request-changes` → `resubmit` (revised record) → `approve` full loop.
+9. `reject`, `cancel`, `expire` single, `expire --sweep` with explicit expiry
    coverage (one stale + one fresh idea: only stale expires; `was_noop` when
    none) plus review-latency sweep coverage for a far-future idea whose review
    deadline exceeds `max_review_latency_hours`.
-9. `mark-submitted` then `mark-filled` with venue/external id recorded in
+10. `mark-submitted` then `mark-filled` with venue/external id recorded in
    audit events.
-10. `budget show` seeds defaults; `budget set --max-loss-per-idea-pct 2
+11. `budget show` seeds defaults; `budget set --max-loss-per-idea-pct 2
     --reason ...` bumps version; `budget set` with no field flags →
     `MISSING_ARGUMENT`.
-11. `audit verify` OK path; tampered line in `audit.jsonl` → failure.
-12. JSON mode for at least propose/approve/list asserting the
+12. `audit verify` OK path; tampered line in `audit.jsonl` → failure.
+13. JSON mode for at least propose/approve/list/report asserting the
     `CliResponse` envelope per CLAUDE.md patterns
     (`result.errors[0].code == CliErrorCode.POLICY_VIOLATION.value`).
 

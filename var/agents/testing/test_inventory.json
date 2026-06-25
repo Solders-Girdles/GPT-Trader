@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6809,
+    "total_tests": 6810,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6644,
+    "unit": 6645,
     "asyncio": 411,
     "parametrize": 193,
     "endpoints": 83,
@@ -39927,7 +39927,7 @@
     "tests/unit/gpt_trader/persistence/test_orders_store.py": [
       {
         "name": "TestOrdersStore::test_initialize_creates_database",
-        "line": 21,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -39936,7 +39936,7 @@
       },
       {
         "name": "TestOrdersStore::test_explicit_close_allows_reinitialize_and_reuse",
-        "line": 30,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -39945,7 +39945,7 @@
       },
       {
         "name": "TestOrdersStore::test_close_releases_thread_local_connections",
-        "line": 43,
+        "line": 44,
         "markers": [
           "unit"
         ],
@@ -39954,7 +39954,7 @@
       },
       {
         "name": "TestOrdersStore::test_worker_thread_connection_closes_when_thread_exits",
-        "line": 66,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -39963,7 +39963,7 @@
       },
       {
         "name": "TestOrdersStore::test_reconnect_in_same_generation_keeps_previous_handle_registered",
-        "line": 86,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -39972,7 +39972,16 @@
       },
       {
         "name": "TestOrdersStore::test_connection_generation_retry_releases_lock_before_reconnect",
-        "line": 108,
+        "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestOrdersStore"
+      },
+      {
+        "name": "TestOrdersStore::test_closed_holder_after_publish_retries_before_return",
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -39981,24 +39990,6 @@
       },
       {
         "name": "TestOrdersStore::test_save_and_get_order",
-        "line": 148,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestOrdersStore"
-      },
-      {
-        "name": "TestOrdersStore::test_get_order_by_client_order_id",
-        "line": 163,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestOrdersStore"
-      },
-      {
-        "name": "TestOrdersStore::test_get_order_not_found",
         "line": 176,
         "markers": [
           "unit"
@@ -40007,8 +39998,26 @@
         "class": "TestOrdersStore"
       },
       {
+        "name": "TestOrdersStore::test_get_order_by_client_order_id",
+        "line": 191,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestOrdersStore"
+      },
+      {
+        "name": "TestOrdersStore::test_get_order_not_found",
+        "line": 204,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestOrdersStore"
+      },
+      {
         "name": "TestOrdersStore::test_save_order_upsert",
-        "line": 182,
+        "line": 210,
         "markers": [
           "unit"
         ],
@@ -40017,7 +40026,7 @@
       },
       {
         "name": "TestOrdersStore::test_upsert_by_client_id_updates_order_id",
-        "line": 196,
+        "line": 224,
         "markers": [
           "unit"
         ],
@@ -40026,7 +40035,7 @@
       },
       {
         "name": "TestOrdersStore::test_get_pending_orders",
-        "line": 218,
+        "line": 246,
         "markers": [
           "unit"
         ],
@@ -40035,7 +40044,7 @@
       },
       {
         "name": "TestOrdersStore::test_get_pending_orders_by_bot",
-        "line": 237,
+        "line": 265,
         "markers": [
           "unit"
         ],
@@ -40044,7 +40053,7 @@
       },
       {
         "name": "TestOrdersStore::test_get_orders_by_symbol",
-        "line": 250,
+        "line": 278,
         "markers": [
           "unit"
         ],
@@ -40053,7 +40062,7 @@
       },
       {
         "name": "TestOrdersStore::test_list_orders_filters_and_limit",
-        "line": 263,
+        "line": 291,
         "markers": [
           "unit"
         ],
@@ -40062,7 +40071,7 @@
       },
       {
         "name": "TestOrdersStore::test_list_orders_requires_positive_limit",
-        "line": 303,
+        "line": 331,
         "markers": [
           "unit"
         ],
@@ -40071,7 +40080,7 @@
       },
       {
         "name": "TestOrdersStore::test_update_status",
-        "line": 309,
+        "line": 337,
         "markers": [
           "unit"
         ],
@@ -40080,7 +40089,7 @@
       },
       {
         "name": "TestOrdersStore::test_verify_integrity_valid",
-        "line": 329,
+        "line": 357,
         "markers": [
           "unit"
         ],
@@ -40089,7 +40098,7 @@
       },
       {
         "name": "TestOrdersStore::test_cleanup_old_orders",
-        "line": 340,
+        "line": 368,
         "markers": [
           "unit"
         ],
@@ -40098,7 +40107,7 @@
       },
       {
         "name": "TestOrdersStore::test_context_manager",
-        "line": 350,
+        "line": 378,
         "markers": [
           "unit"
         ],

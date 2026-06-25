@@ -11,6 +11,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
+from gpt_trader.persistence import orders_store as orders_store_module
 from gpt_trader.persistence.orders_store import OrdersStore, OrderStatus
 from tests.unit.gpt_trader.persistence.orders_store_test_helpers import create_test_order
 
@@ -143,6 +144,33 @@ class TestOrdersStore:
                 raise errors[0]
             assert connect_count == 2
             assert store.get_order("retry-order") is not None
+            store.close()
+
+    def test_closed_holder_after_publish_retries_before_return(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        real_holder = orders_store_module._ConnectionHolder
+
+        class ClosingOnceHolder(real_holder):
+            closed_once = False
+
+            @property
+            def closed(self) -> bool:
+                if not ClosingOnceHolder.closed_once:
+                    ClosingOnceHolder.closed_once = True
+                    self.close()
+                return super().closed
+
+        monkeypatch.setattr(orders_store_module, "_ConnectionHolder", ClosingOnceHolder)
+
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            store.initialize()
+            result = store.save_order(create_test_order(order_id="publish-race-order"))
+
+            assert ClosingOnceHolder.closed_once is True
+            assert result.success is True
+            assert store.get_order("publish-race-order") is not None
             store.close()
 
     def test_save_and_get_order(self) -> None:

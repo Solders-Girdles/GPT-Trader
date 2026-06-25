@@ -269,13 +269,21 @@ class OrdersStore:
                     retry_connection = True
                 else:
                     self._connections[id(new_holder)] = new_holder
+                    self._local.connection_holder = new_holder
+                    self._local.connection_generation = generation
 
             if retry_connection:
                 new_holder.close()
                 return self._get_connection()
 
-            self._local.connection_holder = new_holder
-            self._local.connection_generation = generation
+            if new_holder.closed or generation != self._connection_generation:
+                if getattr(self._local, "connection_holder", None) is new_holder:
+                    del self._local.connection_holder
+                if hasattr(self._local, "connection_generation"):
+                    del self._local.connection_generation
+                new_holder.close()
+                return self._get_connection()
+
             return connection
         except Exception:
             if new_holder is not None:

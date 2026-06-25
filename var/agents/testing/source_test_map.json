@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 720,
-    "source_modules": 372,
+    "source_modules": 373,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1530,6 +1530,9 @@
     "gpt_trader.observability.tracing": [
       "tests/unit/gpt_trader/observability/test_tracing.py",
       "tests/unit/gpt_trader/observability/test_tracing_edges.py"
+    ],
+    "gpt_trader.persistence": [
+      "tests/unit/gpt_trader/persistence/test_orders_store.py"
     ],
     "gpt_trader.persistence.database": [
       "tests/unit/gpt_trader/persistence/test_database_engine.py",
@@ -4266,6 +4269,7 @@
       "gpt_trader.persistence.event_store"
     ],
     "tests/unit/gpt_trader/persistence/test_orders_store.py": [
+      "gpt_trader.persistence",
       "gpt_trader.persistence.orders_store"
     ],
     "tests/unit/gpt_trader/persistence/test_orders_store_edges.py": [
@@ -5268,6 +5272,7 @@
     "gpt_trader.monitoring.two_person_rule.manager": "src/gpt_trader/monitoring/two_person_rule/manager.py",
     "gpt_trader.monitoring.two_person_rule.models": "src/gpt_trader/monitoring/two_person_rule/models.py",
     "gpt_trader.observability.tracing": "src/gpt_trader/observability/tracing.py",
+    "gpt_trader.persistence": "src/gpt_trader/persistence/__init__.py",
     "gpt_trader.persistence.database": "src/gpt_trader/persistence/database.py",
     "gpt_trader.persistence.durability": "src/gpt_trader/persistence/durability.py",
     "gpt_trader.persistence.event_store": "src/gpt_trader/persistence/event_store.py",

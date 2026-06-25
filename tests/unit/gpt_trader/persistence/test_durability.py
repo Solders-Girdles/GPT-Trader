@@ -131,6 +131,28 @@ class TestAtomicFileWrite:
             assert replace_calls[0][1] == path
             assert not list(path.parent.glob(f".{path.name}.*.tmp"))
 
+    def test_atomic_write_file_skips_directory_fsync_without_o_directory(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        open_calls: list[tuple[Path, int]] = []
+        original_open = durability.os.open
+
+        def open_spy(path: str | Path, flags: int, *args: object, **kwargs: object) -> int:
+            open_calls.append((Path(path), flags))
+            return original_open(path, flags, *args, **kwargs)
+
+        monkeypatch.delattr(durability.os, "O_DIRECTORY", raising=False)
+        monkeypatch.setattr(durability.os, "open", open_spy)
+
+        with TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "test.txt"
+
+            atomic_write_file(path, "content")
+
+            assert path.read_text() == "content"
+            assert path.parent not in {opened_path for opened_path, _ in open_calls}
+            assert not list(path.parent.glob(f".{path.name}.*.tmp"))
+
     def test_atomic_write_json(self) -> None:
         with TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "test.json"

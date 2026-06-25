@@ -68,6 +68,7 @@ class SecretsManager:
     ) -> None:
         self._lock = threading.RLock()
         self._cipher_suite: FernetType | None = None
+        self._encryption_key_is_ephemeral = False
         self._secrets_cache: dict[str, dict[str, Any]] = {}
         self._vault_client: Any | None = None
         self._vault_enabled = vault_enabled
@@ -90,6 +91,7 @@ class SecretsManager:
             if environment == "development":
                 fernet_cls = _require_fernet()
                 encryption_key = fernet_cls.generate_key().decode()
+                self._encryption_key_is_ephemeral = True
                 logger.warning(
                     "Generated new encryption key for development",
                     operation="encryption_init",
@@ -124,6 +126,13 @@ class SecretsManager:
         if self._cipher_suite is None:
             raise RuntimeError("Encryption subsystem not initialised")
         return self._cipher_suite
+
+    def _require_durable_file_key(self) -> None:
+        if self._encryption_key_is_ephemeral:
+            raise RuntimeError(
+                "File-backed secret storage requires GPT_TRADER_ENCRYPTION_KEY; "
+                "development-generated encryption keys are ephemeral and cache-only."
+            )
 
     @staticmethod
     def _as_secret_dict(payload: Any) -> dict[str, Any] | None:
@@ -282,6 +291,7 @@ class SecretsManager:
 
     def _store_to_file(self, path: str, secret: dict[str, Any]) -> None:
         """Store secret to encrypted file"""
+        self._require_durable_file_key()
         secrets_dir = self._secrets_dir
         logger.debug(f"Using secrets directory: {secrets_dir}")
         secrets_dir.mkdir(parents=True, exist_ok=True)

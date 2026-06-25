@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6812,
+    "total_tests": 6813,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6647,
+    "unit": 6648,
     "asyncio": 411,
     "parametrize": 193,
     "endpoints": 83,
@@ -43008,7 +43008,7 @@
         "class": "TestFileBasics"
       },
       {
-        "name": "TestFileBasics::test_file_retrieve_success",
+        "name": "TestFileBasics::test_ephemeral_development_key_rejects_file_storage_across_instances",
         "line": 37,
         "markers": [
           "unit"
@@ -43017,8 +43017,17 @@
         "class": "TestFileBasics"
       },
       {
+        "name": "TestFileBasics::test_file_retrieve_success",
+        "line": 76,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestFileBasics"
+      },
+      {
         "name": "TestFileBasics::test_file_delete_success",
-        "line": 48,
+        "line": 87,
         "markers": [
           "unit"
         ],
@@ -43027,7 +43036,7 @@
       },
       {
         "name": "TestFileBasics::test_file_list_success",
-        "line": 65,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -43036,7 +43045,7 @@
       },
       {
         "name": "TestFileBasics::test_file_retrieve_missing_secret",
-        "line": 81,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -43045,7 +43054,7 @@
       },
       {
         "name": "TestFileBasics::test_file_delete_missing_secret",
-        "line": 85,
+        "line": 124,
         "markers": [
           "unit"
         ],
@@ -43054,7 +43063,7 @@
       },
       {
         "name": "TestFileBasics::test_file_path_sanitization",
-        "line": 89,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -43063,7 +43072,7 @@
       },
       {
         "name": "TestFileBasics::test_file_directory_creation",
-        "line": 100,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -43072,7 +43081,7 @@
       },
       {
         "name": "TestFileBasics::test_default_file_storage_uses_registry_secret_dir",
-        "line": 111,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -43081,7 +43090,7 @@
       },
       {
         "name": "TestFileBasics::test_file_encryption_roundtrip",
-        "line": 134,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -43090,7 +43099,7 @@
       },
       {
         "name": "TestFileBasics::test_file_overwrite_existing",
-        "line": 148,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -43099,7 +43108,7 @@
       },
       {
         "name": "TestFileBasics::test_file_invalid_path_characters",
-        "line": 159,
+        "line": 198,
         "markers": [
           "unit"
         ],
@@ -43108,7 +43117,7 @@
       },
       {
         "name": "TestFileBasics::test_file_permissions_handling",
-        "line": 177,
+        "line": 216,
         "markers": [
           "unit"
         ],
@@ -43117,7 +43126,7 @@
       },
       {
         "name": "TestFileBasics::test_file_storage_with_different_data_types",
-        "line": 189,
+        "line": 228,
         "markers": [
           "unit"
         ],
@@ -43126,7 +43135,7 @@
       },
       {
         "name": "TestFileBasics::test_file_storage_empty_secret",
-        "line": 206,
+        "line": 245,
         "markers": [
           "unit"
         ],

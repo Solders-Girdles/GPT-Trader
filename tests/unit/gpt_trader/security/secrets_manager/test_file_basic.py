@@ -34,6 +34,45 @@ class TestFileBasics:
         assert len(encrypted_data) > 0
         assert encrypted_data != json.dumps(secret_data).encode()
 
+    def test_ephemeral_development_key_rejects_file_storage_across_instances(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        patched_require_fernet: None,
+        secrets_bot_config: BotConfig,
+        secrets_dir: Path,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        from gpt_trader.security.secrets_manager import SecretsManager
+
+        monkeypatch.setenv("ENV", "development")
+        monkeypatch.delenv("GPT_TRADER_ENCRYPTION_KEY", raising=False)
+
+        secret_path = "brokers/coinbase"
+        secret_data = {"api_key": "dummy-api-key"}
+
+        first_manager = SecretsManager(
+            vault_enabled=False,
+            config=secrets_bot_config,
+            secrets_dir=secrets_dir,
+        )
+        with caplog.at_level("ERROR"):
+            assert first_manager.store_secret(secret_path, secret_data) is False
+
+        expected_file = secrets_dir / "brokers_coinbase.enc"
+        assert not expected_file.exists()
+        assert any(
+            "File-backed secret storage requires GPT_TRADER_ENCRYPTION_KEY" in message
+            for message in caplog.messages
+        )
+        assert "dummy-api-key" not in caplog.text
+
+        second_manager = SecretsManager(
+            vault_enabled=False,
+            config=secrets_bot_config,
+            secrets_dir=secrets_dir,
+        )
+        assert second_manager.get_secret(secret_path) is None
+
     def test_file_retrieve_success(
         self, secrets_manager_with_fallback: Any, sample_secrets: dict[str, dict[str, Any]]
     ) -> None:

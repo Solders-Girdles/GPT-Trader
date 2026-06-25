@@ -63,6 +63,25 @@ class TestOrdersStore:
                 with pytest.raises(sqlite3.ProgrammingError, match="closed"):
                     connection.execute("SELECT 1")
 
+    def test_reconnect_in_same_generation_keeps_previous_handle_registered(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            store.initialize()
+            first_connection = store._get_connection()
+            del store._local.connection
+            del store._local.connection_generation
+
+            second_connection = store._get_connection()
+
+            assert first_connection is not second_connection
+            assert len(store._connections) == 2
+
+            store.close()
+
+            for connection in [first_connection, second_connection]:
+                with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+                    connection.execute("SELECT 1")
+
     def test_connection_generation_retry_releases_lock_before_reconnect(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

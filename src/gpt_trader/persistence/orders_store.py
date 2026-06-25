@@ -188,7 +188,7 @@ class OrdersStore:
         self._database_path = self.storage_path / "orders.db"
         self._lock = threading.Lock()
         self._connection_lock = threading.Lock()
-        self._connections: dict[tuple[int, int], sqlite3.Connection] = {}
+        self._connections: dict[int, sqlite3.Connection] = {}
         self._connection_generation = 0
         self._initialized = False
         self._local = threading.local()
@@ -201,6 +201,8 @@ class OrdersStore:
             return connection
 
         if connection is not None:
+            with self._connection_lock:
+                self._connections.pop(id(connection), None)
             with suppress(sqlite3.Error):
                 connection.close()
             del self._local.connection
@@ -226,7 +228,7 @@ class OrdersStore:
                 if generation != self._connection_generation:
                     retry_connection = True
                 else:
-                    self._connections[(threading.get_ident(), generation)] = connection
+                    self._connections[id(connection)] = connection
 
             if retry_connection:
                 connection.close()
@@ -236,6 +238,8 @@ class OrdersStore:
             self._local.connection_generation = generation
             return connection
         except Exception:
+            with self._connection_lock:
+                self._connections.pop(id(connection), None)
             connection.close()
             raise
 

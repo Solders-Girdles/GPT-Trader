@@ -13,6 +13,8 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
+import weakref
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -29,6 +31,40 @@ from gpt_trader.persistence.durability import (
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="orders_store")
+
+
+class _ConnectionHolder:
+    """Thread-local SQLite connection wrapper that unregisters itself on teardown."""
+
+    __slots__ = ("_closed", "_store_ref", "connection", "__weakref__")
+
+    def __init__(self, store: OrdersStore, connection: sqlite3.Connection) -> None:
+        self._closed = False
+        self._store_ref = weakref.ref(store)
+        self.connection = connection
+
+    @property
+    def closed(self) -> bool:
+        return self._closed
+
+    def close(self, *, checkpoint: bool = False, unregister: bool = True) -> None:
+        if self._closed:
+            return
+
+        self._closed = True
+        if unregister:
+            store = self._store_ref()
+            if store is not None:
+                store._unregister_connection(self)
+
+        if checkpoint:
+            with suppress(sqlite3.Error):
+                self.connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+        with suppress(sqlite3.Error):
+            self.connection.close()
+
+    def __del__(self) -> None:
+        self.close()
 
 
 class OrderStatus(str, Enum):
@@ -186,23 +222,80 @@ class OrdersStore:
         self.storage_path = Path(storage_path)
         self._database_path = self.storage_path / "orders.db"
         self._lock = threading.Lock()
+        self._connection_lock = threading.Lock()
+        self._connections: weakref.WeakValueDictionary[int, _ConnectionHolder] = (
+            weakref.WeakValueDictionary()
+        )
+        self._connection_generation = 0
         self._initialized = False
         self._local = threading.local()
 
     def _get_connection(self) -> sqlite3.Connection:
         """Get thread-local database connection."""
-        if not hasattr(self._local, "connection"):
-            connection = sqlite3.connect(
-                str(self._database_path),
-                check_same_thread=False,
-                isolation_level=None,  # Autocommit mode
-            )
+        holder: _ConnectionHolder | None = getattr(self._local, "connection_holder", None)
+        connection_generation: int | None = getattr(self._local, "connection_generation", None)
+        if (
+            holder is not None
+            and not holder.closed
+            and connection_generation == self._connection_generation
+        ):
+            return holder.connection
+
+        if holder is not None:
+            holder.close()
+            del self._local.connection_holder
+            if hasattr(self._local, "connection_generation"):
+                del self._local.connection_generation
+
+        with self._connection_lock:
+            generation = self._connection_generation
+
+        connection = sqlite3.connect(
+            str(self._database_path),
+            check_same_thread=False,
+            isolation_level=None,  # Autocommit mode
+        )
+        new_holder: _ConnectionHolder | None = None
+        try:
             connection.execute("PRAGMA journal_mode=WAL")
             connection.execute("PRAGMA synchronous=NORMAL")
             connection.execute("PRAGMA busy_timeout=5000")
             connection.row_factory = sqlite3.Row
-            self._local.connection = connection
-        return self._local.connection  # type: ignore[no-any-return]
+
+            retry_connection = False
+            new_holder = _ConnectionHolder(self, connection)
+            with self._connection_lock:
+                if generation != self._connection_generation:
+                    retry_connection = True
+                else:
+                    self._connections[id(new_holder)] = new_holder
+                    self._local.connection_holder = new_holder
+                    self._local.connection_generation = generation
+
+            if retry_connection:
+                new_holder.close()
+                return self._get_connection()
+
+            if new_holder.closed or generation != self._connection_generation:
+                if getattr(self._local, "connection_holder", None) is new_holder:
+                    del self._local.connection_holder
+                if hasattr(self._local, "connection_generation"):
+                    del self._local.connection_generation
+                new_holder.close()
+                return self._get_connection()
+
+            return connection
+        except Exception:
+            if new_holder is not None:
+                new_holder.close()
+            else:
+                with suppress(sqlite3.Error):
+                    connection.close()
+            raise
+
+    def _unregister_connection(self, holder: _ConnectionHolder) -> None:
+        with self._connection_lock:
+            self._connections.pop(id(holder), None)
 
     def initialize(self, *, check_integrity: bool = True) -> None:
         """
@@ -736,10 +829,26 @@ class OrdersStore:
         )
 
     def close(self) -> None:
-        """Close database connection for current thread."""
-        if hasattr(self._local, "connection"):
-            self._local.connection.close()
-            del self._local.connection
+        """
+        Close all SQLite connections created by this store.
+
+        `OrdersStore` keeps one connection per thread. Explicit close is required
+        for initialize-only or short-lived usage so Windows can release
+        `orders.db` and its WAL side files before cleanup or rotation.
+        """
+        with self._connection_lock:
+            holders = list(self._connections.values())
+            self._connections.clear()
+            self._connection_generation += 1
+
+        for holder in holders:
+            holder.close(checkpoint=True, unregister=False)
+
+        if hasattr(self._local, "connection_holder"):
+            del self._local.connection_holder
+        if hasattr(self._local, "connection_generation"):
+            del self._local.connection_generation
+        self._initialized = False
 
     def __enter__(self) -> OrdersStore:
         """Context manager entry."""

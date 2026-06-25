@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import sqlite3
+import threading
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -9,6 +11,7 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
+from gpt_trader.persistence import orders_store as orders_store_module
 from gpt_trader.persistence.orders_store import OrdersStore, OrderStatus
 from tests.unit.gpt_trader.persistence.orders_store_test_helpers import create_test_order
 
@@ -23,6 +26,152 @@ class TestOrdersStore:
 
             db_path = Path(tmpdir) / "orders.db"
             assert db_path.exists()
+            store.close()
+
+    def test_explicit_close_allows_reinitialize_and_reuse(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            store.initialize()
+            store.close()
+
+            order = create_test_order()
+            result = store.save_order(order)
+
+            assert result.success is True
+            assert store.get_order(order.order_id) is not None
+            store.close()
+
+    def test_close_releases_thread_local_connections(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            store.initialize()
+            main_connection = store._get_connection()
+            worker_connections: list[sqlite3.Connection] = []
+
+            def save_in_worker() -> None:
+                store.save_order(create_test_order(order_id="worker-order"))
+                worker_connections.append(store._get_connection())
+
+            worker = threading.Thread(target=save_in_worker)
+            worker.start()
+            worker.join()
+
+            assert len(worker_connections) == 1
+
+            store.close()
+
+            for connection in [main_connection, *worker_connections]:
+                with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+                    connection.execute("SELECT 1")
+
+    def test_worker_thread_connection_closes_when_thread_exits(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            store.initialize()
+            worker_connections: list[sqlite3.Connection] = []
+
+            def save_in_worker() -> None:
+                store.save_order(create_test_order(order_id="worker-exit-order"))
+                worker_connections.append(store._get_connection())
+
+            worker = threading.Thread(target=save_in_worker)
+            worker.start()
+            worker.join()
+
+            assert len(worker_connections) == 1
+            with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+                worker_connections[0].execute("SELECT 1")
+
+            store.close()
+
+    def test_reconnect_in_same_generation_keeps_previous_handle_registered(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            store.initialize()
+            first_connection = store._get_connection()
+            first_holder = store._local.connection_holder
+            del store._local.connection_holder
+            del store._local.connection_generation
+
+            second_connection = store._get_connection()
+            second_holder = store._local.connection_holder
+
+            assert first_connection is not second_connection
+            assert first_holder is not second_holder
+            assert len(store._connections) == 2
+
+            store.close()
+
+            for connection in [first_connection, second_connection]:
+                with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+                    connection.execute("SELECT 1")
+
+    def test_connection_generation_retry_releases_lock_before_reconnect(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            real_connect = sqlite3.connect
+            connect_count = 0
+
+            def connect_with_generation_change(
+                *args: object, **kwargs: object
+            ) -> sqlite3.Connection:
+                nonlocal connect_count
+                connect_count += 1
+                connection = real_connect(*args, **kwargs)
+                if connect_count == 1:
+                    store.close()
+                return connection
+
+            monkeypatch.setattr(sqlite3, "connect", connect_with_generation_change)
+
+            errors: list[BaseException] = []
+
+            def save_with_generation_retry() -> None:
+                try:
+                    store.initialize()
+                    store.save_order(create_test_order(order_id="retry-order"))
+                except BaseException as exc:
+                    errors.append(exc)
+
+            worker = threading.Thread(target=save_with_generation_retry, daemon=True)
+            worker.start()
+            worker.join(timeout=2)
+
+            assert not worker.is_alive()
+            if errors:
+                raise errors[0]
+            assert connect_count == 2
+            assert store.get_order("retry-order") is not None
+            store.close()
+
+    def test_closed_holder_after_publish_retries_before_return(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        real_holder = orders_store_module._ConnectionHolder
+
+        class ClosingOnceHolder(real_holder):
+            closed_once = False
+
+            @property
+            def closed(self) -> bool:
+                if not ClosingOnceHolder.closed_once:
+                    ClosingOnceHolder.closed_once = True
+                    self.close()
+                return super().closed
+
+        monkeypatch.setattr(orders_store_module, "_ConnectionHolder", ClosingOnceHolder)
+
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            store.initialize()
+            result = store.save_order(create_test_order(order_id="publish-race-order"))
+
+            assert ClosingOnceHolder.closed_once is True
+            assert result.success is True
+            assert store.get_order("publish-race-order") is not None
+            store.close()
 
     def test_save_and_get_order(self) -> None:
         with TemporaryDirectory() as tmpdir:

@@ -36099,7 +36099,7 @@
       },
       {
         "name": "TestMetricsPublisherLogUpdate::test_logs_metrics",
-        "line": 124,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -36108,7 +36108,7 @@
       },
       {
         "name": "TestMetricsPublisherLogUpdate::test_filters_large_fields",
-        "line": 129,
+        "line": 133,
         "markers": [
           "unit"
         ],
@@ -36117,7 +36117,7 @@
       },
       {
         "name": "TestMetricsPublisherLogUpdate::test_handles_log_errors",
-        "line": 145,
+        "line": 149,
         "markers": [
           "unit"
         ],
@@ -36126,7 +36126,7 @@
       },
       {
         "name": "TestMetricsPublisherWriteHealthStatus::test_writes_health_status",
-        "line": 160,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -36135,7 +36135,7 @@
       },
       {
         "name": "TestMetricsPublisherWriteHealthStatus::test_writes_unhealthy_status",
-        "line": 173,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -36144,7 +36144,7 @@
       },
       {
         "name": "TestMetricsPublisherWriteHealthStatus::test_handles_health_status_write_errors",
-        "line": 183,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -36153,7 +36153,7 @@
       },
       {
         "name": "TestTargetDirs::test_returns_profile_specific_path",
-        "line": 203,
+        "line": 207,
         "markers": [
           "unit"
         ],

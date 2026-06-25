@@ -107,15 +107,19 @@ class TestMetricsPublisherWriteSnapshot:
 
     def test_handles_write_errors(
         self,
+        tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
         metrics_logger: MagicMock,
         publisher: MetricsPublisher,
     ) -> None:
-        # Mock _target_dirs to return an unwritable path
-        monkeypatch.setattr(publisher, "_target_dirs", lambda: [Path("/nonexistent/path")])
-        # Should not raise, just log
+        blocking_file = tmp_path / "not-a-directory"
+        blocking_file.write_text("blocks directory creation")
+        monkeypatch.setattr(publisher, "_target_dirs", lambda: [blocking_file])
+
         publisher._write_snapshot({"test": "data"})
+
         metrics_logger.debug.assert_called_once()
+        assert not (blocking_file / "metrics.json").exists()
 
 
 class TestMetricsPublisherLogUpdate:

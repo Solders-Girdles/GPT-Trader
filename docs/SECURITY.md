@@ -12,7 +12,8 @@ This document outlines the security controls and operational guidance for GPT-Tr
 - Credentials and authentication live under `src/gpt_trader/features/brokerages/coinbase/`
   (`auth.py`, `credentials.py`) and use JWT-based CDP keys.
 - Secrets management is handled by `src/gpt_trader/security/secrets_manager.py`, which
-  supports HashiCorp Vault and an encrypted local file fallback in `~/.gpt_trader/secrets`.
+  supports HashiCorp Vault and an encrypted local file fallback at
+  `path_registry.USER_SECRETS_DIR` (`~/.gpt_trader/secrets` by default).
 - Runtime validation is centralized in `src/gpt_trader/security/security_validator.py` and
   is enforced by the TradingEngine guard stack during live order submission.
 - IP allowlisting is enforced by `src/gpt_trader/security/ip_allowlist_enforcer.py`.
@@ -70,8 +71,9 @@ event_type, and key path (no values). Tune scan scope with:
 ## Sensitive Data Handling
 
 - JSON logs redact keys like `api_key`, `private_key`, `token`, and `password`.
-- Runtime data persists to `runtime_data/<profile>/` (SQLite `events.db`, `orders.db`).
-  Avoid writing secrets into events or logs.
+- Runtime data persists to repo-local paths such as `runtime_data/<profile>/`
+  (SQLite `events.db`, `orders.db`) and `runtime_data/optimize/`. Avoid writing
+  secrets into repo-local runtime artifacts, events, or logs.
 
 ## Best Practices
 

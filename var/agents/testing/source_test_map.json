@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 716,
+    "tests_scanned": 718,
     "source_modules": 372,
     "unresolved_modules": 3
   },
@@ -64,6 +64,7 @@
       "tests/unit/gpt_trader/features/live_trade/test_symbols.py",
       "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py",
       "tests/unit/gpt_trader/preflight/test_checks_simulation.py",
+      "tests/unit/gpt_trader/security/secrets_manager/test_file_basic.py",
       "tests/unit/gpt_trader/tui/services/test_config_service.py"
     ],
     "gpt_trader.app.config.bot_config": [
@@ -357,6 +358,9 @@
       "tests/unit/gpt_trader/tui/services/test_mode_service.py"
     ],
     "gpt_trader.config": [
+      "tests/unit/gpt_trader/config/test_path_registry.py",
+      "tests/unit/gpt_trader/features/optimize/persistence/test_storage_edges.py",
+      "tests/unit/gpt_trader/security/secrets_manager/test_file_basic.py",
       "tests/unit/gpt_trader/tui/services/test_mode_service_preferences.py"
     ],
     "gpt_trader.config.config_utilities": [
@@ -1665,6 +1669,7 @@
       "tests/unit/gpt_trader/security/secrets_manager/test_encryption_bootstrap.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_error_bootstrap.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_error_vault.py",
+      "tests/unit/gpt_trader/security/secrets_manager/test_file_basic.py",
       "tests/unit/gpt_trader/security/secrets_manager/test_vault_failures.py"
     ],
     "gpt_trader.security.symbol_validator": [
@@ -2781,6 +2786,9 @@
     "tests/unit/gpt_trader/config/test_env_utils.py": [
       "gpt_trader.config.env_utils"
     ],
+    "tests/unit/gpt_trader/config/test_path_registry.py": [
+      "gpt_trader.config"
+    ],
     "tests/unit/gpt_trader/core/math/test_incremental.py": [
       "gpt_trader.core.math.incremental"
     ],
@@ -3812,6 +3820,7 @@
       "gpt_trader.features.optimize.types"
     ],
     "tests/unit/gpt_trader/features/optimize/persistence/test_storage_edges.py": [
+      "gpt_trader.config",
       "gpt_trader.features.optimize.persistence.storage",
       "gpt_trader.features.optimize.runner.batch_runner",
       "gpt_trader.features.optimize.types"
@@ -4338,6 +4347,11 @@
       "gpt_trader.security.secrets_manager"
     ],
     "tests/unit/gpt_trader/security/secrets_manager/test_error_vault.py": [
+      "gpt_trader.security.secrets_manager"
+    ],
+    "tests/unit/gpt_trader/security/secrets_manager/test_file_basic.py": [
+      "gpt_trader.app.config",
+      "gpt_trader.config",
       "gpt_trader.security.secrets_manager"
     ],
     "tests/unit/gpt_trader/security/secrets_manager/test_vault_failures.py": [
@@ -5364,6 +5378,9 @@
   },
   "unresolved_modules": {
     "gpt_trader.config": [
+      "tests/unit/gpt_trader/config/test_path_registry.py",
+      "tests/unit/gpt_trader/features/optimize/persistence/test_storage_edges.py",
+      "tests/unit/gpt_trader/security/secrets_manager/test_file_basic.py",
       "tests/unit/gpt_trader/tui/services/test_mode_service_preferences.py"
     ],
     "gpt_trader.features.live_trade": [

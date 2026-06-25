@@ -497,6 +497,24 @@ Override order followed when building a `BotConfig`:
 
 The readiness gate and CLI preflight scripts consume the same registry so that `PREFLIGHT_PROFILE`, `READINESS_REPORT_DIR`, and `runtime_data/<profile>` artifacts stay aligned with whatever the CLI is currently driving.
 
+### Runtime Artifact Ownership
+
+Default runtime path ownership lives in `src/gpt_trader/config/path_registry.py`.
+Use that module before adding new filesystem defaults.
+
+- Repo-local runtime artifacts belong under `runtime_data/`. Profile-specific
+  data uses `runtime_data/<profile>/...`; optimization run results use
+  `runtime_data/optimize/...` through `path_registry.OPTIMIZATION_RUNS_DIR`.
+- Repo-local generated or developer artifacts belong under `var/`, including
+  logs, status files, coverage output, and generated `var/agents/**` references.
+- User-global secret material is the explicit exception. Encrypted file fallback
+  secrets remain under `~/.gpt_trader/secrets` through
+  `path_registry.USER_SECRETS_DIR`; do not mix secrets into repo-local runtime
+  directories unless a migration plan covers permissions and compatibility.
+- Tests and temporary tooling should inject paths such as
+  `OptimizationStorage(base_dir=...)` or `SecretsManager(secrets_dir=...)`
+  instead of relying on the real user home.
+
 ## Implementation Status
 
 This section describes which surfaces are implemented in the codebase.

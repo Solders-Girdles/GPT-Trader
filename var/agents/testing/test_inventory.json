@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6762,
+    "total_tests": 6763,
     "total_files": 799,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6597,
+    "unit": 6598,
     "asyncio": 390,
     "parametrize": 191,
     "endpoints": 83,
@@ -32944,7 +32944,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py": [
       {
         "name": "test_record_closeout_attribution_for_filled_idea",
-        "line": 30,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -32952,7 +32952,7 @@
       },
       {
         "name": "test_record_closeout_attribution_for_expired_idea_without_profit_loss",
-        "line": 69,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -32960,7 +32960,7 @@
       },
       {
         "name": "test_record_closeout_attribution_rejects_non_terminal_idea",
-        "line": 93,
+        "line": 95,
         "markers": [
           "unit"
         ],
@@ -32968,7 +32968,7 @@
       },
       {
         "name": "test_record_closeout_attribution_rejects_unknown_idea",
-        "line": 110,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -32976,7 +32976,7 @@
       },
       {
         "name": "test_record_closeout_attribution_rejects_duplicate_conflict",
-        "line": 122,
+        "line": 124,
         "markers": [
           "unit"
         ],
@@ -32984,7 +32984,15 @@
       },
       {
         "name": "test_record_closeout_attribution_rejects_malformed_numeric_payload",
-        "line": 148,
+        "line": 150,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_persisted_closeout_log_rejects_non_object_max_loss_with_line_context",
+        "line": 168,
         "markers": [
           "unit"
         ],

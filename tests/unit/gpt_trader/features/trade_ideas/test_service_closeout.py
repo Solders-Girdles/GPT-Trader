@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -10,6 +11,7 @@ from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 from gpt_trader.features.trade_ideas import (
     ActorType,
     AuditAction,
+    CloseoutAttributionIntegrityError,
     CloseoutResolution,
     DuplicateCloseoutAttributionError,
     InvalidTransitionError,
@@ -161,3 +163,47 @@ def test_record_closeout_attribution_rejects_malformed_numeric_payload(
         )
 
     assert service.get_closeout_attribution(idea.decision_id) is None
+
+
+def test_persisted_closeout_log_rejects_non_object_max_loss_with_line_context(
+    service: TradeIdeaService,
+) -> None:
+    idea = build_trade_idea()
+    service.propose(idea, actor_id="idea-generator-v1")
+    expired = service.expire(idea.decision_id)
+    payload = {
+        "decision_id": idea.decision_id,
+        "timestamp": "2026-06-12T10:05:00+00:00",
+        "actor_type": "human",
+        "actor_id": "rj",
+        "terminal_event_id": expired.events[-1].event_id,
+        "record_hash": expired.events[-1].record_hash,
+        "resolution": CloseoutResolution.EXPIRY.value,
+        "realized_profit_loss_amount": None,
+        "realized_profit_loss_percent": None,
+        "realized_profit_loss_unavailable_reason": "Idea expired before entry fill",
+        "max_loss": None,
+        "evidence": [],
+    }
+    service.closeout_log.path.parent.mkdir(parents=True, exist_ok=True)
+    service.closeout_log.path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+
+    with pytest.raises(
+        CloseoutAttributionIntegrityError,
+        match="Closeout attribution log line 1 is malformed: max_loss must be a JSON object",
+    ) as log_exc_info:
+        service.closeout_log.read_records()
+    assert log_exc_info.value.context["field"] == "line"
+    assert log_exc_info.value.context["value"] == 1
+
+    with pytest.raises(
+        CloseoutAttributionIntegrityError,
+        match="Closeout attribution log line 1 is malformed: max_loss must be a JSON object",
+    ):
+        service.get(idea.decision_id)
+
+    with pytest.raises(
+        CloseoutAttributionIntegrityError,
+        match="Closeout attribution log line 1 is malformed: max_loss must be a JSON object",
+    ):
+        service.list_views()

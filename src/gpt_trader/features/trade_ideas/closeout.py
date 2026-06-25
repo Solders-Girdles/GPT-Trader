@@ -69,6 +69,12 @@ def _string_value(value: Any, field: str) -> str:
     return value
 
 
+def _object_payload(value: Any, field: str) -> Mapping[str, Any]:
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{field} must be a JSON object")
+    return value
+
+
 def _require_timezone_aware(value: datetime, field: str) -> None:
     if value.tzinfo is None or value.utcoffset() is None:
         raise ValueError(f"{field} must include a timezone")
@@ -97,6 +103,7 @@ class MaxLossSnapshot:
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> MaxLossSnapshot:
+        payload = _object_payload(payload, "max_loss")
         return cls(
             amount=_decimal_or_none(payload.get("amount"), "max_loss.amount"),
             percent_of_account=_decimal_or_none(
@@ -168,6 +175,7 @@ class CloseoutAttribution:
 
     @classmethod
     def from_dict(cls, payload: Mapping[str, Any]) -> CloseoutAttribution:
+        payload = _object_payload(payload, "closeout_attribution")
         return cls(
             decision_id=_string_value(payload["decision_id"], "decision_id"),
             timestamp=datetime.fromisoformat(_string_value(payload["timestamp"], "timestamp")),

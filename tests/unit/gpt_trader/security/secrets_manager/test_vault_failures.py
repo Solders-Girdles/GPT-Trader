@@ -101,6 +101,62 @@ class TestVaultFailures:
         assert manager.store_secret("test/secret", {"key": "value"}) is True
         assert (secrets_dir / "test_secret.enc").exists()
 
+    @pytest.mark.parametrize(
+        ("config_environment", "process_environment", "vault_address", "expected_match"),
+        (
+            ("production", None, None, "VAULT_ADDR must be set outside development"),
+            ("canary", "development", "http://vault.local", "https://"),
+        ),
+    )
+    def test_config_environment_drives_non_development_vault_fail_closed(
+        self,
+        secrets_runtime_settings: Any,
+        patched_require_fernet: None,
+        hvac_stub: Any,
+        monkeypatch: pytest.MonkeyPatch,
+        config_environment: str,
+        process_environment: str | None,
+        vault_address: str | None,
+        expected_match: str,
+    ) -> None:
+        config = secrets_runtime_settings.model_copy(update={"environment": config_environment})
+        if process_environment is None:
+            monkeypatch.delenv("ENV", raising=False)
+        else:
+            monkeypatch.setenv("ENV", process_environment)
+        monkeypatch.setenv("VAULT_TOKEN", "test-token")
+        if vault_address is None:
+            monkeypatch.delenv("VAULT_ADDR", raising=False)
+        else:
+            monkeypatch.setenv("VAULT_ADDR", vault_address)
+
+        with pytest.raises(VaultConfigurationError, match=expected_match) as error:
+            SecretsManager(vault_enabled=True, config=config)
+
+        assert f"environment '{config_environment}'" in str(error.value)
+
+    @pytest.mark.parametrize("config_environment", ("test", "local"))
+    def test_config_development_alias_allows_ephemeral_key_and_vault_fallback(
+        self,
+        secrets_runtime_settings: Any,
+        patched_require_fernet: None,
+        hvac_stub: Any,
+        monkeypatch: pytest.MonkeyPatch,
+        config_environment: str,
+    ) -> None:
+        config = secrets_runtime_settings.model_copy(update={"environment": config_environment})
+        monkeypatch.setenv("ENV", "production")
+        monkeypatch.delenv("GPT_TRADER_ENCRYPTION_KEY", raising=False)
+        monkeypatch.delenv("VAULT_ADDR", raising=False)
+        monkeypatch.delenv("VAULT_TOKEN", raising=False)
+
+        manager = SecretsManager(vault_enabled=True, config=config)
+
+        assert manager._environment == config_environment
+        assert manager._encryption_key_is_ephemeral is True
+        assert manager._vault_enabled is False
+        assert manager._vault_client is None
+
     def test_vault_store_failure(
         self,
         secrets_manager_with_vault: Any,

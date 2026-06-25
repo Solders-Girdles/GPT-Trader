@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6817,
+    "total_tests": 6819,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6652,
+    "unit": 6654,
     "asyncio": 411,
-    "parametrize": 193,
+    "parametrize": 195,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -43387,8 +43387,28 @@
         "class": "TestVaultFailures"
       },
       {
+        "name": "TestVaultFailures::test_config_environment_drives_non_development_vault_fail_closed",
+        "line": 111,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestVaultFailures"
+      },
+      {
+        "name": "TestVaultFailures::test_config_development_alias_allows_ephemeral_key_and_vault_fallback",
+        "line": 139,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestVaultFailures"
+      },
+      {
         "name": "TestVaultFailures::test_vault_store_failure",
-        "line": 104,
+        "line": 160,
         "markers": [
           "unit"
         ],
@@ -43397,7 +43417,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_retrieve_failure",
-        "line": 121,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -43406,7 +43426,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_list_failure",
-        "line": 132,
+        "line": 188,
         "markers": [
           "unit"
         ],
@@ -43415,7 +43435,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_delete_failure",
-        "line": 144,
+        "line": 200,
         "markers": [
           "unit"
         ],
@@ -43424,7 +43444,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_environment_configuration",
-        "line": 158,
+        "line": 214,
         "markers": [
           "unit"
         ],
@@ -43433,7 +43453,7 @@
       },
       {
         "name": "TestVaultFailures::test_vault_missing_environment_variables",
-        "line": 175,
+        "line": 231,
         "markers": [
           "unit"
         ],

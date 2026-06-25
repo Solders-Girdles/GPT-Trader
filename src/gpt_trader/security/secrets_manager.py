@@ -100,9 +100,8 @@ class SecretsManager:
         encryption_key = os.getenv("GPT_TRADER_ENCRYPTION_KEY")
 
         if not encryption_key:
-            # Generate new key for development
-            environment = os.getenv("ENV", "development").lower()
-            if environment == "development":
+            # Generate new key for development-like environments.
+            if self._is_development_environment():
                 fernet_cls = _require_fernet()
                 encryption_key = fernet_cls.generate_key().decode()
                 self._encryption_key_is_ephemeral = True
@@ -154,8 +153,11 @@ class SecretsManager:
             return dict(payload)
         return None
 
-    @staticmethod
-    def _current_environment() -> str:
+    def _current_environment(self) -> str:
+        if self._config is not None:
+            config_environment = (self._config.environment or "").strip().lower()
+            if config_environment:
+                return config_environment
         return os.getenv("ENV", "development").strip().lower() or "development"
 
     def _is_development_environment(self) -> bool:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import sqlite3
+import threading
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from pathlib import Path
@@ -23,6 +25,43 @@ class TestOrdersStore:
 
             db_path = Path(tmpdir) / "orders.db"
             assert db_path.exists()
+            store.close()
+
+    def test_explicit_close_allows_reinitialize_and_reuse(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            store.initialize()
+            store.close()
+
+            order = create_test_order()
+            result = store.save_order(order)
+
+            assert result.success is True
+            assert store.get_order(order.order_id) is not None
+            store.close()
+
+    def test_close_releases_thread_local_connections(self) -> None:
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            store.initialize()
+            main_connection = store._get_connection()
+            worker_connections: list[sqlite3.Connection] = []
+
+            def save_in_worker() -> None:
+                store.save_order(create_test_order(order_id="worker-order"))
+                worker_connections.append(store._get_connection())
+
+            worker = threading.Thread(target=save_in_worker)
+            worker.start()
+            worker.join()
+
+            assert len(worker_connections) == 1
+
+            store.close()
+
+            for connection in [main_connection, *worker_connections]:
+                with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+                    connection.execute("SELECT 1")
 
     def test_save_and_get_order(self) -> None:
         with TemporaryDirectory() as tmpdir:

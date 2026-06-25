@@ -13,6 +13,7 @@ from __future__ import annotations
 import json
 import sqlite3
 import threading
+from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -186,23 +187,52 @@ class OrdersStore:
         self.storage_path = Path(storage_path)
         self._database_path = self.storage_path / "orders.db"
         self._lock = threading.Lock()
+        self._connection_lock = threading.Lock()
+        self._connections: dict[tuple[int, int], sqlite3.Connection] = {}
+        self._connection_generation = 0
         self._initialized = False
         self._local = threading.local()
 
     def _get_connection(self) -> sqlite3.Connection:
         """Get thread-local database connection."""
-        if not hasattr(self._local, "connection"):
-            connection = sqlite3.connect(
-                str(self._database_path),
-                check_same_thread=False,
-                isolation_level=None,  # Autocommit mode
-            )
+        connection: sqlite3.Connection | None = getattr(self._local, "connection", None)
+        connection_generation: int | None = getattr(self._local, "connection_generation", None)
+        if connection is not None and connection_generation == self._connection_generation:
+            return connection
+
+        if connection is not None:
+            with suppress(sqlite3.Error):
+                connection.close()
+            del self._local.connection
+            if hasattr(self._local, "connection_generation"):
+                del self._local.connection_generation
+
+        with self._connection_lock:
+            generation = self._connection_generation
+
+        connection = sqlite3.connect(
+            str(self._database_path),
+            check_same_thread=False,
+            isolation_level=None,  # Autocommit mode
+        )
+        try:
             connection.execute("PRAGMA journal_mode=WAL")
             connection.execute("PRAGMA synchronous=NORMAL")
             connection.execute("PRAGMA busy_timeout=5000")
             connection.row_factory = sqlite3.Row
+
+            with self._connection_lock:
+                if generation != self._connection_generation:
+                    connection.close()
+                    return self._get_connection()
+                self._connections[(threading.get_ident(), generation)] = connection
+
             self._local.connection = connection
-        return self._local.connection  # type: ignore[no-any-return]
+            self._local.connection_generation = generation
+            return connection
+        except Exception:
+            connection.close()
+            raise
 
     def initialize(self, *, check_integrity: bool = True) -> None:
         """
@@ -736,10 +766,29 @@ class OrdersStore:
         )
 
     def close(self) -> None:
-        """Close database connection for current thread."""
+        """
+        Close all SQLite connections created by this store.
+
+        `OrdersStore` keeps one connection per thread. Explicit close is required
+        for initialize-only or short-lived usage so Windows can release
+        `orders.db` and its WAL side files before cleanup or rotation.
+        """
+        with self._connection_lock:
+            connections = list(self._connections.values())
+            self._connections.clear()
+            self._connection_generation += 1
+
+        for connection in connections:
+            with suppress(sqlite3.Error):
+                connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+            with suppress(sqlite3.Error):
+                connection.close()
+
         if hasattr(self._local, "connection"):
-            self._local.connection.close()
             del self._local.connection
+        if hasattr(self._local, "connection_generation"):
+            del self._local.connection_generation
+        self._initialized = False
 
     def __enter__(self) -> OrdersStore:
         """Context manager entry."""

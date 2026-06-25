@@ -43,6 +43,8 @@ jobs:
       - name: Checkout code
         # actions/checkout@v7
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Set up Docker Buildx
         # docker/setup-buildx-action@v4
@@ -94,7 +96,7 @@ jobs:
           echo "image=$first_tag" >> "$GITHUB_OUTPUT"
 
       - name: Run Trivy vulnerability scanner
-        # aquasecurity/trivy-action@master
+        # aquasecurity/trivy-action pinned to audited commit
         uses: aquasecurity/trivy-action@cf5c088a69634cd13ccddc735d7926162c31f9a6
         with:
           image-ref: ${{ steps.scan-target.outputs.image }}
@@ -123,6 +125,8 @@ jobs:
       - name: Checkout code
         # actions/checkout@v7
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Configure AWS credentials
         # aws-actions/configure-aws-credentials@v6
@@ -162,6 +166,8 @@ jobs:
       - name: Checkout code
         # actions/checkout@v7
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Configure AWS credentials
         # aws-actions/configure-aws-credentials@v6

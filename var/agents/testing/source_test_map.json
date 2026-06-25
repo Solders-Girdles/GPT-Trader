@@ -2039,6 +2039,7 @@
       "tests/unit/gpt_trader/tui/widgets/test_validation_indicator.py"
     ],
     "gpt_trader.utilities": [
+      "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns.py",
       "tests/unit/gpt_trader/utilities/test_logging_patterns_domain.py"
     ],
@@ -2055,6 +2056,8 @@
       "tests/unit/gpt_trader/utilities/test_backoff_policy.py"
     ],
     "gpt_trader.utilities.console_logging": [
+      "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py",
+      "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_edges.py",
       "tests/unit/gpt_trader/utilities/test_console_logging.py",
       "tests/unit/gpt_trader/utilities/test_console_logging_functions.py"
     ],
@@ -4075,11 +4078,14 @@
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py": [
       "gpt_trader.monitoring.alert_types",
       "gpt_trader.monitoring.notifications",
-      "gpt_trader.monitoring.notifications.backends"
+      "gpt_trader.monitoring.notifications.backends",
+      "gpt_trader.utilities",
+      "gpt_trader.utilities.console_logging"
     ],
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_edges.py": [
       "gpt_trader.monitoring.alert_types",
-      "gpt_trader.monitoring.notifications.backends"
+      "gpt_trader.monitoring.notifications.backends",
+      "gpt_trader.utilities.console_logging"
     ],
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_service.py": [
       "gpt_trader.monitoring.alert_types",

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import tempfile
+from io import StringIO
 from pathlib import Path
 from typing import Any
 
@@ -15,6 +16,8 @@ from gpt_trader.monitoring.notifications.backends import (
     ConsoleNotificationBackend,
     FileNotificationBackend,
 )
+from gpt_trader.utilities import console_logging as console_logging_module
+from gpt_trader.utilities.console_logging import ConsoleLogger
 
 
 class TestConsoleNotificationBackend:
@@ -32,8 +35,10 @@ class TestConsoleNotificationBackend:
         assert backend.is_enabled is False
 
     @pytest.mark.asyncio
-    async def test_send_prints_to_console(self, capsys) -> None:
-        backend = ConsoleNotificationBackend(use_colors=False)
+    async def test_send_writes_to_project_console_sink(self, capsys) -> None:
+        output_stream = StringIO()
+        output_sink = ConsoleLogger(output_stream=output_stream)
+        backend = ConsoleNotificationBackend(use_colors=False, output_sink=output_sink)
         alert = Alert(
             severity=AlertSeverity.WARNING,
             title="Test Alert",
@@ -44,9 +49,53 @@ class TestConsoleNotificationBackend:
 
         assert result is True
         captured = capsys.readouterr()
-        assert "WARNING" in captured.out
-        assert "Test Alert" in captured.out
-        assert "This is a test message" in captured.out
+        assert captured.out == ""
+        output = output_stream.getvalue()
+        assert "WARNING" in output
+        assert "Test Alert" in output
+        assert "This is a test message" in output
+
+    @pytest.mark.asyncio
+    async def test_send_uses_default_console_sink_for_cli_fallback(self, capsys) -> None:
+        console_logging_module._console_logger = None
+        try:
+            backend = ConsoleNotificationBackend(use_colors=False)
+            alert = Alert(
+                severity=AlertSeverity.WARNING,
+                title="Fallback Alert",
+                message="This is a fallback message",
+            )
+
+            result = await backend.send(alert)
+
+            assert result is True
+            captured = capsys.readouterr()
+            assert "WARNING" in captured.out
+            assert "Fallback Alert" in captured.out
+            assert "This is a fallback message" in captured.out
+        finally:
+            console_logging_module._console_logger = None
+
+    @pytest.mark.asyncio
+    async def test_send_default_sink_does_not_reuse_cached_stdout(self, capsys) -> None:
+        stale_stream = StringIO()
+        console_logging_module._console_logger = ConsoleLogger(output_stream=stale_stream)
+        try:
+            backend = ConsoleNotificationBackend(use_colors=False)
+            alert = Alert(
+                severity=AlertSeverity.WARNING,
+                title="Fresh Stdout Alert",
+                message="This should use the active stdout stream",
+            )
+
+            result = await backend.send(alert)
+
+            assert result is True
+            captured = capsys.readouterr()
+            assert "Fresh Stdout Alert" in captured.out
+            assert stale_stream.getvalue() == ""
+        finally:
+            console_logging_module._console_logger = None
 
     @pytest.mark.asyncio
     async def test_send_filters_by_severity(self, capsys) -> None:

@@ -24,6 +24,10 @@ class ConsoleLogger(UnifiedLogger):
             output_stream=output_stream,
         )
 
+    def write(self, message: str) -> bool:
+        """Emit a preformatted console message through the configured output stream."""
+        return self._write(message)
+
 
 # Global console logger instance
 _console_logger: ConsoleLogger | None = None

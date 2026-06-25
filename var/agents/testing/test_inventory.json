@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6802,
+    "total_tests": 6804,
     "total_files": 803,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6637,
-    "asyncio": 409,
+    "unit": 6639,
+    "asyncio": 411,
     "parametrize": 193,
     "endpoints": 83,
     "property": 82,
@@ -35526,7 +35526,7 @@
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py": [
       {
         "name": "TestConsoleNotificationBackend::test_name_property",
-        "line": 23,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -35535,7 +35535,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_is_enabled_property",
-        "line": 27,
+        "line": 30,
         "markers": [
           "unit"
         ],
@@ -35543,8 +35543,28 @@
         "class": "TestConsoleNotificationBackend"
       },
       {
-        "name": "TestConsoleNotificationBackend::test_send_prints_to_console",
-        "line": 35,
+        "name": "TestConsoleNotificationBackend::test_send_writes_to_project_console_sink",
+        "line": 38,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestConsoleNotificationBackend"
+      },
+      {
+        "name": "TestConsoleNotificationBackend::test_send_uses_default_console_sink_for_cli_fallback",
+        "line": 59,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestConsoleNotificationBackend"
+      },
+      {
+        "name": "TestConsoleNotificationBackend::test_send_default_sink_does_not_reuse_cached_stdout",
+        "line": 80,
         "markers": [
           "asyncio",
           "unit"
@@ -35554,7 +35574,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_send_filters_by_severity",
-        "line": 52,
+        "line": 101,
         "markers": [
           "asyncio",
           "unit"
@@ -35564,7 +35584,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_test_connection_always_true",
-        "line": 67,
+        "line": 116,
         "markers": [
           "asyncio",
           "unit"
@@ -35574,7 +35594,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_name_property",
-        "line": 76,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -35583,7 +35603,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_send_writes_to_file",
-        "line": 81,
+        "line": 130,
         "markers": [
           "asyncio",
           "unit"
@@ -35593,7 +35613,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_checks_writability",
-        "line": 103,
+        "line": 152,
         "markers": [
           "asyncio",
           "unit"
@@ -35603,7 +35623,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_checks_existing_target_directly",
-        "line": 117,
+        "line": 166,
         "markers": [
           "asyncio",
           "unit"
@@ -35613,7 +35633,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_rejects_trailing_separator_file_path",
-        "line": 128,
+        "line": 177,
         "markers": [
           "asyncio",
           "unit"
@@ -35623,7 +35643,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_checks_broken_symlink_target_parent",
-        "line": 141,
+        "line": 190,
         "markers": [
           "asyncio",
           "unit"
@@ -35633,7 +35653,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_checks_missing_symlink_target_without_creating_it",
-        "line": 156,
+        "line": 205,
         "markers": [
           "asyncio",
           "unit"
@@ -35643,7 +35663,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_creates_parent_without_alert_file",
-        "line": 174,
+        "line": 223,
         "markers": [
           "asyncio",
           "unit"
@@ -35653,7 +35673,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_handles_long_missing_file_name_without_alert_file",
-        "line": 186,
+        "line": 235,
         "markers": [
           "asyncio",
           "unit"
@@ -35663,7 +35683,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_offloads_file_check_to_thread",
-        "line": 201,
+        "line": 250,
         "markers": [
           "asyncio",
           "unit"
@@ -35673,7 +35693,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_fails_for_invalid_path",
-        "line": 225,
+        "line": 274,
         "markers": [
           "asyncio",
           "unit"
@@ -35685,7 +35705,7 @@
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_edges.py": [
       {
         "name": "test_console_backend_handles_empty_or_nonprintable_messages",
-        "line": 19,
+        "line": 21,
         "markers": [
           "asyncio",
           "parametrize",
@@ -35695,7 +35715,7 @@
       },
       {
         "name": "test_file_backend_handles_json_serialization_failure",
-        "line": 36,
+        "line": 43,
         "markers": [
           "asyncio",
           "unit"
@@ -35704,7 +35724,7 @@
       },
       {
         "name": "test_file_backend_nested_path_creates_parents_and_writes_jsonl",
-        "line": 55,
+        "line": 62,
         "markers": [
           "asyncio",
           "unit"
@@ -35713,7 +35733,7 @@
       },
       {
         "name": "test_file_backend_test_connection_creates_parent_without_alert_file",
-        "line": 77,
+        "line": 84,
         "markers": [
           "asyncio",
           "unit"

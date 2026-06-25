@@ -75,6 +75,7 @@ def build_trade_idea_track_record_report(
 def format_trade_idea_track_record_report(report: Mapping[str, Any]) -> str:
     """Render a compact text report for operators."""
     proposal_volume = report["proposal_volume"]
+    monthly = proposal_volume["by_month"]
     workflow = report["workflow"]
     quality = report["quality"]
     closeouts = report["closeouts"]
@@ -133,6 +134,14 @@ def format_trade_idea_track_record_report(report: Mapping[str, Any]) -> str:
             f"across {profit_loss['max_loss_comparison']['comparable_count']} comparable closeouts"
         ),
     ]
+    if monthly:
+        lines.extend(
+            [
+                "",
+                "Monthly",
+                *_monthly_lines(monthly),
+            ]
+        )
     return "\n".join(lines)
 
 
@@ -401,3 +410,15 @@ def _counts_line(label: str, counts: Mapping[str, Any]) -> str:
     if not counts:
         return f"{label}: none"
     return f"{label}: " + ", ".join(f"{key}={value}" for key, value in counts.items())
+
+
+def _monthly_lines(monthly: Mapping[str, Mapping[str, Any]]) -> list[str]:
+    return [
+        (
+            f"{month}: ideas={bucket['idea_count']}, "
+            f"approval_rate={bucket['approval_rate_pct']}%, "
+            f"closeout_coverage={bucket['closeout_coverage_rate_pct']}%, "
+            f"realized_profit_loss={bucket['realized_profit_loss_amount']}"
+        )
+        for month, bucket in monthly.items()
+    ]

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6772,
-    "total_files": 800,
+    "total_tests": 6780,
+    "total_files": 801,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6607,
+    "unit": 6615,
     "asyncio": 390,
     "parametrize": 193,
     "endpoints": 83,
@@ -238,7 +238,8 @@
       "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/gpt_trader/config/test_bot_config_position_object_handling.py",
       "tests/unit/gpt_trader/config/test_config_utilities.py",
-      "tests/unit/gpt_trader/config/test_env_utils.py"
+      "tests/unit/gpt_trader/config/test_env_utils.py",
+      "tests/unit/gpt_trader/config/test_path_registry.py"
     ],
     "core": [
       "tests/unit/gpt_trader/core/math/test_incremental.py",
@@ -9272,7 +9273,15 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_report.py": [
       {
         "name": "test_report_empty_store_returns_zero_counts",
-        "line": 64,
+        "line": 71,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_empty_store_text_omits_monthly_section_and_stays_read_only",
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -9280,7 +9289,15 @@
       },
       {
         "name": "test_report_summarizes_workflow_quality_closeouts_and_profit_loss",
-        "line": 83,
+        "line": 107,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_text_includes_monthly_trend_buckets_and_is_read_only",
+        "line": 198,
         "markers": [
           "unit"
         ],
@@ -9288,7 +9305,7 @@
       },
       {
         "name": "test_report_missing_closeout_coverage_lists_terminal_ids",
-        "line": 174,
+        "line": 244,
         "markers": [
           "unit"
         ],
@@ -9296,7 +9313,7 @@
       },
       {
         "name": "test_report_classifies_percent_only_closeout_outcomes_without_amount_totals",
-        "line": 195,
+        "line": 265,
         "markers": [
           "unit"
         ],
@@ -9304,7 +9321,7 @@
       },
       {
         "name": "test_report_is_read_only_and_does_not_seed_budget",
-        "line": 242,
+        "line": 312,
         "markers": [
           "unit"
         ],
@@ -10566,6 +10583,16 @@
       {
         "name": "test_parse_env_mapping_skips_empty_entries_when_allowed",
         "line": 146,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/config/test_path_registry.py": [
+      {
+        "name": "test_runtime_artifact_policy_constants_are_grouped_by_ownership",
+        "line": 4,
         "markers": [
           "unit"
         ],
@@ -30506,7 +30533,7 @@
     "tests/unit/gpt_trader/features/optimize/persistence/test_storage_edges.py": [
       {
         "name": "test_run_to_dict_serializes_datetimes_and_config",
-        "line": 51,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -30514,7 +30541,7 @@
       },
       {
         "name": "test_run_from_dict_returns_config_dict_and_no_trials",
-        "line": 61,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -30522,7 +30549,7 @@
       },
       {
         "name": "test_serialize_config_accepts_dict_and_config",
-        "line": 79,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -30530,7 +30557,7 @@
       },
       {
         "name": "test_serialize_trial_with_missing_metrics",
-        "line": 89,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -30538,7 +30565,7 @@
       },
       {
         "name": "test_serialize_trial_with_partial_metrics",
-        "line": 105,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -30546,7 +30573,7 @@
       },
       {
         "name": "test_serialize_trial_with_full_metrics",
-        "line": 128,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -30554,7 +30581,31 @@
       },
       {
         "name": "test_storage_save_run_writes_results_file",
-        "line": 153,
+        "line": 157,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_storage_default_uses_registry_runtime_dir",
+        "line": 168,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_storage_load_run_falls_back_to_legacy_default_dir",
+        "line": 184,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_storage_explicit_base_dir_does_not_use_legacy_default_dir",
+        "line": 205,
         "markers": [
           "unit"
         ],
@@ -30562,7 +30613,7 @@
       },
       {
         "name": "test_storage_load_run_missing_and_invalid_json",
-        "line": 164,
+        "line": 224,
         "markers": [
           "unit"
         ],
@@ -30570,7 +30621,15 @@
       },
       {
         "name": "test_storage_list_runs_sorted_by_started_at",
-        "line": 175,
+        "line": 235,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_storage_list_runs_includes_legacy_default_dir",
+        "line": 267,
         "markers": [
           "unit"
         ],
@@ -42643,7 +42702,7 @@
     "tests/unit/gpt_trader/security/secrets_manager/test_file_basic.py": [
       {
         "name": "TestFileBasics::test_file_store_success",
-        "line": 14,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -42652,7 +42711,7 @@
       },
       {
         "name": "TestFileBasics::test_file_retrieve_success",
-        "line": 32,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -42661,7 +42720,7 @@
       },
       {
         "name": "TestFileBasics::test_file_delete_success",
-        "line": 43,
+        "line": 48,
         "markers": [
           "unit"
         ],
@@ -42670,7 +42729,7 @@
       },
       {
         "name": "TestFileBasics::test_file_list_success",
-        "line": 60,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -42679,7 +42738,7 @@
       },
       {
         "name": "TestFileBasics::test_file_retrieve_missing_secret",
-        "line": 76,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -42688,7 +42747,7 @@
       },
       {
         "name": "TestFileBasics::test_file_delete_missing_secret",
-        "line": 80,
+        "line": 85,
         "markers": [
           "unit"
         ],
@@ -42697,7 +42756,7 @@
       },
       {
         "name": "TestFileBasics::test_file_path_sanitization",
-        "line": 84,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -42706,7 +42765,16 @@
       },
       {
         "name": "TestFileBasics::test_file_directory_creation",
-        "line": 95,
+        "line": 100,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestFileBasics"
+      },
+      {
+        "name": "TestFileBasics::test_default_file_storage_uses_registry_secret_dir",
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -42715,7 +42783,7 @@
       },
       {
         "name": "TestFileBasics::test_file_encryption_roundtrip",
-        "line": 106,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -42724,7 +42792,7 @@
       },
       {
         "name": "TestFileBasics::test_file_overwrite_existing",
-        "line": 120,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -42733,7 +42801,7 @@
       },
       {
         "name": "TestFileBasics::test_file_invalid_path_characters",
-        "line": 131,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -42742,7 +42810,7 @@
       },
       {
         "name": "TestFileBasics::test_file_permissions_handling",
-        "line": 149,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -42751,7 +42819,7 @@
       },
       {
         "name": "TestFileBasics::test_file_storage_with_different_data_types",
-        "line": 161,
+        "line": 189,
         "markers": [
           "unit"
         ],
@@ -42760,7 +42828,7 @@
       },
       {
         "name": "TestFileBasics::test_file_storage_empty_secret",
-        "line": 178,
+        "line": 206,
         "markers": [
           "unit"
         ],

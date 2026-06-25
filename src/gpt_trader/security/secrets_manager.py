@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.app.config import BotConfig
+from gpt_trader.config import path_registry
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
@@ -71,7 +72,9 @@ class SecretsManager:
         self._vault_client: Any | None = None
         self._vault_enabled = vault_enabled
         self._config = config
-        self._secrets_dir = secrets_dir or (Path.home() / ".gpt_trader" / "secrets")
+        self._secrets_dir = (
+            Path(secrets_dir) if secrets_dir is not None else path_registry.USER_SECRETS_DIR
+        )
         self._initialize_encryption()
 
         if vault_enabled:

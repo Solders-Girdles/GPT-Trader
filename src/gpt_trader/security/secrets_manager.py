@@ -10,6 +10,7 @@ import base64
 
 # Removed unused imports - Fernet handles encryption directly
 import hashlib
+import hmac
 import json
 import os
 import threading
@@ -80,6 +81,7 @@ class SecretsManager:
         self._lock = threading.RLock()
         self._cipher_suite: FernetType | None = None
         self._encryption_key_is_ephemeral = False
+        self._log_fingerprint_key: bytes | None = None
         self._secrets_cache: dict[str, dict[str, Any]] = {}
         self._vault_client: Any | None = None
         self._vault_enabled = vault_enabled
@@ -134,6 +136,9 @@ class SecretsManager:
                 key_material = encryption_key
 
             self._cipher_suite = fernet_cls(key_material)
+            self._log_fingerprint_key = hashlib.sha256(
+                b"gpt-trader-secrets-log-ref-v1:" + bytes(key_material)
+            ).digest()
         except Exception as e:
             raise ValueError(f"Invalid encryption key: {e}")
 
@@ -155,17 +160,20 @@ class SecretsManager:
             return dict(payload)
         return None
 
-    @staticmethod
-    def _fingerprint_for_log(value: str) -> str:
-        return hashlib.sha256(value.encode("utf-8")).hexdigest()[:LOG_FINGERPRINT_LENGTH]
+    def _fingerprint_for_log(self, value: str) -> str:
+        if self._log_fingerprint_key is None:
+            raise RuntimeError("Log fingerprinting key not initialised")
+        return hmac.new(
+            self._log_fingerprint_key,
+            value.encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()[:LOG_FINGERPRINT_LENGTH]
 
-    @classmethod
-    def _secret_log_ref(cls, path: str) -> str:
-        return f"secret:{cls._fingerprint_for_log(str(path))}"
+    def _secret_log_ref(self, path: str) -> str:
+        return f"secret:{self._fingerprint_for_log(str(path))}"
 
-    @classmethod
-    def _encrypted_file_log_ref(cls, file_path: Path) -> str:
-        return f"encrypted-file:{cls._fingerprint_for_log(str(file_path))}"
+    def _encrypted_file_log_ref(self, file_path: Path) -> str:
+        return f"encrypted-file:{self._fingerprint_for_log(str(file_path))}"
 
     def _current_environment(self) -> str:
         if self._config is not None:

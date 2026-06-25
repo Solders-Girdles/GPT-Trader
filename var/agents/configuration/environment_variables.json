@@ -761,7 +761,7 @@
       ],
       "code_references": [
         {
-          "line": 175,
+          "line": 183,
           "path": "src/gpt_trader/security/secrets_manager.py",
           "reader": "os.getenv"
         }
@@ -867,7 +867,7 @@
       ],
       "code_references": [
         {
-          "line": 88,
+          "line": 90,
           "path": "src/gpt_trader/security/secrets_manager.py",
           "reader": "parse_bool_env"
         }
@@ -1050,7 +1050,7 @@
       ],
       "code_references": [
         {
-          "line": 102,
+          "line": 104,
           "path": "src/gpt_trader/security/secrets_manager.py",
           "reader": "os.getenv"
         }
@@ -3250,7 +3250,7 @@
       ],
       "code_references": [
         {
-          "line": 316,
+          "line": 324,
           "path": "src/gpt_trader/security/secrets_manager.py",
           "reader": "os.getenv"
         }
@@ -3273,7 +3273,7 @@
       ],
       "code_references": [
         {
-          "line": 343,
+          "line": 351,
           "path": "src/gpt_trader/security/secrets_manager.py",
           "reader": "os.getenv"
         }

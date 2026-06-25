@@ -43270,7 +43270,7 @@
     "tests/unit/gpt_trader/security/secrets_manager/test_log_redaction.py": [
       {
         "name": "test_file_store_and_load_logs_redact_secret_namespace_and_file_path",
-        "line": 24,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -43278,7 +43278,7 @@
       },
       {
         "name": "test_file_read_error_logs_redact_secret_namespace_and_os_error_path",
-        "line": 54,
+        "line": 63,
         "markers": [
           "unit"
         ],

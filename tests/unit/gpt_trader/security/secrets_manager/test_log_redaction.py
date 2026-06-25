@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import hashlib
 import logging
+import re
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 LOGGER_NAME = "gpt_trader.security.secrets_manager"
+LOG_REF_PATTERN = re.compile(r"\b(?:secret|encrypted-file):[0-9a-f]{12}\b")
 
 
 def _captured_log_text(caplog: pytest.LogCaptureFixture) -> str:
@@ -39,6 +42,9 @@ def test_file_store_and_load_logs_redact_secret_namespace_and_file_path(
         assert manager.get_secret("brokers/coinbase-missing") is None
 
     captured_logs = _captured_log_text(caplog)
+    raw_secret_digest = hashlib.sha256(secret_path.encode("utf-8")).hexdigest()[:12]
+    raw_file_digest = hashlib.sha256(str(expected_file).encode("utf-8")).hexdigest()[:12]
+
     assert secret_path not in captured_logs
     assert str(expected_file) not in captured_logs
     assert "brokers_coinbase.enc" not in captured_logs
@@ -46,6 +52,9 @@ def test_file_store_and_load_logs_redact_secret_namespace_and_file_path(
     assert "test-secret-456" not in captured_logs
     assert "secret:" in captured_logs
     assert "encrypted-file:" in captured_logs
+    assert f"secret:{raw_secret_digest}" not in captured_logs
+    assert f"encrypted-file:{raw_file_digest}" not in captured_logs
+    assert LOG_REF_PATTERN.search(captured_logs) is not None
     assert "Successfully wrote encrypted secret file" in caplog.messages
     assert "Successfully decrypted and loaded secret" in caplog.messages
     assert "Encrypted secret file does not exist" in caplog.messages
@@ -77,9 +86,15 @@ def test_file_read_error_logs_redact_secret_namespace_and_os_error_path(
         assert manager.get_secret(secret_path) is None
 
     captured_logs = _captured_log_text(caplog)
+    raw_secret_digest = hashlib.sha256(secret_path.encode("utf-8")).hexdigest()[:12]
+    raw_file_digest = hashlib.sha256(str(expected_file).encode("utf-8")).hexdigest()[:12]
+
     assert secret_path not in captured_logs
     assert str(expected_file) not in captured_logs
     assert "brokers_coinbase.enc" not in captured_logs
     assert "secret-value" not in captured_logs
+    assert f"secret:{raw_secret_digest}" not in captured_logs
+    assert f"encrypted-file:{raw_file_digest}" not in captured_logs
+    assert LOG_REF_PATTERN.search(captured_logs) is not None
     assert "Failed to read encrypted secret file" in caplog.messages
     assert "OSError" in captured_logs

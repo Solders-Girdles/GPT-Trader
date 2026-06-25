@@ -60,7 +60,7 @@ class TickerCache:
             ticker = self._cache.get(symbol)
             if not ticker:
                 return True
-            return (self._clock.now() - ticker.ts).total_seconds() > self.ttl
+            return (self._clock.now() - ticker.ts).total_seconds() >= self.ttl
 
 
 class CoinbaseTickerService:

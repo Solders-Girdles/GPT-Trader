@@ -42,18 +42,21 @@ jobs:
       publication_branch: ${{ env.AGENT_ARTIFACTS_BRANCH }}
     steps:
       - name: Checkout source ref
-        uses: actions/checkout@v7
+        # actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           ref: ${{ env.SOURCE_REF }}
           fetch-depth: 0
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
+        # astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b
         with:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        # actions/setup-python@v6
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version-file: ".python-version"
 
@@ -117,7 +120,8 @@ jobs:
           fi
 
       - name: Upload packaged agent artifacts
-        uses: actions/upload-artifact@v7
+        # actions/upload-artifact@v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: ${{ steps.package.outputs.package_name }}
           path: |
@@ -188,7 +192,8 @@ jobs:
     needs: refresh
     steps:
       - name: Checkout workflow scripts
-        uses: actions/checkout@v7
+        # actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           ref: ${{ env.SOURCE_REF }}
 

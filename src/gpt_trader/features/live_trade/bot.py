@@ -635,7 +635,7 @@ class TradingBot:
             average_fill_price=self._decimal_or_none(payload.get("average_fill_price")),
             created_at=now,
             updated_at=now,
-            bot_id=str(getattr(self.config, "bot_id", "trading-bot")),
+            bot_id=self._emergency_close_bot_id(),
             metadata=metadata,
         )
         try:
@@ -648,6 +648,9 @@ class TradingBot:
                 order_id=str(order_id),
                 client_order_id=str(client_order_id),
             )
+
+    def _emergency_close_bot_id(self) -> str:
+        return str(self.context.bot_id or self.context.config.profile or "live")
 
     @staticmethod
     def _emergency_close_store_status(

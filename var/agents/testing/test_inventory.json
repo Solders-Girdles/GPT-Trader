@@ -27198,7 +27198,7 @@
       },
       {
         "name": "test_flatten_and_stop_links_partial_failure_audit_events",
-        "line": 112,
+        "line": 113,
         "markers": [
           "asyncio",
           "unit"
@@ -27207,7 +27207,7 @@
       },
       {
         "name": "test_flatten_and_stop_avoids_filled_record_without_fill_quantity",
-        "line": 184,
+        "line": 185,
         "markers": [
           "asyncio",
           "unit"
@@ -27216,7 +27216,7 @@
       },
       {
         "name": "test_flatten_and_stop_threads_operation_id_into_failure_logs",
-        "line": 232,
+        "line": 233,
         "markers": [
           "asyncio",
           "unit"
@@ -27225,7 +27225,7 @@
       },
       {
         "name": "test_flatten_and_stop_treats_rejected_close_response_as_failed",
-        "line": 269,
+        "line": 270,
         "markers": [
           "asyncio",
           "unit"

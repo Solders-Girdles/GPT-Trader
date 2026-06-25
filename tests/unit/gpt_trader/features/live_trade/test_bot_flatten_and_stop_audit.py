@@ -58,7 +58,7 @@ async def test_flatten_and_stop_persists_submitted_close_order_audit(
     engine = _install_mock_engine(monkeypatch)
 
     bot = TradingBot(
-        config=BotConfig(symbols=["BTC-USD"], interval=1),
+        config=BotConfig(symbols=["BTC-USD"], interval=1, profile="canary"),
         container=container,
     )
     bot._broker_calls = _DirectBrokerCalls()
@@ -104,6 +104,7 @@ async def test_flatten_and_stop_persists_submitted_close_order_audit(
     assert order_record.status.value == "filled"
     assert order_record.filled_quantity == Decimal("1")
     assert order_record.average_fill_price == Decimal("50000.12")
+    assert order_record.bot_id == "canary"
     assert order_record.metadata["source"] == "emergency_flatten"
     assert order_record.metadata["flatten_operation_id"] == audit_payload["flatten_operation_id"]
 

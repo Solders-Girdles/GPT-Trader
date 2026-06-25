@@ -180,6 +180,22 @@ class TestMetricsPublisherWriteHealthStatus:
             assert data["ok"] is False
             assert data["error"] == "Connection lost"
 
+    def test_handles_health_status_write_errors(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        metrics_logger: MagicMock,
+        publisher: MetricsPublisher,
+    ) -> None:
+        blocking_file = tmp_path / "not-a-directory"
+        blocking_file.write_text("blocks directory creation")
+        monkeypatch.setattr(publisher, "_target_dirs", lambda: [blocking_file])
+
+        publisher.write_health_status(ok=False, error="disk unavailable")
+
+        metrics_logger.debug.assert_called_once()
+        assert not (blocking_file / "health.json").exists()
+
 
 class TestTargetDirs:
     """Tests for MetricsPublisher._target_dirs method."""

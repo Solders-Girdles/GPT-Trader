@@ -32,15 +32,15 @@ class PolicyViolationError(ValidationError):
         self.violations = violations or []
 
 
-BOUNDED_AUTONOMY_AI_APPROVAL_VIOLATION = (
-    "Autonomy mode 'bounded_autonomy' does not permit AI approvals until a "
+BOUNDED_AUTONOMY_NON_HUMAN_APPROVAL_VIOLATION = (
+    "Autonomy mode 'bounded_autonomy' does not permit non-human approvals until a "
     "strategy envelope, kill-switch evidence, and audit evidence are modeled "
     "or a later decision packet scopes a narrower exception"
 )
-BOUNDED_AUTONOMY_AI_BUDGET_CHANGE_VIOLATION = (
-    "Autonomy mode 'bounded_autonomy' does not permit AI budget changes until "
-    "a budget meta-envelope is modeled or a later decision packet scopes a "
-    "narrower exception"
+BOUNDED_AUTONOMY_NON_HUMAN_BUDGET_CHANGE_VIOLATION = (
+    "Autonomy mode 'bounded_autonomy' does not permit non-human budget changes "
+    "until a budget meta-envelope is modeled or a later decision packet scopes "
+    "a narrower exception"
 )
 
 
@@ -74,8 +74,14 @@ class ApprovalPolicy:
                     "Autonomy mode 'human_approved_execution' requires a human approver; "
                     f"got actor_type '{actor_type.value}'"
                 )
-        elif self._autonomy_mode is AutonomyMode.BOUNDED_AUTONOMY and actor_type is ActorType.AI:
-            violations.append(BOUNDED_AUTONOMY_AI_APPROVAL_VIOLATION)
+        elif (
+            self._autonomy_mode is AutonomyMode.BOUNDED_AUTONOMY
+            and actor_type is not ActorType.HUMAN
+        ):
+            violations.append(
+                BOUNDED_AUTONOMY_NON_HUMAN_APPROVAL_VIOLATION
+                + f"; got actor_type '{actor_type.value}'"
+            )
 
         violations.extend(evaluate_eligibility(idea))
 
@@ -146,7 +152,7 @@ class ApprovalPolicy:
             if actor_type is ActorType.HUMAN:
                 return []
             return [
-                BOUNDED_AUTONOMY_AI_BUDGET_CHANGE_VIOLATION
+                BOUNDED_AUTONOMY_NON_HUMAN_BUDGET_CHANGE_VIOLATION
                 + f"; got actor_type '{actor_type.value}'"
             ]
         if actor_type is not ActorType.HUMAN:

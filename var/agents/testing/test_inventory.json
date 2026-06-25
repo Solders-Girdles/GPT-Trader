@@ -32311,7 +32311,7 @@
         "docstring": ""
       },
       {
-        "name": "test_bounded_autonomy_ai_approval_fails_closed_until_envelopes_exist",
+        "name": "test_bounded_autonomy_non_human_approval_fails_closed_until_envelopes_exist",
         "line": 59,
         "markers": [
           "unit"
@@ -32320,7 +32320,7 @@
       },
       {
         "name": "test_bounded_autonomy_human_approval_still_uses_existing_gates",
-        "line": 73,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -32328,7 +32328,7 @@
       },
       {
         "name": "test_ineligible_idea_cannot_be_approved",
-        "line": 81,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -32336,7 +32336,7 @@
       },
       {
         "name": "test_max_loss_above_budget_cap_is_refused",
-        "line": 87,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -32344,7 +32344,7 @@
       },
       {
         "name": "test_futures_leverage_requires_budget_permission",
-        "line": 97,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -32352,7 +32352,7 @@
       },
       {
         "name": "test_futures_leverage_passes_when_budget_allows_it",
-        "line": 105,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -32360,7 +32360,7 @@
       },
       {
         "name": "test_short_direction_requires_budget_permission_by_default",
-        "line": 118,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -32368,7 +32368,7 @@
       },
       {
         "name": "test_short_direction_requires_budget_permission_when_explicitly_disabled",
-        "line": 126,
+        "line": 128,
         "markers": [
           "unit"
         ],
@@ -32376,7 +32376,7 @@
       },
       {
         "name": "test_short_direction_passes_when_budget_allows_naked_shorts",
-        "line": 141,
+        "line": 143,
         "markers": [
           "unit"
         ],
@@ -32384,7 +32384,7 @@
       },
       {
         "name": "test_missing_percent_cannot_be_verified",
-        "line": 154,
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -32392,7 +32392,7 @@
       },
       {
         "name": "test_concurrent_approved_cap_is_enforced",
-        "line": 162,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -32400,7 +32400,7 @@
       },
       {
         "name": "test_stale_idea_cannot_be_approved",
-        "line": 171,
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -32408,7 +32408,7 @@
       },
       {
         "name": "test_review_latency_budget_blocks_stale_proposed_idea",
-        "line": 185,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -32416,15 +32416,15 @@
       },
       {
         "name": "test_budget_changes_require_human_below_bounded_autonomy",
-        "line": 207,
+        "line": 209,
         "markers": [
           "unit"
         ],
         "docstring": ""
       },
       {
-        "name": "test_bounded_autonomy_budget_changes_fail_closed_until_meta_envelope",
-        "line": 214,
+        "name": "test_bounded_autonomy_non_human_budget_changes_fail_closed_until_meta_envelope",
+        "line": 216,
         "markers": [
           "unit"
         ],

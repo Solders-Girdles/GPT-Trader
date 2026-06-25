@@ -63,6 +63,33 @@ class TestOrdersStore:
                 with pytest.raises(sqlite3.ProgrammingError, match="closed"):
                     connection.execute("SELECT 1")
 
+    def test_connection_generation_retry_releases_lock_before_reconnect(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        with TemporaryDirectory() as tmpdir:
+            store = OrdersStore(tmpdir)
+            real_connect = sqlite3.connect
+            connect_count = 0
+
+            def connect_with_generation_change(
+                *args: object, **kwargs: object
+            ) -> sqlite3.Connection:
+                nonlocal connect_count
+                connect_count += 1
+                connection = real_connect(*args, **kwargs)
+                if connect_count == 1:
+                    store.close()
+                return connection
+
+            monkeypatch.setattr(sqlite3, "connect", connect_with_generation_change)
+
+            store.initialize()
+            store.save_order(create_test_order(order_id="retry-order"))
+
+            assert connect_count == 2
+            assert store.get_order("retry-order") is not None
+            store.close()
+
     def test_save_and_get_order(self) -> None:
         with TemporaryDirectory() as tmpdir:
             with OrdersStore(tmpdir) as store:

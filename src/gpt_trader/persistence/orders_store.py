@@ -221,11 +221,16 @@ class OrdersStore:
             connection.execute("PRAGMA busy_timeout=5000")
             connection.row_factory = sqlite3.Row
 
+            retry_connection = False
             with self._connection_lock:
                 if generation != self._connection_generation:
-                    connection.close()
-                    return self._get_connection()
-                self._connections[(threading.get_ident(), generation)] = connection
+                    retry_connection = True
+                else:
+                    self._connections[(threading.get_ident(), generation)] = connection
+
+            if retry_connection:
+                connection.close()
+                return self._get_connection()
 
             self._local.connection = connection
             self._local.connection_generation = generation

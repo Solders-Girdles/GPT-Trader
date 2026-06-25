@@ -99,11 +99,20 @@ class MetricsPublisher:
             "message": message,
             "error": error,
         }
-        for target_dir in self._target_dirs():
-            status_path = target_dir / "health.json"
-            status_path.parent.mkdir(parents=True, exist_ok=True)
-            with status_path.open("w") as fh:
-                json.dump(status, fh, indent=2)
+        try:
+            for target_dir in self._target_dirs():
+                status_path = target_dir / "health.json"
+                status_path.parent.mkdir(parents=True, exist_ok=True)
+                with status_path.open("w") as fh:
+                    json.dump(status, fh, indent=2)
+        except Exception as exc:
+            logger.debug(
+                "Failed to write health status snapshot",
+                operation="system_monitor_metrics",
+                stage="write_health_status",
+                error=str(exc),
+                exc_info=True,
+            )
 
 
 __all__ = ["MetricsPublisher"]

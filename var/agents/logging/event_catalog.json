@@ -2188,7 +2188,7 @@
       "levels": [
         "DEBUG"
       ],
-      "occurrence_count": 2,
+      "occurrence_count": 3,
       "source_files": [
         "monitoring/system/metrics.py"
       ],
@@ -2570,7 +2570,7 @@
     "client_order_id": 12,
     "consecutive_failures": 5,
     "details": 5,
-    "error": 44,
+    "error": 45,
     "error_message": 92,
     "error_msg": 5,
     "error_type": 84,
@@ -2590,12 +2590,12 @@
     "service": 9,
     "severity": 4,
     "side": 25,
-    "stage": 167,
+    "stage": 168,
     "symbol": 77
   },
   "level_distribution": {
     "CRITICAL": 1,
-    "DEBUG": 51,
+    "DEBUG": 52,
     "ERROR": 97,
     "INFO": 118,
     "WARNING": 76

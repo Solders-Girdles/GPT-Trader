@@ -13,8 +13,9 @@ import os
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from decimal import InvalidOperation
+from decimal import Decimal, InvalidOperation
 from pathlib import Path
+from typing import cast
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import (
@@ -31,10 +32,18 @@ from gpt_trader.features.trade_ideas.budget import (
     RiskBudget,
     RiskBudgetLog,
 )
+from gpt_trader.features.trade_ideas.closeout import (
+    CloseoutAttribution,
+    CloseoutAttributionIntegrityError,
+    CloseoutAttributionLog,
+    CloseoutResolution,
+    MaxLossSnapshot,
+)
 from gpt_trader.features.trade_ideas.models import TicketStatus, TicketVenue, TradeIdea
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
 from gpt_trader.features.trade_ideas.workflow import (
+    TERMINAL_STATES,
     InvalidTransitionError,
     TradeIdeaState,
     validate_transition,
@@ -71,10 +80,29 @@ class TradeIdeaView:
     idea: TradeIdea
     state: TradeIdeaState
     events: tuple[AuditEvent, ...]
+    closeout_attribution: CloseoutAttribution | None = None
 
 
 def _utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+def _max_loss_snapshot_for(idea: TradeIdea) -> MaxLossSnapshot:
+    return MaxLossSnapshot(
+        amount=idea.max_loss.amount,
+        percent_of_account=idea.max_loss.percent_of_account,
+        assumptions=idea.max_loss.assumptions,
+    )
+
+
+def _max_loss_snapshot_context(snapshot: MaxLossSnapshot) -> dict[str, object]:
+    return {
+        "amount": str(snapshot.amount) if snapshot.amount is not None else None,
+        "percent_of_account": (
+            str(snapshot.percent_of_account) if snapshot.percent_of_account is not None else None
+        ),
+        "assumptions": list(snapshot.assumptions),
+    }
 
 
 def resolve_ideas_root(root: Path | None = None) -> Path:
@@ -107,6 +135,7 @@ class TradeIdeaService:
     ) -> None:
         self._store = TradeIdeaStore(root / "records")
         self._audit = TradeIdeaAuditLog(root / "audit.jsonl")
+        self._closeouts = CloseoutAttributionLog(root / "closeout_attributions.jsonl")
         self._budget_log = RiskBudgetLog(root / "risk_budget.jsonl")
         self._policy = policy or ApprovalPolicy()
         self._now = now_factory
@@ -114,6 +143,10 @@ class TradeIdeaService:
     @property
     def audit_log(self) -> TradeIdeaAuditLog:
         return self._audit
+
+    @property
+    def closeout_log(self) -> CloseoutAttributionLog:
+        return self._closeouts
 
     # -- budget ----------------------------------------------------------
 
@@ -393,6 +426,58 @@ class TradeIdeaService:
         )
         return self.get(decision_id)
 
+    def record_closeout_attribution(
+        self,
+        decision_id: str,
+        *,
+        actor_id: str,
+        resolution: CloseoutResolution | str,
+        realized_profit_loss_amount: object = None,
+        realized_profit_loss_percent: object = None,
+        realized_profit_loss_unavailable_reason: str = "",
+        evidence: tuple[str, ...] = (),
+        actor_type: ActorType = ActorType.HUMAN,
+    ) -> CloseoutAttribution:
+        """Record why a terminal idea resolved and its realized profit/loss evidence."""
+        view = self.get(decision_id)
+        if view.state not in TERMINAL_STATES:
+            raise InvalidTransitionError(
+                f"Trade idea '{decision_id}' must be terminal before closeout attribution; "
+                f"got '{view.state.value}'",
+                field="after_state",
+                value=view.state.value,
+            )
+
+        terminal_event = view.events[-1]
+        record = CloseoutAttribution(
+            decision_id=decision_id,
+            timestamp=self._now(),
+            actor_type=actor_type.value,
+            actor_id=actor_id,
+            terminal_event_id=terminal_event.event_id,
+            record_hash=terminal_event.record_hash,
+            resolution=CloseoutResolution(resolution),
+            realized_profit_loss_amount=cast(
+                Decimal | None,
+                realized_profit_loss_amount,
+            ),
+            realized_profit_loss_percent=cast(
+                Decimal | None,
+                realized_profit_loss_percent,
+            ),
+            realized_profit_loss_unavailable_reason=realized_profit_loss_unavailable_reason,
+            max_loss=MaxLossSnapshot(
+                amount=view.idea.max_loss.amount,
+                percent_of_account=view.idea.max_loss.percent_of_account,
+                assumptions=view.idea.max_loss.assumptions,
+            ),
+            evidence=evidence,
+        )
+        return self._closeouts.append(record)
+
+    def get_closeout_attribution(self, decision_id: str) -> CloseoutAttribution | None:
+        return self.get(decision_id).closeout_attribution
+
     # -- queries -----------------------------------------------------------
 
     def get(self, decision_id: str) -> TradeIdeaView:
@@ -405,7 +490,12 @@ class TradeIdeaService:
                 value=decision_id,
             )
         state = events[-1].after_state
-        return TradeIdeaView(idea=idea, state=state, events=events)
+        return TradeIdeaView(
+            idea=idea,
+            state=state,
+            events=events,
+            closeout_attribution=self._validated_closeout_attribution(idea, events),
+        )
 
     def list_views(self, state: TradeIdeaState | None = None) -> list[TradeIdeaView]:
         views = [self.get(decision_id) for decision_id in self._store.list_decision_ids()]
@@ -429,6 +519,94 @@ class TradeIdeaService:
         for event in self._audit.read_events():
             latest_events[event.decision_id] = event
         return latest_events
+
+    def _validated_closeout_attribution(
+        self,
+        idea: TradeIdea,
+        events: tuple[AuditEvent, ...],
+    ) -> CloseoutAttribution | None:
+        decision_id = idea.decision_id
+        closeout = self._closeouts.get(decision_id)
+        if closeout is None:
+            return None
+
+        current_event = events[-1]
+        current_max_loss = _max_loss_snapshot_for(idea)
+        context = {
+            "decision_id": decision_id,
+            "stored_terminal_event_id": closeout.terminal_event_id,
+            "current_terminal_event_id": current_event.event_id,
+            "stored_record_hash": closeout.record_hash,
+            "current_record_hash": current_event.record_hash,
+            "stored_max_loss": _max_loss_snapshot_context(closeout.max_loss),
+            "current_max_loss": _max_loss_snapshot_context(current_max_loss),
+        }
+        if current_event.after_state not in TERMINAL_STATES:
+            raise CloseoutAttributionIntegrityError(
+                f"Closeout attribution for decision_id '{decision_id}' cannot be current "
+                f"because latest audit state is '{current_event.after_state.value}', "
+                "not terminal",
+                field="after_state",
+                value=current_event.after_state.value,
+                context=context,
+            )
+
+        mismatch_details: list[str] = []
+        mismatch_field = "closeout_attribution"
+        if closeout.terminal_event_id != current_event.event_id:
+            mismatch_field = "terminal_event_id"
+            mismatch_details.append(
+                f"terminal_event_id expected '{current_event.event_id}' "
+                f"but found '{closeout.terminal_event_id}'"
+            )
+        if closeout.record_hash != current_event.record_hash:
+            if mismatch_field == "closeout_attribution":
+                mismatch_field = "record_hash"
+            mismatch_details.append(
+                f"record_hash expected '{current_event.record_hash}' "
+                f"but found '{closeout.record_hash}'"
+            )
+        if mismatch_details:
+            raise CloseoutAttributionIntegrityError(
+                f"Closeout attribution for decision_id '{decision_id}' does not match "
+                f"the current terminal audit event: {'; '.join(mismatch_details)}",
+                field=mismatch_field,
+                value=decision_id,
+                context=context,
+            )
+        max_loss_mismatch_details: list[str] = []
+        max_loss_mismatch_field = "max_loss"
+        if closeout.max_loss.amount != current_max_loss.amount:
+            max_loss_mismatch_field = "max_loss.amount"
+            max_loss_mismatch_details.append(
+                f"max_loss.amount expected '{current_max_loss.amount}' "
+                f"but found '{closeout.max_loss.amount}'"
+            )
+        if closeout.max_loss.percent_of_account != current_max_loss.percent_of_account:
+            if max_loss_mismatch_field == "max_loss":
+                max_loss_mismatch_field = "max_loss.percent_of_account"
+            max_loss_mismatch_details.append(
+                "max_loss.percent_of_account expected "
+                f"'{current_max_loss.percent_of_account}' "
+                f"but found '{closeout.max_loss.percent_of_account}'"
+            )
+        if closeout.max_loss.assumptions != current_max_loss.assumptions:
+            if max_loss_mismatch_field == "max_loss":
+                max_loss_mismatch_field = "max_loss.assumptions"
+            max_loss_mismatch_details.append(
+                f"max_loss.assumptions expected {list(current_max_loss.assumptions)!r} "
+                f"but found {list(closeout.max_loss.assumptions)!r}"
+            )
+        if max_loss_mismatch_details:
+            raise CloseoutAttributionIntegrityError(
+                f"Closeout attribution for decision_id '{decision_id}' does not match "
+                "the audited max-loss snapshot from the current terminal record: "
+                f"{'; '.join(max_loss_mismatch_details)}",
+                field=max_loss_mismatch_field,
+                value=decision_id,
+                context=context,
+            )
+        return closeout
 
     def _require_idea(self, decision_id: str) -> TradeIdea:
         try:

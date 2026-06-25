@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6752,
-    "total_files": 798,
+    "total_tests": 6767,
+    "total_files": 799,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6587,
+    "unit": 6602,
     "asyncio": 390,
-    "parametrize": 191,
+    "parametrize": 193,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -542,6 +542,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
@@ -32188,7 +32189,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_models.py": [
       {
         "name": "test_round_trip_preserves_record",
-        "line": 20,
+        "line": 23,
         "markers": [
           "unit"
         ],
@@ -32196,7 +32197,7 @@
       },
       {
         "name": "test_to_dict_serializes_decimals_as_strings",
-        "line": 26,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -32204,7 +32205,7 @@
       },
       {
         "name": "test_from_dict_restores_decimal_types",
-        "line": 34,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -32212,7 +32213,7 @@
       },
       {
         "name": "test_time_horizon_rejects_timezone_naive_expiry",
-        "line": 42,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -32220,7 +32221,7 @@
       },
       {
         "name": "test_broker_ticket_defaults_to_no_venue",
-        "line": 53,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -32228,7 +32229,7 @@
       },
       {
         "name": "test_record_hash_is_stable",
-        "line": 59,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -32236,7 +32237,7 @@
       },
       {
         "name": "test_record_hash_changes_when_content_changes",
-        "line": 64,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -32244,7 +32245,7 @@
       },
       {
         "name": "test_optional_value_objects_round_trip_when_empty",
-        "line": 70,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -32252,7 +32253,7 @@
       },
       {
         "name": "test_max_loss_rejects_negative_values",
-        "line": 80,
+        "line": 83,
         "markers": [
           "parametrize",
           "unit"
@@ -32261,7 +32262,7 @@
       },
       {
         "name": "test_from_dict_rejects_negative_max_loss_values",
-        "line": 86,
+        "line": 89,
         "markers": [
           "parametrize",
           "unit"
@@ -32270,7 +32271,7 @@
       },
       {
         "name": "test_from_dict_rejects_malformed_string_sequences",
-        "line": 132,
+        "line": 135,
         "markers": [
           "parametrize",
           "unit"
@@ -32279,9 +32280,33 @@
       },
       {
         "name": "test_from_dict_rejects_malformed_scalar_strings",
-        "line": 166,
+        "line": 169,
         "markers": [
           "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_attribution_round_trip_preserves_record",
+        "line": 187,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_attribution_rejects_malformed_numeric_payload",
+        "line": 215,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_attribution_requires_profit_loss_or_unavailable_reason",
+        "line": 235,
+        "markers": [
           "unit"
         ],
         "docstring": ""
@@ -32436,7 +32461,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_replay.py": [
       {
         "name": "test_score_trade_idea_records_target_hit",
-        "line": 53,
+        "line": 55,
         "markers": [
           "unit"
         ],
@@ -32444,7 +32469,7 @@
       },
       {
         "name": "test_score_trade_idea_requires_midpoint_entry_fill",
-        "line": 70,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -32452,7 +32477,7 @@
       },
       {
         "name": "test_score_trade_idea_reports_not_filled_when_only_entry_zone_edge_trades",
-        "line": 87,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -32460,7 +32485,7 @@
       },
       {
         "name": "test_score_trade_idea_uses_conservative_stop_first_when_bar_hits_both",
-        "line": 102,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -32468,7 +32493,7 @@
       },
       {
         "name": "test_score_trade_idea_defers_target_hit_on_entry_candle",
-        "line": 114,
+        "line": 116,
         "markers": [
           "unit"
         ],
@@ -32476,7 +32501,7 @@
       },
       {
         "name": "test_score_trade_idea_defers_prefill_long_stop_on_entry_candle",
-        "line": 130,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -32484,7 +32509,7 @@
       },
       {
         "name": "test_score_trade_idea_defers_prefill_short_stop_on_entry_candle",
-        "line": 146,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -32492,7 +32517,7 @@
       },
       {
         "name": "test_score_trade_idea_keeps_long_entry_candle_stop_when_not_pinned_to_open",
-        "line": 166,
+        "line": 168,
         "markers": [
           "unit"
         ],
@@ -32500,7 +32525,7 @@
       },
       {
         "name": "test_score_trade_idea_keeps_short_entry_candle_stop_when_not_pinned_to_open",
-        "line": 177,
+        "line": 179,
         "markers": [
           "unit"
         ],
@@ -32508,7 +32533,7 @@
       },
       {
         "name": "test_score_trade_idea_records_short_target_hit",
-        "line": 192,
+        "line": 194,
         "markers": [
           "unit"
         ],
@@ -32516,7 +32541,7 @@
       },
       {
         "name": "test_score_trade_idea_uses_conservative_short_stop_first_when_bar_hits_both",
-        "line": 212,
+        "line": 214,
         "markers": [
           "unit"
         ],
@@ -32524,7 +32549,7 @@
       },
       {
         "name": "test_score_trade_idea_times_out_at_last_close_before_expiry",
-        "line": 228,
+        "line": 230,
         "markers": [
           "unit"
         ],
@@ -32532,7 +32557,7 @@
       },
       {
         "name": "test_score_trade_idea_counts_waiting_bars_before_delayed_entry",
-        "line": 245,
+        "line": 247,
         "markers": [
           "unit"
         ],
@@ -32540,7 +32565,7 @@
       },
       {
         "name": "test_score_trade_idea_reports_not_filled_when_entry_zone_never_trades",
-        "line": 263,
+        "line": 265,
         "markers": [
           "unit"
         ],
@@ -32548,7 +32573,7 @@
       },
       {
         "name": "test_score_trade_idea_reports_no_future_data",
-        "line": 279,
+        "line": 281,
         "markers": [
           "unit"
         ],
@@ -32556,7 +32581,15 @@
       },
       {
         "name": "test_score_trade_idea_excludes_candles_that_extend_past_expiry",
-        "line": 286,
+        "line": 288,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_scoring_does_not_mutate_live_closeout_records",
+        "line": 305,
         "markers": [
           "unit"
         ],
@@ -32903,6 +32936,98 @@
         "name": "test_approval_count_ignores_unaudited_latest_for_nonapproved_records",
         "line": 50,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py": [
+      {
+        "name": "test_record_closeout_attribution_for_filled_idea",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_closeout_attribution_for_expired_idea_without_profit_loss",
+        "line": 105,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_closeout_attribution_rejects_non_terminal_idea",
+        "line": 129,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_closeout_attribution_rejects_unknown_idea",
+        "line": 146,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_closeout_attribution_rejects_duplicate_conflict",
+        "line": 158,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_closeout_attribution_rejects_malformed_numeric_payload",
+        "line": 184,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_persisted_closeout_rejects_stale_terminal_event_id_against_current_event",
+        "line": 202,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_persisted_closeout_rejects_stale_record_hash_against_current_event",
+        "line": 232,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_persisted_closeout_rejects_current_event_with_stale_max_loss_snapshot",
+        "line": 270,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_persisted_closeout_log_rejects_non_object_max_loss_with_line_context",
+        "line": 302,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_persisted_closeout_log_rejects_negative_max_loss_values_with_line_context",
+        "line": 353,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""

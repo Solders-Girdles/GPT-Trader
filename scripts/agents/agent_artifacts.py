@@ -135,9 +135,9 @@ def _gitignored_files(paths: list[Path], *, git_root: Path) -> set[Path]:
         return set()
 
     return {
-        path_by_relative[relative]
-        for relative in result.stdout.splitlines()
-        if relative in path_by_relative
+        path_by_relative[normalized]
+        for line in result.stdout.splitlines()
+        if (normalized := line.strip().replace("\\", "/")) in path_by_relative
     }
 
 

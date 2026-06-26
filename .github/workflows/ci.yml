@@ -385,12 +385,16 @@ jobs:
     name: Windows Unit Tests (Portability)
     runs-on: windows-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
     env:
       GPT_TRADER_STRICT_CONTAINER: "1"
       PYTHONWARNINGS: default
     steps:
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Install uv
         # astral-sh/setup-uv@v7

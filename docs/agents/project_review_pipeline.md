@@ -250,6 +250,19 @@ gh pr merge --auto --squash --delete-branch
 After merge, confirm the issue is closed or comment with the merged PR and any
 follow-up. New work gets a new finding packet.
 
+## Review Artifacts Convention (from #968, run goal-pipeline-20260626-001-gpt-trader-clean-discovery-scout)
+
+Review and analysis artifacts (spreadsheets, CSVs, reports) produced by agent review lanes:
+
+- Committed only under `review_artifacts/`
+- Use narrow exceptions in `.gitignore` (for example, `!review_artifacts/*.csv`) so global `*.csv` and `data/` ignores do not swallow handoff deliverables.
+- Non-durable temps go in `review_artifacts/tmp/` (still ignored).
+- Document format/location in this file and AGENTS.md.
+- XLSX and targeted CSVs are allowed; avoid committing large datasets or secrets.
+- Verification: after creating artifact, `git status` should show only the intended review files; broad generated CSVs outside remain ignored.
+
+This supports repeatable review workflow without polluting commits or losing handoff data.
+
 ## Cadence
 
 Start with an hourly Codex automation. Tighten the cadence only after the issue

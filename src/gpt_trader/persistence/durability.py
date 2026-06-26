@@ -513,7 +513,9 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
         conn = sqlite3.connect(str(temp_db_path))
         recovered_count = 0
         try:
-            conn.execute("PRAGMA journal_mode=WAL")
+            # DELETE mode keeps the recovered temp database as a single file so
+            # Windows repair can swap it without fighting locked WAL sidecars.
+            conn.execute("PRAGMA journal_mode=DELETE")
             conn.execute("PRAGMA synchronous=NORMAL")
 
             # Initialize with known schemas to preserve them
@@ -550,9 +552,7 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
                         operation="database_repair",
                         table=table_name,
                     )
-            # Commit the copied data to the new database before closing
             conn.commit()
-            conn.execute("PRAGMA main.wal_checkpoint(TRUNCATE)")
         finally:
             try:
                 conn.execute("DETACH DATABASE corrupted")

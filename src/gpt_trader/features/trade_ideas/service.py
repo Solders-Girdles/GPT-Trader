@@ -59,6 +59,7 @@ EXPIRABLE_STATES = frozenset(
         TradeIdeaState.APPROVED,
     }
 )
+_AUDIT_VENUES = frozenset({TicketVenue.COINBASE, TicketVenue.MANUAL})
 
 
 class UnknownTradeIdeaError(ValidationError):
@@ -391,6 +392,7 @@ class TradeIdeaService:
         reason: str = "Approved ticket submitted",
         actor_type: ActorType = ActorType.SYSTEM,
     ) -> TradeIdeaView:
+        venue = _validate_audit_venue(venue)
         idea = self._require_idea(decision_id)
         self._append(
             idea,
@@ -413,6 +415,7 @@ class TradeIdeaService:
         reason: str = "Venue confirmed fill",
         actor_type: ActorType = ActorType.VENUE,
     ) -> TradeIdeaView:
+        venue = _validate_audit_venue(venue)
         idea = self._require_idea(decision_id)
         self._append(
             idea,
@@ -720,3 +723,23 @@ def create_trade_idea_service(
 ) -> TradeIdeaService:
     """Resolve root (arg > GPT_TRADER_IDEAS_ROOT > default) and build the service."""
     return TradeIdeaService(resolve_ideas_root(root), policy=policy, now_factory=now_factory)
+
+
+def _validate_audit_venue(venue: str) -> str:
+    try:
+        parsed = TicketVenue(venue)
+    except ValueError as error:
+        allowed = ", ".join(sorted(item.value for item in _AUDIT_VENUES))
+        raise ValidationError(
+            f"Unsupported trade-idea venue '{venue}'; expected one of: {allowed}",
+            field="venue",
+            value=venue,
+        ) from error
+    if parsed in _AUDIT_VENUES:
+        return parsed.value
+    allowed = ", ".join(sorted(item.value for item in _AUDIT_VENUES))
+    raise ValidationError(
+        f"Unsupported trade-idea venue '{venue}'; expected one of: {allowed}",
+        field="venue",
+        value=venue,
+    )

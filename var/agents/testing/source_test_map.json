@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 720,
+    "tests_scanned": 721,
     "source_modules": 373,
     "unresolved_modules": 3
   },
@@ -495,6 +495,7 @@
       "tests/unit/gpt_trader/errors/test_handler.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
       "tests/unit/gpt_trader/validation/test_base_validator.py",
       "tests/unit/gpt_trader/validation/test_composite_validators.py",
       "tests/unit/gpt_trader/validation/test_config_validators.py",
@@ -1304,6 +1305,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py",
@@ -3959,6 +3961,10 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py": [
+      "gpt_trader.errors",
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py": [

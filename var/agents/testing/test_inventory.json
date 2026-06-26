@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6823,
-    "total_files": 804,
+    "total_tests": 6826,
+    "total_files": 805,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6658,
+    "unit": 6661,
     "asyncio": 411,
     "parametrize": 195,
     "endpoints": 83,
@@ -548,6 +548,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
@@ -33312,6 +33313,32 @@
         "line": 110,
         "markers": [
           "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py": [
+      {
+        "name": "test_manual_venue_submission_and_fill_remain_supported",
+        "line": 21,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_submission_rejects_unsupported_venue_before_audit_mutation",
+        "line": 35,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_fill_rejects_unsupported_venue_before_audit_mutation",
+        "line": 58,
+        "markers": [
           "unit"
         ],
         "docstring": ""

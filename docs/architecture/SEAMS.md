@@ -97,6 +97,10 @@ Config is the shared input surface that defines:
   `src/gpt_trader/backtesting/`, prefer consolidating on the canonical engine.
 - **Config coupling:** some config loaders import strategy implementations; treat this as existing coupling to be
   reduced over time (prefer registering strategies via explicit wiring).
+- **Oversized module decomposition:** use
+  [Oversized Module Decomposition Plan](OVERSIZED_MODULE_DECOMPOSITION.md) for
+  source-grounded extraction targets and behavior-focused test anchors before
+  splitting large strategy, execution, monitoring, backtesting, or risk modules.
 
 ## Where to add new code (quick decision guide)
 

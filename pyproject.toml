@@ -93,6 +93,11 @@ target-version = ["py312"]
 line-length = 100
 target-version = "py312"
 src = ["src"]
+# scripts/ is globally excluded from `ruff check .` to allow intentional looseness
+# for experiments, one-offs, and analysis. Only "critical" production/ops/ci/maintenance
+# scripts are explicitly linted in local-ci and CI as a ratchet (see issue #962).
+# Policy: expand the explicit list over time for operationally important scripts;
+# document exclusions for the rest.
 extend-exclude = [
     "scripts",
 ]

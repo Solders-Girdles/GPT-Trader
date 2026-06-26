@@ -405,7 +405,8 @@ def _wal_sidecar_is_valid(wal_path: Path) -> bool:
     if not wal_path.exists():
         return True
     try:
-        header = wal_path.read_bytes()[:4]
+        with wal_path.open("rb") as wal_file:
+            header = wal_file.read(4)
     except OSError:
         return False
     return len(header) == 4 and header in _SQLITE_WAL_MAGIC
@@ -430,15 +431,26 @@ def _swap_recovered_database(temp_db_path: Path, database_path: Path) -> None:
             if attempt < 7:
                 time.sleep(0.1 * (attempt + 1))
     if os.name == "nt":
-        shutil.copy2(str(temp_db_path), str(database_path))
-        _remove_sqlite_file_set(temp_db_path)
-        return
+        staging_path = database_path.with_suffix(f"{database_path.suffix}.swap")
+        if not _remove_sqlite_file_set(staging_path):
+            raise RecoveryError(f"Could not prepare staging database for swap: {staging_path}")
+        try:
+            shutil.copy2(str(temp_db_path), str(staging_path))
+            os.replace(str(staging_path), str(database_path))
+            return
+        except OSError as error:
+            raise RecoveryError(
+                f"Could not replace database at {database_path}: {error}"
+            ) from error
+        finally:
+            _remove_sqlite_file_set(staging_path)
+            _remove_sqlite_file_set(temp_db_path)
     raise RecoveryError(
         f"Could not replace database at {database_path}: {replace_error}"
     ) from replace_error
 
 
-def _remove_invalid_sqlite_sidecars(database_path: Path) -> None:
+def _remove_invalid_sqlite_sidecars(database_path: Path) -> bool:
     """Drop WAL/SHM sidecars that are not valid SQLite WAL companions."""
     wal_path, shm_path = _sqlite_sidecar_paths(database_path)
     if wal_path.exists() and not _wal_sidecar_is_valid(wal_path):
@@ -454,6 +466,8 @@ def _remove_invalid_sqlite_sidecars(database_path: Path) -> None:
                     sidecar=str(sidecar_path),
                     error=str(e),
                 )
+                return False
+    return True
 
 
 def repair_sqlite_database(database_path: Path, backup_path: Path | None = None) -> bool:
@@ -473,7 +487,8 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
     if not database_path.exists():
         return True
 
-    _remove_invalid_sqlite_sidecars(database_path)
+    if not _remove_invalid_sqlite_sidecars(database_path):
+        return False
 
     # Backup corrupted database
     if backup_path is None:

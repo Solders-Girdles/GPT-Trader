@@ -72,6 +72,7 @@
     "gpt_trader.app.config.bot_config": [
       "tests/unit/gpt_trader/app/config/test_bot_config.py",
       "tests/unit/gpt_trader/app/config/test_cfm_config.py",
+      "tests/unit/gpt_trader/app/config/test_validation.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation_kill_switch.py",
       "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/scripts/test_backtest_runner_pillar2_gates.py"
@@ -91,7 +92,8 @@
     "gpt_trader.app.config.validation": [
       "tests/unit/gpt_trader/app/config/test_bot_config_loading.py",
       "tests/unit/gpt_trader/app/config/test_validation.py",
-      "tests/unit/gpt_trader/cli/test_commands_run.py"
+      "tests/unit/gpt_trader/cli/test_commands_run.py",
+      "tests/unit/gpt_trader/cli/test_services.py"
     ],
     "gpt_trader.app.config.validation_rules": [
       "tests/unit/gpt_trader/app/config/test_validation_rules.py"
@@ -381,6 +383,7 @@
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/app/test_bootstrap_profile_loading.py",
+      "tests/unit/gpt_trader/cli/test_services.py",
       "tests/unit/gpt_trader/cli/test_services_build_config.py",
       "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/gpt_trader/features/live_trade/test_symbols_derivatives.py",
@@ -2398,6 +2401,7 @@
       "gpt_trader.config.types"
     ],
     "tests/unit/gpt_trader/app/config/test_validation.py": [
+      "gpt_trader.app.config.bot_config",
       "gpt_trader.app.config.validation"
     ],
     "tests/unit/gpt_trader/app/config/test_validation_rules.py": [
@@ -2782,9 +2786,11 @@
     ],
     "tests/unit/gpt_trader/cli/test_services.py": [
       "gpt_trader.app.config",
+      "gpt_trader.app.config.validation",
       "gpt_trader.app.container",
       "gpt_trader.cli.commands.run",
-      "gpt_trader.cli.services"
+      "gpt_trader.cli.services",
+      "gpt_trader.config.types"
     ],
     "tests/unit/gpt_trader/cli/test_services_build_config.py": [
       "gpt_trader.app.config.profile_loader",

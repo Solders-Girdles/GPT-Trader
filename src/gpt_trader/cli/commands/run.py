@@ -67,6 +67,20 @@ def execute(args: Namespace) -> int:
             include=options.RUNTIME_CONFIG_KEYS,
             skip={"dev_fast", "tui", "demo"},
         )
+
+        # Auto-reduce interval for fast development iteration
+        if args.dev_fast and getattr(args, "interval", None) is None:
+            config.interval = 1  # 1 second instead of default 60
+
+        # Initialize OpenTelemetry tracing if enabled
+        if OTEL_ENABLED:
+            init_tracing(
+                service_name=OTEL_SERVICE_NAME,
+                endpoint=OTEL_EXPORTER_ENDPOINT,
+                enabled=True,
+            )
+
+        bot = services.instantiate_bot(config)
     except ConfigValidationError as exc:
         message = str(exc)
         if "symbols overrides" in message:
@@ -74,20 +88,6 @@ def execute(args: Namespace) -> int:
         else:
             logger.error(message)
         return 1
-
-    # Auto-reduce interval for fast development iteration
-    if args.dev_fast and getattr(args, "interval", None) is None:
-        config.interval = 1  # 1 second instead of default 60
-
-    # Initialize OpenTelemetry tracing if enabled
-    if OTEL_ENABLED:
-        init_tracing(
-            service_name=OTEL_SERVICE_NAME,
-            endpoint=OTEL_EXPORTER_ENDPOINT,
-            enabled=True,
-        )
-
-    bot = services.instantiate_bot(config)
 
     if args.tui:
         return _run_tui(bot)

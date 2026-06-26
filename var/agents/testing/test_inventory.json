@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6829,
+    "total_tests": 6842,
     "total_files": 806,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6664,
+    "unit": 6677,
     "asyncio": 411,
     "parametrize": 195,
     "endpoints": 83,
@@ -3270,7 +3270,7 @@
     "tests/unit/gpt_trader/app/config/test_validation.py": [
       {
         "name": "TestConfigValidationError::test_stores_errors_list",
-        "line": 17,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -3279,7 +3279,7 @@
       },
       {
         "name": "TestConfigValidationError::test_message_joins_errors",
-        "line": 22,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -3288,7 +3288,7 @@
       },
       {
         "name": "TestConfigValidationError::test_empty_errors_default_message",
-        "line": 27,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -3297,7 +3297,7 @@
       },
       {
         "name": "TestConfigValidationError::test_single_error_message",
-        "line": 31,
+        "line": 33,
         "markers": [
           "unit"
         ],
@@ -3306,7 +3306,7 @@
       },
       {
         "name": "TestConfigValidationError::test_is_exception_subclass",
-        "line": 35,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -3315,7 +3315,7 @@
       },
       {
         "name": "TestConfigValidationError::test_no_args_default_message",
-        "line": 39,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -3324,7 +3324,7 @@
       },
       {
         "name": "TestConfigValidationResult::test_valid_result_creation",
-        "line": 48,
+        "line": 50,
         "markers": [
           "unit"
         ],
@@ -3333,7 +3333,7 @@
       },
       {
         "name": "TestConfigValidationResult::test_invalid_result_with_errors",
-        "line": 54,
+        "line": 56,
         "markers": [
           "unit"
         ],
@@ -3342,7 +3342,7 @@
       },
       {
         "name": "TestConfigValidationResult::test_result_with_warnings",
-        "line": 59,
+        "line": 61,
         "markers": [
           "unit"
         ],
@@ -3351,7 +3351,7 @@
       },
       {
         "name": "TestConfigValidationResult::test_has_errors_property_true",
-        "line": 63,
+        "line": 65,
         "markers": [
           "unit"
         ],
@@ -3360,7 +3360,7 @@
       },
       {
         "name": "TestConfigValidationResult::test_has_errors_property_false",
-        "line": 67,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -3369,7 +3369,7 @@
       },
       {
         "name": "TestConfigValidationResult::test_has_warnings_property_true",
-        "line": 71,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -3378,7 +3378,7 @@
       },
       {
         "name": "TestConfigValidationResult::test_has_warnings_property_false",
-        "line": 75,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -3387,7 +3387,7 @@
       },
       {
         "name": "TestConfigValidationResult::test_both_errors_and_warnings",
-        "line": 79,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -3396,7 +3396,7 @@
       },
       {
         "name": "TestFormatValidationErrors::test_formats_single_field_error",
-        "line": 95,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -3405,7 +3405,7 @@
       },
       {
         "name": "TestFormatValidationErrors::test_formats_multiple_errors",
-        "line": 103,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -3414,7 +3414,7 @@
       },
       {
         "name": "TestFormatValidationErrors::test_field_path_included_in_message",
-        "line": 110,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -3423,12 +3423,84 @@
       },
       {
         "name": "TestFormatValidationErrors::test_missing_field_error",
-        "line": 118,
+        "line": 120,
         "markers": [
           "unit"
         ],
         "docstring": "",
         "class": "TestFormatValidationErrors"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_spot_only_default_is_valid",
+        "line": 131,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_cfm_enabled_requires_cfm_trading_mode",
+        "line": 134,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_cfm_trading_mode_requires_cfm_enabled",
+        "line": 139,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_hybrid_trading_mode_requires_cfm_enabled",
+        "line": 144,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_malformed_trading_modes_none_returns_validation_errors",
+        "line": 149,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_malformed_trading_modes_items_return_validation_error",
+        "line": 155,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_cfm_only_configuration_is_valid",
+        "line": 160,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_hybrid_cfm_configuration_is_valid",
+        "line": 165,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
       }
     ],
     "tests/unit/gpt_trader/app/config/test_validation_rules.py": [
@@ -9805,7 +9877,7 @@
         "docstring": ""
       },
       {
-        "name": "test_execute_invokes_run_bot",
+        "name": "test_execute_handles_shared_bot_config_validation",
         "line": 48,
         "markers": [
           "unit"
@@ -9813,8 +9885,16 @@
         "docstring": ""
       },
       {
+        "name": "test_execute_invokes_run_bot",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_run_bot_sets_signal_handlers_and_runs",
-        "line": 76,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -10074,7 +10154,7 @@
     "tests/unit/gpt_trader/cli/test_services.py": [
       {
         "name": "TestInstantiateBot::test_sets_container_when_none_present",
-        "line": 42,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -10083,7 +10163,7 @@
       },
       {
         "name": "TestInstantiateBot::test_uses_existing_container",
-        "line": 69,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -10091,8 +10171,44 @@
         "class": "TestInstantiateBot"
       },
       {
+        "name": "TestInstantiateBot::test_rejects_invalid_config_before_container_creation",
+        "line": 98,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that bot creation fails closed on invalid runtime config.",
+        "class": "TestInstantiateBot"
+      },
+      {
+        "name": "TestInstantiateBot::test_allows_observe_read_only_zero_position_fraction",
+        "line": 116,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that read-only observe config can create a bot with zero position size.",
+        "class": "TestInstantiateBot"
+      },
+      {
+        "name": "TestInstantiateBot::test_rejects_non_observe_zero_position_fraction",
+        "line": 134,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that executable profiles still reject zero position fraction.",
+        "class": "TestInstantiateBot"
+      },
+      {
+        "name": "TestInstantiateBot::test_observe_profile_still_rejects_cfm_mismatch",
+        "line": 152,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that observe startup only exempts the read-only sizing sentinel.",
+        "class": "TestInstantiateBot"
+      },
+      {
         "name": "TestRunBotCleanup::test_clears_container_on_shutdown",
-        "line": 99,
+        "line": 175,
         "markers": [
           "unit"
         ],
@@ -10101,7 +10217,7 @@
       },
       {
         "name": "TestRunBotCleanup::test_clears_container_even_on_exception",
-        "line": 121,
+        "line": 197,
         "markers": [
           "unit"
         ],

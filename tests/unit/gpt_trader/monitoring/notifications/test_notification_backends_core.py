@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import tempfile
 from io import StringIO
 from pathlib import Path
@@ -232,6 +233,10 @@ class TestFileNotificationBackend:
         assert list(alert_path.parent.iterdir()) == []
 
     @pytest.mark.asyncio
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="os.pathconf PC_NAME_MAX is Unix-only",
+    )
     async def test_test_connection_handles_long_missing_file_name_without_alert_file(
         self, tmp_path: Path
     ) -> None:

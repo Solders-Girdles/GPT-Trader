@@ -109,7 +109,7 @@
     "property": 82,
     "integration": 79,
     "usefixtures": 17,
-    "skipif": 8,
+    "skipif": 9,
     "slow": 4,
     "anyio": 3,
     "contract": 3,
@@ -35673,7 +35673,7 @@
     "tests/unit/gpt_trader/monitoring/notifications/test_notification_backends_core.py": [
       {
         "name": "TestConsoleNotificationBackend::test_name_property",
-        "line": 26,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -35682,7 +35682,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_is_enabled_property",
-        "line": 30,
+        "line": 31,
         "markers": [
           "unit"
         ],
@@ -35691,7 +35691,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_send_writes_to_project_console_sink",
-        "line": 38,
+        "line": 39,
         "markers": [
           "asyncio",
           "unit"
@@ -35701,7 +35701,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_send_uses_default_console_sink_for_cli_fallback",
-        "line": 59,
+        "line": 60,
         "markers": [
           "asyncio",
           "unit"
@@ -35711,7 +35711,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_send_default_sink_does_not_reuse_cached_stdout",
-        "line": 80,
+        "line": 81,
         "markers": [
           "asyncio",
           "unit"
@@ -35721,7 +35721,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_send_filters_by_severity",
-        "line": 101,
+        "line": 102,
         "markers": [
           "asyncio",
           "unit"
@@ -35731,7 +35731,7 @@
       },
       {
         "name": "TestConsoleNotificationBackend::test_test_connection_always_true",
-        "line": 116,
+        "line": 117,
         "markers": [
           "asyncio",
           "unit"
@@ -35741,7 +35741,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_name_property",
-        "line": 125,
+        "line": 126,
         "markers": [
           "unit"
         ],
@@ -35750,7 +35750,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_send_writes_to_file",
-        "line": 130,
+        "line": 131,
         "markers": [
           "asyncio",
           "unit"
@@ -35760,7 +35760,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_checks_writability",
-        "line": 152,
+        "line": 153,
         "markers": [
           "asyncio",
           "unit"
@@ -35770,7 +35770,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_checks_existing_target_directly",
-        "line": 166,
+        "line": 167,
         "markers": [
           "asyncio",
           "unit"
@@ -35780,7 +35780,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_rejects_trailing_separator_file_path",
-        "line": 177,
+        "line": 178,
         "markers": [
           "asyncio",
           "unit"
@@ -35790,7 +35790,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_checks_broken_symlink_target_parent",
-        "line": 190,
+        "line": 191,
         "markers": [
           "asyncio",
           "unit"
@@ -35800,7 +35800,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_checks_missing_symlink_target_without_creating_it",
-        "line": 205,
+        "line": 206,
         "markers": [
           "asyncio",
           "unit"
@@ -35810,7 +35810,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_creates_parent_without_alert_file",
-        "line": 223,
+        "line": 224,
         "markers": [
           "asyncio",
           "unit"
@@ -35820,9 +35820,10 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_handles_long_missing_file_name_without_alert_file",
-        "line": 235,
+        "line": 240,
         "markers": [
           "asyncio",
+          "skipif",
           "unit"
         ],
         "docstring": "",
@@ -35830,7 +35831,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_offloads_file_check_to_thread",
-        "line": 250,
+        "line": 255,
         "markers": [
           "asyncio",
           "unit"
@@ -35840,7 +35841,7 @@
       },
       {
         "name": "TestFileNotificationBackend::test_test_connection_fails_for_invalid_path",
-        "line": 274,
+        "line": 279,
         "markers": [
           "asyncio",
           "unit"
@@ -39881,7 +39882,7 @@
     "tests/unit/gpt_trader/persistence/test_durability_repair.py": [
       {
         "name": "test_repair_sqlite_database_aborts_when_backup_copy_fails",
-        "line": 26,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -39889,7 +39890,7 @@
       },
       {
         "name": "test_repair_sqlite_database_removes_stale_wal_sidecars",
-        "line": 44,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -39897,7 +39898,7 @@
       },
       {
         "name": "test_repair_sqlite_database_preserves_uncheckpointed_wal_rows",
-        "line": 57,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -39905,7 +39906,7 @@
       },
       {
         "name": "test_repair_sqlite_database_copies_common_columns_from_stale_schema",
-        "line": 77,
+        "line": 79,
         "markers": [
           "unit"
         ],

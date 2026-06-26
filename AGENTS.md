@@ -124,6 +124,13 @@ After editing `.tcss` files, rebuild CSS:
 python scripts/build_tui_css.py
 ```
 
+### Agent Review Artifacts
+
+Review and analysis artifacts that should be durable project records belong in
+`review_artifacts/`. Commit only intended review CSV/XLSX deliverables there;
+keep temporary review outputs under `review_artifacts/tmp/`, and do not commit
+large datasets or secrets.
+
 ## Architecture
 
 ### Source Structure
@@ -211,3 +218,9 @@ uv run pytest -m "integration" tests/      # Integration tests (opt-in)
 | `docs/naming.md` | Naming conventions |
 | `docs/TUI_STYLE_GUIDE.md` | TUI development guide |
 | `CONTRIBUTING.md` | Full contribution workflow |
+
+### Review Artifacts Convention (run goal-pipeline-20260626-001-gpt-trader-clean-discovery-scout)
+Review deliverables (CSVs, spreadsheets from agent review lanes) are tracked only in `review_artifacts/`.
+- `!review_artifacts/` exception in .gitignore (global *.csv still protects data/).
+- See docs/agents/project_review_pipeline.md for details and verification.
+- Keeps handoff data durable without broad un-ignores.

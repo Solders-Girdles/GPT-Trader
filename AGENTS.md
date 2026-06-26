@@ -211,3 +211,9 @@ uv run pytest -m "integration" tests/      # Integration tests (opt-in)
 | `docs/naming.md` | Naming conventions |
 | `docs/TUI_STYLE_GUIDE.md` | TUI development guide |
 | `CONTRIBUTING.md` | Full contribution workflow |
+
+### Review Artifacts Convention (run goal-pipeline-20260626-001-gpt-trader-clean-discovery-scout)
+Review deliverables (CSVs, spreadsheets from agent review lanes) are tracked only in `review_artifacts/`.
+- `!review_artifacts/` exception in .gitignore (global *.csv still protects data/).
+- See docs/agents/project_review_pipeline.md for details and verification.
+- Keeps handoff data durable without broad un-ignores.

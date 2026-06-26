@@ -45,19 +45,14 @@ def test_execute_logs_generic_validation_error(monkeypatch, caplog):
     assert caplog.records[-1].message == "something else failed"
 
 
-def test_execute_validates_config_before_instantiating_bot(monkeypatch, caplog):
+def test_execute_handles_shared_bot_config_validation(monkeypatch, caplog):
     class MockConfig:
         interval = 60
 
     monkeypatch.setattr(run_cmd.services, "build_config_from_args", lambda *_, **__: MockConfig())
-    monkeypatch.setattr(
-        run_cmd,
-        "validate_config",
-        lambda config: ["cfm_enabled requires trading_modes to include 'cfm'"],
-    )
 
     def fail_instantiate_bot(config):
-        raise AssertionError("invalid config should not instantiate the bot")
+        raise ConfigValidationError(["cfm_enabled requires trading_modes to include 'cfm'"])
 
     monkeypatch.setattr(run_cmd.services, "instantiate_bot", fail_instantiate_bot)
 
@@ -73,15 +68,18 @@ def test_execute_invokes_run_bot(monkeypatch):
         interval = 60
 
     monkeypatch.setattr(run_cmd.services, "build_config_from_args", lambda *_, **__: MockConfig())
-    monkeypatch.setattr(run_cmd, "validate_config", lambda config: [])
 
     class StubBot:
         pass
 
     stub_bot = StubBot()
-    monkeypatch.setattr(run_cmd.services, "instantiate_bot", lambda config: stub_bot)
-
     captured = {}
+
+    def fake_instantiate_bot(config):
+        captured["bot_config"] = config
+        return stub_bot
+
+    monkeypatch.setattr(run_cmd.services, "instantiate_bot", fake_instantiate_bot)
 
     def fake_run_bot(bot, *, single_cycle):
         captured["bot"] = bot
@@ -93,6 +91,7 @@ def test_execute_invokes_run_bot(monkeypatch):
     result = run_cmd.execute(Namespace(dev_fast=True, profile="dev", tui=False))
 
     assert result == 0
+    assert captured["bot_config"].interval == 1
     assert captured["bot"] is stub_bot
     assert captured["single_cycle"] is True
 

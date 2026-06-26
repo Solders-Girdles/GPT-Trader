@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6838,
+    "total_tests": 6839,
     "total_files": 806,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6673,
+    "unit": 6674,
     "asyncio": 411,
     "parametrize": 195,
     "endpoints": 83,
@@ -9556,7 +9556,7 @@
       },
       {
         "name": "test_orders_preview_invokes_broker_preview",
-        "line": 103,
+        "line": 101,
         "markers": [
           "unit"
         ],
@@ -9564,7 +9564,7 @@
       },
       {
         "name": "test_cli_preflight_delegates_to_preflight_cli",
-        "line": 185,
+        "line": 183,
         "markers": [
           "unit"
         ],
@@ -9572,7 +9572,7 @@
       },
       {
         "name": "test_orders_profile_argument_inherits_across_nested_subcommands",
-        "line": 203,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -9877,7 +9877,7 @@
         "docstring": ""
       },
       {
-        "name": "test_execute_validates_config_before_instantiating_bot",
+        "name": "test_execute_handles_shared_bot_config_validation",
         "line": 48,
         "markers": [
           "unit"
@@ -9886,7 +9886,7 @@
       },
       {
         "name": "test_execute_invokes_run_bot",
-        "line": 71,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -9894,7 +9894,7 @@
       },
       {
         "name": "test_run_bot_sets_signal_handlers_and_runs",
-        "line": 100,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -10154,7 +10154,7 @@
     "tests/unit/gpt_trader/cli/test_services.py": [
       {
         "name": "TestInstantiateBot::test_sets_container_when_none_present",
-        "line": 42,
+        "line": 43,
         "markers": [
           "unit"
         ],
@@ -10163,7 +10163,7 @@
       },
       {
         "name": "TestInstantiateBot::test_uses_existing_container",
-        "line": 69,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -10171,8 +10171,17 @@
         "class": "TestInstantiateBot"
       },
       {
+        "name": "TestInstantiateBot::test_rejects_invalid_config_before_container_creation",
+        "line": 96,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test that bot creation fails closed on invalid runtime config.",
+        "class": "TestInstantiateBot"
+      },
+      {
         "name": "TestRunBotCleanup::test_clears_container_on_shutdown",
-        "line": 99,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -10181,7 +10190,7 @@
       },
       {
         "name": "TestRunBotCleanup::test_clears_container_even_on_exception",
-        "line": 121,
+        "line": 140,
         "markers": [
           "unit"
         ],

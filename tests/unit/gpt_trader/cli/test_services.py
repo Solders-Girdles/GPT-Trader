@@ -9,6 +9,7 @@ import pytest
 import gpt_trader.cli.commands.run as run_module
 import gpt_trader.cli.services as services_module
 from gpt_trader.app.config import BotConfig
+from gpt_trader.app.config.validation import ConfigValidationError
 from gpt_trader.app.container import (
     ApplicationContainer,
     clear_application_container,
@@ -91,6 +92,24 @@ class TestInstantiateBot:
         existing_container.create_bot.assert_called_once()
         assert bot is mock_bot
         assert get_application_container() is existing_container
+
+    def test_rejects_invalid_config_before_container_creation(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test that bot creation fails closed on invalid runtime config."""
+        invalid_config = BotConfig(cfm_enabled=True, trading_modes=["spot"])
+        mock_create = MagicMock()
+        monkeypatch.setattr(services_module, "create_application_container", mock_create)
+
+        with pytest.raises(
+            ConfigValidationError,
+            match="cfm_enabled requires trading_modes to include 'cfm'",
+        ):
+            instantiate_bot(invalid_config)
+
+        mock_create.assert_not_called()
+        assert get_application_container() is None
 
 
 class TestRunBotCleanup:

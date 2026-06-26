@@ -67,7 +67,6 @@ def test_cli_run_defaults_to_run_subcommand(monkeypatch):
             self.single_cycle = single_cycle
 
     cli = importlib.import_module("gpt_trader.cli")
-    run_cmd = importlib.import_module("gpt_trader.cli.commands.run")
     services = importlib.import_module("gpt_trader.cli.services")
 
     def fake_build_config(args, *, include=None, skip=None):
@@ -87,7 +86,6 @@ def test_cli_run_defaults_to_run_subcommand(monkeypatch):
 
     monkeypatch.setattr(services, "build_config_from_args", fake_build_config)
     monkeypatch.setattr(services, "instantiate_bot", fake_instantiate)
-    monkeypatch.setattr(run_cmd, "validate_config", lambda config: [])
 
     exit_code = cli.main(argv)
 

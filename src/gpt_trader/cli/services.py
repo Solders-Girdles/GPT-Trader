@@ -14,6 +14,7 @@ from gpt_trader.app.config.profile_loader import (
     get_env_profile_override,
     resolve_profile_override,
 )
+from gpt_trader.app.config.validation import ConfigValidationError, validate_config
 from gpt_trader.app.container import (
     create_application_container,
     get_application_container,
@@ -211,6 +212,10 @@ def instantiate_bot(config: BotConfig) -> TradingBot:
     via get_application_container(). Avoids overriding an existing container
     (e.g., one set by tests).
     """
+    validation_errors = validate_config(config)
+    if validation_errors:
+        raise ConfigValidationError(validation_errors)
+
     # Check if container already set (e.g., by tests)
     existing = get_application_container()
     if existing is not None:

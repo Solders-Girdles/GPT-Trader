@@ -62,11 +62,14 @@ is ready.
 ## Validation Commands
 
 ```bash
-# Full local quality gate for PR-like confidence
+# Strict/full local gate: PR-readiness plus local/live readiness evidence
 uv run local-ci
 
-# Faster loop while editing
+# Fast development loop: skips readiness and agent-artifact freshness
 uv run local-ci --profile quick
+
+# Local PR-readiness surface without the canary readiness gate
+make ci-required
 
 # Profile and live-readiness diagnostics
 uv run python scripts/production_preflight.py --profile canary

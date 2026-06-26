@@ -252,6 +252,15 @@ class TestHealthCheckRunner:
 class TestHealthCheckPlanner:
     """Tests for HealthCheckPlanner ordering and diagnostics."""
 
+    def test_legacy_health_check_mode_import_path_is_preserved(self) -> None:
+        from gpt_trader.monitoring.health_check_planning import (
+            HealthCheckMode as PlanningHealthCheckMode,
+        )
+        from gpt_trader.monitoring.health_checks import HealthCheckMode
+
+        assert HealthCheckMode is PlanningHealthCheckMode
+        assert "HealthCheckMode" in health_checks.__all__
+
     @staticmethod
     def _make_descriptor(
         name: str,

@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6837,
+    "total_tests": 6838,
     "total_files": 806,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6672,
+    "unit": 6673,
     "asyncio": 411,
     "parametrize": 195,
     "endpoints": 83,
@@ -9556,7 +9556,7 @@
       },
       {
         "name": "test_orders_preview_invokes_broker_preview",
-        "line": 101,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -9564,7 +9564,7 @@
       },
       {
         "name": "test_cli_preflight_delegates_to_preflight_cli",
-        "line": 183,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -9572,7 +9572,7 @@
       },
       {
         "name": "test_orders_profile_argument_inherits_across_nested_subcommands",
-        "line": 201,
+        "line": 203,
         "markers": [
           "unit"
         ],
@@ -9877,7 +9877,7 @@
         "docstring": ""
       },
       {
-        "name": "test_execute_invokes_run_bot",
+        "name": "test_execute_validates_config_before_instantiating_bot",
         "line": 48,
         "markers": [
           "unit"
@@ -9885,8 +9885,16 @@
         "docstring": ""
       },
       {
+        "name": "test_execute_invokes_run_bot",
+        "line": 71,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_run_bot_sets_signal_handlers_and_runs",
-        "line": 76,
+        "line": 100,
         "markers": [
           "unit"
         ],

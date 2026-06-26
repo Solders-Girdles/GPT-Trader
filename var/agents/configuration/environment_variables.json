@@ -1137,7 +1137,7 @@
       ],
       "code_references": [
         {
-          "line": 181,
+          "line": 184,
           "path": "src/gpt_trader/cli/commands/run.py",
           "reader": "_env_int"
         }
@@ -1176,7 +1176,7 @@
       ],
       "code_references": [
         {
-          "line": 171,
+          "line": 174,
           "path": "src/gpt_trader/cli/commands/run.py",
           "reader": "_env_flag"
         }

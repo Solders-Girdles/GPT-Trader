@@ -10,7 +10,7 @@ from argparse import Namespace
 from types import FrameType
 from typing import Any
 
-from gpt_trader.app.config.validation import ConfigValidationError
+from gpt_trader.app.config.validation import ConfigValidationError, validate_config
 from gpt_trader.app.container import clear_application_container, get_application_container
 from gpt_trader.cli import options, services
 from gpt_trader.config.constants import OTEL_ENABLED, OTEL_EXPORTER_ENDPOINT, OTEL_SERVICE_NAME
@@ -67,6 +67,9 @@ def execute(args: Namespace) -> int:
             include=options.RUNTIME_CONFIG_KEYS,
             skip={"dev_fast", "tui", "demo"},
         )
+        validation_errors = validate_config(config)
+        if validation_errors:
+            raise ConfigValidationError(validation_errors)
     except ConfigValidationError as exc:
         message = str(exc)
         if "symbols overrides" in message:

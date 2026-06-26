@@ -411,6 +411,30 @@ def _wal_sidecar_is_valid(wal_path: Path) -> bool:
     return len(header) == 4 and header in _SQLITE_WAL_MAGIC
 
 
+def _sqlite_attach_path(path: Path) -> str:
+    return path.resolve().as_posix()
+
+
+def _swap_recovered_database(temp_db_path: Path, database_path: Path) -> None:
+    _remove_sqlite_sidecars(database_path)
+    replace_error: OSError | None = None
+    for attempt in range(8):
+        try:
+            os.replace(str(temp_db_path), str(database_path))
+            return
+        except OSError as error:
+            replace_error = error
+            if attempt < 7:
+                time.sleep(0.1 * (attempt + 1))
+    if os.name == "nt":
+        shutil.copy2(str(temp_db_path), str(database_path))
+        _remove_sqlite_file_set(temp_db_path)
+        return
+    raise RecoveryError(
+        f"Could not replace database at {database_path}: {replace_error}"
+    ) from replace_error
+
+
 def _remove_invalid_sqlite_sidecars(database_path: Path) -> None:
     """Drop WAL/SHM sidecars that are not valid SQLite WAL companions."""
     wal_path, shm_path = _sqlite_sidecar_paths(database_path)
@@ -480,7 +504,10 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
                 conn.executescript(schema_path.read_text())
 
             # Attach corrupted backup to stream data directly at SQLite level
-            conn.execute("ATTACH DATABASE ? AS corrupted", (str(backup_path),))
+            conn.execute(
+                "ATTACH DATABASE ? AS corrupted",
+                (_sqlite_attach_path(backup_path),),
+            )
 
             cursor = conn.execute(
                 "SELECT name, sql FROM corrupted.sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
@@ -517,24 +544,7 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
 
         if not _remove_sqlite_sidecars(temp_db_path):
             raise RecoveryError("Could not remove recovered database WAL sidecars")
-        _remove_sqlite_sidecars(database_path)
-
-        # os.replace atomically overwrites the destination on Windows without a
-        # separate unlink step that can fail while handles are still closing.
-        replace_error: OSError | None = None
-        for attempt in range(5):
-            try:
-                os.replace(str(temp_db_path), str(database_path))
-                replace_error = None
-                break
-            except OSError as error:
-                replace_error = error
-                if attempt < 4:
-                    time.sleep(0.05 * (attempt + 1))
-        if replace_error is not None:
-            raise RecoveryError(
-                f"Could not replace database at {database_path}: {replace_error}"
-            ) from replace_error
+        _swap_recovered_database(temp_db_path, database_path)
 
         logger.info(
             "Database recreated",

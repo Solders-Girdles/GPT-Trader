@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6826,
-    "total_files": 805,
+    "total_tests": 6828,
+    "total_files": 806,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6661,
+    "unit": 6663,
     "asyncio": 411,
     "parametrize": 195,
     "endpoints": 83,
@@ -804,6 +804,9 @@
     ],
     "test_manage_logs.py": [
       "tests/unit/scripts/test_manage_logs.py"
+    ],
+    "test_mypy_tui_ratchet.py": [
+      "tests/unit/scripts/test_mypy_tui_ratchet.py"
     ],
     "test_project_review_issue_promoter.py": [
       "tests/unit/scripts/test_project_review_issue_promoter.py"
@@ -62554,6 +62557,24 @@
       {
         "name": "test_get_active_logs_reports_sizes",
         "line": 98,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_mypy_tui_ratchet.py": [
+      {
+        "name": "test_tui_mypy_ratchet_includes_initial_state_and_type_modules",
+        "line": 12,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_tui_mypy_ratchet_disables_ignore_errors_for_included_modules",
+        "line": 34,
         "markers": [
           "unit"
         ],

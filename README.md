@@ -151,6 +151,20 @@ uv run pytest tests/property -q
 uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -q
 ```
 
+### Local Validation Profiles
+
+Use `uv run local-ci --profile quick` for fast development feedback; it skips
+readiness inputs and agent-artifact freshness with explicit banner messages.
+Use `make ci-required` for the local PR-readiness surface, including generated
+agent-artifact freshness. Use default `uv run local-ci` only when you also need
+strict/full local-live readiness evidence before a PR handoff.
+
+When strict/full fails on stale generated artifacts, run
+`uv run agent-regenerate` and then `uv run agent-regenerate --verify`. When it
+fails on readiness inputs, refresh the canary inputs with `make canary-daily`
+or follow the profile-specific commands in
+[`docs/DEVELOPMENT_GUIDELINES.md`](docs/DEVELOPMENT_GUIDELINES.md#local-ci-troubleshooting).
+
 ### Test Guardrails
 
 - Keep `test_*.py` modules <= 240 lines unless allowlisted.

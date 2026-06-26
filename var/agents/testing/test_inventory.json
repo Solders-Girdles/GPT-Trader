@@ -62574,7 +62574,7 @@
       },
       {
         "name": "test_tui_mypy_ratchet_disables_ignore_errors_for_included_modules",
-        "line": 32,
+        "line": 34,
         "markers": [
           "unit"
         ],

@@ -127,7 +127,7 @@ explicit_package_bases = true
 mypy_path = "src"
 # Keep most of the dynamic Textual surface out of the default mypy pass while
 # ratcheting small state/type modules into normal CI coverage.
-exclude = "(^|.*/)src/gpt_trader/tui/(?!(types|thresholds)\\.py$)(?!state_management/(?:__init__|validators)\\.py$).*"
+exclude = "(^|.*/)src/gpt_trader/tui/(?!(types|thresholds)\\.py$)(?!state_management/(?:__init__|validators)\\.py$).*\\.py$"
 files = [
     "src/gpt_trader",
 ]

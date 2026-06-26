@@ -13,6 +13,8 @@ def test_tui_mypy_ratchet_includes_initial_state_and_type_modules() -> None:
     exclude = re.compile(_mypy_config()["exclude"])
 
     included_paths = [
+        "src/gpt_trader/tui/",
+        "src/gpt_trader/tui/state_management/",
         "src/gpt_trader/tui/types.py",
         "src/gpt_trader/tui/thresholds.py",
         "src/gpt_trader/tui/state_management/__init__.py",

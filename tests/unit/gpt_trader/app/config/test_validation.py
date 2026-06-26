@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ValidationError
 
+from gpt_trader.app.config.bot_config import BotConfig
 from gpt_trader.app.config.validation import (
     ConfigValidationError,
     ConfigValidationResult,
     format_validation_errors,
+    validate_config,
 )
 
 
@@ -121,3 +123,35 @@ class TestFormatValidationErrors:
         except ValidationError as exc:
             errors = format_validation_errors(exc)
             assert len(errors) >= 1
+
+
+class TestValidateConfigCFMConsistency:
+    """Tests for CFM mode and enablement consistency validation."""
+
+    def test_spot_only_default_is_valid(self) -> None:
+        assert validate_config(BotConfig()) == []
+
+    def test_cfm_enabled_requires_cfm_trading_mode(self) -> None:
+        errors = validate_config(BotConfig(cfm_enabled=True, trading_modes=["spot"]))
+
+        assert "cfm_enabled requires trading_modes to include 'cfm'" in errors
+
+    def test_cfm_trading_mode_requires_cfm_enabled(self) -> None:
+        errors = validate_config(BotConfig(cfm_enabled=False, trading_modes=["cfm"]))
+
+        assert "trading_modes includes 'cfm' but cfm_enabled is false" in errors
+
+    def test_hybrid_trading_mode_requires_cfm_enabled(self) -> None:
+        errors = validate_config(BotConfig(cfm_enabled=False, trading_modes=["spot", "cfm"]))
+
+        assert "trading_modes includes 'cfm' but cfm_enabled is false" in errors
+
+    def test_cfm_only_configuration_is_valid(self) -> None:
+        errors = validate_config(BotConfig(cfm_enabled=True, trading_modes=["cfm"]))
+
+        assert errors == []
+
+    def test_hybrid_cfm_configuration_is_valid(self) -> None:
+        errors = validate_config(BotConfig(cfm_enabled=True, trading_modes=["spot", "cfm"]))
+
+        assert errors == []

@@ -72,6 +72,7 @@
     "gpt_trader.app.config.bot_config": [
       "tests/unit/gpt_trader/app/config/test_bot_config.py",
       "tests/unit/gpt_trader/app/config/test_cfm_config.py",
+      "tests/unit/gpt_trader/app/config/test_validation.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation_kill_switch.py",
       "tests/unit/gpt_trader/config/test_bot_config.py",
       "tests/unit/scripts/test_backtest_runner_pillar2_gates.py"
@@ -2398,6 +2399,7 @@
       "gpt_trader.config.types"
     ],
     "tests/unit/gpt_trader/app/config/test_validation.py": [
+      "gpt_trader.app.config.bot_config",
       "gpt_trader.app.config.validation"
     ],
     "tests/unit/gpt_trader/app/config/test_validation_rules.py": [

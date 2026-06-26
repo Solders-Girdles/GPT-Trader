@@ -39882,7 +39882,7 @@
     "tests/unit/gpt_trader/persistence/test_durability_repair.py": [
       {
         "name": "test_repair_sqlite_database_aborts_when_backup_copy_fails",
-        "line": 26,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -39890,7 +39890,7 @@
       },
       {
         "name": "test_repair_sqlite_database_removes_stale_wal_sidecars",
-        "line": 44,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -39898,7 +39898,7 @@
       },
       {
         "name": "test_repair_sqlite_database_preserves_uncheckpointed_wal_rows",
-        "line": 57,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -39906,7 +39906,7 @@
       },
       {
         "name": "test_repair_sqlite_database_copies_common_columns_from_stale_schema",
-        "line": 77,
+        "line": 79,
         "markers": [
           "unit"
         ],

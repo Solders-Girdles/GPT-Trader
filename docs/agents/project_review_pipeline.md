@@ -255,7 +255,7 @@ follow-up. New work gets a new finding packet.
 Review and analysis artifacts (spreadsheets, CSVs, reports) produced by agent review lanes:
 
 - Committed only under `review_artifacts/`
-- Use narrow exceptions in `.gitignore` (e.g. `!review_artifacts/`) so global `*.csv` and `data/` ignores do not swallow handoff deliverables.
+- Use narrow exceptions in `.gitignore` (for example, `!review_artifacts/*.csv`) so global `*.csv` and `data/` ignores do not swallow handoff deliverables.
 - Non-durable temps go in `review_artifacts/tmp/` (still ignored).
 - Document format/location in this file and AGENTS.md.
 - XLSX and targeted CSVs are allowed; avoid committing large datasets or secrets.

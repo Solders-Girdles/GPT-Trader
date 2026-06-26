@@ -102,7 +102,7 @@
     "property": 82,
     "integration": 79,
     "usefixtures": 17,
-    "skipif": 8,
+    "skipif": 9,
     "slow": 4,
     "anyio": 3,
     "contract": 3,

@@ -62,6 +62,8 @@ docs/_build/
 
 # Review artifacts convention (tracked review CSVs/XLSX only; see #968 and docs/agents/project_review_pipeline.md)
 !review_artifacts/
+!review_artifacts/*.csv
+!review_artifacts/*.xlsx
 review_artifacts/tmp/
 review_artifacts/*.tmp
 review_artifacts/*.log

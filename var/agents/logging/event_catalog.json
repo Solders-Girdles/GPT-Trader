@@ -450,7 +450,7 @@
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 8,
+      "occurrence_count": 9,
       "source_files": [
         "persistence/durability.py"
       ],
@@ -2512,7 +2512,7 @@
     "consecutive_failures": 6,
     "details": 4,
     "environment": 12,
-    "error": 64,
+    "error": 65,
     "error_message": 89,
     "error_type": 87,
     "event_type": 5,
@@ -2539,7 +2539,7 @@
   "level_distribution": {
     "CRITICAL": 2,
     "DEBUG": 49,
-    "ERROR": 122,
+    "ERROR": 123,
     "INFO": 90,
     "WARNING": 101
   },

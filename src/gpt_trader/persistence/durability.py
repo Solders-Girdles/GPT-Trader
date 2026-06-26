@@ -16,6 +16,7 @@ import os
 import shutil
 import sqlite3
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -516,11 +517,24 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
 
         if not _remove_sqlite_sidecars(temp_db_path):
             raise RecoveryError("Could not remove recovered database WAL sidecars")
-        if not _remove_sqlite_file_set(database_path):
-            raise RecoveryError("Could not remove original database before swap")
+        _remove_sqlite_sidecars(database_path)
 
-        # os.replace overwrites on Windows; Path.replace can fail if dst exists.
-        os.replace(str(temp_db_path), str(database_path))
+        # os.replace atomically overwrites the destination on Windows without a
+        # separate unlink step that can fail while handles are still closing.
+        replace_error: OSError | None = None
+        for attempt in range(5):
+            try:
+                os.replace(str(temp_db_path), str(database_path))
+                replace_error = None
+                break
+            except OSError as error:
+                replace_error = error
+                if attempt < 4:
+                    time.sleep(0.05 * (attempt + 1))
+        if replace_error is not None:
+            raise RecoveryError(
+                f"Could not replace database at {database_path}: {replace_error}"
+            ) from replace_error
 
         logger.info(
             "Database recreated",

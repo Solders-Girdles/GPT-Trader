@@ -126,8 +126,12 @@ uv run local-ci
 
 This covers the same core validation categories used around PRs: lint + format,
 docs audits, mypy, agent artifacts freshness, TUI CSS check, test guardrails,
-and core unit tests. Profile-specific local checks can still differ from GitHub
-pull_request enforcement, especially around readiness evidence.
+and core unit tests. The mypy pass includes the first TUI ratchet modules under
+`src/gpt_trader/tui/types.py`, `src/gpt_trader/tui/thresholds.py`, and
+`src/gpt_trader/tui/state_management/validators.py`; the broader dynamic
+Textual surface remains excluded until later ratchet steps. Profile-specific
+local checks can still differ from GitHub pull_request enforcement, especially
+around readiness evidence.
 
 The command accepts `--profile`/`-p` to select either the default strict/full
 profile or the quick/dev profile. Strict (the default and the `full` alias) runs

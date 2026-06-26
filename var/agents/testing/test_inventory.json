@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6835,
+    "total_tests": 6837,
     "total_files": 806,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6670,
+    "unit": 6672,
     "asyncio": 411,
     "parametrize": 195,
     "endpoints": 83,
@@ -3467,7 +3467,7 @@
         "class": "TestValidateConfigCFMConsistency"
       },
       {
-        "name": "TestValidateConfigCFMConsistency::test_cfm_only_configuration_is_valid",
+        "name": "TestValidateConfigCFMConsistency::test_malformed_trading_modes_none_returns_validation_errors",
         "line": 149,
         "markers": [
           "unit"
@@ -3476,8 +3476,26 @@
         "class": "TestValidateConfigCFMConsistency"
       },
       {
+        "name": "TestValidateConfigCFMConsistency::test_malformed_trading_modes_items_return_validation_error",
+        "line": 155,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_cfm_only_configuration_is_valid",
+        "line": 160,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
         "name": "TestValidateConfigCFMConsistency::test_hybrid_cfm_configuration_is_valid",
-        "line": 154,
+        "line": 165,
         "markers": [
           "unit"
         ],

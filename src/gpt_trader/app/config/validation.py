@@ -98,7 +98,16 @@ def validate_config(config: BotConfig) -> list[str]:
     if not config.symbols:
         errors.append("symbols list cannot be empty")
 
-    trading_modes = set(config.trading_modes)
+    raw_trading_modes = config.trading_modes
+    if not isinstance(raw_trading_modes, list):
+        errors.append("trading_modes must be a list of mode names")
+        trading_modes = set()
+    elif not all(isinstance(mode, str) for mode in raw_trading_modes):
+        errors.append("trading_modes must contain only mode names")
+        trading_modes = {mode for mode in raw_trading_modes if isinstance(mode, str)}
+    else:
+        trading_modes = set(raw_trading_modes)
+
     cfm_mode_enabled = "cfm" in trading_modes
     if config.cfm_enabled and not cfm_mode_enabled:
         errors.append("cfm_enabled requires trading_modes to include 'cfm'")

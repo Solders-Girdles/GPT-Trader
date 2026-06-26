@@ -146,6 +146,17 @@ class TestValidateConfigCFMConsistency:
 
         assert "trading_modes includes 'cfm' but cfm_enabled is false" in errors
 
+    def test_malformed_trading_modes_none_returns_validation_errors(self) -> None:
+        errors = validate_config(BotConfig(cfm_enabled=True, trading_modes=None))  # type: ignore[arg-type]
+
+        assert "trading_modes must be a list of mode names" in errors
+        assert "cfm_enabled requires trading_modes to include 'cfm'" in errors
+
+    def test_malformed_trading_modes_items_return_validation_error(self) -> None:
+        errors = validate_config(BotConfig(cfm_enabled=True, trading_modes=["cfm", 1]))  # type: ignore[list-item]
+
+        assert "trading_modes must contain only mode names" in errors
+
     def test_cfm_only_configuration_is_valid(self) -> None:
         errors = validate_config(BotConfig(cfm_enabled=True, trading_modes=["cfm"]))
 

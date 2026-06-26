@@ -212,7 +212,7 @@ def instantiate_bot(config: BotConfig) -> TradingBot:
     via get_application_container(). Avoids overriding an existing container
     (e.g., one set by tests).
     """
-    validation_errors = validate_config(config)
+    validation_errors = _validate_startup_config(config)
     if validation_errors:
         raise ConfigValidationError(validation_errors)
 
@@ -231,3 +231,23 @@ def instantiate_bot(config: BotConfig) -> TradingBot:
     set_application_container(container)
     logger.debug("Created and registered application container")
     return container.create_bot()
+
+
+def _validate_startup_config(config: BotConfig) -> list[str]:
+    errors = validate_config(config)
+    if not _is_observe_read_only_config(config):
+        return errors
+
+    return [error for error in errors if not _is_observe_position_fraction_error(error)]
+
+
+def _is_observe_read_only_config(config: BotConfig) -> bool:
+    profile = getattr(config, "profile", None)
+    profile_value = getattr(profile, "value", profile)
+    return str(profile_value).lower() == Profile.OBSERVE.value and bool(
+        getattr(config, "dry_run", False)
+    )
+
+
+def _is_observe_position_fraction_error(error: str) -> bool:
+    return error.startswith("risk.position_fraction must be between 0 and 1, got 0")

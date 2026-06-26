@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 from unittest.mock import MagicMock
 
 import pytest
@@ -17,7 +18,8 @@ from gpt_trader.app.container import (
     set_application_container,
 )
 from gpt_trader.cli.commands.run import _run_bot
-from gpt_trader.cli.services import instantiate_bot
+from gpt_trader.cli.services import instantiate_bot, load_profile_config
+from gpt_trader.config.types import Profile
 
 
 @pytest.fixture
@@ -110,6 +112,61 @@ class TestInstantiateBot:
 
         mock_create.assert_not_called()
         assert get_application_container() is None
+
+    def test_allows_observe_read_only_zero_position_fraction(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test that read-only observe config can create a bot with zero position size."""
+        observe_config = load_profile_config(Profile.OBSERVE)
+        mock_container = MagicMock(spec=ApplicationContainer)
+        mock_bot = MagicMock()
+        mock_container.create_bot.return_value = mock_bot
+        mock_create = MagicMock(return_value=mock_container)
+        monkeypatch.setattr(services_module, "create_application_container", mock_create)
+
+        bot = instantiate_bot(observe_config)
+
+        mock_create.assert_called_once_with(observe_config)
+        mock_container.create_bot.assert_called_once()
+        assert bot is mock_bot
+
+    def test_rejects_non_observe_zero_position_fraction(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test that executable profiles still reject zero position fraction."""
+        invalid_config = BotConfig()
+        invalid_config.risk.position_fraction = Decimal("0")
+        mock_create = MagicMock()
+        monkeypatch.setattr(services_module, "create_application_container", mock_create)
+
+        with pytest.raises(
+            ConfigValidationError,
+            match="risk.position_fraction must be between 0 and 1",
+        ):
+            instantiate_bot(invalid_config)
+
+        mock_create.assert_not_called()
+
+    def test_observe_profile_still_rejects_cfm_mismatch(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test that observe startup only exempts the read-only sizing sentinel."""
+        observe_config = load_profile_config(Profile.OBSERVE)
+        observe_config.cfm_enabled = True
+        observe_config.trading_modes = ["spot"]
+        mock_create = MagicMock()
+        monkeypatch.setattr(services_module, "create_application_container", mock_create)
+
+        with pytest.raises(
+            ConfigValidationError,
+            match="cfm_enabled requires trading_modes to include 'cfm'",
+        ):
+            instantiate_bot(observe_config)
+
+        mock_create.assert_not_called()
 
 
 class TestRunBotCleanup:

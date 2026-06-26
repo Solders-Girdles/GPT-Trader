@@ -121,24 +121,22 @@ def _gitignored_files(paths: list[Path], *, git_root: Path) -> set[Path]:
     if not relative_paths:
         return set()
 
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(git_root), "check-ignore", "--stdin"],
-            input="\n".join(relative_paths) + "\n",
-            capture_output=True,
-            text=True,
-        )
-    except FileNotFoundError:
-        return set()
+    ignored: set[Path] = set()
+    for relative in relative_paths:
+        for candidate in {relative, relative.replace("/", "\\")}:
+            try:
+                result = subprocess.run(
+                    ["git", "-C", str(git_root), "check-ignore", "-q", "--", candidate],
+                    capture_output=True,
+                    text=True,
+                )
+            except FileNotFoundError:
+                return ignored
+            if result.returncode == 0 and relative in path_by_relative:
+                ignored.add(path_by_relative[relative])
+                break
 
-    if result.returncode not in {0, 1}:
-        return set()
-
-    return {
-        path_by_relative[relative]
-        for relative in result.stdout.splitlines()
-        if relative in path_by_relative
-    }
+    return ignored
 
 
 def _iter_source_files(

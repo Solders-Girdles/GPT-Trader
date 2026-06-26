@@ -65,10 +65,10 @@ def test_repair_sqlite_database_preserves_uncheckpointed_wal_rows(tmp_path: Path
         connection.execute("INSERT INTO repair_items VALUES (1, 'from-wal')")
         connection.commit()
         assert _sidecar_paths(database_path)[0].stat().st_size > 0
-
-        assert durability.repair_sqlite_database(database_path) is True
     finally:
         connection.close()
+
+    assert durability.repair_sqlite_database(database_path) is True
 
     with sqlite3.connect(str(database_path)) as repaired:
         assert repaired.execute("SELECT name FROM repair_items").fetchone() == ("from-wal",)

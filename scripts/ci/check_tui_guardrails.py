@@ -134,7 +134,7 @@ def check_css_files(files: list[pathlib.Path], root: pathlib.Path) -> tuple[list
                 for match in matches[:3]:  # Limit to first 3 occurrences
                     # Find approximate line number (may be off due to comment removal)
                     line_num = text_no_comments[: match.start()].count("\n") + 1
-                    errors.append(f"{rel}:{line_num}: {message}")
+                    errors.append(f"{rel.as_posix()}:{line_num}: {message}")
 
     return errors, warnings
 

@@ -70,7 +70,7 @@ Item:first-child {
     assert warnings == []
     assert any("linear-gradient() not supported" in error for error in errors)
     assert any(":first-child not supported" in error for error in errors)
-    assert all("styles/bad.tcss:" in error for error in errors)
+    assert all("styles/bad.tcss:" in error.replace("\\", "/") for error in errors)
 
 
 def test_check_required_modules_reports_missing(tmp_path: Path) -> None:

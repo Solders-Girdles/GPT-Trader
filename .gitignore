@@ -61,10 +61,11 @@ archived/claudia_20250812_151036/
 docs/_build/
 
 # Review artifacts convention (tracked review CSVs/XLSX only; see #968 and docs/agents/project_review_pipeline.md)
-!review_artifacts/
+review_artifacts/**
+!review_artifacts/.gitkeep
 !review_artifacts/*.csv
 !review_artifacts/*.xlsx
-review_artifacts/tmp/
+review_artifacts/tmp/**
 review_artifacts/*.tmp
 review_artifacts/*.log
 

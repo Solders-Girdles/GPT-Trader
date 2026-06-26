@@ -106,6 +106,20 @@ def _git_root_for(path: Path) -> Path | None:
     return Path(root) if root else None
 
 
+def _gitignore_basename_patterns(git_root: Path) -> set[str]:
+    gitignore = git_root / ".gitignore"
+    if not gitignore.is_file():
+        return set()
+    patterns: set[str] = set()
+    for raw_line in gitignore.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "/" not in line and not line.startswith("*"):
+            patterns.add(line)
+    return patterns
+
+
 def _gitignored_files(paths: list[Path], *, git_root: Path) -> set[Path]:
     resolved_git_root = git_root.resolve()
     relative_paths: list[str] = []
@@ -121,24 +135,27 @@ def _gitignored_files(paths: list[Path], *, git_root: Path) -> set[Path]:
     if not relative_paths:
         return set()
 
-    try:
-        result = subprocess.run(
-            ["git", "-C", str(git_root), "check-ignore", "--stdin"],
-            input="\n".join(relative_paths) + "\n",
-            capture_output=True,
-            text=True,
-        )
-    except FileNotFoundError:
-        return set()
+    ignored: set[Path] = set()
+    basename_patterns = _gitignore_basename_patterns(resolved_git_root)
+    for relative, path in path_by_relative.items():
+        if Path(relative).name in basename_patterns:
+            ignored.add(path)
 
-    if result.returncode not in {0, 1}:
-        return set()
+    for relative in relative_paths:
+        for candidate in {relative, relative.replace("/", "\\")}:
+            try:
+                result = subprocess.run(
+                    ["git", "-C", str(git_root), "check-ignore", "-q", "--", candidate],
+                    capture_output=True,
+                    text=True,
+                )
+            except FileNotFoundError:
+                return ignored
+            if result.returncode == 0 and relative in path_by_relative:
+                ignored.add(path_by_relative[relative])
+                break
 
-    return {
-        path_by_relative[normalized]
-        for line in result.stdout.splitlines()
-        if (normalized := line.strip().replace("\\", "/")) in path_by_relative
-    }
+    return ignored
 
 
 def _iter_source_files(

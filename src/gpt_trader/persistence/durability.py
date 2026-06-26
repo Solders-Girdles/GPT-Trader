@@ -397,6 +397,37 @@ def check_sqlite_integrity(database_path: Path) -> tuple[bool, list[str]]:
         return False, [f"Database error: {e}"]
 
 
+_SQLITE_WAL_MAGIC = {bytes.fromhex("377f0682"), bytes.fromhex("377f0683")}
+
+
+def _wal_sidecar_is_valid(wal_path: Path) -> bool:
+    if not wal_path.exists():
+        return True
+    try:
+        header = wal_path.read_bytes()[:4]
+    except OSError:
+        return False
+    return len(header) == 4 and header in _SQLITE_WAL_MAGIC
+
+
+def _remove_invalid_sqlite_sidecars(database_path: Path) -> None:
+    """Drop WAL/SHM sidecars that are not valid SQLite WAL companions."""
+    wal_path, shm_path = _sqlite_sidecar_paths(database_path)
+    if wal_path.exists() and not _wal_sidecar_is_valid(wal_path):
+        for sidecar_path in (wal_path, shm_path):
+            try:
+                sidecar_path.unlink()
+            except FileNotFoundError:
+                continue
+            except OSError as e:
+                logger.error(
+                    "Failed to remove invalid SQLite sidecar",
+                    operation="database_repair",
+                    sidecar=str(sidecar_path),
+                    error=str(e),
+                )
+
+
 def repair_sqlite_database(database_path: Path, backup_path: Path | None = None) -> bool:
     """
     Attempt to repair a corrupted SQLite database.
@@ -413,6 +444,8 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
     """
     if not database_path.exists():
         return True
+
+    _remove_invalid_sqlite_sidecars(database_path)
 
     # Backup corrupted database
     if backup_path is None:
@@ -483,11 +516,11 @@ def repair_sqlite_database(database_path: Path, backup_path: Path | None = None)
 
         if not _remove_sqlite_sidecars(temp_db_path):
             raise RecoveryError("Could not remove recovered database WAL sidecars")
-        if not _remove_sqlite_sidecars(database_path):
-            raise RecoveryError("Could not remove original database WAL sidecars")
+        if not _remove_sqlite_file_set(database_path):
+            raise RecoveryError("Could not remove original database before swap")
 
-        # Replace corrupted database with recovered temporary database
-        temp_db_path.replace(database_path)
+        # os.replace overwrites on Windows; Path.replace can fail if dst exists.
+        os.replace(str(temp_db_path), str(database_path))
 
         logger.info(
             "Database recreated",

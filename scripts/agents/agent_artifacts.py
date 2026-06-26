@@ -106,20 +106,6 @@ def _git_root_for(path: Path) -> Path | None:
     return Path(root) if root else None
 
 
-def _gitignore_basename_patterns(git_root: Path) -> set[str]:
-    gitignore = git_root / ".gitignore"
-    if not gitignore.is_file():
-        return set()
-    patterns: set[str] = set()
-    for raw_line in gitignore.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if "/" not in line and not line.startswith("*"):
-            patterns.add(line)
-    return patterns
-
-
 def _gitignored_files(paths: list[Path], *, git_root: Path) -> set[Path]:
     resolved_git_root = git_root.resolve()
     relative_paths: list[str] = []
@@ -136,11 +122,6 @@ def _gitignored_files(paths: list[Path], *, git_root: Path) -> set[Path]:
         return set()
 
     ignored: set[Path] = set()
-    basename_patterns = _gitignore_basename_patterns(resolved_git_root)
-    for relative, path in path_by_relative.items():
-        if Path(relative).name in basename_patterns:
-            ignored.add(path)
-
     for relative in relative_paths:
         for candidate in {relative, relative.replace("/", "\\")}:
             try:

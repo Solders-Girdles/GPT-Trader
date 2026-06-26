@@ -416,7 +416,10 @@ def _sqlite_attach_path(path: Path) -> str:
 
 
 def _swap_recovered_database(temp_db_path: Path, database_path: Path) -> None:
-    _remove_sqlite_sidecars(database_path)
+    if not _remove_sqlite_sidecars(database_path):
+        raise RecoveryError(
+            f"Could not remove destination WAL sidecars before swap: {database_path}"
+        )
     replace_error: OSError | None = None
     for attempt in range(8):
         try:

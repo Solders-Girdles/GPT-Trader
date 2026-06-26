@@ -357,11 +357,11 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 544,
+          "line": 423,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         },
         {
-          "line": 569,
+          "line": 448,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -376,7 +376,7 @@
       ],
       "locations": [
         {
-          "line": 539,
+          "line": 418,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -389,7 +389,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 614,
+          "line": 493,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],

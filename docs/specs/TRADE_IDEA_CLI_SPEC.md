@@ -284,7 +284,8 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
   - `timing_invalidation_constraints` with horizon, invalidation, target exit,
     failure mode, and do-not-trade conditions.
   - `policy_budget_snapshot` with the current persisted/default risk budget and
-    approval-policy violations evaluated at the latest audited event timestamp.
+    approval-policy violations evaluated at the export/evaluation timestamp
+    recorded as `policy_budget_snapshot.evaluated_at`.
   - `broker_ticket.source_record` copied from the immutable `TradeIdea` plus a
     derived broker-neutral export ticket.
   - `venue_request`, `venue_payload`, and sanitized provenance for created,

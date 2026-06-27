@@ -2,227 +2,130 @@
 
 ---
 status: current
-last-updated: 2026-01-23
 ---
 
-This document describes the known differences between our P&L calculations and what Coinbase reports through their API.
+This document describes where P&L is computed in our code and the known reasons
+our numbers can differ from what Coinbase reports through their API.
 
-## Overview
+> **Implementation status.** Live P&L tracking (realized + unrealized) is
+> implemented in `PnLService`. Several reconciliation features described in
+> older versions of this doc are **not built**: there is no funding field on
+> live positions, fees are not folded into P&L, and there is no automated
+> P&L-value reconciliation against Coinbase. Those are called out as **Gaps**
+> below so they are not mistaken for existing behavior.
 
-When reconciling P&L between our internal calculations and Coinbase's reported values, we've identified several areas where calculations may differ. Understanding these differences is crucial for accurate position tracking and risk management.
+## Where P&L lives in code
 
-## Key Differences
+| Concern | Code |
+|---------|------|
+| Live realized/unrealized P&L | `PnLService` — `src/gpt_trader/features/brokerages/coinbase/rest/pnl_service.py` |
+| Position state (qty, side, entry) | `PositionStateStore` / `PositionState` — `src/gpt_trader/features/brokerages/coinbase/rest/position_state_store.py`, `.../coinbase/utilities.py` |
+| Mark prices | `MarketDataService.get_mark()` — `src/gpt_trader/features/brokerages/coinbase/market_data_service.py` |
+| Position drift detection | `PositionReconciler` — `src/gpt_trader/monitoring/system/positions.py` |
+| CFM futures positions (broker) | `cfm_position()` / `cfm_positions()` — `src/gpt_trader/features/brokerages/coinbase/client/portfolio.py` |
+| Backtest funding simulation | `FundingPnLTracker` — `src/gpt_trader/backtesting/simulation/funding_tracker.py` |
 
-### 1. Funding Payments
+### How `PnLService` computes P&L
 
-**Our System:**
-- Tracks funding payments separately in `position.funding_paid`
-- Maintains distinct `realized_pnl` and `funding_paid` fields
-- Funding is subtracted from total P&L when calculating net results
+`process_fill_for_pnl(fill)` updates position state from each fill:
 
-**Coinbase:**
-- Often includes funding payments in the `realized_pnl` field
-- May not provide separate funding tracking in position endpoints
-- CFM (Cross Futures Margin) endpoints may combine funding with realized P&L
+- **Increasing a position** recalculates a weighted-average entry price:
+  ```python
+  total_cost = (position.quantity * position.entry_price) + (size * price)
+  position.entry_price = total_cost / (position.quantity + size)
+  ```
+- **Reducing a position** realizes P&L on the closed portion:
+  ```python
+  pnl = (price - position.entry_price) * close_quantity
+  if position.side == "short":
+      pnl = -pnl
+  position.realized_pnl += pnl
+  ```
 
-**Reconciliation:**
+`get_position_pnl(symbol)` computes unrealized P&L from the current mark:
+
 ```python
-# Our total economic impact
-our_total = position.realized_pnl - position.funding_paid
-
-# Coinbase total (funding included)
-cb_total = coinbase_position.realized_pnl
-
-# These should match
-assert abs(our_total - cb_total) < tolerance
+mark = market_data.get_mark(symbol)            # falls back to entry_price if unavailable
+upnl = (mark - position.entry_price) * position.quantity
+if position.side == "short":
+    upnl = -upnl
 ```
 
-### 2. Fee Handling
+`get_portfolio_pnl()` aggregates realized + unrealized across all tracked symbols.
 
-**Our System:**
-- Currently does not include trading fees in P&L calculations
-- Fees would need to be tracked separately if required
+> **Position flips (long → short in one fill) are handled simplistically.**
+> `process_fill_for_pnl` only reduces the existing position down to zero; it does
+> not open the opposite side with the remaining quantity. Treat flips as
+> incompletely modeled until this is hardened.
 
-**Coinbase:**
-- May include fees in realized P&L
-- Maker/taker fees affect the actual P&L realized
+## Why our numbers differ from Coinbase
 
-**Impact:**
-- Our P&L may appear higher than Coinbase's by the amount of fees paid
-- For accurate reconciliation, fees should be subtracted from our calculations
+### 1. Funding payments (CFM/derivatives)
 
-### 3. Mark Price Updates
+- **Our system:** live positions (`core.account.Position`) have **no funding
+  field**. Funding is only modeled in backtests via `FundingPnLTracker`. Live
+  realized P&L from `PnLService` therefore excludes funding entirely.
+- **Coinbase:** CFM endpoints may fold funding into `realized_pnl`.
+- **Consequence:** for derivatives, our realized P&L and Coinbase's can diverge
+  by accumulated funding. Spot trading (the active mode) is unaffected.
 
-**Our System:**
-- Updates mark prices when we explicitly call `update_marks()`
-- May have stale prices if not updated frequently
+### 2. Fees (Gap — not implemented)
 
-**Coinbase:**
-- Uses real-time mark prices from their matching engine
-- Always has the most current mark price for unrealized P&L
+- **Our system:** trading fees are **not** included in P&L. `PnLService` works
+  purely from fill price/size.
+- **Coinbase:** maker/taker fees reduce realized P&L.
+- **Consequence:** our P&L reads higher than Coinbase's by roughly the fees paid.
 
-**Best Practice:**
-- Fetch current mark prices from Coinbase before any P&L comparison
-- Update our tracker with Coinbase's mark prices for consistency
+### 3. Mark price timing
 
-### 4. Weighted Average Entry Price
+- **Our system:** unrealized P&L uses the latest mark from `MarketDataService`,
+  which can lag if the feed is stale. When no mark is available, `PnLService`
+  falls back to `entry_price` (unrealized P&L of zero).
+- **Coinbase:** uses real-time marks from its matching engine.
+- **Best practice:** when comparing, pull Coinbase's mark and use it for both sides.
 
-**Our System:**
-```python
-# Precise weighted average calculation
-new_avg = (old_avg * old_qty + new_price * new_qty) / total_qty
-```
+### 4. Weighted-average entry price
 
-**Coinbase:**
-- Should use the same weighted average formula
-- May have slight rounding differences due to decimal precision
+Both sides use the same weighted-average formula (see code above). Differences
+here are limited to decimal rounding (see below).
 
-**Validation:**
-- Both should arrive at the same weighted average within 0.01% tolerance
+### 5. Decimal precision
 
-### 5. Position Flips
+- **Our system:** uses Python `Decimal` throughout.
+- **Coinbase:** returns strings we convert to `Decimal`; values may already be
+  rounded to 2–8 places.
+- **Tolerance for comparisons:** `max(0.01% of value, $0.10)`.
 
-**Our System:**
-- Handles position flips (long to short) in a single trade
-- Calculates realized P&L for the closed portion
-- Opens new position with remaining quantity
+## Reconciliation: what actually runs
 
-**Coinbase:**
-- Should handle similarly but may report differently
-- Check if they report two separate trades or one combined
+The only automated reconciliation today is **position drift detection**, not
+P&L-value reconciliation:
 
-### 6. Decimal Precision
+- `PositionReconciler.run()` periodically (default every 90s) calls
+  `broker.list_positions()` and diffs quantity/side against the cached
+  `runtime_state.last_positions`.
+- On change it logs and emits a `position_drift` event via the EventStore.
 
-**Our System:**
-- Uses Python's `Decimal` type for arbitrary precision
-- Maintains full precision throughout calculations
+There is **no** automated job that compares our realized/unrealized P&L against
+Coinbase-reported values and alerts on tolerance breaches. (A historical
+reconciliation helper was removed during the 2025 cleanup; recover it from git
+history if that capability is reintroduced.) For a manual check, compare
+`PnLService.get_portfolio_pnl()` output against Coinbase, accounting for the
+funding and fee gaps above.
 
-**Coinbase:**
-- Returns values as strings that we convert to Decimal
-- May round to specific decimal places (typically 2-8 decimals)
+### Relevant Coinbase endpoints
 
-**Reconciliation Tolerance:**
-- Use tolerance of max(0.01% of value, $0.10) for comparisons
+| Purpose | Endpoint |
+|---------|----------|
+| CFM positions | `GET /api/v3/brokerage/cfm/positions/{product_id}` (via `cfm_position()`) |
+| Fills (rebuild history) | `GET /api/v3/brokerage/orders/historical/fills` |
+| Portfolio aggregate | `GET /api/v3/brokerage/portfolios/{portfolio_uuid}` |
 
-## API Endpoints for P&L Data
+## Gaps / not yet built
 
-### CFM Positions Endpoint
-```
-GET /api/v3/brokerage/cfm/positions/{product_id}
-```
+- Funding on live positions (currently backtest-only).
+- Fee-adjusted P&L.
+- Automated P&L-value reconciliation against Coinbase with alerting.
+- Complete position-flip handling in `process_fill_for_pnl`.
 
-Returns:
-- `unrealized_pnl`: Current unrealized P&L
-- `realized_pnl`: Realized P&L (may include funding)
-- `mark_price`: Current mark price
-- `entry_price`: Weighted average entry price
-
-### List Fills Endpoint
-```
-GET /api/v3/brokerage/orders/historical/fills
-```
-
-Use to reconstruct position history and calculate P&L from trades.
-
-### Portfolio Endpoint
-```
-GET /api/v3/brokerage/portfolios/{portfolio_uuid}
-```
-
-May provide aggregated P&L across all positions.
-
-## Reconciliation Process
-
-1. **Fetch Current Positions from Coinbase**
-   ```python
-   positions = adapter.list_positions()
-   cfm_data = adapter.client.cfm_position(product_id)
-   ```
-
-2. **Update Mark Prices in Our Tracker**
-   ```python
-   for pos in positions:
-       tracker.update_marks({pos.symbol: pos.mark_price})
-   ```
-
-3. **Compare P&L Values**
-   ```python
-   tolerance = max(Decimal('0.10'), abs(cb_value) * Decimal('0.001'))
-   if abs(our_value - cb_value) > tolerance:
-       log_discrepancy(...)
-   ```
-
-4. **Account for Known Differences**
-   - Add/subtract funding as needed
-   - Adjust for fees if tracked
-   - Use Coinbase's mark price
-
-## Testing Strategy
-
-### Unit Tests
-- Test our calculations with deterministic data
-- Verify calculation correctness independent of Coinbase
-
-### Integration Tests
-- Mock Coinbase responses with realistic data
-- Test reconciliation logic with known differences
-
-### Live Reconciliation
-- Periodically reconcile PnL against Coinbase statements using the EventStore
-  snapshots. (A historical reconciliation helper was removed during the 2025 cleanup; use git history if needed.)
-- Monitor for unexpected discrepancies
-- Alert if differences exceed thresholds
-
-## Common Issues and Solutions
-
-### Issue: P&L Drift Over Time
-**Cause:** Not updating mark prices frequently enough
-**Solution:** Update marks at least every 30 seconds during active trading
-
-### Issue: Realized P&L Mismatch
-**Cause:** Funding payments included in Coinbase's realized P&L
-**Solution:** Track funding separately and combine for comparison
-
-### Issue: Missing Positions
-**Cause:** Not tracking all products or missing fills
-**Solution:** Fetch complete fill history and rebuild positions
-
-### Issue: Large Discrepancies
-**Cause:** Calculation bug or missed trades
-**Solution:** Rebuild from fills and validate each trade's P&L
-
-## Monitoring and Alerts
-
-Set up alerts for:
-- Discrepancies > 1% or $100 (whichever is smaller)
-- Missing positions (in Coinbase but not our tracker)
-- Stale mark prices (>60 seconds old)
-- Unusual funding rates
-
-## Future Improvements
-
-1. **Real-time Reconciliation**
-   - WebSocket feed for live position updates
-   - Continuous P&L validation
-
-2. **Fee Integration**
-   - Track maker/taker fees
-   - Include in P&L calculations
-
-3. **Historical Analysis**
-   - Store reconciliation reports
-   - Analyze patterns in discrepancies
-
-4. **Automated Corrections**
-   - Auto-adjust for known differences
-   - Self-healing position state
-
-## Conclusion
-
-While our P&L calculations are mathematically correct, differences with Coinbase's reported values are expected due to:
-- Funding payment handling
-- Fee inclusion
-- Mark price timing
-- Decimal rounding
-
-The key is to understand these differences and account for them in reconciliation. Always treat Coinbase's values as the source of truth for actual P&L.
+Treat the above as design intent, not current behavior.

@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-01-31
 ---
 
 GPT-Trader enforces lightweight test hygiene via `scripts/ci/check_test_hygiene.py`.
@@ -11,7 +10,7 @@ The goal is to keep tests navigable and keep refactors from turning into 600-lin
 
 ## Current enforcement
 
-- Default max lines per test module: **240** (`THRESHOLD = 240`)
+- Default max lines per test module: **400** (`THRESHOLD = 400`, raised from 240 to accommodate comprehensive CI-rule test files)
 - Enforcement runs in pre-commit (and CI) via:
   - `scripts/ci/check_test_hygiene.py`
 

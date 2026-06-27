@@ -1,6 +1,5 @@
 ---
 status: current
-last-updated: 2026-02-10
 ---
 
 # Strategy Profile Diff

@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-06-25
 ---
 
 This plan records the current oversized-module evidence for Issue #972 and

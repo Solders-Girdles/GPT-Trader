@@ -2,11 +2,26 @@
 
 ---
 status: current
-last-updated: 2026-06-24
 ---
 
 All docs under `docs/` must be reachable from this index (directly or via other linked docs).
 When adding a new doc, link it below in the best-fit section.
+
+### Doc metadata convention
+
+Each doc carries a frontmatter block with a single required field:
+
+```
+---
+status: current   # one of: current, draft, deprecated, superseded
+---
+```
+
+There is intentionally **no `last-updated` field**: it drifted out of sync with
+reality and gave a false signal. **Git history is the source of truth for when a
+doc changed** (`git log -1 -- docs/<file>.md`); `status` is the human signal git
+cannot provide. The metadata block is enforced by
+`scripts/maintenance/docs_reachability_check.py`.
 
 ## Start Here
 

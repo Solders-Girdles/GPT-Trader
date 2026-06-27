@@ -1,6 +1,5 @@
 ---
 status: current
-last-updated: 2026-06-27
 workstream: 1 (see TRADE_IDEA_INTERFACES_DESIGN_NOTES.md)
 depends-on: Workstream 0 (implemented service factory, error codes, actor resolution)
 ---

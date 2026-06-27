@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-01-31
 ---
 
 This document lists the canonical runtime entrypoints and where they are wired.

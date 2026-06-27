@@ -12,7 +12,7 @@ from collections.abc import Sequence
 # Increased from 240 to 400 to accommodate comprehensive test coverage.
 # Comprehensive test files (e.g., testing all validation rules in a CI script)
 # often require more lines to cover all edge cases properly.
-# See: docs/WORKFLOW-LEARNINGS-FEB1.md (Friction Point #2)
+# See docs/test_hygiene.md for the threshold/allowlist policy.
 THRESHOLD = 400
 UNIT_ALLOWED_PREFIXES = (
     "tests/unit/gpt_trader/",

@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-06-24
 ---
 
 This document establishes the naming conventions for the GPT-Trader codebase. Adherence to these standards ensures clarity, consistency, and maintainability across the repository.

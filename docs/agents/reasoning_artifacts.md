@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-01-23
 ---
 
 Curated summaries for generated reasoning maps and health schema outputs.

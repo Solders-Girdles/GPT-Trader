@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-01-24
 ---
 
 Use this as a “where do I start?” index when you already know what you’re trying to change.

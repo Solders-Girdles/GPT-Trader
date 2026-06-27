@@ -43,6 +43,15 @@ from gpt_trader.features.live_trade.engines.price_tick_store import (
     EVENT_PRICE_TICK,
     PriceTickStore,
 )
+from gpt_trader.features.live_trade.engines.runtime.coordinator import RuntimeEngine
+from gpt_trader.features.live_trade.engines.runtime.models import (
+    RuntimeDependency,
+    RuntimeLifecycleError,
+    RuntimeLifecyclePlan,
+    RuntimeLifecycleStep,
+    RuntimeStepKind,
+    RuntimeStopCondition,
+)
 from gpt_trader.features.live_trade.engines.system_maintenance import (
     SystemMaintenanceService,
 )
@@ -58,8 +67,6 @@ from gpt_trader.features.live_trade.engines.telemetry_streaming import (
     _should_enable_streaming,
     _start_streaming,
     _stop_streaming,
-    start_streaming_background,
-    stop_streaming_background,
 )
 from gpt_trader.features.live_trade.execution.broker_executor import BrokerExecutor
 from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
@@ -247,6 +254,14 @@ class TradingEngine(BaseEngine):
         self._init_guard_stack()
         self._user_event_handler: Any | None = None
         self._init_user_event_handler()
+        self._runtime_engine = RuntimeEngine(
+            context,
+            shutdown_timeout_seconds=getattr(
+                context.config,
+                "runtime_shutdown_timeout_seconds",
+                5.0,
+            ),
+        )
 
     def preserve_broker_calls_on_shutdown(self) -> None:
         self._preserve_broker_calls_on_shutdown = True
@@ -987,78 +1002,218 @@ class TradingEngine(BaseEngine):
             force=force,
         )
 
-    async def start_background_tasks(self) -> list[asyncio.Task[Any]]:
-        """Start the main trading loop and heartbeat service.
+    def _runtime_lifecycle_plan(self) -> RuntimeLifecyclePlan:
+        shutdown_timeout_seconds = getattr(
+            self.context.config,
+            "runtime_shutdown_timeout_seconds",
+            5.0,
+        )
+        return RuntimeLifecyclePlan(
+            dependencies=(
+                RuntimeDependency("config", self.context.config),
+                RuntimeDependency("container", self.context.container),
+                RuntimeDependency("broker", self.context.broker, required=False),
+                RuntimeDependency("risk_manager", self.context.risk_manager, required=False),
+                RuntimeDependency("event_store", self.context.event_store, required=False),
+                RuntimeDependency("orders_store", self.context.orders_store, required=False),
+                RuntimeDependency(
+                    "notification_service",
+                    self.context.notification_service,
+                    required=False,
+                ),
+            ),
+            stop_conditions=(
+                RuntimeStopCondition(
+                    name="engine_error_state",
+                    is_met=lambda: self.state == EngineState.ERROR,
+                    reason="trading_engine_error",
+                ),
+            ),
+            startup_steps=(
+                RuntimeLifecycleStep(
+                    name="engine_state_starting",
+                    kind=RuntimeStepKind.STARTUP_HOOK,
+                    callback=self._runtime_mark_starting,
+                ),
+                RuntimeLifecycleStep(
+                    name="price_history_rehydrate",
+                    kind=RuntimeStepKind.STARTUP_HOOK,
+                    callback=self._runtime_rehydrate_once,
+                ),
+                RuntimeLifecycleStep(
+                    name="runtime_start_event",
+                    kind=RuntimeStepKind.STARTUP_HOOK,
+                    callback=self._record_runtime_start,
+                ),
+                RuntimeLifecycleStep(
+                    name="engine_state_running",
+                    kind=RuntimeStepKind.STARTUP_HOOK,
+                    callback=self._runtime_mark_running,
+                ),
+                RuntimeLifecycleStep(
+                    name="trading_loop",
+                    kind=RuntimeStepKind.BACKGROUND_TASK,
+                    callback=self._start_trading_loop_task,
+                ),
+                RuntimeLifecycleStep(
+                    name="heartbeat_service",
+                    kind=RuntimeStepKind.HEARTBEAT,
+                    callback=self._heartbeat.start,
+                ),
+                RuntimeLifecycleStep(
+                    name="status_reporter",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._status_reporter.start,
+                ),
+                RuntimeLifecycleStep(
+                    name="health_check_runner",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._health_check_runner.start,
+                ),
+                RuntimeLifecycleStep(
+                    name="system_maintenance_prune",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._system_maintenance.start_prune_loop,
+                ),
+                RuntimeLifecycleStep(
+                    name="runtime_guard_checkpoint",
+                    kind=RuntimeStepKind.POLICY_CHECKPOINT,
+                    callback=self._runtime_guard_checkpoint,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="runtime_guard_sweep",
+                    kind=RuntimeStepKind.POLICY_CHECKPOINT,
+                    callback=self._start_runtime_guard_task,
+                ),
+                RuntimeLifecycleStep(
+                    name="streaming",
+                    kind=RuntimeStepKind.STREAMING,
+                    callback=self._runtime_start_streaming,
+                ),
+                RuntimeLifecycleStep(
+                    name="ws_health_watchdog",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._start_ws_health_watchdog_task,
+                ),
+            ),
+            shutdown_steps=(
+                RuntimeLifecycleStep(
+                    name="ws_health_watchdog",
+                    kind=RuntimeStepKind.SHUTDOWN_HOOK,
+                    callback=self._stop_ws_health_watchdog_task,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="streaming",
+                    kind=RuntimeStepKind.STREAMING,
+                    callback=self._runtime_stop_streaming,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="health_check_runner",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._health_check_runner.stop,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="system_maintenance",
+                    kind=RuntimeStepKind.SHUTDOWN_HOOK,
+                    callback=self._system_maintenance.stop,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="status_reporter",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._status_reporter.stop,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="heartbeat_service",
+                    kind=RuntimeStepKind.HEARTBEAT,
+                    callback=self._heartbeat.stop,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="broker_call_executor",
+                    kind=RuntimeStepKind.SHUTDOWN_HOOK,
+                    callback=self._runtime_shutdown_broker_calls,
+                    register_task=False,
+                ),
+            ),
+            task_cleanup_timeout_seconds=shutdown_timeout_seconds,
+            shutdown_step_timeout_seconds=shutdown_timeout_seconds,
+        )
 
-        Before starting, attempts to rehydrate state from EventStore.
-        """
+    def _runtime_mark_starting(self) -> None:
         self._transition_state(EngineState.STARTING, reason="start_background_tasks")
-        # Rehydrate state from EventStore before starting
+
+    def _runtime_rehydrate_once(self) -> None:
         if not self._rehydrated:
             self._rehydrate_from_events()
             self._rehydrated = True
 
-        self._record_runtime_start()
-
+    def _runtime_mark_running(self) -> None:
         self._transition_state(EngineState.RUNNING, reason="tasks_scheduled")
 
-        tasks: list[asyncio.Task[Any]] = []
+    def _start_trading_loop_task(self) -> asyncio.Task[Any]:
+        return asyncio.create_task(self._run_loop(), name="trading_loop")
 
-        # Start main trading loop
-        trading_task = asyncio.create_task(self._run_loop())
-        self._register_background_task(trading_task)
-        tasks.append(trading_task)
+    def _runtime_guard_checkpoint(self) -> None:
+        logger.info(
+            "Runtime policy checkpoint reached",
+            guard_manager_available=self._guard_manager is not None,
+            order_validator_available=self._order_validator is not None,
+            operation="runtime_lifecycle",
+            stage="policy_checkpoint",
+        )
 
-        # Start heartbeat service
-        heartbeat_task = await self._heartbeat.start()
-        if heartbeat_task:
-            self._register_background_task(heartbeat_task)
-            tasks.append(heartbeat_task)
-
-        # Start status reporter
-        status_task = await self._status_reporter.start()
-        if status_task:
-            self._register_background_task(status_task)
-            tasks.append(status_task)
-
-        # Start health check runner for active /health probes
-        await self._health_check_runner.start()
-
-        # Start database pruning task via system maintenance service
-        prune_task = await self._system_maintenance.start_prune_loop()
-        self._register_background_task(prune_task)
-        tasks.append(prune_task)
-
-        # Start runtime guard sweep (daily loss, liquidation buffer, volatility)
+    def _start_runtime_guard_task(self) -> asyncio.Task[Any] | None:
         if self._guard_manager is not None:
-            guard_task = asyncio.create_task(
-                self._runtime_guard_sweep(), name="runtime_guard_sweep"
-            )
-            self._register_background_task(guard_task)
-            tasks.append(guard_task)
+            return asyncio.create_task(self._runtime_guard_sweep(), name="runtime_guard_sweep")
+        return None
 
-        # Start WebSocket streaming if enabled
+    async def _runtime_start_streaming(self) -> asyncio.Task[Any] | None:
         if self._should_enable_streaming():
-            start_streaming_background(self)
+            task = await self._start_streaming()
             logger.info(
                 "Started WebSocket streaming",
                 operation="streaming",
                 stage="start",
             )
+            return task
+        return None
 
-        # Start WS health watchdog
+    def _start_ws_health_watchdog_task(self) -> asyncio.Task[Any]:
         self._ws_health_task = asyncio.create_task(
             self._monitor_ws_health(), name="ws_health_watchdog"
         )
-        self._register_background_task(self._ws_health_task)
-        tasks.append(self._ws_health_task)
         logger.info(
             "Started WS health watchdog",
             operation="ws_health",
             stage="start",
         )
+        return self._ws_health_task
 
-        return tasks
+    async def start_background_tasks(self) -> list[asyncio.Task[Any]]:
+        """Start runtime background tasks through the lifecycle coordinator.
+
+        Before starting, attempts to rehydrate state from EventStore.
+        """
+        try:
+            return await self._runtime_engine.start(
+                self._runtime_lifecycle_plan(),
+                register_task=self._register_background_task,
+            )
+        except RuntimeLifecycleError:
+            self._transition_state(EngineState.ERROR, reason="runtime_start_failed")
+            raise
 
     def _rehydrate_from_events(self) -> int:
         """Restore price history from persisted events.
@@ -3376,40 +3531,44 @@ class TradingEngine(BaseEngine):
 
     async def shutdown(self) -> None:
         self._transition_state(EngineState.STOPPING, reason="shutdown_called")
+        await self._runtime_engine.shutdown(self._runtime_lifecycle_plan())
+        self._background_tasks.clear()
+        self._shutdown_complete = True
+        if self._runtime_engine.graceful_shutdown_failed:
+            self._transition_state(
+                EngineState.ERROR,
+                reason="runtime_shutdown_failed",
+                details={"error": self._runtime_engine.last_error},
+            )
+            return
+        self._transition_state(EngineState.STOPPED, reason="shutdown_complete")
 
-        # Stop WS health watchdog
+    async def _stop_ws_health_watchdog_task(self) -> None:
         if self._ws_health_task is not None and not self._ws_health_task.done():
             self._ws_health_task.cancel()
             try:
                 await self._ws_health_task
             except asyncio.CancelledError:
                 pass
-            self._ws_health_task = None
-            logger.info(
-                "Stopped WS health watchdog",
-                operation="ws_health",
-                stage="stop",
-            )
+        self._ws_health_task = None
+        logger.info(
+            "Stopped WS health watchdog",
+            operation="ws_health",
+            stage="stop",
+        )
 
-        # Stop streaming
-        stop_streaming_background(self)
+    async def _runtime_stop_streaming(self) -> None:
+        await self._stop_streaming()
         logger.info(
             "Stopped WebSocket streaming",
             operation="streaming",
             stage="stop",
         )
 
-        # Stop health check runner
-        await self._health_check_runner.stop()
-
-        await self._system_maintenance.stop()
-        await self._status_reporter.stop()
-        await self._heartbeat.stop()
+    def _runtime_shutdown_broker_calls(self) -> None:
         shutdown = getattr(self._broker_calls, "shutdown", None)
         if callable(shutdown) and not self._preserve_broker_calls_on_shutdown:
             shutdown()
-        await super().shutdown()
-        self._transition_state(EngineState.STOPPED, reason="shutdown_complete")
 
     def health_check(self) -> HealthStatus:
         return HealthStatus(healthy=self.running, component=self.name)

@@ -4,6 +4,7 @@
       "collect_runtime_guard_state",
       "config_guardian",
       "runtime_guards",
+      "runtime_lifecycle",
       "runtime_start"
     ],
     "data": [
@@ -1900,6 +1901,34 @@
       ],
       "statuses": null
     },
+    "runtime_lifecycle": {
+      "common_fields": [
+        "error_message",
+        "error_type",
+        "guard_manager_available",
+        "kind",
+        "missing",
+        "order_validator_available",
+        "pending_task_count",
+        "stage",
+        "step",
+        "task_count",
+        "timeout_seconds"
+      ],
+      "components": null,
+      "levels": [
+        "DEBUG",
+        "ERROR",
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 8,
+      "source_files": [
+        "features/live_trade/engines/runtime/coordinator.py",
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
     "runtime_start": {
       "common_fields": [
         "config_digest",
@@ -2513,8 +2542,8 @@
     "details": 5,
     "environment": 12,
     "error": 66,
-    "error_message": 89,
-    "error_type": 87,
+    "error_message": 93,
+    "error_type": 91,
     "event_type": 5,
     "flatten_operation_id": 9,
     "granularity": 6,
@@ -2533,16 +2562,16 @@
     "secret_ref": 6,
     "service": 9,
     "side": 26,
-    "stage": 167,
+    "stage": 174,
     "symbol": 84
   },
   "level_distribution": {
     "CRITICAL": 2,
-    "DEBUG": 49,
-    "ERROR": 123,
-    "INFO": 90,
-    "WARNING": 102
+    "DEBUG": 50,
+    "ERROR": 124,
+    "INFO": 93,
+    "WARNING": 105
   },
-  "total_event_types": 136,
+  "total_event_types": 137,
   "version": "1.0"
 }

@@ -105,6 +105,7 @@ def build_broker_neutral_ticket_payload(
         request.venue,
         record_hash,
     )
+    order_side = _order_side_for_direction(idea.direction)
     exported_ticket = BrokerTicket(
         venue=request.venue,
         status=_ticket_status_for_state(state),
@@ -156,7 +157,7 @@ def build_broker_neutral_ticket_payload(
             "venue": request.venue.value,
             "instrument": idea.instrument,
             "direction": idea.direction.value,
-            "order_side": _order_side_for_direction(idea.direction),
+            "order_side": order_side,
             "quantity": idea.sizing_recommendation.to_dict()["quantity"],
             "notional": idea.sizing_recommendation.to_dict()["notional"],
             "entry_zone": idea.entry_zone.to_dict(),
@@ -257,12 +258,17 @@ def _default_client_order_id(
     return normalized
 
 
-def _order_side_for_direction(direction: TradeDirection) -> str | None:
+def _order_side_for_direction(direction: TradeDirection) -> str:
     if direction is TradeDirection.LONG:
         return "buy"
     if direction is TradeDirection.SHORT:
         return "sell"
-    return None
+    raise ValidationError(
+        "Ticket export requires an orderable direction before emitting a venue payload; "
+        f"expected long or short, got '{direction.value}'",
+        field="direction",
+        value=direction.value,
+    )
 
 
 def _non_empty_text(value: str, field: str) -> str:

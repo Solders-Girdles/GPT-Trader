@@ -554,9 +554,16 @@ class TradeIdeaService:
         budget = self._budget_log.current()
         budget_source = "risk_budget_log" if budget is not None else "default"
         effective_budget = budget or DEFAULT_RISK_BUDGET
-        latest_event = view.events[-1]
         export_time = self._now()
         expires_at = view.idea.time_horizon.expires_at
+        policy_violations = self._policy.approval_violations(
+            view.idea,
+            actor_type=ActorType.HUMAN,
+            budget=effective_budget,
+            open_approved_count=self._open_approved_count_excluding(decision_id),
+            now=export_time,
+            review_started_at=self._review_started_at_from_events(view.events),
+        )
         if (
             view.state is TradeIdeaState.APPROVED
             and expires_at is not None
@@ -565,16 +572,8 @@ class TradeIdeaService:
             violation = f"Idea expired at {expires_at.isoformat()}; export no stale ticket"
             raise PolicyViolationError(
                 f"Ticket export for '{decision_id}' refused: {violation}",
-                [violation],
+                [violation, *policy_violations],
             )
-        policy_violations = self._policy.approval_violations(
-            view.idea,
-            actor_type=ActorType.HUMAN,
-            budget=effective_budget,
-            open_approved_count=self._open_approved_count_excluding(decision_id),
-            now=latest_event.timestamp,
-            review_started_at=self._review_started_at_from_events(view.events),
-        )
         request = BrokerTicketExportRequest.from_values(
             venue=venue,
             venue_order_type=venue_order_type,

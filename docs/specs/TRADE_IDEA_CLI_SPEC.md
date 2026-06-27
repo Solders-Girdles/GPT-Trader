@@ -70,6 +70,13 @@ gpt-trader ideas
 │                    [--reward-multiple DECIMAL] [--expiry-hours N]
 │                    [--expected-hold TEXT] [--price-precision DECIMAL]
 │                    [--source LABEL]
+├── closeout
+│   ├── record       DECISION_ID --resolution {thesis_target,invalidation,expiry}
+│   │                [--realized-profit-loss-amount DECIMAL]
+│   │                [--realized-profit-loss-percent DECIMAL]
+│   │                [--realized-profit-loss-unavailable-reason TEXT]
+│   │                [--evidence TEXT]... [--actor-type {human,system}]
+│   └── show         DECISION_ID
 ├── approve          DECISION_ID --reason TEXT
 ├── reject           DECISION_ID --reason TEXT
 ├── request-changes  DECISION_ID --reason TEXT
@@ -168,7 +175,7 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
   - `--granularity GRANULARITY`
 - Supported baseline/replay options:
   - `--source LABEL` (default `fixture:candles`)
-  - `--min-history N` (default `long-window + crossover-lookback`)
+  - `--min-history N` (default `max(short-window, long-window) + crossover-lookback`)
   - `--short-window N` (default `10`)
   - `--long-window N` (default `50`)
   - `--crossover-lookback N` (default `3`)
@@ -197,8 +204,9 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
 
   Timestamps are ISO-8601; naive timestamps are treated as UTC. Decimal values
   may be strings or JSON numbers. Malformed JSON, a missing `candles` array,
-  missing candle fields, invalid timestamps, and non-finite decimals return
-  `INVALID_ARGUMENT` with the offending field when available.
+  missing candle fields, invalid timestamps, non-finite decimals, and invalid
+  OHLCV rows (`high < low`, open/close outside `[low, high]`, or negative
+  volume) return `INVALID_ARGUMENT` with the offending field when available.
 - JSON `data` is `ReplayReport.to_dict()` and includes `proposer_id`,
   `symbol`, `granularity`, `source`, `snapshots_evaluated`, `ideas_proposed`,
   `target_hits`, `stop_hits`, `timed_out`, `not_filled`, `no_future_data`,
@@ -215,6 +223,36 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
   ```
 
   A replay with zero proposed ideas succeeds with `was_noop=True`.
+
+### `ideas closeout record` / `ideas closeout show`
+
+- `record` wraps `service.record_closeout_attribution`; `show` wraps
+  `service.get_closeout_attribution`. Both use only local trade-idea storage.
+- `record` requires a terminal idea. The service enforces the terminal-state
+  precondition and pins the attribution to the latest terminal audit event and
+  record hash.
+- `record` accepts:
+  - `--resolution {thesis_target,invalidation,expiry}`
+  - `--realized-profit-loss-amount DECIMAL` and/or
+    `--realized-profit-loss-percent DECIMAL` (negative values represent losses)
+  - `--realized-profit-loss-unavailable-reason TEXT` when numeric realized P/L
+    is unavailable
+  - repeated `--evidence TEXT` strings
+  - `--actor-type {human,system}` with default `human`
+- At least one realized P/L value or unavailable reason is required.
+- JSON `data` for both successful commands is
+  `{decision_id, closeout_attribution}`. `closeout_attribution` is the
+  persisted closeout record dictionary, or `null` for `show` when the idea is
+  known but has no attribution (`was_noop=True`).
+- Text starts with:
+
+  ```text
+  ✓ ideas closeout record OK (trade-20260612-001, resolution=thesis_target)
+  ```
+
+- These commands never call broker, account, venue, preflight, canary, ticket
+  payload-generation, or live-trading surfaces. Evidence strings are operator
+  references only.
 
 ### `ideas approve DECISION_ID --reason TEXT`
 
@@ -309,23 +347,31 @@ Required cases:
 5. `report` empty store, normal records, missing closeout coverage, JSON
    output, and read-only behavior that does not create `risk_budget.jsonl`.
 6. `replay baseline` text success, malformed fixture input, empty/no-idea
-   replay success with `was_noop=True`, and JSON output exposing
-   `ReplayReport` aggregate fields.
-7. `approve` happy path → state `approved`, human actor in audit event.
-8. `approve` over-budget idea → exit 1, `POLICY_VIOLATION`, all violations in
+   replay success with `was_noop=True`, JSON output exposing `ReplayReport`
+   aggregate fields, precision-preserving JSON-number candle parsing, custom
+   moving-average history defaults, semantically invalid OHLCV fixture rows,
+   and help text for required read-only flags.
+7. `closeout record` for a terminal filled idea with realized amount/percent
+   and repeated evidence; `closeout show` returns the persisted attribution.
+8. `closeout record` for an expired idea with unavailable P/L reason; proposed
+   ideas fail with `VALIDATION_ERROR`; missing realized P/L input fails with
+   `MISSING_ARGUMENT`; `closeout show` without attribution succeeds with
+   `was_noop=True`.
+9. `approve` happy path → state `approved`, human actor in audit event.
+10. `approve` over-budget idea → exit 1, `POLICY_VIOLATION`, all violations in
    `data["violations"]` (assert ≥2 violations both present).
-9. `request-changes` → `resubmit` (revised record) → `approve` full loop.
-10. `reject`, `cancel`, `expire` single, `expire --sweep` with explicit expiry
+11. `request-changes` → `resubmit` (revised record) → `approve` full loop.
+12. `reject`, `cancel`, `expire` single, `expire --sweep` with explicit expiry
    coverage (one stale + one fresh idea: only stale expires; `was_noop` when
    none) plus review-latency sweep coverage for a far-future idea whose review
    deadline exceeds `max_review_latency_hours`.
-11. `mark-submitted` then `mark-filled` with venue/external id recorded in
+13. `mark-submitted` then `mark-filled` with venue/external id recorded in
    audit events.
-12. `budget show` seeds defaults; `budget set --max-loss-per-idea-pct 2
+14. `budget show` seeds defaults; `budget set --max-loss-per-idea-pct 2
     --reason ...` bumps version; `budget set` with no field flags →
     `MISSING_ARGUMENT`.
-13. `audit verify` OK path; tampered line in `audit.jsonl` → failure.
-14. JSON mode for at least propose/approve/list/report/replay baseline asserting the
+15. `audit verify` OK path; tampered line in `audit.jsonl` → failure.
+16. JSON mode for at least propose/approve/list/report/replay baseline asserting the
     `CliResponse` envelope per CLAUDE.md patterns
     (`result.errors[0].code == CliErrorCode.POLICY_VIOLATION.value`).
 

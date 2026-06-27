@@ -47,7 +47,10 @@ TUI surfaces. They are not a request to re-promote the TUI review workstream.
 1. **Thin adapters only.** Interfaces parse input, resolve actor identity,
    call one `TradeIdeaService` method, and render the result. No workflow,
    policy, or budget logic in CLI/TUI code. If an interface needs a new
-   behavior, it goes into the service first.
+   behavior, it goes into the service first. The read-only replay baseline
+   calibration command is the explicit exception: it is not a workflow mutation
+   or storage adapter, so it may call `TradeIdeaReplayRunner` directly and
+   render `ReplayReport` without constructing `TradeIdeaService`.
 2. **Every action is identity-stamped.** No anonymous mutations. Each
    mutating command requires an `actor_id` and an `actor_type`; review
    actions from interactive interfaces are always `ActorType.HUMAN`.

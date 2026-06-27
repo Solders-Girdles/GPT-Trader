@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
 
 from gpt_trader import cli
+from gpt_trader.cli.commands.ideas import _load_candle_fixture
 from gpt_trader.cli.response import CliErrorCode
 
 AS_OF = datetime(2026, 6, 12, 12, 0, tzinfo=UTC)
@@ -126,6 +128,103 @@ def test_replay_baseline_malformed_input_returns_invalid_argument(
     assert exit_code == 1
     assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
     assert response["errors"][0]["details"]["field"] == "candles[0].open"
+
+
+def test_replay_baseline_preserves_json_number_precision(tmp_path: Path) -> None:
+    fixture = tmp_path / "precise-candles.json"
+    fixture.write_text(
+        """
+        {
+          "candles": [
+            {
+              "ts": "2026-06-12T12:00:00+00:00",
+              "open": 100.123456789123456789,
+              "high": 100.123456789123456790,
+              "low": 100.123456789123456788,
+              "close": 100.123456789123456789,
+              "volume": 1000.000000000000000001
+            }
+          ]
+        }
+        """,
+        encoding="utf-8",
+    )
+
+    candles = _load_candle_fixture(fixture)
+
+    assert candles[0].open == Decimal("100.123456789123456789")
+    assert candles[0].volume == Decimal("1000.000000000000000001")
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "expected_field"),
+    [
+        ("high", "99", "candles[0].high"),
+        ("open", "103", "candles[0].open"),
+        ("close", "99", "candles[0].close"),
+        ("volume", "-1", "candles[0].volume"),
+    ],
+)
+def test_replay_baseline_rejects_semantically_invalid_ohlcv_rows(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    field: str,
+    value: str,
+    expected_field: str,
+) -> None:
+    payload = _baseline_hit_fixture()
+    payload["candles"][0][field] = value
+    fixture = _write_fixture(tmp_path / "bad-ohlcv.json", payload)
+
+    exit_code, response = _run_json(capsys, _baseline_args(fixture))
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert response["errors"][0]["details"]["field"] == expected_field
+
+
+def test_replay_baseline_default_history_uses_largest_window(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fixture = _write_fixture(tmp_path / "flat-candles.json", _flat_fixture())
+    argv = [
+        "ideas",
+        "replay",
+        "baseline",
+        "--file",
+        str(fixture),
+        "--symbol",
+        "BTC-USD",
+        "--granularity",
+        "ONE_HOUR",
+        "--short-window",
+        "5",
+        "--long-window",
+        "2",
+        "--crossover-lookback",
+        "1",
+        "--format",
+        "json",
+    ]
+
+    exit_code, response = _run_json(capsys, argv)
+
+    assert exit_code == 0
+    assert response["data"]["snapshots_evaluated"] == 1
+
+
+def test_replay_baseline_help_documents_required_flags_and_read_only_contract(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    with pytest.raises(SystemExit) as exc_info:
+        cli.main(["ideas", "replay", "baseline", "--help"])
+
+    assert exc_info.value.code == 0
+    output = capsys.readouterr().out
+    assert "--file" in output
+    assert "--symbol" in output
+    assert "broker-free and read-only" in output
 
 
 def test_replay_baseline_no_idea_replay_is_successful_noop(

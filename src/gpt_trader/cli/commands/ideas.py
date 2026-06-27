@@ -27,6 +27,7 @@ from gpt_trader.features.trade_ideas import (
     BaselineProposer,
     BaselineProposerConfig,
     BudgetIntegrityError,
+    CloseoutResolution,
     InvalidTransitionError,
     PolicyViolationError,
     ReplayReport,
@@ -183,7 +184,7 @@ def register(subparsers: Any) -> None:
         type=_positive_int_value,
         help=(
             "Minimum historical candles before evaluating snapshots "
-            "(default: long-window + crossover-lookback)"
+            "(default: max(short-window, long-window) + crossover-lookback)"
         ),
     )
     baseline.add_argument("--short-window", type=_positive_int_value, default=10)
@@ -212,6 +213,71 @@ def register(subparsers: Any) -> None:
         default=Decimal("0.01"),
     )
     baseline.set_defaults(handler=_handle_replay_baseline, subcommand="replay baseline")
+
+    closeout = ideas_subparsers.add_parser(
+        "closeout",
+        help="Record or inspect terminal closeout attribution",
+        description=(
+            "Record and inspect broker-neutral closeout attribution for terminal trade "
+            "ideas. This command never contacts a broker or account."
+        ),
+    )
+    closeout_subparsers = closeout.add_subparsers(dest="closeout_command", required=True)
+
+    closeout_record = closeout_subparsers.add_parser(
+        "record",
+        help="Record terminal closeout attribution; does not call a broker API",
+        description=(
+            "Append closeout attribution for a terminal trade idea. This records external "
+            "evidence only and never places, modifies, or cancels broker orders."
+        ),
+    )
+    _add_common_options(closeout_record)
+    _add_actor_options(closeout_record)
+    closeout_record.add_argument("decision_id", help="Trade idea decision identifier")
+    closeout_record.add_argument(
+        "--resolution",
+        required=True,
+        choices=[resolution.value for resolution in CloseoutResolution],
+        help="Why the terminal idea resolved",
+    )
+    closeout_record.add_argument(
+        "--realized-profit-loss-amount",
+        type=_decimal_value,
+        help="Realized profit/loss amount; negative values represent losses",
+    )
+    closeout_record.add_argument(
+        "--realized-profit-loss-percent",
+        type=_decimal_value,
+        help="Realized profit/loss percent; negative values represent losses",
+    )
+    closeout_record.add_argument(
+        "--realized-profit-loss-unavailable-reason",
+        default="",
+        help="Why realized profit/loss is unavailable",
+    )
+    closeout_record.add_argument(
+        "--evidence",
+        action="append",
+        default=None,
+        help="Evidence string to attach; repeat for multiple evidence entries",
+    )
+    closeout_record.add_argument(
+        "--actor-type",
+        choices=(ActorType.HUMAN.value, ActorType.SYSTEM.value),
+        default=ActorType.HUMAN.value,
+        help="Actor type stamped into the closeout attribution record",
+    )
+    closeout_record.set_defaults(handler=_handle_closeout_record, subcommand="closeout record")
+
+    closeout_show = closeout_subparsers.add_parser(
+        "show",
+        help="Show closeout attribution for one trade idea",
+        description="Read closeout attribution from local trade-idea records only.",
+    )
+    _add_common_options(closeout_show)
+    closeout_show.add_argument("decision_id", help="Trade idea decision identifier")
+    closeout_show.set_defaults(handler=_handle_closeout_show, subcommand="closeout show")
 
     approve = ideas_subparsers.add_parser("approve", help="Approve a proposed trade idea")
     _add_common_options(approve)
@@ -455,7 +521,7 @@ def _load_candle_fixture(path: Path) -> tuple[Candle, ...]:
         raise CandleInputError(f"Could not read candle fixture: {error}") from error
 
     try:
-        payload = json.loads(raw_payload)
+        payload = json.loads(raw_payload, parse_float=Decimal, parse_int=Decimal)
     except json.JSONDecodeError as error:
         raise CandleInputError(f"Malformed candle fixture JSON: {error.msg}") from error
     if not isinstance(payload, dict):
@@ -474,7 +540,7 @@ def _parse_candle(row: Any, index: int) -> Candle:
             f"candle at index {index} must be a JSON object",
             field=f"candles[{index}]",
         )
-    return Candle(
+    candle = Candle(
         ts=_parse_candle_timestamp(_required_candle_field(row, "ts", index), index),
         open=_parse_candle_decimal(_required_candle_field(row, "open", index), index, "open"),
         high=_parse_candle_decimal(_required_candle_field(row, "high", index), index, "high"),
@@ -482,6 +548,8 @@ def _parse_candle(row: Any, index: int) -> Candle:
         close=_parse_candle_decimal(_required_candle_field(row, "close", index), index, "close"),
         volume=_parse_candle_decimal(_required_candle_field(row, "volume", index), index, "volume"),
     )
+    _validate_candle_semantics(candle, index)
+    return candle
 
 
 def _required_candle_field(row: dict[str, Any], field_name: str, index: int) -> Any:
@@ -521,6 +589,33 @@ def _parse_candle_decimal(value: Any, index: int, field_name: str) -> Decimal:
             field=field,
         )
     return parsed
+
+
+def _validate_candle_semantics(candle: Candle, index: int) -> None:
+    if candle.high < candle.low:
+        raise CandleInputError(
+            f"candle at index {index} has high below low",
+            field=f"candles[{index}].high",
+        )
+    if not candle.low <= candle.open <= candle.high:
+        raise CandleInputError(
+            f"candle at index {index} has open outside low/high range",
+            field=f"candles[{index}].open",
+        )
+    if not candle.low <= candle.close <= candle.high:
+        raise CandleInputError(
+            f"candle at index {index} has close outside low/high range",
+            field=f"candles[{index}].close",
+        )
+    if candle.volume < 0:
+        raise CandleInputError(
+            f"candle at index {index} has negative volume",
+            field=f"candles[{index}].volume",
+        )
+
+
+def _default_replay_min_history(config: BaselineProposerConfig) -> int:
+    return max(config.short_window, config.long_window) + config.crossover_lookback
 
 
 def _handle_propose(args: Namespace) -> CliResponse:
@@ -641,7 +736,7 @@ def _handle_replay_baseline(args: Namespace) -> CliResponse:
         min_history = (
             args.min_history
             if args.min_history is not None
-            else proposer_config.long_window + proposer_config.crossover_lookback
+            else _default_replay_min_history(proposer_config)
         )
         report = TradeIdeaReplayRunner(
             BaselineProposer(proposer_config),
@@ -655,6 +750,58 @@ def _handle_replay_baseline(args: Namespace) -> CliResponse:
     payload = report.to_dict()
     text = _replay_report_text(report)
     return _success(command, args, payload, text, was_noop=report.ideas_proposed == 0)
+
+
+def _handle_closeout_record(args: Namespace) -> CliResponse:
+    command = "ideas closeout record"
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
+    profit_loss_error = _closeout_profit_loss_error(command, args)
+    if profit_loss_error is not None:
+        return profit_loss_error
+    evidence_error = _evidence_error(command, args)
+    if evidence_error is not None:
+        return evidence_error
+
+    try:
+        record = _service(args).record_closeout_attribution(
+            args.decision_id,
+            actor_id=_actor_id(args),
+            actor_type=ActorType(args.actor_type),
+            resolution=args.resolution,
+            realized_profit_loss_amount=args.realized_profit_loss_amount,
+            realized_profit_loss_percent=args.realized_profit_loss_percent,
+            realized_profit_loss_unavailable_reason=(
+                args.realized_profit_loss_unavailable_reason.strip()
+            ),
+            evidence=_evidence(args),
+        )
+    except Exception as error:
+        return _mapped_error(command, args, error)
+    return _closeout_success(command, args, record)
+
+
+def _handle_closeout_show(args: Namespace) -> CliResponse:
+    command = "ideas closeout show"
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
+    try:
+        record = _service(args).get_closeout_attribution(args.decision_id)
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    payload = {
+        "decision_id": args.decision_id,
+        "closeout_attribution": record.to_dict() if record is not None else None,
+    }
+    if record is None:
+        text = _status_line(command, "OK", f"{args.decision_id}, no closeout attribution")
+        return _success(command, args, payload, text, was_noop=True)
+
+    text = _closeout_text(command, record.to_dict())
+    return _success(command, args, payload, text)
 
 
 def _handle_approve(args: Namespace) -> CliResponse:
@@ -874,10 +1021,56 @@ def _budget_overrides(args: Namespace) -> dict[str, Any]:
     return overrides
 
 
+def _closeout_profit_loss_error(command: str, args: Namespace) -> CliResponse | None:
+    if (
+        args.realized_profit_loss_amount is not None
+        or args.realized_profit_loss_percent is not None
+        or args.realized_profit_loss_unavailable_reason.strip()
+    ):
+        return None
+    return _failure(
+        command,
+        args,
+        CliErrorCode.MISSING_ARGUMENT,
+        (
+            "Provide at least one of --realized-profit-loss-amount, "
+            "--realized-profit-loss-percent, or --realized-profit-loss-unavailable-reason"
+        ),
+        details={"field": "realized_profit_loss"},
+    )
+
+
+def _evidence(args: Namespace) -> tuple[str, ...]:
+    return tuple(item.strip() for item in (getattr(args, "evidence", None) or ()))
+
+
+def _evidence_error(command: str, args: Namespace) -> CliResponse | None:
+    for index, item in enumerate(getattr(args, "evidence", None) or ()):
+        if item.strip():
+            continue
+        return _failure(
+            command,
+            args,
+            CliErrorCode.INVALID_ARGUMENT,
+            "--evidence entries must be non-empty",
+            details={"field": "evidence", "index": index},
+        )
+    return None
+
+
 def _state_change_success(command: str, args: Namespace, view: Any) -> CliResponse:
     payload = _view_summary(view)
     text = _status_line(command, "OK", f"{view.idea.decision_id}, state={view.state.value}")
     return _success(command, args, payload, text)
+
+
+def _closeout_success(command: str, args: Namespace, record: Any) -> CliResponse:
+    record_payload = record.to_dict()
+    payload = {
+        "decision_id": record.decision_id,
+        "closeout_attribution": record_payload,
+    }
+    return _success(command, args, payload, _closeout_text(command, record_payload))
 
 
 def _view_summary(view: Any) -> dict[str, Any]:
@@ -1153,3 +1346,23 @@ def _replay_report_text(report: ReplayReport) -> str:
 
 def _decimal_pct(value: Decimal) -> str:
     return f"{(value * Decimal('100')).quantize(Decimal('0.01'))}%"
+
+
+def _closeout_text(command: str, payload: dict[str, Any]) -> str:
+    lines = [
+        _status_line(
+            command, "OK", f"{payload['decision_id']}, resolution={payload['resolution']}"
+        ),
+        f"actor: {payload['actor_type']}/{payload['actor_id']}",
+        f"realized_profit_loss_amount: {payload['realized_profit_loss_amount']}",
+        f"realized_profit_loss_percent: {payload['realized_profit_loss_percent']}",
+        "realized_profit_loss_unavailable_reason: "
+        f"{payload['realized_profit_loss_unavailable_reason']}",
+        f"terminal_event_id: {payload['terminal_event_id']}",
+        f"record_hash: {payload['record_hash']}",
+    ]
+    evidence = payload.get("evidence", [])
+    if evidence:
+        lines.append("evidence:")
+        lines.extend(f"- {item}" for item in evidence)
+    return "\n".join(lines)

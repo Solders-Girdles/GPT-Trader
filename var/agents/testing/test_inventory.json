@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6852,
-    "total_files": 807,
+    "total_tests": 6865,
+    "total_files": 809,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6687,
+    "unit": 6700,
     "asyncio": 411,
-    "parametrize": 198,
+    "parametrize": 199,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -206,12 +206,14 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
@@ -9155,6 +9157,48 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py": [
+      {
+        "name": "test_closeout_record_and_show_for_filled_idea",
+        "line": 135,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_record_accepts_unavailable_profit_loss_reason",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_record_rejects_non_terminal_idea",
+        "line": 236,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_record_requires_profit_loss_or_unavailable_reason",
+        "line": 266,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_show_without_attribution_is_successful_noop",
+        "line": 295,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py": [
       {
         "name": "test_futures_preview_and_approval_follow_budget_leverage_flag",
@@ -9389,6 +9433,73 @@
       {
         "name": "test_help_lists_ideas_subcommands",
         "line": 221,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py": [
+      {
+        "name": "test_replay_baseline_text_success_reports_replay_summary",
+        "line": 103,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_malformed_input_returns_invalid_argument",
+        "line": 118,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_preserves_json_number_precision",
+        "line": 133,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_rejects_semantically_invalid_ohlcv_rows",
+        "line": 168,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_default_history_uses_largest_window",
+        "line": 186,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_help_documents_required_flags_and_read_only_contract",
+        "line": 217,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_no_idea_replay_is_successful_noop",
+        "line": 230,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_json_output_returns_replay_report",
+        "line": 247,
         "markers": [
           "unit"
         ],

@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 725,
-    "source_modules": 375,
+    "tests_scanned": 726,
+    "source_modules": 376,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -17,6 +17,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
@@ -306,6 +307,9 @@
     "gpt_trader.cli.commands.coinbase": [
       "tests/unit/gpt_trader/cli/test_commands_coinbase.py"
     ],
+    "gpt_trader.cli.commands.ideas": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py"
+    ],
     "gpt_trader.cli.commands.optimize": [
       "tests/unit/gpt_trader/cli/commands/optimize/test_apply_output.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_arg_parsing.py",
@@ -350,6 +354,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
@@ -2738,6 +2743,11 @@
       "gpt_trader.cli.response",
       "gpt_trader.features.trade_ideas"
     ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py": [
+      "gpt_trader",
+      "gpt_trader.cli.commands.ideas",
+      "gpt_trader.cli.response"
+    ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_report.py": [
       "gpt_trader",
       "gpt_trader.features.trade_ideas"
@@ -5123,6 +5133,7 @@
     "gpt_trader.cli.commands.account": "src/gpt_trader/cli/commands/account.py",
     "gpt_trader.cli.commands.broker_connectivity": "src/gpt_trader/cli/commands/broker_connectivity.py",
     "gpt_trader.cli.commands.coinbase": "src/gpt_trader/cli/commands/coinbase.py",
+    "gpt_trader.cli.commands.ideas": "src/gpt_trader/cli/commands/ideas.py",
     "gpt_trader.cli.commands.optimize": "src/gpt_trader/cli/commands/optimize/__init__.py",
     "gpt_trader.cli.commands.optimize.config_loader": "src/gpt_trader/cli/commands/optimize/config_loader.py",
     "gpt_trader.cli.commands.optimize.formatters": "src/gpt_trader/cli/commands/optimize/formatters.py",

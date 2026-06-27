@@ -13,10 +13,10 @@ import sys
 from argparse import ArgumentParser, Namespace
 from collections.abc import Mapping
 from dataclasses import replace
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from gpt_trader.cli import options
 from gpt_trader.cli.response import CliError, CliErrorCode, CliResponse
@@ -26,14 +26,18 @@ from gpt_trader.features.trade_ideas import (
     ActorType,
     AuditIntegrityError,
     BaselineProposer,
+    BaselineProposerConfig,
     BudgetIntegrityError,
     CloseoutResolution,
     InvalidTransitionError,
     MarketSnapshot,
     PolicyViolationError,
+    ReplayReport,
+    ReplayRunnerConfig,
     SnapshotIntegrityError,
     SymbolSeries,
     TradeIdea,
+    TradeIdeaReplayRunner,
     TradeIdeaService,
     TradeIdeaState,
     UnknownTradeIdeaError,
@@ -41,6 +45,7 @@ from gpt_trader.features.trade_ideas import (
     is_safe_decision_id,
     resolve_trade_idea_actor_id,
 )
+from gpt_trader.features.trade_ideas.replay import _granularity_duration
 from gpt_trader.features.trade_ideas.report import (
     build_trade_idea_track_record_report,
     format_trade_idea_track_record_report,
@@ -74,6 +79,10 @@ class IdeaInputError(InputPayloadError):
 
 class SnapshotInputError(InputPayloadError):
     """Raised when a JSON market snapshot payload cannot be parsed."""
+
+
+class CandleInputError(InputPayloadError):
+    """Raised when a replay candle fixture cannot be parsed."""
 
 
 def register(subparsers: Any) -> None:
@@ -167,6 +176,76 @@ def register(subparsers: Any) -> None:
     )
     _add_common_options(report)
     report.set_defaults(handler=_handle_report, subcommand="report")
+
+    replay = ideas_subparsers.add_parser(
+        "replay",
+        help="Replay proposer calibration against local candle fixtures",
+        description=(
+            "Read-only calibration commands over local candle fixtures. "
+            "Replay commands never contact brokers, accounts, or live market data."
+        ),
+    )
+    replay_subparsers = replay.add_subparsers(dest="replay_command", required=True)
+    baseline = replay_subparsers.add_parser(
+        "baseline",
+        help="Replay the deterministic baseline proposer over candle history",
+        description=(
+            "Feed a local OHLCV candle fixture to the deterministic baseline proposer "
+            "and summarize replay scoring. This command is broker-free and read-only."
+        ),
+    )
+    options.add_output_options(baseline, include_quiet=False)
+    baseline.add_argument(
+        "--file",
+        type=Path,
+        required=True,
+        help="JSON fixture with a top-level candles array of OHLCV bars",
+    )
+    baseline.add_argument("--symbol", required=True, help="Symbol represented by the candles")
+    baseline.add_argument(
+        "--granularity",
+        required=True,
+        help="Candle granularity, for example ONE_HOUR, 1H, or 1D",
+    )
+    baseline.add_argument(
+        "--source",
+        default="fixture:candles",
+        help="Source label stamped into point-in-time replay snapshots",
+    )
+    baseline.add_argument(
+        "--min-history",
+        type=_positive_int_value,
+        help=(
+            "Minimum historical candles before evaluating snapshots "
+            "(default: max(short-window, long-window) + crossover-lookback)"
+        ),
+    )
+    baseline.add_argument("--short-window", type=_positive_int_value, default=10)
+    baseline.add_argument("--long-window", type=_positive_int_value, default=50)
+    baseline.add_argument("--crossover-lookback", type=_positive_int_value, default=3)
+    baseline.add_argument(
+        "--risk-per-idea-pct",
+        type=_non_negative_decimal_value,
+        default=Decimal("2"),
+    )
+    baseline.add_argument(
+        "--entry-band-pct",
+        type=_positive_decimal_value,
+        default=Decimal("1"),
+    )
+    baseline.add_argument(
+        "--reward-multiple",
+        type=_positive_decimal_value,
+        default=Decimal("2"),
+    )
+    baseline.add_argument("--expiry-hours", type=_positive_int_value, default=48)
+    baseline.add_argument("--expected-hold", default="5-15 days")
+    baseline.add_argument(
+        "--price-precision",
+        type=_positive_decimal_value,
+        default=Decimal("0.01"),
+    )
+    baseline.set_defaults(handler=_handle_replay_baseline, subcommand="replay baseline")
 
     closeout = ideas_subparsers.add_parser(
         "closeout",
@@ -414,6 +493,23 @@ def _non_negative_int_value(value: str) -> int:
     return parsed
 
 
+def _positive_decimal_value(value: str) -> Decimal:
+    parsed = _decimal_value(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError(f"decimal value must be positive: {value}")
+    return parsed
+
+
+def _positive_int_value(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(f"invalid integer value: {value}") from error
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError(f"integer value must be positive: {value}")
+    return parsed
+
+
 def _bool_value(value: str) -> bool:
     return value.lower() == "true"
 
@@ -583,6 +679,142 @@ def _required_payload_datetime(payload: Mapping[str, Any], key: str, field: str)
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         raise SnapshotInputError(f"{field} must include a timezone", field=field)
     return parsed
+
+
+def _load_candle_fixture(path: Path) -> tuple[Candle, ...]:
+    try:
+        raw_payload = path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise CandleInputError(f"Could not read candle fixture: {error}") from error
+
+    try:
+        payload = json.loads(raw_payload, parse_float=Decimal, parse_int=Decimal)
+    except json.JSONDecodeError as error:
+        raise CandleInputError(f"Malformed candle fixture JSON: {error.msg}") from error
+    if not isinstance(payload, dict):
+        raise CandleInputError("Candle fixture must be a JSON object", field="candles")
+
+    raw_candles = payload.get("candles")
+    if not isinstance(raw_candles, list):
+        raise CandleInputError("Candle fixture must contain a candles array", field="candles")
+
+    return tuple(_parse_candle(row, index) for index, row in enumerate(raw_candles))
+
+
+def _parse_candle(row: Any, index: int) -> Candle:
+    if not isinstance(row, dict):
+        raise CandleInputError(
+            f"candle at index {index} must be a JSON object",
+            field=f"candles[{index}]",
+        )
+    candle = Candle(
+        ts=_parse_candle_timestamp(_required_candle_field(row, "ts", index), index),
+        open=_parse_candle_decimal(_required_candle_field(row, "open", index), index, "open"),
+        high=_parse_candle_decimal(_required_candle_field(row, "high", index), index, "high"),
+        low=_parse_candle_decimal(_required_candle_field(row, "low", index), index, "low"),
+        close=_parse_candle_decimal(_required_candle_field(row, "close", index), index, "close"),
+        volume=_parse_candle_decimal(_required_candle_field(row, "volume", index), index, "volume"),
+    )
+    _validate_candle_semantics(candle, index)
+    return candle
+
+
+def _required_candle_field(row: dict[str, Any], field_name: str, index: int) -> Any:
+    if field_name not in row:
+        raise CandleInputError(
+            f"candle at index {index} is missing required field '{field_name}'",
+            field=f"candles[{index}].{field_name}",
+        )
+    return row[field_name]
+
+
+def _parse_candle_timestamp(value: Any, index: int) -> datetime:
+    field = f"candles[{index}].ts"
+    if not isinstance(value, str):
+        raise CandleInputError("candle ts must be an ISO-8601 string", field=field)
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise CandleInputError(f"Invalid candle timestamp: {value}", field=field) from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def _parse_candle_decimal(value: Any, index: int, field_name: str) -> Decimal:
+    field = f"candles[{index}].{field_name}"
+    try:
+        parsed = Decimal(str(value))
+    except InvalidOperation as error:
+        raise CandleInputError(
+            f"Invalid decimal candle value for {field_name}: {value}",
+            field=field,
+        ) from error
+    if not parsed.is_finite():
+        raise CandleInputError(
+            f"Candle decimal value must be finite for {field_name}: {value}",
+            field=field,
+        )
+    return parsed
+
+
+def _validate_candle_semantics(candle: Candle, index: int) -> None:
+    for field_name in ("open", "high", "low", "close"):
+        if getattr(candle, field_name) <= 0:
+            raise CandleInputError(
+                f"candle at index {index} has non-positive {field_name}",
+                field=f"candles[{index}].{field_name}",
+            )
+    if candle.high < candle.low:
+        raise CandleInputError(
+            f"candle at index {index} has high below low",
+            field=f"candles[{index}].high",
+        )
+    if not candle.low <= candle.open <= candle.high:
+        raise CandleInputError(
+            f"candle at index {index} has open outside low/high range",
+            field=f"candles[{index}].open",
+        )
+    if not candle.low <= candle.close <= candle.high:
+        raise CandleInputError(
+            f"candle at index {index} has close outside low/high range",
+            field=f"candles[{index}].close",
+        )
+    if candle.volume < 0:
+        raise CandleInputError(
+            f"candle at index {index} has negative volume",
+            field=f"candles[{index}].volume",
+        )
+
+
+def _default_replay_min_history(config: BaselineProposerConfig) -> int:
+    return max(config.short_window, config.long_window) + config.crossover_lookback
+
+
+def _resolve_replay_min_history(args: Namespace, config: BaselineProposerConfig) -> int:
+    minimum_history = _default_replay_min_history(config)
+    requested_min_history = cast(int | None, args.min_history)
+    if requested_min_history is None:
+        return minimum_history
+    if requested_min_history < minimum_history:
+        raise CandleInputError(
+            (
+                "--min-history must be at least "
+                f"{minimum_history} for short-window={config.short_window}, "
+                f"long-window={config.long_window}, "
+                f"crossover-lookback={config.crossover_lookback}"
+            ),
+            field="min_history",
+        )
+    return requested_min_history
+
+
+def _validate_replay_granularity(granularity: str) -> None:
+    if _granularity_duration(granularity) is None:
+        raise CandleInputError(
+            f"Unsupported replay granularity: {granularity}",
+            field="granularity",
+        )
 
 
 def _handle_propose(args: Namespace) -> CliResponse:
@@ -785,6 +1017,37 @@ def _handle_report(args: Namespace) -> CliResponse:
     text = format_trade_idea_track_record_report(payload)
     idea_count = payload["proposal_volume"]["idea_count"]
     return _success(command, args, payload, text, was_noop=idea_count == 0)
+
+
+def _handle_replay_baseline(args: Namespace) -> CliResponse:
+    command = "ideas replay baseline"
+    try:
+        _validate_replay_granularity(args.granularity)
+        candles = _load_candle_fixture(args.file)
+        proposer_config = BaselineProposerConfig(
+            short_window=args.short_window,
+            long_window=args.long_window,
+            crossover_lookback=args.crossover_lookback,
+            risk_per_idea_pct=args.risk_per_idea_pct,
+            entry_band_pct=args.entry_band_pct,
+            reward_multiple=args.reward_multiple,
+            expiry_hours=args.expiry_hours,
+            expected_hold=args.expected_hold,
+            price_precision=args.price_precision,
+        )
+        min_history = _resolve_replay_min_history(args, proposer_config)
+        report = TradeIdeaReplayRunner(
+            BaselineProposer(proposer_config),
+            config=ReplayRunnerConfig(source=args.source, min_history=min_history),
+        ).run_series(symbol=args.symbol, granularity=args.granularity, candles=candles)
+    except CandleInputError as error:
+        return _input_error(command, args, error)
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    payload = report.to_dict()
+    text = _replay_report_text(report)
+    return _success(command, args, payload, text, was_noop=report.ideas_proposed == 0)
 
 
 def _handle_closeout_record(args: Namespace) -> CliResponse:
@@ -1340,6 +1603,45 @@ def _events_text(events: list[dict[str, Any]]) -> str:
 
 def _budget_text(payload: dict[str, Any]) -> str:
     return "\n".join(f"{key}: {value}" for key, value in payload.items())
+
+
+def _replay_report_text(report: ReplayReport) -> str:
+    average_return_r = report.average_return_r
+    return "\n".join(
+        [
+            _status_line(
+                "ideas replay baseline",
+                "OK",
+                (
+                    f"{report.symbol} {report.granularity}, "
+                    f"snapshots={report.snapshots_evaluated}, "
+                    f"ideas={report.ideas_proposed}"
+                ),
+            ),
+            f"proposer_id: {report.proposer_id}",
+            (
+                "outcomes: "
+                f"target_hits={report.target_hits}, "
+                f"stop_hits={report.stop_hits}, "
+                f"timed_out={report.timed_out}, "
+                f"not_filled={report.not_filled}, "
+                f"no_future_data={report.no_future_data}"
+            ),
+            (
+                "hit_rates: "
+                f"target={_decimal_pct(report.target_hit_rate)}, "
+                f"stop={_decimal_pct(report.stop_hit_rate)}"
+            ),
+            (
+                "average_return_r: "
+                f"{average_return_r.normalize() if average_return_r is not None else 'n/a'}"
+            ),
+        ]
+    )
+
+
+def _decimal_pct(value: Decimal) -> str:
+    return f"{(value * Decimal('100')).quantize(Decimal('0.01'))}%"
 
 
 def _closeout_text(command: str, payload: dict[str, Any]) -> str:

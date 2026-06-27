@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import inspect
 from collections.abc import Awaitable, Callable, Sequence
-from typing import Any
+from typing import Any, TypeVar
 
 from gpt_trader.features.live_trade.engines.base import (
     BaseEngine,
@@ -29,6 +29,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="runtime_engine")
 
 TaskRegistrar = Callable[[asyncio.Task[Any]], None]
+ResultT = TypeVar("ResultT")
 
 
 def _consume_task_result(task: asyncio.Future[Any]) -> None:
@@ -77,6 +78,8 @@ class RuntimeEngine(BaseEngine):
         self._last_error: str | None = None
         self._graceful_shutdown_failed = False
         self._drain_task: asyncio.Task[None] | None = None
+        self._lifecycle_lock = asyncio.Lock()
+        self._lifecycle_owner: asyncio.Task[Any] | None = None
 
     @property
     def name(self) -> str:
@@ -110,6 +113,16 @@ class RuntimeEngine(BaseEngine):
         register_task: TaskRegistrar | None = None,
     ) -> list[asyncio.Task[Any]]:
         """Execute startup steps once and return the tracked background tasks."""
+        return await self._run_lifecycle_serialized(
+            lambda: self._start(plan, register_task=register_task)
+        )
+
+    async def _start(
+        self,
+        plan: RuntimeLifecyclePlan,
+        *,
+        register_task: TaskRegistrar | None,
+    ) -> list[asyncio.Task[Any]]:
         if self._state == RuntimeEngineState.RUNNING:
             self._record_event("start_idempotent", "runtime", success=True)
             return self.background_tasks
@@ -146,6 +159,9 @@ class RuntimeEngine(BaseEngine):
 
     async def shutdown(self, plan: RuntimeLifecyclePlan | None = None) -> None:
         """Run shutdown hooks and cancel tracked tasks within bounded timeouts."""
+        await self._run_lifecycle_serialized(lambda: self._shutdown(plan))
+
+    async def _shutdown(self, plan: RuntimeLifecyclePlan | None) -> None:
         if self._state in {RuntimeEngineState.TERMINATED, RuntimeEngineState.FAILED}:
             self._record_event("shutdown_idempotent", "runtime", success=True)
             return
@@ -276,6 +292,24 @@ class RuntimeEngine(BaseEngine):
         if isinstance(result, Sequence) and not isinstance(result, (str, bytes, bytearray)):
             return [task for task in result if isinstance(task, asyncio.Task)]
         return []
+
+    async def _run_lifecycle_serialized(
+        self,
+        operation: Callable[[], Awaitable[ResultT]],
+    ) -> ResultT:
+        current_task = asyncio.current_task()
+        if current_task is not None and (
+            current_task is self._lifecycle_owner or current_task is self._drain_task
+        ):
+            return await operation()
+
+        async with self._lifecycle_lock:
+            self._lifecycle_owner = current_task
+            try:
+                return await operation()
+            finally:
+                if self._lifecycle_owner is current_task:
+                    self._lifecycle_owner = None
 
     async def _run_drain(
         self,

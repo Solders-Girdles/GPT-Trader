@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
 from collections import Counter
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
+from gpt_trader.features.trade_ideas.artifacts import stable_artifact_id
 from gpt_trader.features.trade_ideas.audit import ActorType, AuditAction
 from gpt_trader.features.trade_ideas.budget import DEFAULT_RISK_BUDGET
 from gpt_trader.features.trade_ideas.closeout import CloseoutResolution
@@ -81,13 +80,14 @@ def build_trade_idea_track_record_report(
         "closeout_count": sum(1 for view in views if view.closeout_attribution is not None),
         "idea_count": total_ideas,
     }
-    quality_report_id = _stable_report_id(
+    quality_report_id = stable_artifact_id(
+        "tir",
         {
             "schema_version": REPORT_SCHEMA_VERSION,
             "filters": filters,
             "source": source,
             "payload": payload,
-        }
+        },
     )
     return {
         "schema_version": REPORT_SCHEMA_VERSION,
@@ -232,12 +232,6 @@ def _filters_payload(
         "since": since.isoformat() if since is not None else None,
         "until": until.isoformat() if until is not None else None,
     }
-
-
-def _stable_report_id(payload: Mapping[str, Any]) -> str:
-    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
-    digest = hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:16]
-    return f"tir-{digest}"
 
 
 def _quality_summary(views: list[TradeIdeaView], *, now: datetime) -> dict[str, Any]:

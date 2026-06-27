@@ -1335,6 +1335,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py"
     ],
     "gpt_trader.features.trade_ideas.service": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py"
     ],
     "gpt_trader.logging.correlation": [
@@ -2716,7 +2717,8 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py": [
       "gpt_trader",
       "gpt_trader.features.trade_ideas",
-      "gpt_trader.features.trade_ideas.report"
+      "gpt_trader.features.trade_ideas.report",
+      "gpt_trader.features.trade_ideas.service"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py": [
       "gpt_trader",

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6883,
-    "total_files": 812,
+    "total_tests": 6884,
+    "total_files": 813,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6718,
+    "unit": 6719,
     "asyncio": 411,
     "parametrize": 200,
     "endpoints": 83,
@@ -207,6 +207,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_csv.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
@@ -9202,10 +9203,28 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_csv.py": [
+      {
+        "name": "test_audit_list_filters_paginates_and_exports_csv",
+        "line": 19,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_csv_output_dir_names_include_content_digest",
+        "line": 105,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py": [
       {
         "name": "test_report_json_artifact_schema_date_window_and_output_dir",
-        "line": 91,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -9213,7 +9232,7 @@
       },
       {
         "name": "test_report_id_is_deterministic_for_seeded_fixture",
-        "line": 136,
+        "line": 147,
         "markers": [
           "unit"
         ],
@@ -9221,15 +9240,7 @@
       },
       {
         "name": "test_report_csv_output_contains_flat_metric_rows",
-        "line": 148,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_audit_list_filters_paginates_and_exports_csv",
-        "line": 173,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -9237,7 +9248,7 @@
       },
       {
         "name": "test_closeout_list_filters_joins_terminal_event_and_exports_csv",
-        "line": 233,
+        "line": 184,
         "markers": [
           "unit"
         ],
@@ -9245,7 +9256,7 @@
       },
       {
         "name": "test_audit_and_closeout_no_match_results_are_successful_noops",
-        "line": 284,
+        "line": 238,
         "markers": [
           "unit"
         ],

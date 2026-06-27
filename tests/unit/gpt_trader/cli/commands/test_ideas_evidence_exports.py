@@ -15,9 +15,9 @@ from gpt_trader.features.trade_ideas import (
     ActorType,
     CloseoutResolution,
     TimeHorizon,
-    TradeIdeaService,
 )
 from gpt_trader.features.trade_ideas.report import build_trade_idea_track_record_report
+from gpt_trader.features.trade_ideas.service import TradeIdeaService
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 
@@ -59,7 +59,18 @@ def _seed_evidence_store(root: Path) -> TradeIdeaService:
     service = TradeIdeaService(root, now_factory=lambda: current_time[0])
 
     filled = _idea("trade-evidence-filled")
-    service.propose(filled, actor_id="generator-a")
+    service.propose(
+        filled,
+        actor_id="generator-a",
+        reason="=formula-style proposal reason",
+        evidence=(
+            "+proposal evidence",
+            "-proposal evidence",
+            "@proposal evidence",
+            "\tproposal evidence",
+            "\rproposal evidence",
+        ),
+    )
     current_time[0] = datetime(2026, 5, 8, 12, 0, tzinfo=UTC)
     service.approve(filled.decision_id, actor_id="rj", reason="Risk verified")
     service.record_submission(filled.decision_id, actor_id="operator", venue="manual")
@@ -70,7 +81,7 @@ def _seed_evidence_store(root: Path) -> TradeIdeaService:
         resolution=CloseoutResolution.THESIS_TARGET,
         realized_profit_loss_amount=Decimal("125.50"),
         realized_profit_loss_percent=Decimal("2.4"),
-        evidence=("statement:manual-123",),
+        evidence=("=statement:manual-123", "\tcloseout-evidence"),
     )
 
     current_time[0] = datetime(2026, 6, 4, 12, 0, tzinfo=UTC)
@@ -170,66 +181,6 @@ def test_report_csv_output_contains_flat_metric_rows(
     )
 
 
-def test_audit_list_filters_paginates_and_exports_csv(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    root = tmp_path / "ideas"
-    _seed_evidence_store(root)
-
-    exit_code, response = _run_json(
-        capsys,
-        [
-            "ideas",
-            "audit",
-            "list",
-            *_root_args(root),
-            "--actor",
-            "rj",
-            "--action",
-            "approved",
-            "--state",
-            "approved",
-            "--limit",
-            "1",
-            "--offset",
-            "0",
-        ],
-    )
-
-    assert exit_code == 0
-    data = response["data"]
-    assert data["schema_version"] == "gpt-trader.trade_ideas.audit_export.v1"
-    assert data["pagination"] == {
-        "total_count": 1,
-        "returned_count": 1,
-        "limit": 1,
-        "offset": 0,
-        "next_offset": None,
-    }
-    assert data["events"][0]["decision_id"] == "trade-evidence-filled"
-    assert data["events"][0]["actor_id"] == "rj"
-
-    exit_code, csv_output = _run_text(
-        capsys,
-        [
-            "ideas",
-            "audit",
-            "export",
-            *_root_args(root, output_format="csv"),
-            "--decision-id",
-            "trade-evidence-filled",
-            "--action",
-            "filled",
-        ],
-    )
-
-    assert exit_code == 0
-    rows = list(csv.DictReader(io.StringIO(csv_output)))
-    assert [row["action"] for row in rows] == ["filled"]
-    assert rows[0]["decision_id"] == "trade-evidence-filled"
-
-
 def test_closeout_list_filters_joins_terminal_event_and_exports_csv(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -269,16 +220,19 @@ def test_closeout_list_filters_joins_terminal_event_and_exports_csv(
             "closeout",
             "export",
             *_root_args(root, output_format="csv"),
+            "--decision-id",
+            "trade-evidence-filled",
             "--resolution",
-            "expiry",
+            "thesis_target",
         ],
     )
 
     assert exit_code == 0
     rows = list(csv.DictReader(io.StringIO(csv_output)))
-    assert [row["decision_id"] for row in rows] == ["trade-evidence-expired"]
-    assert rows[0]["terminal_state"] == "expired"
-    assert rows[0]["realized_profit_loss_unavailable_reason"] == "Expired before entry"
+    assert [row["decision_id"] for row in rows] == ["trade-evidence-filled"]
+    assert rows[0]["terminal_state"] == "filled"
+    assert rows[0]["realized_profit_loss_amount"] == "125.50"
+    assert json.loads(rows[0]["evidence"]) == ["'=statement:manual-123", "'\tcloseout-evidence"]
 
 
 def test_audit_and_closeout_no_match_results_are_successful_noops(
@@ -297,6 +251,36 @@ def test_audit_and_closeout_no_match_results_are_successful_noops(
     assert audit_response["data"]["events"] == []
     assert audit_response["data"]["pagination"]["total_count"] == 0
 
+    exit_code, audit_csv = _run_text(
+        capsys,
+        [
+            "ideas",
+            "audit",
+            "export",
+            *_root_args(root, output_format="csv"),
+            "--actor",
+            "nobody",
+        ],
+    )
+    assert exit_code == 0
+    audit_reader = csv.DictReader(io.StringIO(audit_csv))
+    assert audit_reader.fieldnames == [
+        "event_id",
+        "timestamp",
+        "decision_id",
+        "actor_type",
+        "actor_id",
+        "action",
+        "before_state",
+        "after_state",
+        "reason",
+        "record_hash",
+        "evidence",
+        "venue",
+        "external_order_id",
+    ]
+    assert list(audit_reader) == []
+
     exit_code, closeout_response = _run_json(
         capsys,
         [
@@ -312,3 +296,37 @@ def test_audit_and_closeout_no_match_results_are_successful_noops(
     assert closeout_response["metadata"]["was_noop"] is True
     assert closeout_response["data"]["row_count"] == 0
     assert closeout_response["data"]["rows"] == []
+
+    exit_code, closeout_csv = _run_text(
+        capsys,
+        [
+            "ideas",
+            "closeout",
+            "export",
+            *_root_args(root, output_format="csv"),
+            "--decision-id",
+            "trade-no-match",
+        ],
+    )
+    assert exit_code == 0
+    closeout_reader = csv.DictReader(io.StringIO(closeout_csv))
+    assert closeout_reader.fieldnames == [
+        "decision_id",
+        "timestamp",
+        "actor_type",
+        "actor_id",
+        "resolution",
+        "realized_profit_loss_amount",
+        "realized_profit_loss_percent",
+        "realized_profit_loss_unavailable_reason",
+        "max_loss_amount",
+        "max_loss_percent_of_account",
+        "max_loss_assumptions",
+        "evidence",
+        "terminal_event_id",
+        "terminal_event_timestamp",
+        "terminal_action",
+        "terminal_state",
+        "record_hash",
+    ]
+    assert list(closeout_reader) == []

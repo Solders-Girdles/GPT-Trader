@@ -1372,7 +1372,11 @@ def _handle_closeout_export(args: Namespace) -> CliResponse:
             _write_output_dir_artifact(
                 args,
                 stem="trade-idea-closeouts",
-                artifact_id=_csv_artifact_suffix("closeout", _closeout_filters_payload(args)),
+                artifact_id=_csv_artifact_suffix(
+                    "closeout",
+                    _closeout_filters_payload(args),
+                    content,
+                ),
                 extension="csv",
                 content=content,
             )
@@ -1648,7 +1652,11 @@ def _handle_audit_export(args: Namespace) -> CliResponse:
             _write_output_dir_artifact(
                 args,
                 stem="trade-idea-audit",
-                artifact_id=_csv_artifact_suffix("audit", _audit_filters_payload(args)),
+                artifact_id=_csv_artifact_suffix(
+                    "audit",
+                    _audit_filters_payload(args),
+                    content,
+                ),
                 extension="csv",
                 content=content,
             )
@@ -1812,10 +1820,11 @@ def _write_output_dir_artifact(
     return str(path)
 
 
-def _csv_artifact_suffix(prefix: str, filters: Mapping[str, Any]) -> str:
+def _csv_artifact_suffix(prefix: str, filters: Mapping[str, Any], content: str) -> str:
     encoded = json.dumps(filters, sort_keys=True, separators=(",", ":"), default=str)
-    digest = hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:16]
-    return f"{prefix}-{digest}"
+    filter_digest = hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:12]
+    content_digest = hashlib.sha256(content.encode("utf-8")).hexdigest()[:12]
+    return f"{prefix}-{filter_digest}-{content_digest}"
 
 
 def _closeout_profit_loss_error(command: str, args: Namespace) -> CliResponse | None:

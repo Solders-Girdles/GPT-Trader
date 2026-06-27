@@ -85,6 +85,13 @@ from gpt_trader.features.trade_ideas.snapshot import (
     SnapshotIntegrityError,
     SymbolSeries,
 )
+from gpt_trader.features.trade_ideas.snapshot_builder import (
+    HistoricalCandleSource,
+    MarketSnapshotBuilder,
+    MarketSnapshotBuildRequest,
+    granularity_duration,
+    market_snapshot_to_payload,
+)
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
 from gpt_trader.features.trade_ideas.workflow import (
     ALLOWED_TRANSITIONS,
@@ -101,6 +108,7 @@ __all__ = [
     "DEFAULT_IDEAS_ROOT",
     "DuplicateCloseoutAttributionError",
     "DuplicateTradeIdeaError",
+    "HistoricalCandleSource",
     "IDEAS_ROOT_ENV_VAR",
     "TERMINAL_STATES",
     "ActorType",
@@ -123,6 +131,8 @@ __all__ = [
     "EntryZone",
     "InvalidTransitionError",
     "MarketSnapshot",
+    "MarketSnapshotBuilder",
+    "MarketSnapshotBuildRequest",
     "MaxLoss",
     "MaxLossSnapshot",
     "PreApprovalBrokerTicketError",
@@ -157,8 +167,10 @@ __all__ = [
     "evaluate_eligibility",
     "extract_numeric_scoring_levels",
     "format_trade_idea_track_record_report",
+    "granularity_duration",
     "is_eligible",
     "is_safe_decision_id",
+    "market_snapshot_to_payload",
     "new_event_id",
     "resolve_ideas_root",
     "resolve_trade_idea_actor_id",

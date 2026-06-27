@@ -79,6 +79,67 @@ async def test_runtime_engine_concurrent_shutdown_awaits_in_flight_drain() -> No
 
 
 @pytest.mark.asyncio
+async def test_runtime_engine_cancelled_shutdown_caller_preserves_in_flight_drain() -> None:
+    runtime = RuntimeEngine(_context(), shutdown_timeout_seconds=_TEST_LIFECYCLE_TIMEOUT)
+    shutdown_started = asyncio.Event()
+    release_shutdown = asyncio.Event()
+    events: list[str] = []
+
+    async def shutdown_hook() -> None:
+        events.append("shutdown_started")
+        shutdown_started.set()
+        await release_shutdown.wait()
+        events.append("shutdown_finished")
+
+    plan = RuntimeLifecyclePlan(
+        shutdown_steps=(
+            RuntimeLifecycleStep(
+                "shutdown",
+                RuntimeStepKind.SHUTDOWN_HOOK,
+                shutdown_hook,
+                timeout_seconds=_TEST_LIFECYCLE_TIMEOUT,
+                register_task=False,
+            ),
+        ),
+        shutdown_step_timeout_seconds=_TEST_LIFECYCLE_TIMEOUT,
+    )
+
+    first_shutdown: asyncio.Task[None] | None = None
+    second_shutdown: asyncio.Task[None] | None = None
+    try:
+        await runtime.start(plan)
+        first_shutdown = asyncio.create_task(runtime.shutdown(plan))
+        await shutdown_started.wait()
+
+        first_shutdown.cancel()
+
+        with pytest.raises(asyncio.CancelledError):
+            await asyncio.wait_for(first_shutdown, timeout=2.0)
+
+        assert runtime.state == RuntimeEngineState.DRAINING
+
+        second_shutdown = asyncio.create_task(runtime.shutdown(plan))
+        await asyncio.sleep(0)
+
+        assert not second_shutdown.done()
+
+        release_shutdown.set()
+        await asyncio.wait_for(second_shutdown, timeout=2.0)
+    finally:
+        release_shutdown.set()
+        pending_shutdowns = [
+            task
+            for task in (first_shutdown, second_shutdown)
+            if task is not None and not task.done()
+        ]
+        if pending_shutdowns:
+            await asyncio.gather(*pending_shutdowns, return_exceptions=True)
+
+    assert events == ["shutdown_started", "shutdown_finished"]
+    assert runtime.state == RuntimeEngineState.TERMINATED
+
+
+@pytest.mark.asyncio
 async def test_runtime_engine_shutdown_waits_for_initializing_startup() -> None:
     runtime = RuntimeEngine(_context(), shutdown_timeout_seconds=_TEST_LIFECYCLE_TIMEOUT)
     startup_started = asyncio.Event()

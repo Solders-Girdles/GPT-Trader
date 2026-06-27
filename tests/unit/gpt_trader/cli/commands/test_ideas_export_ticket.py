@@ -161,6 +161,40 @@ def test_export_ticket_rejects_unapproved_idea_with_json_error(
     }
 
 
+def test_export_ticket_error_does_not_write_to_out_artifact_path(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "ideas"
+    output_path = tmp_path / "ticket.json"
+    output_path.write_text("keep-existing-ticket", encoding="utf-8")
+    payload = _idea_payload(decision_id="trade-export-error-file")
+    path = _write_idea(tmp_path / "proposed.json", payload)
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "propose",
+            *_root_args(root),
+            "--actor",
+            "idea-generator-v1",
+            "--file",
+            str(path),
+        ],
+    )
+    assert exit_code == 0
+    assert response["success"] is True
+
+    exit_code, response = _run_json(
+        capsys,
+        [*_export_args(root, payload["decision_id"]), "--out", str(output_path)],
+    )
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.VALIDATION_ERROR.value
+    assert output_path.read_text(encoding="utf-8") == "keep-existing-ticket"
+
+
 def test_export_ticket_stdout_json_is_byte_deterministic(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

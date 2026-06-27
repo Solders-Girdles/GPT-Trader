@@ -33,6 +33,7 @@ TICKET_PAYLOAD_SCHEMA_VERSION = "gpt-trader.trade_idea_ticket.v1"
 DEFAULT_VENUE_ORDER_TYPE = "operator_selected"
 DEFAULT_TIME_IN_FORCE = "operator_selected"
 EXPORT_TICKET_VENUES = frozenset({TicketVenue.COINBASE, TicketVenue.MANUAL})
+MAX_CLIENT_ORDER_ID_LENGTH = 128
 
 _CLIENT_ORDER_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$")
 
@@ -244,7 +245,16 @@ def _default_client_order_id(
     venue: TicketVenue,
     record_hash: str,
 ) -> str:
-    return f"gpt-trader-{venue.value}-{decision_id}-{record_hash[:12]}"
+    prefix = f"gpt-trader-{venue.value}-"
+    decision_hash = hashlib.sha256(decision_id.encode("utf-8")).hexdigest()[:12]
+    suffix = f"-{decision_hash}-{record_hash[:12]}"
+    max_decision_length = MAX_CLIENT_ORDER_ID_LENGTH - len(prefix) - len(suffix)
+    decision_fragment = decision_id[:max_decision_length]
+    generated = f"{prefix}{decision_fragment}{suffix}"
+    normalized = _optional_client_order_id(generated)
+    if normalized is None:  # pragma: no cover - generated ids are always present
+        raise AssertionError("generated client_order_id unexpectedly empty")
+    return normalized
 
 
 def _order_side_for_direction(direction: TradeDirection) -> str | None:

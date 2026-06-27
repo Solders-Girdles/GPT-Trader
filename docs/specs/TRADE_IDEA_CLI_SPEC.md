@@ -257,7 +257,8 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
   - `--venue-order-type TEXT` (default `operator_selected`)
   - `--time-in-force TEXT` (default `operator_selected`)
   - `--client-order-id ID` (defaults deterministically from venue, decision id,
-    and record hash)
+    and record hash; long decision ids are hash/truncated so generated ids stay
+    within the same 128-character validation bound as explicit ids)
 - Output:
   - Default success output is the raw canonical ticket JSON on stdout, not a
     `CliResponse` envelope, so repeated exports of the same audited state are
@@ -270,7 +271,9 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
 - State guard: export succeeds only for `approved`, `submitted`, `filled`,
   `cancelled`, or `expired` ideas that have an approval event. It fails with
   `VALIDATION_ERROR` for unapproved states such as `proposed`,
-  `needs_changes`, `rejected`, or pre-approval `expired`.
+  `needs_changes`, `rejected`, or pre-approval `expired`. Approved ideas also
+  recheck `time_horizon.expires_at` at export time and fail instead of
+  producing an actionable ticket when the idea has gone stale.
 - Payload includes:
   - `schema_version`, `decision_id`, `record_hash`, deterministic
     `generated_at`, and `ticket_hash`.

@@ -555,6 +555,18 @@ class TradeIdeaService:
         budget_source = "risk_budget_log" if budget is not None else "default"
         effective_budget = budget or DEFAULT_RISK_BUDGET
         latest_event = view.events[-1]
+        export_time = self._now()
+        expires_at = view.idea.time_horizon.expires_at
+        if (
+            view.state is TradeIdeaState.APPROVED
+            and expires_at is not None
+            and expires_at <= export_time
+        ):
+            violation = f"Idea expired at {expires_at.isoformat()}; export no stale ticket"
+            raise PolicyViolationError(
+                f"Ticket export for '{decision_id}' refused: {violation}",
+                [violation],
+            )
         policy_violations = self._policy.approval_violations(
             view.idea,
             actor_type=ActorType.HUMAN,

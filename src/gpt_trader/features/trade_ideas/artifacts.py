@@ -308,14 +308,16 @@ def _csv_value(value: Any, *, neutralize_formula: bool = True) -> str:
     if value is None:
         return ""
     if isinstance(value, (list, tuple)):
-        payload = [_csv_json_value(item, neutralize_formula=neutralize_formula) for item in value]
-        return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+        sequence_payload = [
+            _csv_json_value(item, neutralize_formula=neutralize_formula) for item in value
+        ]
+        return json.dumps(sequence_payload, sort_keys=True, separators=(",", ":"), default=str)
     if isinstance(value, dict):
-        payload = {
+        mapping_payload = {
             str(key): _csv_json_value(item, neutralize_formula=neutralize_formula)
             for key, item in value.items()
         }
-        return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+        return json.dumps(mapping_payload, sort_keys=True, separators=(",", ":"), default=str)
     if neutralize_formula and isinstance(value, str):
         return _neutralize_csv_formula(value)
     return str(value)

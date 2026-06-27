@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
-from typing import Any
+from typing import AbstractSet, Any
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import ActorType, AuditAction
@@ -207,13 +207,17 @@ class PaperFillReconciler:
         """Reconcile normalized paper fill events."""
         views = tuple(self._service.list_views())
         view_by_decision_id = {view.idea.decision_id: view for view in views}
-        recordable_views = _recordable_views(views)
+        preview_filled_decision_ids: set[str] = set()
 
         matched: list[PaperFillReconciliationEntry] = []
         unmatched: list[PaperFillReconciliationEntry] = []
         skipped: list[PaperFillReconciliationEntry] = []
 
         for event in fills:
+            recordable_views = _recordable_views(
+                view_by_decision_id.values(),
+                preview_filled_decision_ids=preview_filled_decision_ids,
+            )
             decision_id, method, reason = self._match_event(
                 event,
                 view_by_decision_id=view_by_decision_id,
@@ -246,6 +250,19 @@ class PaperFillReconciler:
                         )
                     )
                     continue
+
+            if decision_id in preview_filled_decision_ids:
+                skipped.append(
+                    PaperFillReconciliationEntry(
+                        event=event,
+                        status="skipped",
+                        reason="trade idea is already terminal filled",
+                        decision_id=decision_id,
+                        match_method=method,
+                        final_state=TradeIdeaState.FILLED.value,
+                    )
+                )
+                continue
 
             if self._already_reconciled(view, event):
                 skipped.append(
@@ -311,7 +328,8 @@ class PaperFillReconciler:
                 recorded_fill = True
                 final_state = view.state.value
                 view_by_decision_id[decision_id] = view
-                recordable_views = _recordable_views(view_by_decision_id.values())
+            else:
+                final_state = TradeIdeaState.FILLED.value
 
             matched.append(
                 PaperFillReconciliationEntry(
@@ -329,6 +347,8 @@ class PaperFillReconciler:
                     final_state=final_state,
                 )
             )
+            if not apply:
+                preview_filled_decision_ids.add(decision_id)
 
         return PaperFillReconciliationReport(
             mode="apply" if apply else "dry_run",
@@ -397,9 +417,16 @@ def _match_client_order_id(
     return matches[0] if len(matches) == 1 else None
 
 
-def _recordable_views(views: Iterable[TradeIdeaView]) -> tuple[TradeIdeaView, ...]:
+def _recordable_views(
+    views: Iterable[TradeIdeaView],
+    *,
+    preview_filled_decision_ids: AbstractSet[str],
+) -> tuple[TradeIdeaView, ...]:
     return tuple(
-        view for view in views if view.state in {TradeIdeaState.APPROVED, TradeIdeaState.SUBMITTED}
+        view
+        for view in views
+        if view.state in {TradeIdeaState.APPROVED, TradeIdeaState.SUBMITTED}
+        and view.idea.decision_id not in preview_filled_decision_ids
     )
 
 

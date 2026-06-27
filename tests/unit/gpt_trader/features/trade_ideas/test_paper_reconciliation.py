@@ -324,6 +324,56 @@ def test_reconciler_refreshes_symbol_side_candidates_after_applied_fill(
     assert service.get(second_decision_id).state is TradeIdeaState.FILLED
 
 
+def test_reconciler_dry_run_previews_refreshed_symbol_side_candidates(
+    tmp_path: Path,
+) -> None:
+    service = _service(tmp_path / "ideas")
+    first_decision_id = _approved_idea(service, decision_id="trade-20260612-001")
+    second_decision_id = _approved_idea(service, decision_id="trade-20260612-002")
+    fills = [
+        _fill_event(
+            client_order_id=first_decision_id,
+            order_id="MOCK_000007",
+        ),
+        _fill_event(
+            order_id="MOCK_000008",
+            client_order_id="",
+        ),
+    ]
+
+    dry_run_report = PaperFillReconciler(service).reconcile_fills(fills, apply=False)
+
+    assert dry_run_report.mode == "dry_run"
+    assert dry_run_report.matched_count == 2
+    assert dry_run_report.unmatched_count == 0
+    assert [entry.decision_id for entry in dry_run_report.matched] == [
+        first_decision_id,
+        second_decision_id,
+    ]
+    assert [entry.match_method for entry in dry_run_report.matched] == [
+        "client_order_id",
+        "symbol_side",
+    ]
+    assert [entry.final_state for entry in dry_run_report.matched] == [
+        TradeIdeaState.FILLED.value,
+        TradeIdeaState.FILLED.value,
+    ]
+    assert service.get(first_decision_id).state is TradeIdeaState.APPROVED
+    assert service.get(second_decision_id).state is TradeIdeaState.APPROVED
+
+    apply_report = PaperFillReconciler(service).reconcile_fills(fills, apply=True)
+
+    assert [entry.decision_id for entry in apply_report.matched] == [
+        first_decision_id,
+        second_decision_id,
+    ]
+    assert [entry.match_method for entry in apply_report.matched] == [
+        "client_order_id",
+        "symbol_side",
+    ]
+    assert apply_report.unmatched_count == 0
+
+
 def test_live_profiles_are_rejected_for_paper_reconciliation() -> None:
     assert validate_paper_reconciliation_profile("paper") == "paper"
     assert validate_paper_reconciliation_profile("dev") == "dev"

@@ -7,6 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 from rich.text import Text
 
+import gpt_trader.tui.utilities.table_formatting as table_formatting
 from gpt_trader.tui.utilities.table_formatting import (
     copy_to_clipboard,
     create_numeric_cell,
@@ -105,6 +106,30 @@ class TestCopyToClipboard:
         """Copy empty string doesn't crash."""
         result = copy_to_clipboard("")
         assert isinstance(result, bool)
+
+    def test_windows_clipboard_copy_does_not_use_shell(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Windows clipboard copy invokes clip without a shell."""
+        calls: list[dict[str, object]] = []
+
+        def fake_run(command: list[str], **kwargs: object) -> None:
+            calls.append({"command": command, **kwargs})
+
+        monkeypatch.setattr(table_formatting.sys, "platform", "win32")
+        monkeypatch.setattr(table_formatting.subprocess, "run", fake_run)
+
+        result = copy_to_clipboard("test text")
+
+        assert result is True
+        assert calls == [
+            {
+                "command": ["clip"],
+                "input": b"test text",
+                "check": True,
+                "capture_output": True,
+            }
+        ]
 
 
 class TestTruncateId:

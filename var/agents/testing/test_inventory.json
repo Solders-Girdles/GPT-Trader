@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6876,
+    "total_tests": 6877,
     "total_files": 811,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6711,
+    "unit": 6712,
     "asyncio": 411,
     "parametrize": 200,
     "endpoints": 83,
@@ -9559,7 +9559,7 @@
         "docstring": ""
       },
       {
-        "name": "test_replay_baseline_help_documents_required_flags_and_read_only_contract",
+        "name": "test_replay_baseline_rejects_custom_min_history_below_largest_window",
         "line": 252,
         "markers": [
           "unit"
@@ -9567,8 +9567,16 @@
         "docstring": ""
       },
       {
+        "name": "test_replay_baseline_help_documents_required_flags_and_read_only_contract",
+        "line": 270,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_replay_baseline_no_idea_replay_is_successful_noop",
-        "line": 265,
+        "line": 283,
         "markers": [
           "unit"
         ],
@@ -9576,7 +9584,7 @@
       },
       {
         "name": "test_replay_baseline_json_output_returns_replay_report",
-        "line": 282,
+        "line": 300,
         "markers": [
           "unit"
         ],

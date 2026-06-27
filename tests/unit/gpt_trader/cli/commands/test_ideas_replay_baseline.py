@@ -249,6 +249,24 @@ def test_replay_baseline_default_history_uses_largest_window(
     assert response["data"]["snapshots_evaluated"] == 1
 
 
+def test_replay_baseline_rejects_custom_min_history_below_largest_window(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fixture = _write_fixture(tmp_path / "flat-candles.json", _flat_fixture())
+    argv = _baseline_args(fixture)
+    argv[argv.index("--short-window") + 1] = "5"
+    argv[argv.index("--long-window") + 1] = "2"
+    argv.extend(["--min-history", "5"])
+
+    exit_code, response = _run_json(capsys, argv)
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert response["errors"][0]["details"]["field"] == "min_history"
+    assert "--min-history must be at least 6" in response["errors"][0]["message"]
+
+
 def test_replay_baseline_help_documents_required_flags_and_read_only_contract(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

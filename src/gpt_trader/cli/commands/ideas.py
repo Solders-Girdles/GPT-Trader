@@ -16,7 +16,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from gpt_trader.cli import options
 from gpt_trader.cli.response import CliError, CliErrorCode, CliResponse
@@ -791,6 +791,24 @@ def _default_replay_min_history(config: BaselineProposerConfig) -> int:
     return max(config.short_window, config.long_window) + config.crossover_lookback
 
 
+def _resolve_replay_min_history(args: Namespace, config: BaselineProposerConfig) -> int:
+    minimum_history = _default_replay_min_history(config)
+    requested_min_history = cast(int | None, args.min_history)
+    if requested_min_history is None:
+        return minimum_history
+    if requested_min_history < minimum_history:
+        raise CandleInputError(
+            (
+                "--min-history must be at least "
+                f"{minimum_history} for short-window={config.short_window}, "
+                f"long-window={config.long_window}, "
+                f"crossover-lookback={config.crossover_lookback}"
+            ),
+            field="min_history",
+        )
+    return requested_min_history
+
+
 def _validate_replay_granularity(granularity: str) -> None:
     if _granularity_duration(granularity) is None:
         raise CandleInputError(
@@ -1017,11 +1035,7 @@ def _handle_replay_baseline(args: Namespace) -> CliResponse:
             expected_hold=args.expected_hold,
             price_precision=args.price_precision,
         )
-        min_history = (
-            args.min_history
-            if args.min_history is not None
-            else _default_replay_min_history(proposer_config)
-        )
+        min_history = _resolve_replay_min_history(args, proposer_config)
         report = TradeIdeaReplayRunner(
             BaselineProposer(proposer_config),
             config=ReplayRunnerConfig(source=args.source, min_history=min_history),

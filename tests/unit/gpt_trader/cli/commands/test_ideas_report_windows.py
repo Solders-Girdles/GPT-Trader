@@ -5,7 +5,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from gpt_trader.features.trade_ideas import CloseoutResolution, TimeHorizon
+from gpt_trader.features.trade_ideas import CloseoutResolution, MaxLoss, TimeHorizon
 from gpt_trader.features.trade_ideas.report import build_trade_idea_track_record_report
 from gpt_trader.features.trade_ideas.service import TradeIdeaService
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
@@ -94,3 +94,39 @@ def test_windowed_report_uses_cutoff_for_approval_readiness(tmp_path: Path) -> N
 
     assert report["quality"]["approval_ready_count"] == 1
     assert report["quality"]["approval_policy_violation_counts"] == {}
+
+
+def test_windowed_report_loads_record_version_for_last_in_window_event(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "ideas"
+    current_time = [datetime(2026, 5, 20, 12, 0, tzinfo=UTC)]
+    service = TradeIdeaService(root, now_factory=lambda: current_time[0])
+    original = _idea(
+        "trade-window-versioned-record",
+        max_loss=MaxLoss(),
+    )
+    service.propose(original, actor_id="idea-generator-v1")
+
+    current_time[0] = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
+    service.request_changes(original.decision_id, actor_id="rj", reason="Add max loss")
+    service.resubmit(
+        _idea(
+            original.decision_id,
+            max_loss=MaxLoss(amount=Decimal("300"), percent_of_account=Decimal("2.0")),
+        ),
+        actor_id="idea-generator-v1",
+    )
+
+    report = build_trade_idea_track_record_report(
+        service,
+        now=datetime(2026, 7, 1, 12, 0, tzinfo=UTC),
+        since=datetime(2026, 5, 1, 0, 0, tzinfo=UTC),
+        until=datetime(2026, 5, 31, 23, 59, 59, tzinfo=UTC),
+    )
+
+    assert report["source"]["audit_event_count"] == 1
+    assert report["workflow"]["current_state_counts"]["proposed"] == 1
+    assert report["quality"]["missing_field_counts"]["max_loss.amount"] == 1
+    assert report["quality"]["missing_field_counts"]["max_loss.percent_of_account"] == 1
+    assert report["quality"]["approval_ready_count"] == 0

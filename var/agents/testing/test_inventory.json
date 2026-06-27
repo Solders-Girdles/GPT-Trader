@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6886,
-    "total_files": 814,
+    "total_tests": 6889,
+    "total_files": 815,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6721,
+    "unit": 6724,
     "asyncio": 411,
     "parametrize": 200,
     "endpoints": 83,
@@ -553,6 +553,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
@@ -9262,6 +9263,14 @@
           "unit"
         ],
         "docstring": ""
+      },
+      {
+        "name": "test_zero_limit_pages_do_not_repeat_current_offset",
+        "line": 335,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py": [
@@ -9724,6 +9733,14 @@
       {
         "name": "test_windowed_report_uses_cutoff_for_approval_readiness",
         "line": 74,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_windowed_report_loads_record_version_for_last_in_window_event",
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -33618,6 +33635,16 @@
       {
         "name": "test_approval_count_ignores_unaudited_latest_for_nonapproved_records",
         "line": 50,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_query.py": [
+      {
+        "name": "test_audit_query_preserves_append_order_for_tied_timestamps",
+        "line": 20,
         "markers": [
           "unit"
         ],

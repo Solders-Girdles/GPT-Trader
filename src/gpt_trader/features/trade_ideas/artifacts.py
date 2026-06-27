@@ -282,7 +282,7 @@ def _pagination_payload(
     offset: int,
 ) -> dict[str, int | None]:
     next_offset = None
-    if limit is not None and offset + returned_count < total_count:
+    if limit is not None and returned_count > 0 and offset + returned_count < total_count:
         next_offset = offset + returned_count
     return {
         "total_count": total_count,

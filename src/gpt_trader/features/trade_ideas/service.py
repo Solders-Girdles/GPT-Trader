@@ -579,6 +579,25 @@ class TradeIdeaService:
     def get_closeout_attribution(self, decision_id: str) -> CloseoutAttribution | None:
         return self.get(decision_id).closeout_attribution
 
+    def load_record_version(self, decision_id: str, record_hash: str) -> TradeIdea:
+        """Load the exact record version referenced by an audit event."""
+        try:
+            idea = self._store.load_version(decision_id, record_hash)
+        except (InvalidOperation, TypeError, ValueError) as error:
+            raise ValidationError(
+                f"Stored trade idea '{decision_id}' version '{record_hash}' is invalid: {error}",
+                field="record_hash",
+                value=record_hash,
+            ) from error
+        if idea is None:
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' is missing audit record_hash "
+                f"'{record_hash}'",
+                field="record_hash",
+                value=record_hash,
+            )
+        return idea
+
     # -- queries -----------------------------------------------------------
 
     def get(self, decision_id: str) -> TradeIdeaView:
@@ -630,7 +649,7 @@ class TradeIdeaService:
             and (requested_state is None or event.after_state is requested_state)
             and _timestamp_in_window(event.timestamp, since=since, until=until)
         )
-        ordered_events = tuple(sorted(events, key=lambda event: (event.timestamp, event.event_id)))
+        ordered_events = tuple(sorted(events, key=lambda event: event.timestamp))
         return _page_items(ordered_events, limit=limit, offset=offset)
 
     def query_closeout_records(

@@ -330,3 +330,29 @@ def test_audit_and_closeout_no_match_results_are_successful_noops(
         "record_hash",
     ]
     assert list(closeout_reader) == []
+
+
+def test_zero_limit_pages_do_not_repeat_current_offset(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "ideas"
+    _seed_evidence_store(root)
+
+    exit_code, audit_response = _run_json(
+        capsys,
+        ["ideas", "audit", "list", *_root_args(root), "--limit", "0", "--offset", "0"],
+    )
+    assert exit_code == 0
+    assert audit_response["data"]["pagination"]["total_count"] > 0
+    assert audit_response["data"]["pagination"]["returned_count"] == 0
+    assert audit_response["data"]["pagination"]["next_offset"] is None
+
+    exit_code, closeout_response = _run_json(
+        capsys,
+        ["ideas", "closeout", "list", *_root_args(root), "--limit", "0", "--offset", "0"],
+    )
+    assert exit_code == 0
+    assert closeout_response["data"]["pagination"]["total_count"] > 0
+    assert closeout_response["data"]["pagination"]["returned_count"] == 0
+    assert closeout_response["data"]["pagination"]["next_offset"] is None

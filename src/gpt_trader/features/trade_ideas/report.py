@@ -43,7 +43,12 @@ def build_trade_idea_track_record_report(
     """Build a read-only report from stored records, audit events, and closeouts."""
     current_time = now or datetime.now(UTC)
     report_cutoff = until or current_time
-    views = _snapshot_views_by_window(service.list_views(), since=since, until=report_cutoff)
+    views = _snapshot_views_by_window(
+        service,
+        service.list_views(),
+        since=since,
+        until=report_cutoff,
+    )
     total_ideas = len(views)
 
     event_counts = _zero_action_counts()
@@ -199,6 +204,7 @@ def _workflow_summary(
 
 
 def _snapshot_views_by_window(
+    service: TradeIdeaService,
     views: list[TradeIdeaView],
     *,
     since: datetime | None,
@@ -219,6 +225,7 @@ def _snapshot_views_by_window(
         )
         if not events:
             continue
+        idea = service.load_record_version(view.idea.decision_id, events[-1].record_hash)
         closeout = view.closeout_attribution
         if closeout is not None and not _timestamp_in_window(
             closeout.timestamp,
@@ -228,7 +235,7 @@ def _snapshot_views_by_window(
             closeout = None
         snapshots.append(
             TradeIdeaView(
-                idea=view.idea,
+                idea=idea,
                 state=events[-1].after_state,
                 events=events,
                 closeout_attribution=closeout,

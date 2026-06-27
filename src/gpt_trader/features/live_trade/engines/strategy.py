@@ -1012,7 +1012,7 @@ class TradingEngine(BaseEngine):
             dependencies=(
                 RuntimeDependency("config", self.context.config),
                 RuntimeDependency("container", self.context.container),
-                RuntimeDependency("broker", self.context.broker, required=False),
+                RuntimeDependency("broker", self.context.broker),
                 RuntimeDependency("risk_manager", self.context.risk_manager, required=False),
                 RuntimeDependency("event_store", self.context.event_store, required=False),
                 RuntimeDependency("orders_store", self.context.orders_store, required=False),

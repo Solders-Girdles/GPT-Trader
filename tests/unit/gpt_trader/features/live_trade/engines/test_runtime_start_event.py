@@ -25,7 +25,7 @@ def engine() -> Iterator[TradingEngine]:
     set_application_container(container)
     engine_context = CoordinatorContext(
         config=config,
-        broker=None,
+        broker=MagicMock(),
         risk_manager=None,
         event_store=container.event_store,
         orders_store=container.orders_store,

@@ -34,7 +34,7 @@ def engine() -> Iterator[TradingEngine]:
     set_application_container(container)
     engine_context = CoordinatorContext(
         config=config,
-        broker=None,
+        broker=MagicMock(),
         risk_manager=None,
         event_store=container.event_store,
         orders_store=container.orders_store,
@@ -79,18 +79,19 @@ async def test_trading_engine_runtime_start_shutdown_are_idempotent(
     )
     engine._system_maintenance.stop = AsyncMock()
 
-    first_tasks = await engine.start_background_tasks()
-    second_tasks = await engine.start_background_tasks()
+    try:
+        first_tasks = await engine.start_background_tasks()
+        second_tasks = await engine.start_background_tasks()
 
-    assert first_tasks == second_tasks
-    assert len(first_tasks) == 5
-    assert engine._event_store.append.call_count == 1
-    engine._health_check_runner.start.assert_awaited_once()
-    engine._heartbeat.start.assert_awaited_once()
-    engine._status_reporter.start.assert_awaited_once()
-    engine._system_maintenance.start_prune_loop.assert_awaited_once()
-
-    await engine.shutdown()
+        assert first_tasks == second_tasks
+        assert len(first_tasks) == 5
+        assert engine._event_store.append.call_count == 1
+        engine._health_check_runner.start.assert_awaited_once()
+        engine._heartbeat.start.assert_awaited_once()
+        engine._status_reporter.start.assert_awaited_once()
+        engine._system_maintenance.start_prune_loop.assert_awaited_once()
+    finally:
+        await engine.shutdown()
     await engine.shutdown()
 
     engine._health_check_runner.stop.assert_awaited_once()

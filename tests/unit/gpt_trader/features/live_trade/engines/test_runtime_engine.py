@@ -226,6 +226,30 @@ async def test_runtime_engine_stop_condition_prevents_startup() -> None:
 
 
 @pytest.mark.asyncio
+async def test_runtime_engine_stop_condition_error_is_lifecycle_failure() -> None:
+    runtime = RuntimeEngine(_context())
+
+    def broken_condition() -> bool:
+        raise ValueError("predicate failed")
+
+    plan = RuntimeLifecyclePlan(
+        stop_conditions=(
+            RuntimeStopCondition(
+                name="broken_stop_condition",
+                is_met=broken_condition,
+                reason="predicate_failed",
+            ),
+        ),
+    )
+
+    with pytest.raises(RuntimeLifecycleError, match="broken_stop_condition") as exc_info:
+        await runtime.start(plan)
+
+    assert not isinstance(exc_info.value, RuntimeStopRequested)
+    assert runtime.state == RuntimeEngineState.FAILED
+
+
+@pytest.mark.asyncio
 async def test_runtime_engine_shutdown_timeout_escalates_failure() -> None:
     runtime = RuntimeEngine(_context(), shutdown_timeout_seconds=0.01)
 

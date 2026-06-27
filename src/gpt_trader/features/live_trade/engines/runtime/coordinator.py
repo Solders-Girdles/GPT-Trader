@@ -194,7 +194,7 @@ class RuntimeEngine(BaseEngine):
                     f"{type(exc).__name__}: {exc}"
                 )
                 self._record_event("stop_condition", RuntimeStepKind.STARTUP_HOOK, False, message)
-                raise RuntimeStopRequested(message) from exc
+                raise RuntimeLifecycleError(message) from exc
 
         if active:
             message = "Runtime startup stopped by condition(s): " + ", ".join(active)
@@ -321,11 +321,12 @@ class RuntimeEngine(BaseEngine):
         for task in tasks:
             task.cancel()
 
+        effective_timeout = _coerce_timeout(timeout_seconds, self._shutdown_timeout_seconds)
         if tasks:
             try:
                 await asyncio.wait_for(
                     asyncio.gather(*tasks, return_exceptions=True),
-                    timeout=_coerce_timeout(timeout_seconds, self._shutdown_timeout_seconds),
+                    timeout=effective_timeout,
                 )
             except TimeoutError as exc:
                 self._graceful_shutdown_failed = True
@@ -333,7 +334,7 @@ class RuntimeEngine(BaseEngine):
                 logger.warning(
                     "Runtime task cleanup timed out",
                     task_count=len(tasks),
-                    timeout_seconds=timeout_seconds,
+                    timeout_seconds=effective_timeout,
                     operation="runtime_lifecycle",
                     stage="task_cleanup",
                 )

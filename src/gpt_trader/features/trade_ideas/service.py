@@ -15,8 +15,9 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
+from enum import Enum
 from pathlib import Path
-from typing import Generic, TypeVar, cast
+from typing import Any, Generic, TypeVar, cast
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import (
@@ -40,7 +41,13 @@ from gpt_trader.features.trade_ideas.closeout import (
     CloseoutResolution,
     MaxLossSnapshot,
 )
-from gpt_trader.features.trade_ideas.models import TicketStatus, TicketVenue, TradeIdea
+from gpt_trader.features.trade_ideas.models import (
+    ConfidenceLabel,
+    TicketStatus,
+    TicketVenue,
+    TradeDirection,
+    TradeIdea,
+)
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
 from gpt_trader.features.trade_ideas.workflow import (
@@ -62,6 +69,16 @@ EXPIRABLE_STATES = frozenset(
 )
 _AUDIT_VENUES = frozenset({TicketVenue.COINBASE, TicketVenue.MANUAL})
 _QueryItem = TypeVar("_QueryItem")
+_CONFIDENCE_RANK = {
+    ConfidenceLabel.LOW: 0,
+    ConfidenceLabel.MEDIUM: 1,
+    ConfidenceLabel.HIGH: 2,
+}
+_STATE_SORT_RANK = {
+    TradeIdeaState.PROPOSED: 0,
+    TradeIdeaState.NEEDS_CHANGES: 1,
+    TradeIdeaState.APPROVED: 2,
+}
 
 
 class UnknownTradeIdeaError(ValidationError):
@@ -94,6 +111,51 @@ class TradeIdeaQueryPage(Generic[_QueryItem]):
     total_count: int
     limit: int | None
     offset: int
+
+
+class TradeIdeaListSortKey(str, Enum):
+    DECISION_ID = "decision_id"
+    STATE = "state"
+    INSTRUMENT = "instrument"
+    DIRECTION = "direction"
+    CONFIDENCE = "confidence"
+    MAX_LOSS_PCT = "max_loss_pct"
+    EXPIRES_AT = "expires_at"
+    CREATED_AT = "created_at"
+    UPDATED_AT = "updated_at"
+
+
+@dataclass(frozen=True, slots=True)
+class TradeIdeaListQuery:
+    """Shared read query for trade-idea review adapters."""
+
+    state: TradeIdeaState | None = None
+    instrument: str | None = None
+    decision_id: str | None = None
+    direction: TradeDirection | None = None
+    min_confidence: ConfidenceLabel | None = None
+    max_confidence: ConfidenceLabel | None = None
+    updated_since: datetime | None = None
+    updated_until: datetime | None = None
+    sort_by: TradeIdeaListSortKey | None = None
+    descending: bool = False
+    limit: int | None = None
+    offset: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class TradeIdeaListResult:
+    """Filtered trade-idea views plus pagination metadata."""
+
+    views: tuple[TradeIdeaView, ...]
+    total_count: int
+    offset: int
+    limit: int | None
+    has_more: bool
+
+    @property
+    def returned_count(self) -> int:
+        return len(self.views)
 
 
 def _utc_now() -> datetime:
@@ -646,10 +708,30 @@ class TradeIdeaService:
         )
 
     def list_views(self, state: TradeIdeaState | None = None) -> list[TradeIdeaView]:
+        """Return stored views, preserving the historical optional state filter."""
+        return list(self.list_view_result(TradeIdeaListQuery(state=state)).views)
+
+    def list_view_result(
+        self,
+        query: TradeIdeaListQuery | None = None,
+    ) -> TradeIdeaListResult:
+        """Return filtered, sorted, and paginated trade-idea views."""
+        query = query or TradeIdeaListQuery()
+        _validate_list_query(query)
         views = [self.get(decision_id) for decision_id in self._store.list_decision_ids()]
-        if state is None:
-            return views
-        return [view for view in views if view.state is state]
+        filtered = [view for view in views if _matches_list_query(view, query)]
+        ordered = _sort_list_views(filtered, query)
+        total_count = len(ordered)
+        start = query.offset
+        stop = None if query.limit is None else start + query.limit
+        page = tuple(ordered[start:stop])
+        return TradeIdeaListResult(
+            views=page,
+            total_count=total_count,
+            offset=query.offset,
+            limit=query.limit,
+            has_more=start + len(page) < total_count,
+        )
 
     def list_audit_events(
         self,
@@ -947,6 +1029,137 @@ class TradeIdeaService:
                 external_order_id=external_order_id,
             )
         )
+
+
+def _validate_list_query(query: TradeIdeaListQuery) -> None:
+    if query.offset < 0:
+        raise ValidationError(
+            "Trade idea list offset must be non-negative",
+            field="offset",
+            value=query.offset,
+        )
+    if query.limit is not None and query.limit <= 0:
+        raise ValidationError(
+            "Trade idea list limit must be positive",
+            field="limit",
+            value=query.limit,
+        )
+    if (
+        query.min_confidence is not None
+        and query.max_confidence is not None
+        and _CONFIDENCE_RANK[query.min_confidence] > _CONFIDENCE_RANK[query.max_confidence]
+    ):
+        raise ValidationError(
+            "Trade idea list min_confidence cannot be greater than max_confidence",
+            field="confidence",
+            value={
+                "min_confidence": query.min_confidence.value,
+                "max_confidence": query.max_confidence.value,
+            },
+        )
+    _validate_query_timestamp(query.updated_since, "updated_since")
+    _validate_query_timestamp(query.updated_until, "updated_until")
+    if (
+        query.updated_since is not None
+        and query.updated_until is not None
+        and query.updated_since > query.updated_until
+    ):
+        raise ValidationError(
+            "Trade idea list updated_since cannot be after updated_until",
+            field="updated_since",
+            value=query.updated_since.isoformat(),
+        )
+
+
+def _validate_query_timestamp(value: datetime | None, field: str) -> None:
+    if value is None:
+        return
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValidationError(
+            f"Trade idea list {field} must include a timezone",
+            field=field,
+            value=value.isoformat(),
+        )
+
+
+def _matches_list_query(view: TradeIdeaView, query: TradeIdeaListQuery) -> bool:
+    idea = view.idea
+    if query.state is not None and view.state is not query.state:
+        return False
+    if query.instrument and idea.instrument.casefold() != query.instrument.casefold():
+        return False
+    if query.decision_id and idea.decision_id != query.decision_id:
+        return False
+    if query.direction is not None and idea.direction is not query.direction:
+        return False
+    confidence_rank = _CONFIDENCE_RANK[idea.confidence.label]
+    if (
+        query.min_confidence is not None
+        and confidence_rank < _CONFIDENCE_RANK[query.min_confidence]
+    ):
+        return False
+    if (
+        query.max_confidence is not None
+        and confidence_rank > _CONFIDENCE_RANK[query.max_confidence]
+    ):
+        return False
+    updated_at = view.events[-1].timestamp
+    if query.updated_since is not None and updated_at < query.updated_since:
+        return False
+    if query.updated_until is not None and updated_at > query.updated_until:
+        return False
+    return True
+
+
+def _sort_list_views(
+    views: list[TradeIdeaView],
+    query: TradeIdeaListQuery,
+) -> list[TradeIdeaView]:
+    if query.sort_by is None:
+        return views
+
+    keyed: list[tuple[Any, TradeIdeaView]] = []
+    missing: list[TradeIdeaView] = []
+    for view in views:
+        value = _list_sort_value(view, query.sort_by)
+        if value is None:
+            missing.append(view)
+            continue
+        keyed.append((value, view))
+    keyed.sort(key=lambda item: item[0], reverse=query.descending)
+    return [view for _, view in keyed] + missing
+
+
+def _list_sort_value(
+    view: TradeIdeaView,
+    sort_by: TradeIdeaListSortKey,
+) -> Any | None:
+    idea = view.idea
+    if sort_by is TradeIdeaListSortKey.DECISION_ID:
+        return idea.decision_id
+    if sort_by is TradeIdeaListSortKey.STATE:
+        return (
+            _STATE_SORT_RANK.get(view.state, 9),
+            idea.time_horizon.expires_at or datetime.max.replace(tzinfo=UTC),
+            idea.decision_id,
+        )
+    if sort_by is TradeIdeaListSortKey.INSTRUMENT:
+        return (idea.instrument.casefold(), idea.decision_id)
+    if sort_by is TradeIdeaListSortKey.DIRECTION:
+        return (idea.direction.value, idea.decision_id)
+    if sort_by is TradeIdeaListSortKey.CONFIDENCE:
+        return (_CONFIDENCE_RANK[idea.confidence.label], idea.decision_id)
+    if sort_by is TradeIdeaListSortKey.MAX_LOSS_PCT:
+        percent = idea.max_loss.percent_of_account
+        return (percent, idea.decision_id) if percent is not None else None
+    if sort_by is TradeIdeaListSortKey.EXPIRES_AT:
+        expires_at = idea.time_horizon.expires_at
+        return (expires_at, idea.decision_id) if expires_at is not None else None
+    if sort_by is TradeIdeaListSortKey.CREATED_AT:
+        return (view.events[0].timestamp, idea.decision_id)
+    if sort_by is TradeIdeaListSortKey.UPDATED_AT:
+        return (view.events[-1].timestamp, idea.decision_id)
+    return None
 
 
 def create_trade_idea_service(

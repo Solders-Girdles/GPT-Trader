@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6898,
-    "total_files": 818,
+    "total_tests": 6904,
+    "total_files": 819,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6733,
-    "asyncio": 411,
+    "unit": 6739,
+    "asyncio": 413,
     "parametrize": 201,
     "endpoints": 83,
     "property": 82,
@@ -560,6 +560,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
@@ -9539,7 +9540,31 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py": [
       {
         "name": "test_list_empty_store_and_state_filter",
-        "line": 63,
+        "line": 72,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_list_advanced_filters_sort_and_pagination_metadata",
+        "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_list_rejects_inverted_confidence_range",
+        "line": 169,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_list_default_text_output_keeps_table_shape",
+        "line": 192,
         "markers": [
           "unit"
         ],
@@ -9547,7 +9572,7 @@
       },
       {
         "name": "test_show_unknown_id_and_show_with_events",
-        "line": 100,
+        "line": 208,
         "markers": [
           "unit"
         ],
@@ -9555,7 +9580,7 @@
       },
       {
         "name": "test_show_rejects_absolute_decision_id_before_store_lookup",
-        "line": 120,
+        "line": 228,
         "markers": [
           "unit"
         ],
@@ -9563,7 +9588,7 @@
       },
       {
         "name": "test_list_and_show_reject_orphaned_record_without_audit_trail",
-        "line": 139,
+        "line": 247,
         "markers": [
           "unit"
         ],
@@ -9571,7 +9596,7 @@
       },
       {
         "name": "test_list_show_and_reject_refuse_unaudited_interrupted_resubmit",
-        "line": 160,
+        "line": 268,
         "markers": [
           "unit"
         ],
@@ -9579,7 +9604,7 @@
       },
       {
         "name": "test_audit_verify_ok_and_tampered_line_failure",
-        "line": 202,
+        "line": 310,
         "markers": [
           "unit"
         ],
@@ -9587,7 +9612,7 @@
       },
       {
         "name": "test_help_lists_ideas_subcommands",
-        "line": 221,
+        "line": 329,
         "markers": [
           "unit"
         ],
@@ -33888,6 +33913,16 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_query.py": [
+      {
+        "name": "test_list_view_result_filters_sorts_and_paginates",
+        "line": 29,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py": [
       {
         "name": "test_manual_venue_submission_and_fill_remain_supported",
@@ -51218,7 +51253,7 @@
     "tests/unit/gpt_trader/tui/test_ideas_review_screen.py": [
       {
         "name": "test_empty_store_renders_empty_state",
-        "line": 50,
+        "line": 58,
         "markers": [
           "asyncio",
           "unit"
@@ -51227,7 +51262,7 @@
       },
       {
         "name": "test_populated_queue_renders_detail_and_policy",
-        "line": 61,
+        "line": 69,
         "markers": [
           "asyncio",
           "unit"
@@ -51236,7 +51271,7 @@
       },
       {
         "name": "test_policy_violations_are_listed",
-        "line": 78,
+        "line": 86,
         "markers": [
           "asyncio",
           "unit"
@@ -51245,7 +51280,7 @@
       },
       {
         "name": "test_approve_flow_records_human_reason",
-        "line": 92,
+        "line": 100,
         "markers": [
           "asyncio",
           "unit"
@@ -51254,7 +51289,7 @@
       },
       {
         "name": "test_approve_refusal_keeps_state_unchanged",
-        "line": 118,
+        "line": 126,
         "markers": [
           "asyncio",
           "unit"
@@ -51263,7 +51298,7 @@
       },
       {
         "name": "test_reject_and_request_changes_record_events",
-        "line": 139,
+        "line": 147,
         "markers": [
           "asyncio",
           "unit"
@@ -51272,7 +51307,7 @@
       },
       {
         "name": "test_terminal_state_action_is_noop",
-        "line": 161,
+        "line": 169,
         "markers": [
           "asyncio",
           "unit"
@@ -51281,7 +51316,25 @@
       },
       {
         "name": "test_filter_cycle_changes_visible_rows",
-        "line": 180,
+        "line": 188,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_instrument_filter_modal_applies_and_clears_summary",
+        "line": 210,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_filter_summary_shows_returned_count_against_total",
+        "line": 242,
         "markers": [
           "asyncio",
           "unit"
@@ -51290,7 +51343,7 @@
       },
       {
         "name": "test_refresh_preserves_selected_visible_idea",
-        "line": 202,
+        "line": 267,
         "markers": [
           "asyncio",
           "unit"

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -9,7 +10,15 @@ import pytest
 
 from gpt_trader import cli
 from gpt_trader.cli.response import CliErrorCode
-from gpt_trader.features.trade_ideas import TimeHorizon, TradeIdeaService, TradeIdeaStore
+from gpt_trader.features.trade_ideas import (
+    Confidence,
+    ConfidenceLabel,
+    MaxLoss,
+    TimeHorizon,
+    TradeDirection,
+    TradeIdeaService,
+    TradeIdeaStore,
+)
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 
@@ -95,6 +104,105 @@ def test_list_empty_store_and_state_filter(
     assert [idea["decision_id"] for idea in response["data"]["ideas"]] == [
         "trade-20350612-proposed"
     ]
+
+
+def test_list_advanced_filters_sort_and_pagination_metadata(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    low_loss = _idea_payload(
+        decision_id="trade-20350612-btc-low",
+        instrument="BTC-USD",
+        confidence=Confidence(label=ConfidenceLabel.MEDIUM, rationale="Constructive setup"),
+        max_loss=MaxLoss(amount=Decimal("150"), percent_of_account=Decimal("1")),
+    )
+    high_loss = _idea_payload(
+        decision_id="trade-20350612-btc-high",
+        instrument="BTC-USD",
+        confidence=Confidence(label=ConfidenceLabel.HIGH, rationale="Strong confirmation"),
+        max_loss=MaxLoss(amount=Decimal("400"), percent_of_account=Decimal("4")),
+    )
+    other = _idea_payload(
+        decision_id="trade-20350612-eth-short",
+        instrument="ETH-USD",
+        direction=TradeDirection.SHORT,
+        confidence=Confidence(label=ConfidenceLabel.LOW, rationale="Weak confirmation"),
+        max_loss=MaxLoss(amount=Decimal("100"), percent_of_account=Decimal("0.5")),
+    )
+    _propose(capsys, root, low_loss, "low.json")
+    _propose(capsys, root, high_loss, "high.json")
+    _propose(capsys, root, other, "other.json")
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "list",
+            *_root_args(root),
+            "--instrument",
+            "btc-usd",
+            "--direction",
+            "long",
+            "--min-confidence",
+            "medium",
+            "--sort-by",
+            "max_loss_pct",
+            "--descending",
+            "--limit",
+            "1",
+            "--offset",
+            "0",
+        ],
+    )
+
+    assert exit_code == 0
+    assert [idea["decision_id"] for idea in response["data"]["ideas"]] == [
+        "trade-20350612-btc-high"
+    ]
+    assert response["data"]["total_count"] == 2
+    assert response["data"]["returned_count"] == 1
+    assert response["data"]["offset"] == 0
+    assert response["data"]["limit"] == 1
+    assert response["data"]["has_more"] is True
+
+
+def test_list_rejects_inverted_confidence_range(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "list",
+            *_root_args(root),
+            "--min-confidence",
+            "high",
+            "--max-confidence",
+            "low",
+        ],
+    )
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.VALIDATION_ERROR.value
+    assert response["errors"][0]["details"]["field"] == "confidence"
+
+
+def test_list_default_text_output_keeps_table_shape(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    payload = _idea_payload(decision_id="trade-20350612-default-text")
+    _propose(capsys, root, payload, "default-text.json")
+
+    exit_code = cli.main(["ideas", "list", "--ideas-root", str(root)])
+    output = capsys.readouterr().out
+
+    assert exit_code == 0
+    assert "DECISION_ID  STATE  INSTRUMENT  DIRECTION  MAX_LOSS%  EXPIRES_AT" in output
+    assert "trade-20350612-default-text  proposed  BTC-USD  long  1.5" in output
+    assert "total_count" not in output
 
 
 def test_show_unknown_id_and_show_with_events(

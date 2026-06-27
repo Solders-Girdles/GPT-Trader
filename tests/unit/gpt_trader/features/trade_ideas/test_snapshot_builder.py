@@ -11,6 +11,7 @@ from gpt_trader.features.trade_ideas import (
     MarketSnapshotBuilder,
     MarketSnapshotBuildRequest,
     SnapshotIntegrityError,
+    canonical_granularity,
     granularity_duration,
     market_snapshot_to_payload,
 )
@@ -91,6 +92,21 @@ async def test_builder_fetches_window_and_builds_auditable_snapshot_metadata() -
 
 
 @pytest.mark.asyncio
+async def test_builder_normalizes_granularity_alias_before_fetching() -> None:
+    source = FakeCandleSource({"BTC-USD": (candle(-2), candle(-1))})
+
+    snapshot = await MarketSnapshotBuilder(source).build(request(granularity="1H", lookback=2))
+
+    assert source.calls[0]["granularity"] == "ONE_HOUR"
+    series = snapshot.series_for("BTC-USD")
+    assert series is not None
+    assert series.granularity == "ONE_HOUR"
+    assert snapshot.source == (
+        "coinbase:market-candles:granularity=ONE_HOUR:lookback=2" f":as_of={AS_OF.isoformat()}"
+    )
+
+
+@pytest.mark.asyncio
 async def test_builder_skips_candles_at_or_after_as_of_without_lookahead() -> None:
     source = FakeCandleSource({"BTC-USD": (candle(-2), candle(-1), candle(0), candle(1))})
 
@@ -106,15 +122,21 @@ async def test_builder_skips_candles_at_or_after_as_of_without_lookahead() -> No
 
 
 @pytest.mark.asyncio
-async def test_builder_excludes_open_bucket_for_unaligned_as_of() -> None:
+async def test_builder_fetches_full_completed_lookback_for_unaligned_as_of() -> None:
     unaligned_as_of = AS_OF + timedelta(minutes=30)
-    source = FakeCandleSource({"BTC-USD": (candle(-1), candle(0), candle(1))})
+    source = FakeCandleSource({"BTC-USD": (candle(-3), candle(-2), candle(-1), candle(0))})
 
     snapshot = await MarketSnapshotBuilder(source).build(request(lookback=3, as_of=unaligned_as_of))
 
+    assert source.calls[0]["start"] == AS_OF - timedelta(hours=3)
+    assert source.calls[0]["end"] == unaligned_as_of
     series = snapshot.series_for("BTC-USD")
     assert series is not None
-    assert [item.ts for item in series.candles] == [AS_OF - timedelta(hours=1)]
+    assert [item.ts for item in series.candles] == [
+        AS_OF - timedelta(hours=3),
+        AS_OF - timedelta(hours=2),
+        AS_OF - timedelta(hours=1),
+    ]
     assert all(item.ts + timedelta(hours=1) <= snapshot.as_of for item in series.candles)
 
 
@@ -145,6 +167,8 @@ def test_build_request_rejects_unsupported_granularity() -> None:
         request(granularity="BAD")
 
     assert exc_info.value.context["field"] == "granularity"
+    assert canonical_granularity("1H") == "ONE_HOUR"
+    assert canonical_granularity("1D") == "ONE_DAY"
     assert granularity_duration("ONE_DAY") == timedelta(days=1)
 
 

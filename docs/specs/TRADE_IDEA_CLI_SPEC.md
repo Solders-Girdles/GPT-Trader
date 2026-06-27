@@ -213,7 +213,8 @@ as `INVALID_ARGUMENT`.
   - `--source-label LABEL` (default `coinbase:market-candles`)
   - `--coinbase-base-url URL` (default `https://api.coinbase.com`)
 - Point-in-time rules:
-  - Fetch window is `[as_of - granularity * lookback, as_of)`.
+  - Fetch start is aligned from the last closed candle boundary:
+    `[last_closed_boundary - granularity * lookback, as_of)`.
   - Source candles must be strictly ascending by timestamp.
   - Candle selection includes only fully closed bars: for each source candle,
     `candle.ts + granularity <= as_of`. Candles that start before `as_of` but

@@ -48,6 +48,30 @@ def _snapshot(symbol: str = "BTC-USD") -> MarketSnapshot:
     )
 
 
+def _minimal_snapshot(symbol: str, granularity: str) -> MarketSnapshot:
+    price = Decimal("100")
+    return MarketSnapshot(
+        as_of=AS_OF,
+        source=f"test:source:granularity={granularity}:lookback=1:as_of={AS_OF.isoformat()}",
+        series=(
+            SymbolSeries(
+                symbol=symbol,
+                granularity=granularity,
+                candles=(
+                    Candle(
+                        ts=AS_OF - timedelta(days=1),
+                        open=price,
+                        high=price,
+                        low=price,
+                        close=price,
+                        volume=Decimal("1000"),
+                    ),
+                ),
+            ),
+        ),
+    )
+
+
 def _snapshot_build_args(out: Path) -> list[str]:
     return [
         "ideas",
@@ -112,6 +136,31 @@ def test_snapshot_build_writes_json_accepted_by_propose_baseline(
     assert propose_response["data"]["proposed"][0]["decision_id"].startswith(
         "trade-20350612-btcusd-"
     )
+
+
+@pytest.mark.parametrize(("alias", "canonical"), [("1H", "ONE_HOUR"), ("1D", "ONE_DAY")])
+def test_snapshot_build_normalizes_granularity_alias_before_fetch(
+    alias: str,
+    canonical: str,
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: dict[str, Any] = {}
+
+    async def fake_build(args: Any, request: Any) -> MarketSnapshot:
+        captured["request"] = request
+        return _minimal_snapshot(request.symbols[0], request.granularity)
+
+    monkeypatch.setattr(ideas, "_build_coinbase_market_snapshot", fake_build)
+    argv = _snapshot_build_args(tmp_path / "snapshot.json")
+    argv[argv.index("--granularity") + 1] = alias
+
+    exit_code, response = _run_json(capsys, argv)
+
+    assert exit_code == 0
+    assert captured["request"].granularity == canonical
+    assert response["data"]["snapshot"]["series"][0]["granularity"] == canonical
 
 
 def test_snapshot_build_rejects_as_of_without_timezone(

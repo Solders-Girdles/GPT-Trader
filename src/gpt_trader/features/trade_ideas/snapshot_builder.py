@@ -14,6 +14,51 @@ from gpt_trader.features.trade_ideas.snapshot import (
     SymbolSeries,
 )
 
+_CANONICAL_GRANULARITY_BY_ALIAS = {
+    "1M": "ONE_MINUTE",
+    "1MIN": "ONE_MINUTE",
+    "1MINUTE": "ONE_MINUTE",
+    "ONE_MINUTE": "ONE_MINUTE",
+    "5M": "FIVE_MINUTE",
+    "5MIN": "FIVE_MINUTE",
+    "5MINUTE": "FIVE_MINUTE",
+    "FIVE_MINUTE": "FIVE_MINUTE",
+    "15M": "FIFTEEN_MINUTE",
+    "15MIN": "FIFTEEN_MINUTE",
+    "15MINUTE": "FIFTEEN_MINUTE",
+    "FIFTEEN_MINUTE": "FIFTEEN_MINUTE",
+    "30M": "THIRTY_MINUTE",
+    "30MIN": "THIRTY_MINUTE",
+    "30MINUTE": "THIRTY_MINUTE",
+    "THIRTY_MINUTE": "THIRTY_MINUTE",
+    "1H": "ONE_HOUR",
+    "1HR": "ONE_HOUR",
+    "1HOUR": "ONE_HOUR",
+    "ONE_HOUR": "ONE_HOUR",
+    "2H": "TWO_HOUR",
+    "2HR": "TWO_HOUR",
+    "2HOUR": "TWO_HOUR",
+    "TWO_HOUR": "TWO_HOUR",
+    "6H": "SIX_HOUR",
+    "6HR": "SIX_HOUR",
+    "6HOUR": "SIX_HOUR",
+    "SIX_HOUR": "SIX_HOUR",
+    "1D": "ONE_DAY",
+    "1DAY": "ONE_DAY",
+    "ONE_DAY": "ONE_DAY",
+}
+
+_GRANULARITY_DURATION_BY_NAME = {
+    "ONE_MINUTE": timedelta(minutes=1),
+    "FIVE_MINUTE": timedelta(minutes=5),
+    "FIFTEEN_MINUTE": timedelta(minutes=15),
+    "THIRTY_MINUTE": timedelta(minutes=30),
+    "ONE_HOUR": timedelta(hours=1),
+    "TWO_HOUR": timedelta(hours=2),
+    "SIX_HOUR": timedelta(hours=6),
+    "ONE_DAY": timedelta(days=1),
+}
+
 
 class HistoricalCandleSource(Protocol):
     """Read-only source for historical candles."""
@@ -90,20 +135,22 @@ class MarketSnapshotBuilder:
 
     async def build(self, request: MarketSnapshotBuildRequest) -> MarketSnapshot:
         """Fetch completed historical candles and build a point-in-time snapshot."""
-        duration = granularity_duration(request.granularity)
-        if duration is None:
+        granularity = canonical_granularity(request.granularity)
+        if granularity is None:
             raise SnapshotIntegrityError(
                 f"Unsupported snapshot granularity: {request.granularity}",
                 field="granularity",
             )
+        duration = _GRANULARITY_DURATION_BY_NAME[granularity]
         as_of = _normalize_utc(request.as_of)
-        start = as_of - duration * request.lookback
+        completed_cutoff = _completed_candle_cutoff(as_of, duration)
+        start = completed_cutoff - duration * request.lookback
 
         series: list[SymbolSeries] = []
         for symbol in request.symbols:
             candles = await self._candle_source.fetch_candles(
                 symbol=symbol,
-                granularity=request.granularity,
+                granularity=granularity,
                 start=start,
                 end=as_of,
             )
@@ -118,7 +165,7 @@ class MarketSnapshotBuilder:
             series.append(
                 SymbolSeries(
                     symbol=symbol,
-                    granularity=request.granularity,
+                    granularity=granularity,
                     candles=completed,
                 )
             )
@@ -127,7 +174,7 @@ class MarketSnapshotBuilder:
             as_of=as_of,
             source=_source_metadata(
                 self._source_label,
-                granularity=request.granularity,
+                granularity=granularity,
                 lookback=request.lookback,
                 as_of=as_of,
             ),
@@ -163,40 +210,16 @@ def market_snapshot_to_payload(snapshot: MarketSnapshot) -> dict[str, Any]:
 
 def granularity_duration(granularity: str) -> timedelta | None:
     """Return the duration for supported Coinbase candle granularities."""
+    canonical = canonical_granularity(granularity)
+    if canonical is None:
+        return None
+    return _GRANULARITY_DURATION_BY_NAME[canonical]
+
+
+def canonical_granularity(granularity: str) -> str | None:
+    """Return the Coinbase enum name for a supported candle granularity alias."""
     normalized = granularity.strip().upper().replace("-", "_")
-    return {
-        "1M": timedelta(minutes=1),
-        "1MIN": timedelta(minutes=1),
-        "1MINUTE": timedelta(minutes=1),
-        "ONE_MINUTE": timedelta(minutes=1),
-        "5M": timedelta(minutes=5),
-        "5MIN": timedelta(minutes=5),
-        "5MINUTE": timedelta(minutes=5),
-        "FIVE_MINUTE": timedelta(minutes=5),
-        "15M": timedelta(minutes=15),
-        "15MIN": timedelta(minutes=15),
-        "15MINUTE": timedelta(minutes=15),
-        "FIFTEEN_MINUTE": timedelta(minutes=15),
-        "30M": timedelta(minutes=30),
-        "30MIN": timedelta(minutes=30),
-        "30MINUTE": timedelta(minutes=30),
-        "THIRTY_MINUTE": timedelta(minutes=30),
-        "1H": timedelta(hours=1),
-        "1HR": timedelta(hours=1),
-        "1HOUR": timedelta(hours=1),
-        "ONE_HOUR": timedelta(hours=1),
-        "2H": timedelta(hours=2),
-        "2HR": timedelta(hours=2),
-        "2HOUR": timedelta(hours=2),
-        "TWO_HOUR": timedelta(hours=2),
-        "6H": timedelta(hours=6),
-        "6HR": timedelta(hours=6),
-        "6HOUR": timedelta(hours=6),
-        "SIX_HOUR": timedelta(hours=6),
-        "1D": timedelta(days=1),
-        "1DAY": timedelta(days=1),
-        "ONE_DAY": timedelta(days=1),
-    }.get(normalized)
+    return _CANONICAL_GRANULARITY_BY_ALIAS.get(normalized)
 
 
 def _completed_window(
@@ -236,6 +259,12 @@ def _normalize_utc(value: datetime) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
         return value.replace(tzinfo=UTC)
     return value.astimezone(UTC)
+
+
+def _completed_candle_cutoff(as_of: datetime, duration: timedelta) -> datetime:
+    epoch = datetime(1970, 1, 1, tzinfo=UTC)
+    intervals = (as_of - epoch) // duration
+    return epoch + intervals * duration
 
 
 def _require_ascending(symbol: str, candles: Sequence[Candle]) -> None:

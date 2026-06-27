@@ -92,6 +92,7 @@ from gpt_trader.features.trade_ideas.snapshot_builder import (
     HistoricalCandleSource,
     MarketSnapshotBuilder,
     MarketSnapshotBuildRequest,
+    canonical_granularity,
     granularity_duration,
     market_snapshot_to_payload,
 )
@@ -169,6 +170,7 @@ __all__ = [
     "TradeIdeaView",
     "UnknownTradeIdeaError",
     "build_trade_idea_track_record_report",
+    "canonical_granularity",
     "create_trade_idea_service",
     "evaluate_eligibility",
     "extract_numeric_scoring_levels",

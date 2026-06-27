@@ -49,8 +49,8 @@ from gpt_trader.features.trade_ideas import (
     TradeIdeaService,
     TradeIdeaState,
     UnknownTradeIdeaError,
+    canonical_granularity,
     create_trade_idea_service,
-    granularity_duration,
     is_safe_decision_id,
     market_snapshot_to_payload,
     resolve_trade_idea_actor_id,
@@ -197,7 +197,7 @@ def register(subparsers: Any) -> None:
     snapshot_build.add_argument(
         "--granularity",
         required=True,
-        help="Candle granularity, for example ONE_HOUR or ONE_DAY",
+        help="Candle granularity, for example ONE_HOUR, ONE_DAY, 1H, or 1D",
     )
     snapshot_build.add_argument(
         "--lookback",
@@ -1112,12 +1112,13 @@ def _snapshot_symbols(value: str) -> tuple[str, ...]:
 
 
 def _snapshot_granularity(value: str) -> str:
-    if granularity_duration(value) is None:
+    canonical = canonical_granularity(value)
+    if canonical is None:
         raise SnapshotBuildInputError(
             f"Unsupported snapshot granularity: {value}",
             field="granularity",
         )
-    return value
+    return canonical
 
 
 def _snapshot_as_of(value: str | None) -> datetime:

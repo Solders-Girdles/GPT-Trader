@@ -211,6 +211,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
@@ -9307,6 +9308,48 @@
         "line": 74,
         "markers": [
           "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py": [
+      {
+        "name": "test_propose_baseline_persists_generated_proposal",
+        "line": 87,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_no_signal_is_noop",
+        "line": 112,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_duplicate_decision_fails_without_extra_audit",
+        "line": 128,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_malformed_snapshot_returns_invalid_argument",
+        "line": 148,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_json_output_includes_approval_preview_warnings",
+        "line": 166,
+        "markers": [
           "unit"
         ],
         "docstring": ""

@@ -11,21 +11,28 @@ import argparse
 import json
 import sys
 from argparse import ArgumentParser, Namespace
+from collections.abc import Mapping
 from dataclasses import replace
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any
 
 from gpt_trader.cli import options
 from gpt_trader.cli.response import CliError, CliErrorCode, CliResponse
+from gpt_trader.core import Candle
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas import (
     ActorType,
     AuditIntegrityError,
+    BaselineProposer,
     BudgetIntegrityError,
     CloseoutResolution,
     InvalidTransitionError,
+    MarketSnapshot,
     PolicyViolationError,
+    SnapshotIntegrityError,
+    SymbolSeries,
     TradeIdea,
     TradeIdeaService,
     TradeIdeaState,
@@ -53,12 +60,20 @@ BUDGET_FIELDS = (
 )
 
 
-class IdeaInputError(ValueError):
-    """Raised when a JSON trade-idea payload cannot be parsed."""
+class InputPayloadError(ValueError):
+    """Raised when a JSON CLI payload cannot be parsed."""
 
     def __init__(self, message: str, *, field: str | None = None) -> None:
         super().__init__(message)
         self.field = field
+
+
+class IdeaInputError(InputPayloadError):
+    """Raised when a JSON trade-idea payload cannot be parsed."""
+
+
+class SnapshotInputError(InputPayloadError):
+    """Raised when a JSON market snapshot payload cannot be parsed."""
 
 
 def register(subparsers: Any) -> None:
@@ -85,6 +100,30 @@ def register(subparsers: Any) -> None:
     )
     propose.add_argument("--reason", default="New trade idea proposed", help="Audit reason")
     propose.set_defaults(handler=_handle_propose, subcommand="propose")
+
+    propose_baseline = ideas_subparsers.add_parser(
+        "propose-baseline",
+        help="Generate proposals from a local market snapshot fixture",
+        description=(
+            "Generate deterministic BaselineProposer trade ideas from a local JSON "
+            "market snapshot and persist them through the audited trade-idea service. "
+            "This command reads no broker, account, credential, canary, or preflight data."
+        ),
+    )
+    _add_common_options(propose_baseline)
+    _add_actor_options(propose_baseline, default_description="baseline proposer id")
+    propose_baseline.add_argument(
+        "--snapshot",
+        type=Path,
+        required=True,
+        help="Read a local MarketSnapshot JSON fixture",
+    )
+    propose_baseline.add_argument(
+        "--reason",
+        default="Baseline proposer generated idea from local snapshot",
+        help="Audit reason",
+    )
+    propose_baseline.set_defaults(handler=_handle_propose_baseline, subcommand="propose-baseline")
 
     resubmit = ideas_subparsers.add_parser(
         "resubmit", help="Submit a revised record after requested changes"
@@ -337,10 +376,14 @@ def _add_input_options(parser: ArgumentParser) -> None:
     source.add_argument("--stdin", action="store_true", help="Read TradeIdea JSON from stdin")
 
 
-def _add_actor_options(parser: ArgumentParser) -> None:
+def _add_actor_options(
+    parser: ArgumentParser,
+    *,
+    default_description: str = "GPT_TRADER_ACTOR, then OS user",
+) -> None:
     parser.add_argument(
         "--actor",
-        help="Actor id stamped into audit events (default: GPT_TRADER_ACTOR, then OS user)",
+        help=f"Actor id stamped into audit events (default: {default_description})",
     )
 
 
@@ -412,6 +455,136 @@ def _load_trade_idea(args: Namespace) -> TradeIdea:
         raise IdeaInputError(f"Invalid trade idea field: {error}") from error
 
 
+def _load_market_snapshot(path: Path) -> MarketSnapshot:
+    try:
+        raw_payload = path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise SnapshotInputError(f"Could not read market snapshot input: {error}") from error
+
+    try:
+        payload = json.loads(raw_payload)
+    except json.JSONDecodeError as error:
+        raise SnapshotInputError(f"Malformed market snapshot JSON: {error.msg}") from error
+    if not isinstance(payload, Mapping):
+        raise SnapshotInputError("Market snapshot input must be a JSON object")
+
+    try:
+        return _market_snapshot_from_payload(payload)
+    except SnapshotInputError:
+        raise
+    except SnapshotIntegrityError as error:
+        context_field = _error_context(error).get("field")
+        raise SnapshotInputError(
+            f"Invalid market snapshot field: {error}",
+            field=context_field if isinstance(context_field, str) else None,
+        ) from error
+
+
+def _market_snapshot_from_payload(payload: Mapping[str, Any]) -> MarketSnapshot:
+    series_payloads = _required_payload_array(payload, "series", "series")
+    return MarketSnapshot(
+        as_of=_required_payload_datetime(payload, "as_of", "as_of"),
+        source=_required_payload_string(payload, "source", "source"),
+        series=tuple(
+            _symbol_series_from_payload(series_payload, index)
+            for index, series_payload in enumerate(series_payloads)
+        ),
+    )
+
+
+def _symbol_series_from_payload(payload: Any, index: int) -> SymbolSeries:
+    field_prefix = f"series[{index}]"
+    series_payload = _payload_object(payload, field_prefix)
+    candle_payloads = _required_payload_array(
+        series_payload,
+        "candles",
+        f"{field_prefix}.candles",
+    )
+    return SymbolSeries(
+        symbol=_required_payload_string(series_payload, "symbol", f"{field_prefix}.symbol"),
+        granularity=_required_payload_string(
+            series_payload,
+            "granularity",
+            f"{field_prefix}.granularity",
+        ),
+        candles=tuple(
+            _candle_from_payload(candle_payload, f"{field_prefix}.candles[{candle_index}]")
+            for candle_index, candle_payload in enumerate(candle_payloads)
+        ),
+    )
+
+
+def _candle_from_payload(payload: Any, field_prefix: str) -> Candle:
+    candle_payload = _payload_object(payload, field_prefix)
+    return Candle(
+        ts=_required_payload_datetime(candle_payload, "ts", f"{field_prefix}.ts"),
+        open=_required_payload_decimal(candle_payload, "open", f"{field_prefix}.open"),
+        high=_required_payload_decimal(candle_payload, "high", f"{field_prefix}.high"),
+        low=_required_payload_decimal(candle_payload, "low", f"{field_prefix}.low"),
+        close=_required_payload_decimal(candle_payload, "close", f"{field_prefix}.close"),
+        volume=_required_payload_decimal(candle_payload, "volume", f"{field_prefix}.volume"),
+    )
+
+
+def _payload_object(value: Any, field: str) -> Mapping[str, Any]:
+    if not isinstance(value, Mapping):
+        raise SnapshotInputError(f"{field} must be a JSON object", field=field)
+    return value
+
+
+def _required_payload_value(payload: Mapping[str, Any], key: str, field: str) -> Any:
+    try:
+        return payload[key]
+    except KeyError as error:
+        raise SnapshotInputError(
+            f"Missing required market snapshot field: {field}",
+            field=field,
+        ) from error
+
+
+def _required_payload_array(
+    payload: Mapping[str, Any],
+    key: str,
+    field: str,
+) -> list[Any]:
+    value = _required_payload_value(payload, key, field)
+    if not isinstance(value, list):
+        raise SnapshotInputError(f"{field} must be a JSON array", field=field)
+    return value
+
+
+def _required_payload_string(payload: Mapping[str, Any], key: str, field: str) -> str:
+    value = _required_payload_value(payload, key, field)
+    if not isinstance(value, str) or not value.strip():
+        raise SnapshotInputError(f"{field} must be a non-empty string", field=field)
+    return value
+
+
+def _required_payload_decimal(payload: Mapping[str, Any], key: str, field: str) -> Decimal:
+    value = _required_payload_value(payload, key, field)
+    try:
+        parsed = Decimal(str(value))
+    except (InvalidOperation, ValueError) as error:
+        raise SnapshotInputError(f"{field} must be a decimal value", field=field) from error
+    if not parsed.is_finite():
+        raise SnapshotInputError(f"{field} must be finite", field=field)
+    return parsed
+
+
+def _required_payload_datetime(payload: Mapping[str, Any], key: str, field: str) -> datetime:
+    value = _required_payload_value(payload, key, field)
+    if not isinstance(value, str):
+        raise SnapshotInputError(f"{field} must be an ISO datetime string", field=field)
+    normalized = f"{value[:-1]}+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as error:
+        raise SnapshotInputError(f"{field} must be an ISO datetime string", field=field) from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise SnapshotInputError(f"{field} must include a timezone", field=field)
+    return parsed
+
+
 def _handle_propose(args: Namespace) -> CliResponse:
     command = "ideas propose"
     try:
@@ -442,6 +615,49 @@ def _handle_propose(args: Namespace) -> CliResponse:
     return _success(command, args, payload, text, warnings=warning_messages)
 
 
+def _handle_propose_baseline(args: Namespace) -> CliResponse:
+    command = "ideas propose-baseline"
+    proposer = BaselineProposer()
+    try:
+        snapshot = _load_market_snapshot(args.snapshot)
+        ideas = proposer.propose(snapshot)
+        if not ideas:
+            payload = _baseline_payload(snapshot, proposer.proposer_id, [])
+            text = _status_line(command, "OK", "0 proposals")
+            return _success(command, args, payload, text, was_noop=True)
+
+        service = _service(args)
+        for idea in ideas:
+            service.validate_new_proposal(idea)
+        previews = [service.approval_violations(idea, actor_type=ActorType.HUMAN) for idea in ideas]
+        actor_id = _baseline_actor_id(args, proposer.proposer_id)
+        views = [
+            service.propose(
+                idea,
+                actor_id=actor_id,
+                actor_type=ActorType.AI,
+                reason=args.reason,
+                evidence=_baseline_evidence(args.snapshot, snapshot, proposer.proposer_id),
+            )
+            for idea in ideas
+        ]
+    except SnapshotInputError as error:
+        return _input_error(command, args, error)
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    proposed = [
+        _baseline_proposed_summary(view, violations)
+        for view, violations in zip(views, previews, strict=True)
+    ]
+    payload = _baseline_payload(snapshot, proposer.proposer_id, proposed)
+    warnings = [
+        warning for proposal in proposed for warning in proposal["approval_preview"]["warnings"]
+    ]
+    text = _baseline_text(command, proposed)
+    return _success(command, args, payload, text, warnings=warnings)
+
+
 def _handle_resubmit(args: Namespace) -> CliResponse:
     command = "ideas resubmit"
     try:
@@ -470,6 +686,68 @@ def _handle_resubmit(args: Namespace) -> CliResponse:
     if violations:
         text += "\n" + "\n".join(f"⚠ would fail approval: {violation}" for violation in violations)
     return _success(command, args, payload, text, warnings=warning_messages)
+
+
+def _baseline_actor_id(args: Namespace, proposer_id: str) -> str:
+    explicit_actor = getattr(args, "actor", None)
+    return resolve_trade_idea_actor_id(explicit_actor or proposer_id)
+
+
+def _baseline_evidence(
+    snapshot_path: Path,
+    snapshot: MarketSnapshot,
+    proposer_id: str,
+) -> tuple[str, ...]:
+    return (
+        f"proposer_id={proposer_id}",
+        f"snapshot_path={snapshot_path}",
+        f"snapshot_source={snapshot.source}",
+        f"snapshot_as_of={snapshot.as_of.isoformat()}",
+    )
+
+
+def _baseline_proposed_summary(view: Any, violations: list[str]) -> dict[str, Any]:
+    warning_messages = [f"would fail approval: {violation}" for violation in violations]
+    return {
+        **_view_summary(view),
+        "record_hash": view.idea.record_hash(),
+        "approval_preview": {
+            "violations": violations,
+            "warnings": warning_messages,
+        },
+    }
+
+
+def _baseline_payload(
+    snapshot: MarketSnapshot,
+    proposer_id: str,
+    proposed: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "proposer_id": proposer_id,
+        "snapshot": {
+            "as_of": snapshot.as_of.isoformat(),
+            "source": snapshot.source,
+            "symbols": list(snapshot.symbols()),
+        },
+        "proposal_count": len(proposed),
+        "proposed": proposed,
+    }
+
+
+def _baseline_text(command: str, proposed: list[dict[str, Any]]) -> str:
+    lines = [_status_line(command, "OK", f"{len(proposed)} proposals")]
+    for proposal in proposed:
+        lines.append(
+            "{decision_id}  state={state}  record_hash={record_hash}".format(
+                decision_id=proposal["decision_id"],
+                state=proposal["state"],
+                record_hash=proposal["record_hash"],
+            )
+        )
+        for warning in proposal["approval_preview"]["warnings"]:
+            lines.append(f"⚠ {proposal['decision_id']}: {warning}")
+    return "\n".join(lines)
 
 
 def _handle_list(args: Namespace) -> CliResponse:
@@ -874,7 +1152,7 @@ def _success(
     )
 
 
-def _input_error(command: str, args: Namespace, error: IdeaInputError) -> CliResponse:
+def _input_error(command: str, args: Namespace, error: InputPayloadError) -> CliResponse:
     details = {"field": error.field} if error.field else {}
     return _failure(
         command,

@@ -172,6 +172,13 @@ class RuntimeEngine(BaseEngine):
 
     async def _shutdown(self, plan: RuntimeLifecyclePlan | None) -> None:
         if self._state in {RuntimeEngineState.TERMINATED, RuntimeEngineState.FAILED}:
+            if self._tracked_tasks:
+                if plan is None:
+                    plan = RuntimeLifecyclePlan(
+                        task_cleanup_timeout_seconds=self._shutdown_timeout_seconds,
+                        shutdown_step_timeout_seconds=self._shutdown_timeout_seconds,
+                    )
+                await self._cleanup_tasks(plan.task_cleanup_timeout_seconds)
             self._record_event("shutdown_idempotent", "runtime", success=True)
             return
         if plan is None:
@@ -256,7 +263,11 @@ class RuntimeEngine(BaseEngine):
                     result = await result
                 else:
                     timeout = _coerce_timeout(step.timeout_seconds, self._shutdown_timeout_seconds)
-                    result = await self._await_with_timeout(result, timeout=timeout)
+                    result = await self._await_with_timeout(
+                        result,
+                        timeout=timeout,
+                        task_name=step.name,
+                    )
             self._register_step_tasks(step, result, register_task=register_task)
         except Exception as exc:
             message = f"{type(exc).__name__}: {exc}"
@@ -290,10 +301,43 @@ class RuntimeEngine(BaseEngine):
             name = task_name or step.name
             if name in self._named_tasks and self._named_tasks[name] is not task:
                 name = f"{step.name}_{index}"
-            self._named_tasks[name] = task
+            self._track_task(name, task)
             self._register_background_task(task)
             if register_task is not None:
                 register_task(task)
+
+    @property
+    def _tracked_tasks(self) -> list[asyncio.Task[Any]]:
+        self._forget_completed_tasks()
+        return list(self._named_tasks.values())
+
+    def _track_task(self, name: str, task: asyncio.Task[Any]) -> None:
+        selected_name = name
+        suffix = 1
+        while selected_name in self._named_tasks and self._named_tasks[selected_name] is not task:
+            suffix += 1
+            selected_name = f"{name}_{suffix}"
+        self._named_tasks[selected_name] = task
+
+    def _forget_task(self, task: asyncio.Task[Any]) -> None:
+        self._named_tasks = {
+            name: tracked_task
+            for name, tracked_task in self._named_tasks.items()
+            if tracked_task is not task
+        }
+        self._background_tasks = [
+            tracked_task for tracked_task in self._background_tasks if tracked_task is not task
+        ]
+
+    def _forget_completed_tasks(self) -> None:
+        for task in list(self._named_tasks.values()):
+            if task.done():
+                _consume_task_result(task)
+                self._forget_task(task)
+
+    def _consume_and_forget_task(self, task: asyncio.Task[Any]) -> None:
+        _consume_task_result(task)
+        self._forget_task(task)
 
     def _normalize_tasks(self, result: Any) -> list[asyncio.Task[Any]]:
         if isinstance(result, asyncio.Task):
@@ -385,7 +429,11 @@ class RuntimeEngine(BaseEngine):
         try:
             result = step.callback()
             if inspect.isawaitable(result):
-                await self._await_with_timeout(result, timeout=timeout)
+                await self._await_with_timeout(
+                    result,
+                    timeout=timeout,
+                    task_name=step.name,
+                )
         except Exception as exc:
             self._graceful_shutdown_failed = True
             self._last_error = str(exc)
@@ -404,17 +452,24 @@ class RuntimeEngine(BaseEngine):
             return
         self._record_event(step.name, step.kind, True)
 
-    async def _await_with_timeout(self, awaitable: Awaitable[Any], *, timeout: float) -> Any:
+    async def _await_with_timeout(
+        self,
+        awaitable: Awaitable[Any],
+        *,
+        timeout: float,
+        task_name: str,
+    ) -> Any:
         task = asyncio.ensure_future(awaitable)
         done, pending = await asyncio.wait({task}, timeout=timeout)
         if pending:
+            self._track_task(f"{task_name}_timeout", task)
             task.cancel()
-            task.add_done_callback(_consume_task_result)
+            task.add_done_callback(self._consume_and_forget_task)
             raise TimeoutError(f"timed out after {timeout:.3f}s")
         return await next(iter(done))
 
     async def _cleanup_tasks(self, timeout_seconds: float) -> None:
-        tasks = [task for task in self._named_tasks.values() if not task.done()]
+        tasks = self._tracked_tasks
         for task in tasks:
             task.cancel()
 
@@ -426,7 +481,7 @@ class RuntimeEngine(BaseEngine):
             if pending:
                 for task in pending:
                     task.cancel()
-                    task.add_done_callback(_consume_task_result)
+                    task.add_done_callback(self._consume_and_forget_task)
                 self._graceful_shutdown_failed = True
                 self._last_error = f"timed out waiting for {len(pending)} runtime task(s)"
                 logger.warning(
@@ -444,12 +499,13 @@ class RuntimeEngine(BaseEngine):
                     "timeout",
                 )
             else:
+                for task in done:
+                    self._forget_task(task)
                 self._record_event("task_cleanup", RuntimeStepKind.SHUTDOWN_HOOK, True)
         else:
             self._record_event("task_cleanup", RuntimeStepKind.SHUTDOWN_HOOK, True)
 
-        self._named_tasks.clear()
-        self._background_tasks.clear()
+        self._forget_completed_tasks()
 
     def _record_event(
         self,

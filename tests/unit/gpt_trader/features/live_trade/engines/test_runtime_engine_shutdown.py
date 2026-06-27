@@ -221,3 +221,127 @@ async def test_runtime_engine_shutdown_waits_for_initializing_startup() -> None:
     assert created_tasks and created_tasks[0].cancelled()
     assert runtime.background_tasks == []
     assert runtime.state == RuntimeEngineState.TERMINATED
+
+
+@pytest.mark.asyncio
+async def test_runtime_engine_shutdown_hook_timeout_keeps_hook_owned_until_cleanup_finishes() -> (
+    None
+):
+    runtime = RuntimeEngine(_context(), shutdown_timeout_seconds=0.01)
+    cleanup_started = asyncio.Event()
+    release_cleanup = asyncio.Event()
+
+    async def cancellation_resistant_shutdown() -> None:
+        try:
+            await asyncio.sleep(60)
+        except asyncio.CancelledError:
+            cleanup_started.set()
+            while not release_cleanup.is_set():
+                try:
+                    await release_cleanup.wait()
+                except asyncio.CancelledError:
+                    cleanup_started.set()
+
+    plan = RuntimeLifecyclePlan(
+        shutdown_steps=(
+            RuntimeLifecycleStep(
+                "slow_shutdown",
+                RuntimeStepKind.SHUTDOWN_HOOK,
+                cancellation_resistant_shutdown,
+                timeout_seconds=0.01,
+                register_task=False,
+            ),
+        ),
+        shutdown_step_timeout_seconds=0.01,
+        task_cleanup_timeout_seconds=0.01,
+    )
+    cleanup_plan = RuntimeLifecyclePlan(task_cleanup_timeout_seconds=0.2)
+
+    cleanup_task: asyncio.Task[None] | None = None
+    try:
+        await runtime.start(plan)
+        await asyncio.wait_for(runtime.shutdown(plan), timeout=0.2)
+
+        await asyncio.wait_for(cleanup_started.wait(), timeout=0.2)
+
+        assert runtime.state == RuntimeEngineState.FAILED
+        assert runtime.graceful_shutdown_failed is True
+        assert len(runtime.background_tasks) == 1
+        assert not runtime.background_tasks[0].done()
+
+        cleanup_task = asyncio.create_task(runtime.shutdown(cleanup_plan))
+        await asyncio.sleep(0)
+
+        assert not cleanup_task.done()
+
+        release_cleanup.set()
+        await asyncio.wait_for(cleanup_task, timeout=0.2)
+
+        assert runtime.background_tasks == []
+    finally:
+        release_cleanup.set()
+        if cleanup_task is not None and not cleanup_task.done():
+            await asyncio.gather(cleanup_task, return_exceptions=True)
+
+
+@pytest.mark.asyncio
+async def test_runtime_engine_task_cleanup_timeout_keeps_worker_owned_until_cleanup_finishes() -> (
+    None
+):
+    runtime = RuntimeEngine(_context(), shutdown_timeout_seconds=0.01)
+    cleanup_started = asyncio.Event()
+    release_cleanup = asyncio.Event()
+    created_tasks: list[asyncio.Task[None]] = []
+
+    async def cancellation_resistant_worker() -> None:
+        try:
+            await asyncio.sleep(60)
+        except asyncio.CancelledError:
+            cleanup_started.set()
+            while not release_cleanup.is_set():
+                try:
+                    await release_cleanup.wait()
+                except asyncio.CancelledError:
+                    cleanup_started.set()
+
+    def task_factory() -> asyncio.Task[None]:
+        task = asyncio.create_task(
+            cancellation_resistant_worker(),
+            name="cancellation_resistant_worker",
+        )
+        created_tasks.append(task)
+        return task
+
+    plan = RuntimeLifecyclePlan(
+        startup_steps=(
+            RuntimeLifecycleStep("worker", RuntimeStepKind.BACKGROUND_TASK, task_factory),
+        ),
+        task_cleanup_timeout_seconds=0.01,
+    )
+    cleanup_plan = RuntimeLifecyclePlan(task_cleanup_timeout_seconds=0.2)
+
+    cleanup_task: asyncio.Task[None] | None = None
+    try:
+        await runtime.start(plan)
+        await asyncio.sleep(0)
+        await asyncio.wait_for(runtime.shutdown(plan), timeout=0.2)
+
+        await asyncio.wait_for(cleanup_started.wait(), timeout=0.2)
+
+        assert runtime.state == RuntimeEngineState.FAILED
+        assert runtime.graceful_shutdown_failed is True
+        assert runtime.background_tasks == created_tasks
+
+        cleanup_task = asyncio.create_task(runtime.shutdown(cleanup_plan))
+        await asyncio.sleep(0)
+
+        assert not cleanup_task.done()
+
+        release_cleanup.set()
+        await asyncio.wait_for(cleanup_task, timeout=0.2)
+
+        assert runtime.background_tasks == []
+    finally:
+        release_cleanup.set()
+        if cleanup_task is not None and not cleanup_task.done():
+            await asyncio.gather(cleanup_task, return_exceptions=True)

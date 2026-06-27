@@ -21,7 +21,7 @@ def _context() -> CoordinatorContext:
 
 
 @pytest.mark.asyncio
-async def test_runtime_engine_startup_timeout_does_not_wait_for_cancel_cleanup() -> None:
+async def test_runtime_engine_startup_timeout_keeps_hook_owned_until_cleanup_finishes() -> None:
     runtime = RuntimeEngine(_context(), shutdown_timeout_seconds=0.01)
     cleanup_started = asyncio.Event()
     release_cleanup = asyncio.Event()
@@ -31,7 +31,11 @@ async def test_runtime_engine_startup_timeout_does_not_wait_for_cancel_cleanup()
             await asyncio.sleep(60)
         except asyncio.CancelledError:
             cleanup_started.set()
-            await release_cleanup.wait()
+            while not release_cleanup.is_set():
+                try:
+                    await release_cleanup.wait()
+                except asyncio.CancelledError:
+                    cleanup_started.set()
 
     plan = RuntimeLifecyclePlan(
         startup_steps=(
@@ -45,7 +49,9 @@ async def test_runtime_engine_startup_timeout_does_not_wait_for_cancel_cleanup()
         ),
         task_cleanup_timeout_seconds=0.01,
     )
+    cleanup_plan = RuntimeLifecyclePlan(task_cleanup_timeout_seconds=0.2)
 
+    cleanup_task: asyncio.Task[None] | None = None
     try:
         with pytest.raises(RuntimeLifecycleError, match="slow_startup"):
             await asyncio.wait_for(runtime.start(plan), timeout=0.2)
@@ -53,6 +59,9 @@ async def test_runtime_engine_startup_timeout_does_not_wait_for_cancel_cleanup()
         await asyncio.wait_for(cleanup_started.wait(), timeout=0.2)
 
         assert runtime.state == RuntimeEngineState.FAILED
+        assert runtime.graceful_shutdown_failed is True
+        assert len(runtime.background_tasks) == 1
+        assert not runtime.background_tasks[0].done()
         assert any(
             event.name == "slow_startup"
             and event.success is False
@@ -61,9 +70,20 @@ async def test_runtime_engine_startup_timeout_does_not_wait_for_cancel_cleanup()
             for event in runtime.events
         )
         assert all(event.name != "state_running" for event in runtime.events)
+
+        cleanup_task = asyncio.create_task(runtime.shutdown(cleanup_plan))
+        await asyncio.sleep(0)
+
+        assert not cleanup_task.done()
+
+        release_cleanup.set()
+        await asyncio.wait_for(cleanup_task, timeout=0.2)
+
+        assert runtime.background_tasks == []
     finally:
         release_cleanup.set()
-        await asyncio.sleep(0)
+        if cleanup_task is not None and not cleanup_task.done():
+            await asyncio.gather(cleanup_task, return_exceptions=True)
 
 
 @pytest.mark.asyncio

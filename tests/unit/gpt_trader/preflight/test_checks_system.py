@@ -16,6 +16,8 @@ from gpt_trader.preflight.checks.system import (
 )
 from gpt_trader.preflight.core import PreflightCheck
 
+FAKE_COINBASE_PRIVATE_KEY = "test-private-key"
+
 
 class TestCheckPythonVersion:
     """Test Python version check."""
@@ -190,11 +192,9 @@ class TestCheckSystemTime:
         cleared_env: None,
     ) -> None:
         checker = PreflightCheck(profile="dev")
+        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
         monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/abc/apiKeys/xyz")
-        monkeypatch.setenv(
-            "COINBASE_CDP_PRIVATE_KEY",
-            "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
-        )
+        monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", FAKE_COINBASE_PRIVATE_KEY)
         mock_now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
         mock_datetime.now.return_value = mock_now
         client = MagicMock()
@@ -213,11 +213,9 @@ class TestCheckSystemTime:
         cleared_env: None,
     ) -> None:
         checker = PreflightCheck(profile="dev")
+        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
         monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/abc/apiKeys/xyz")
-        monkeypatch.setenv(
-            "COINBASE_CDP_PRIVATE_KEY",
-            "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
-        )
+        monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", FAKE_COINBASE_PRIVATE_KEY)
         mock_datetime.now.return_value = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
 
         def raise_client_error(**_: str) -> object:
@@ -238,11 +236,9 @@ class TestCheckSystemTime:
         cleared_env: None,
     ) -> None:
         checker = PreflightCheck(profile="dev")
+        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
         monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/abc/apiKeys/xyz")
-        monkeypatch.setenv(
-            "COINBASE_CDP_PRIVATE_KEY",
-            "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
-        )
+        monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", FAKE_COINBASE_PRIVATE_KEY)
         mock_datetime.now.return_value = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
         client = MagicMock()
         client.get_time.return_value = {"epoch": 1_750_000_000}
@@ -262,10 +258,7 @@ class TestCheckSystemTime:
         checker = PreflightCheck(profile="dev")
         monkeypatch.setenv("COINBASE_PREFLIGHT_SKIP_REMOTE", "1")
         monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/abc/apiKeys/xyz")
-        monkeypatch.setenv(
-            "COINBASE_CDP_PRIVATE_KEY",
-            "-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----",
-        )
+        monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", FAKE_COINBASE_PRIVATE_KEY)
         mock_datetime.now.return_value = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
         client_factory = MagicMock()
         monkeypatch.setattr(system_checks, "_build_coinbase_time_client", client_factory)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from collections.abc import Callable, Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from typing import Any
 
 from gpt_trader.features.live_trade.engines.base import (
@@ -29,6 +29,21 @@ from gpt_trader.utilities.logging_patterns import get_logger
 logger = get_logger(__name__, component="runtime_engine")
 
 TaskRegistrar = Callable[[asyncio.Task[Any]], None]
+
+
+def _consume_task_result(task: asyncio.Future[Any]) -> None:
+    try:
+        task.result()
+    except asyncio.CancelledError:
+        return
+    except Exception as exc:
+        logger.debug(
+            "Runtime lifecycle task completed after timeout",
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+            operation="runtime_lifecycle",
+            stage="late_task_completion",
+        )
 
 
 def _coerce_timeout(value: float | int | None, default: float) -> float:
@@ -297,7 +312,7 @@ class RuntimeEngine(BaseEngine):
         try:
             result = step.callback()
             if inspect.isawaitable(result):
-                await asyncio.wait_for(result, timeout=timeout)
+                await self._await_with_timeout(result, timeout=timeout)
         except Exception as exc:
             self._graceful_shutdown_failed = True
             self._last_error = str(exc)
@@ -316,6 +331,15 @@ class RuntimeEngine(BaseEngine):
             return
         self._record_event(step.name, step.kind, True)
 
+    async def _await_with_timeout(self, awaitable: Awaitable[Any], *, timeout: float) -> Any:
+        task = asyncio.ensure_future(awaitable)
+        done, pending = await asyncio.wait({task}, timeout=timeout)
+        if pending:
+            task.cancel()
+            task.add_done_callback(_consume_task_result)
+            raise TimeoutError(f"timed out after {timeout:.3f}s")
+        return await next(iter(done))
+
     async def _cleanup_tasks(self, timeout_seconds: float) -> None:
         tasks = [task for task in self._named_tasks.values() if not task.done()]
         for task in tasks:
@@ -323,17 +347,19 @@ class RuntimeEngine(BaseEngine):
 
         effective_timeout = _coerce_timeout(timeout_seconds, self._shutdown_timeout_seconds)
         if tasks:
-            try:
-                await asyncio.wait_for(
-                    asyncio.gather(*tasks, return_exceptions=True),
-                    timeout=effective_timeout,
-                )
-            except TimeoutError as exc:
+            done, pending = await asyncio.wait(tasks, timeout=effective_timeout)
+            for task in done:
+                _consume_task_result(task)
+            if pending:
+                for task in pending:
+                    task.cancel()
+                    task.add_done_callback(_consume_task_result)
                 self._graceful_shutdown_failed = True
-                self._last_error = str(exc)
+                self._last_error = f"timed out waiting for {len(pending)} runtime task(s)"
                 logger.warning(
                     "Runtime task cleanup timed out",
                     task_count=len(tasks),
+                    pending_task_count=len(pending),
                     timeout_seconds=effective_timeout,
                     operation="runtime_lifecycle",
                     stage="task_cleanup",

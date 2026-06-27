@@ -277,8 +277,8 @@ class TradeIdeaService:
         try:
             views: list[TradeIdeaView] = []
             for idea in ideas:
-                self._store.save(idea)
                 created_decision_ids.append(idea.decision_id)
+                self._store.save(idea)
                 self._append(
                     idea,
                     action=AuditAction.PROPOSED,
@@ -716,7 +716,10 @@ class TradeIdeaService:
         original_audit: bytes | None,
     ) -> None:
         for decision_id in created_decision_ids:
-            shutil.rmtree(self._store.root / decision_id, ignore_errors=True)
+            try:
+                shutil.rmtree(self._store.root / decision_id)
+            except FileNotFoundError:
+                pass
 
         audit_path = self._audit.path
         if original_audit is None:

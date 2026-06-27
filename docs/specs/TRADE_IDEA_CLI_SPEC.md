@@ -40,6 +40,10 @@ Every storage-backed workflow subcommand accepts:
 - `--ideas-root PATH` — override storage root (default: `GPT_TRADER_IDEAS_ROOT`
   env, then `var/data/trade_ideas/`)
 
+Exception: `export-ticket` defaults `--format` to raw canonical JSON and
+supports `--out PATH` / `--output PATH` / `-o PATH` for writing the ticket
+artifact itself instead of a `CliResponse` envelope.
+
 Read-only replay commands accept `--format {text,json}` but do not read or
 write `--ideas-root`; they operate only on the local fixture named by `--file`.
 
@@ -67,6 +71,9 @@ gpt-trader ideas
 ├── list             [--state STATE]
 ├── show             DECISION_ID [--events]
 ├── report
+├── export-ticket    --decision-id ID --venue {coinbase,manual}
+│                    [--venue-order-type TEXT] [--time-in-force TEXT]
+│                    [--client-order-id ID] [--out PATH] [--format {json,text}]
 ├── replay
 │   └── baseline     --file PATH --symbol SYMBOL --granularity GRANULARITY
 │                    [--short-window N] [--long-window N]
@@ -236,6 +243,60 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
   compact `Monthly` section with one line per month showing idea count, approval
   rate, closeout coverage, and realized P/L amount. Empty stores and reports
   without monthly buckets omit the section while still returning success.
+
+### `ideas export-ticket`
+
+- Render-only command that exports a deterministic broker-neutral ticket JSON
+  artifact from local trade-idea records and audit state. It never calls broker,
+  account, credential, preflight, canary, order-preview, or live-trading
+  surfaces, and it does not mutate the persisted `TradeIdea.broker_ticket`.
+- Required options:
+  - `--decision-id ID`
+  - `--venue {coinbase,manual}`
+- Optional venue placeholders:
+  - `--venue-order-type TEXT` (default `operator_selected`)
+  - `--time-in-force TEXT` (default `operator_selected`)
+  - `--client-order-id ID` (defaults deterministically from venue, decision id,
+    and record hash)
+- Output:
+  - Default success output is the raw canonical ticket JSON on stdout, not a
+    `CliResponse` envelope, so repeated exports of the same audited state are
+    byte-identical.
+  - `--out PATH` / `--output PATH` / `-o PATH` writes that same canonical JSON
+    artifact to a file instead of stdout.
+  - `--format text` prints a compact human summary; errors still use the normal
+    CLI error response conventions.
+- State guard: export succeeds only for `approved`, `submitted`, `filled`,
+  `cancelled`, or `expired` ideas that have an approval event. It fails with
+  `VALIDATION_ERROR` for unapproved states such as `proposed`,
+  `needs_changes`, `rejected`, or pre-approval `expired`.
+- Payload includes:
+  - `schema_version`, `decision_id`, `record_hash`, deterministic
+    `generated_at`, and `ticket_hash`.
+  - `decision_metadata` with autonomy mode, instrument, product type,
+    direction, confidence, and thesis.
+  - `risk_sizing_snapshot` with entry zone, max loss, and sizing
+    recommendation.
+  - `timing_invalidation_constraints` with horizon, invalidation, target exit,
+    failure mode, and do-not-trade conditions.
+  - `policy_budget_snapshot` with the current persisted/default risk budget and
+    approval-policy violations evaluated at the latest audited event timestamp.
+  - `broker_ticket.source_record` copied from the immutable `TradeIdea` plus a
+    derived broker-neutral export ticket.
+  - `venue_request`, `venue_payload`, and sanitized provenance for created,
+    approval, latest, and terminal audit events. External order ids are not
+    copied into the artifact; provenance records only whether one was present.
+
+Example:
+
+```bash
+uv run gpt-trader ideas export-ticket \
+  --decision-id trade-20350612-btcusd-4c5a9e2d \
+  --venue coinbase \
+  --venue-order-type limit \
+  --time-in-force GTC \
+  --out review_artifacts/tmp/trade-ticket.json
+```
 
 ### `ideas replay baseline`
 
@@ -449,10 +510,12 @@ Required cases:
 16. JSON mode for at least propose/approve/list/report/replay baseline asserting the
     `CliResponse` envelope per CLAUDE.md patterns
     (`result.errors[0].code == CliErrorCode.POLICY_VIOLATION.value`).
-14. `propose-baseline` success from a local snapshot fixture, no-signal
+17. `propose-baseline` success from a local snapshot fixture, no-signal
     no-op behavior, duplicate decision handling, malformed snapshot input, and
     JSON output with decision ids, record hashes, states, and approval-preview
     warnings/violations.
+18. `export-ticket` happy path for an approved idea, unapproved state guard
+    failure, byte-deterministic raw JSON output, and `--out` file behavior.
 
 ## Acceptance criteria
 
@@ -468,6 +531,8 @@ Required cases:
 - [x] `propose-baseline` turns local candle fixtures into proposed records
       without broker/API access, and reports approval-preview warnings per
       proposal.
+- [x] `export-ticket` renders deterministic broker-neutral ticket artifacts
+      from approved or terminal-approved ideas without broker/API access.
 - [x] The focused `tests/unit/gpt_trader/cli/commands/test_ideas_*.py` suite
       covers the implemented command group.
 - [ ] Re-run the repo-required quality bundle before merging any future change

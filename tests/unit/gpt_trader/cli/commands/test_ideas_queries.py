@@ -227,6 +227,7 @@ def test_help_lists_ideas_subcommands(capsys: pytest.CaptureFixture[str]) -> Non
     assert "propose" in output
     assert "request-changes" in output
     assert "report" in output
+    assert "export-ticket" in output
     assert "replay" in output
     assert "closeout" in output
     assert "mark-submitted" in output

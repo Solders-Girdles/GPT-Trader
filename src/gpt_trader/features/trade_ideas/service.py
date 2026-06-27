@@ -27,6 +27,10 @@ from gpt_trader.features.trade_ideas.audit import (
     TradeIdeaAuditLog,
     new_event_id,
 )
+from gpt_trader.features.trade_ideas.broker_payloads import (
+    BrokerTicketExportRequest,
+    build_broker_neutral_ticket_payload,
+)
 from gpt_trader.features.trade_ideas.budget import (
     DEFAULT_RISK_BUDGET,
     BudgetLogEntry,
@@ -536,6 +540,45 @@ class TradeIdeaService:
     def get_closeout_attribution(self, decision_id: str) -> CloseoutAttribution | None:
         return self.get(decision_id).closeout_attribution
 
+    def export_broker_ticket_payload(
+        self,
+        decision_id: str,
+        *,
+        venue: str,
+        venue_order_type: str,
+        time_in_force: str,
+        client_order_id: str | None = None,
+    ) -> dict[str, object]:
+        """Render a deterministic broker-neutral ticket without mutating records."""
+        view = self.get(decision_id)
+        budget = self._budget_log.current()
+        budget_source = "risk_budget_log" if budget is not None else "default"
+        effective_budget = budget or DEFAULT_RISK_BUDGET
+        latest_event = view.events[-1]
+        policy_violations = self._policy.approval_violations(
+            view.idea,
+            actor_type=ActorType.HUMAN,
+            budget=effective_budget,
+            open_approved_count=self._open_approved_count_excluding(decision_id),
+            now=latest_event.timestamp,
+            review_started_at=self._review_started_at_from_events(view.events),
+        )
+        request = BrokerTicketExportRequest.from_values(
+            venue=venue,
+            venue_order_type=venue_order_type,
+            time_in_force=time_in_force,
+            client_order_id=client_order_id,
+        )
+        return build_broker_neutral_ticket_payload(
+            idea=view.idea,
+            state=view.state,
+            events=view.events,
+            request=request,
+            budget=effective_budget,
+            budget_source=budget_source,
+            approval_policy_violations=policy_violations,
+        )
+
     # -- queries -----------------------------------------------------------
 
     def get(self, decision_id: str) -> TradeIdeaView:
@@ -564,6 +607,17 @@ class TradeIdeaService:
     def open_approved_count(self) -> int:
         approved_count = 0
         for decision_id, event in self._latest_audit_events_by_decision_id().items():
+            if event.after_state is not TradeIdeaState.APPROVED:
+                continue
+            self._require_idea(decision_id)
+            approved_count += 1
+        return approved_count
+
+    def _open_approved_count_excluding(self, excluded_decision_id: str) -> int:
+        approved_count = 0
+        for decision_id, event in self._latest_audit_events_by_decision_id().items():
+            if decision_id == excluded_decision_id:
+                continue
             if event.after_state is not TradeIdeaState.APPROVED:
                 continue
             self._require_idea(decision_id)

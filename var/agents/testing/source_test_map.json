@@ -309,6 +309,7 @@
       "tests/unit/gpt_trader/cli/test_commands_coinbase.py"
     ],
     "gpt_trader.cli.commands.ideas": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_paper_reconciliation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py"
     ],
     "gpt_trader.cli.commands.optimize": [
@@ -2734,6 +2735,7 @@
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_paper_reconciliation.py": [
       "gpt_trader",
+      "gpt_trader.cli.commands.ideas",
       "gpt_trader.features.trade_ideas",
       "gpt_trader.persistence.event_store"
     ],

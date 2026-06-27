@@ -8,7 +8,7 @@ paper/mock trade events and records lifecycle facts only through
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
@@ -70,6 +70,7 @@ class PaperFillReconciliationEntry:
     recorded_submission: bool = False
     recorded_fill: bool = False
     final_state: str | None = None
+    context: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -80,6 +81,7 @@ class PaperFillReconciliationEntry:
             "recorded_submission": self.recorded_submission,
             "recorded_fill": self.recorded_fill,
             "final_state": self.final_state,
+            "context": self.context,
             "event": self.event.to_dict(),
         }
 
@@ -232,6 +234,23 @@ class PaperFillReconciler:
                 continue
 
             view = view_by_decision_id[decision_id]
+            if method in {"decision_id", "client_order_id"}:
+                payload_conflict = _matched_payload_conflict(view, event)
+                if payload_conflict is not None:
+                    conflict_reason, conflict_context = payload_conflict
+                    unmatched.append(
+                        PaperFillReconciliationEntry(
+                            event=event,
+                            status="unmatched",
+                            reason=conflict_reason,
+                            decision_id=decision_id,
+                            match_method=method,
+                            final_state=view.state.value,
+                            context=conflict_context,
+                        )
+                    )
+                    continue
+
             if self._already_reconciled(view, event):
                 skipped.append(
                     PaperFillReconciliationEntry(
@@ -328,11 +347,10 @@ class PaperFillReconciler:
         view_by_decision_id: Mapping[str, TradeIdeaView],
         recordable_views: tuple[TradeIdeaView, ...],
     ) -> tuple[str | None, str | None, str]:
-        explicit_decision_id = _first_existing_decision_id(
-            event,
-            view_by_decision_id=view_by_decision_id,
-        )
+        explicit_decision_id = _safe_text_or_none(event.decision_id)
         if explicit_decision_id is not None:
+            if explicit_decision_id not in view_by_decision_id:
+                return None, None, f"explicit decision_id not found: {explicit_decision_id}"
             return explicit_decision_id, "decision_id", "matched explicit decision id"
 
         client_match = _match_client_order_id(
@@ -363,16 +381,6 @@ class PaperFillReconciler:
             and audit_event.external_order_id == external_order_id
             for audit_event in view.events
         )
-
-
-def _first_existing_decision_id(
-    event: PaperFillEvent,
-    *,
-    view_by_decision_id: Mapping[str, TradeIdeaView],
-) -> str | None:
-    if event.decision_id and event.decision_id in view_by_decision_id:
-        return event.decision_id
-    return None
 
 
 def _match_client_order_id(
@@ -415,6 +423,40 @@ def _side_matches(view: TradeIdeaView, event: PaperFillEvent) -> bool:
     if view.idea.direction is TradeDirection.SHORT:
         return side == "sell"
     return False
+
+
+def _matched_payload_conflict(
+    view: TradeIdeaView,
+    event: PaperFillEvent,
+) -> tuple[str, dict[str, Any]] | None:
+    if event.symbol and not _symbol_matches(view, event):
+        return (
+            "fill symbol conflicts with matched trade idea",
+            {
+                "field": "symbol",
+                "event_symbol": event.symbol,
+                "idea_symbol": view.idea.instrument,
+            },
+        )
+    if event.side and not _side_matches(view, event):
+        return (
+            "fill side conflicts with matched trade idea",
+            {
+                "field": "side",
+                "event_side": event.side,
+                "idea_direction": view.idea.direction.value,
+                "expected_side": _expected_side(view),
+            },
+        )
+    return None
+
+
+def _expected_side(view: TradeIdeaView) -> str | None:
+    if view.idea.direction is TradeDirection.LONG:
+        return "buy"
+    if view.idea.direction is TradeDirection.SHORT:
+        return "sell"
+    return None
 
 
 def _submission_reason(event: PaperFillEvent) -> str:

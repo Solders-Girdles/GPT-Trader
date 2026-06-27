@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 
+import gpt_trader.cli.commands.ideas as ideas_command_module
 from gpt_trader import cli
 from gpt_trader.features.trade_ideas import TimeHorizon, TradeIdeaService, TradeIdeaState
 from gpt_trader.persistence.event_store import EventStore
@@ -57,6 +58,10 @@ def _append_fill_event(event_store_root: Path, decision_id: str) -> None:
 
 def _root_args(root: Path) -> list[str]:
     return ["--ideas-root", str(root), "--format", "json"]
+
+
+def test_reconcile_paper_fills_command_module_is_source_mapped() -> None:
+    assert callable(ideas_command_module.register)
 
 
 def test_reconcile_paper_fills_dry_run_does_not_mutate_audit(

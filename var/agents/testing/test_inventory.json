@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6886,
+    "total_tests": 6893,
     "total_files": 813,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6721,
+    "unit": 6728,
     "asyncio": 411,
     "parametrize": 200,
     "endpoints": 83,
@@ -9319,8 +9319,16 @@
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_paper_reconciliation.py": [
       {
+        "name": "test_reconcile_paper_fills_command_module_is_source_mapped",
+        "line": 63,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_reconcile_paper_fills_dry_run_does_not_mutate_audit",
-        "line": 62,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -9328,7 +9336,7 @@
       },
       {
         "name": "test_reconcile_paper_fills_apply_records_submission_and_fill",
-        "line": 92,
+        "line": 97,
         "markers": [
           "unit"
         ],
@@ -9336,7 +9344,7 @@
       },
       {
         "name": "test_reconcile_paper_fills_rejects_live_profile_without_mutation",
-        "line": 122,
+        "line": 127,
         "markers": [
           "unit"
         ],
@@ -32969,7 +32977,7 @@
         "docstring": ""
       },
       {
-        "name": "test_reconciler_dry_run_reports_match_without_mutation",
+        "name": "test_reconciler_does_not_fall_back_from_unknown_decision_id_to_client_order_id",
         "line": 99,
         "markers": [
           "unit"
@@ -32977,8 +32985,56 @@
         "docstring": ""
       },
       {
+        "name": "test_reconciler_does_not_fall_back_from_unknown_decision_id_to_symbol_side",
+        "line": 126,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reconciler_rejects_symbol_conflict_on_explicit_decision_id_without_mutation",
+        "line": 153,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reconciler_rejects_side_conflict_on_explicit_decision_id_without_mutation",
+        "line": 181,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reconciler_rejects_symbol_conflict_on_client_order_id_without_mutation",
+        "line": 210,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reconciler_rejects_side_conflict_on_client_order_id_without_mutation",
+        "line": 234,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reconciler_dry_run_reports_match_without_mutation",
+        "line": 258,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_reconciler_skips_duplicate_fill_in_same_apply_pass",
-        "line": 114,
+        "line": 273,
         "markers": [
           "unit"
         ],
@@ -32986,7 +33042,7 @@
       },
       {
         "name": "test_live_profiles_are_rejected_for_paper_reconciliation",
-        "line": 129,
+        "line": 288,
         "markers": [
           "unit"
         ],

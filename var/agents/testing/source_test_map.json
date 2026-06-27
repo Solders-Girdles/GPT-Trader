@@ -1,13 +1,14 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 731,
+    "tests_scanned": 732,
     "source_modules": 378,
     "unresolved_modules": 3
   },
   "source_to_tests": {
     "gpt_trader": [
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_audit_ordering.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout_evidence_integrity.py",
@@ -1297,6 +1298,7 @@
     ],
     "gpt_trader.features.trade_ideas": [
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_audit_ordering.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout_evidence_integrity.py",
@@ -1344,6 +1346,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py"
     ],
     "gpt_trader.features.trade_ideas.service": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_audit_ordering.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout_evidence_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py",
@@ -2714,6 +2717,11 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py": [
       "gpt_trader",
       "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_audit_ordering.py": [
+      "gpt_trader",
+      "gpt_trader.features.trade_ideas",
+      "gpt_trader.features.trade_ideas.service"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py": [
       "gpt_trader",

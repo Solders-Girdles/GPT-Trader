@@ -584,7 +584,7 @@ class TradeIdeaService:
         try:
             idea = self._store.load_version(decision_id, record_hash)
         except (InvalidOperation, TypeError, ValueError) as error:
-            raise ValidationError(
+            raise AuditIntegrityError(
                 f"Stored trade idea '{decision_id}' version '{record_hash}' is invalid: {error}",
                 field="record_hash",
                 value=record_hash,
@@ -595,6 +595,21 @@ class TradeIdeaService:
                 f"'{record_hash}'",
                 field="record_hash",
                 value=record_hash,
+            )
+        if idea.decision_id != decision_id:
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' version '{record_hash}' contains "
+                f"decision_id '{idea.decision_id}'",
+                field="decision_id",
+                value=idea.decision_id,
+            )
+        actual_record_hash = idea.record_hash()
+        if actual_record_hash != record_hash:
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' version '{record_hash}' hashes to "
+                f"'{actual_record_hash}'",
+                field="record_hash",
+                value=actual_record_hash,
             )
         return idea
 
@@ -649,8 +664,7 @@ class TradeIdeaService:
             and (requested_state is None or event.after_state is requested_state)
             and _timestamp_in_window(event.timestamp, since=since, until=until)
         )
-        ordered_events = tuple(sorted(events, key=lambda event: event.timestamp))
-        return _page_items(ordered_events, limit=limit, offset=offset)
+        return _page_items(events, limit=limit, offset=offset)
 
     def query_closeout_records(
         self,

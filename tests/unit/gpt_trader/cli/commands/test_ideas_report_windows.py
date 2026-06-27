@@ -1,11 +1,19 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from gpt_trader.features.trade_ideas import CloseoutResolution, MaxLoss, TimeHorizon
+import pytest
+
+from gpt_trader.features.trade_ideas import (
+    AuditIntegrityError,
+    CloseoutResolution,
+    MaxLoss,
+    TimeHorizon,
+)
 from gpt_trader.features.trade_ideas.report import build_trade_idea_track_record_report
 from gpt_trader.features.trade_ideas.service import TradeIdeaService
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
@@ -130,3 +138,33 @@ def test_windowed_report_loads_record_version_for_last_in_window_event(
     assert report["quality"]["missing_field_counts"]["max_loss.amount"] == 1
     assert report["quality"]["missing_field_counts"]["max_loss.percent_of_account"] == 1
     assert report["quality"]["approval_ready_count"] == 0
+
+
+def test_windowed_report_rejects_tampered_historical_record_hash(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "ideas"
+    service = TradeIdeaService(
+        root,
+        now_factory=lambda: datetime(2026, 5, 20, 12, 0, tzinfo=UTC),
+    )
+    original = _idea("trade-window-tampered-history", max_loss=MaxLoss())
+    service.propose(original, actor_id="idea-generator-v1")
+    proposed_hash = service.audit_log.read_events(original.decision_id)[0].record_hash
+    tampered = _idea(
+        original.decision_id,
+        max_loss=MaxLoss(amount=Decimal("300"), percent_of_account=Decimal("2.0")),
+    )
+    historical_path = root / "records" / original.decision_id / f"{proposed_hash}.json"
+    historical_path.write_text(
+        json.dumps(tampered.to_dict(), sort_keys=True, indent=2),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(AuditIntegrityError, match="hashes to"):
+        build_trade_idea_track_record_report(
+            service,
+            now=datetime(2026, 7, 1, 12, 0, tzinfo=UTC),
+            since=datetime(2026, 5, 1, 0, 0, tzinfo=UTC),
+            until=datetime(2026, 5, 31, 23, 59, 59, tzinfo=UTC),
+        )

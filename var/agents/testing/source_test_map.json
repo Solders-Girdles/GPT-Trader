@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 721,
+    "tests_scanned": 722,
     "source_modules": 374,
     "unresolved_modules": 3
   },
@@ -84,6 +84,7 @@
       "tests/integration/test_container_lifecycle_runtime.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
+      "tests/unit/gpt_trader/app/config/test_profile_loader_session_times.py",
       "tests/unit/gpt_trader/app/test_application_container.py",
       "tests/unit/gpt_trader/cli/test_options.py",
       "tests/unit/gpt_trader/cli/test_services_build_config.py",
@@ -380,6 +381,7 @@
     "gpt_trader.config.types": [
       "tests/unit/gpt_trader/app/config/test_profile_loader.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
+      "tests/unit/gpt_trader/app/config/test_profile_loader_session_times.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
       "tests/unit/gpt_trader/app/test_bootstrap.py",
       "tests/unit/gpt_trader/app/test_bootstrap_profile_loading.py",
@@ -2398,6 +2400,10 @@
       "gpt_trader.app.config",
       "gpt_trader.app.config.profile_loader",
       "gpt_trader.app.container",
+      "gpt_trader.config.types"
+    ],
+    "tests/unit/gpt_trader/app/config/test_profile_loader_session_times.py": [
+      "gpt_trader.app.config.profile_loader",
       "gpt_trader.config.types"
     ],
     "tests/unit/gpt_trader/app/config/test_validation.py": [

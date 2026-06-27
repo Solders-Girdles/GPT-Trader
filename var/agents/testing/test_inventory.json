@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6852,
-    "total_files": 807,
+    "total_tests": 6857,
+    "total_files": 808,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6687,
+    "unit": 6692,
     "asyncio": 411,
     "parametrize": 198,
     "endpoints": 83,
@@ -206,6 +206,7 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
@@ -9149,6 +9150,48 @@
       {
         "name": "test_shared_root_and_actor_resolution_helpers",
         "line": 151,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py": [
+      {
+        "name": "test_closeout_record_and_show_for_filled_idea",
+        "line": 135,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_record_accepts_unavailable_profit_loss_reason",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_record_rejects_non_terminal_idea",
+        "line": 236,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_record_requires_profit_loss_or_unavailable_reason",
+        "line": 266,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_show_without_attribution_is_successful_noop",
+        "line": 295,
         "markers": [
           "unit"
         ],

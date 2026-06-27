@@ -1,6 +1,6 @@
 ---
 status: current
-last-updated: 2026-06-24
+last-updated: 2026-06-27
 workstream: 1 (see TRADE_IDEA_INTERFACES_DESIGN_NOTES.md)
 depends-on: Workstream 0 (implemented service factory, error codes, actor resolution)
 ---
@@ -59,6 +59,13 @@ gpt-trader ideas
 ├── list             [--state STATE]
 ├── show             DECISION_ID [--events]
 ├── report
+├── closeout
+│   ├── record       DECISION_ID --resolution {thesis_target,invalidation,expiry}
+│   │                [--realized-profit-loss-amount DECIMAL]
+│   │                [--realized-profit-loss-percent DECIMAL]
+│   │                [--realized-profit-loss-unavailable-reason TEXT]
+│   │                [--evidence TEXT]... [--actor-type {human,system}]
+│   └── show         DECISION_ID
 ├── approve          DECISION_ID --reason TEXT
 ├── reject           DECISION_ID --reason TEXT
 ├── request-changes  DECISION_ID --reason TEXT
@@ -143,6 +150,36 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
   compact `Monthly` section with one line per month showing idea count, approval
   rate, closeout coverage, and realized P/L amount. Empty stores and reports
   without monthly buckets omit the section while still returning success.
+
+### `ideas closeout record` / `ideas closeout show`
+
+- `record` wraps `service.record_closeout_attribution`; `show` wraps
+  `service.get_closeout_attribution`. Both use only local trade-idea storage.
+- `record` requires a terminal idea. The service enforces the terminal-state
+  precondition and pins the attribution to the latest terminal audit event and
+  record hash.
+- `record` accepts:
+  - `--resolution {thesis_target,invalidation,expiry}`
+  - `--realized-profit-loss-amount DECIMAL` and/or
+    `--realized-profit-loss-percent DECIMAL` (negative values represent losses)
+  - `--realized-profit-loss-unavailable-reason TEXT` when numeric realized P/L
+    is unavailable
+  - repeated `--evidence TEXT` strings
+  - `--actor-type {human,system}` with default `human`
+- At least one realized P/L value or unavailable reason is required.
+- JSON `data` for both successful commands is
+  `{decision_id, closeout_attribution}`. `closeout_attribution` is the
+  persisted closeout record dictionary, or `null` for `show` when the idea is
+  known but has no attribution (`was_noop=True`).
+- Text starts with:
+
+  ```text
+  ✓ ideas closeout record OK (trade-20260612-001, resolution=thesis_target)
+  ```
+
+- These commands never call broker, account, venue, preflight, canary, ticket
+  payload-generation, or live-trading surfaces. Evidence strings are operator
+  references only.
 
 ### `ideas approve DECISION_ID --reason TEXT`
 
@@ -236,21 +273,27 @@ Required cases:
 4. `show` unknown id → `IDEA_NOT_FOUND`. `show --events` includes history.
 5. `report` empty store, normal records, missing closeout coverage, JSON
    output, and read-only behavior that does not create `risk_budget.jsonl`.
-6. `approve` happy path → state `approved`, human actor in audit event.
-7. `approve` over-budget idea → exit 1, `POLICY_VIOLATION`, all violations in
+6. `closeout record` for a terminal filled idea with realized amount/percent
+   and repeated evidence; `closeout show` returns the persisted attribution.
+7. `closeout record` for an expired idea with unavailable P/L reason; proposed
+   ideas fail with `VALIDATION_ERROR`; missing realized P/L input fails with
+   `MISSING_ARGUMENT`; `closeout show` without attribution succeeds with
+   `was_noop=True`.
+8. `approve` happy path → state `approved`, human actor in audit event.
+9. `approve` over-budget idea → exit 1, `POLICY_VIOLATION`, all violations in
    `data["violations"]` (assert ≥2 violations both present).
-8. `request-changes` → `resubmit` (revised record) → `approve` full loop.
-9. `reject`, `cancel`, `expire` single, `expire --sweep` with explicit expiry
+10. `request-changes` → `resubmit` (revised record) → `approve` full loop.
+11. `reject`, `cancel`, `expire` single, `expire --sweep` with explicit expiry
    coverage (one stale + one fresh idea: only stale expires; `was_noop` when
    none) plus review-latency sweep coverage for a far-future idea whose review
    deadline exceeds `max_review_latency_hours`.
-10. `mark-submitted` then `mark-filled` with venue/external id recorded in
+12. `mark-submitted` then `mark-filled` with venue/external id recorded in
    audit events.
-11. `budget show` seeds defaults; `budget set --max-loss-per-idea-pct 2
+13. `budget show` seeds defaults; `budget set --max-loss-per-idea-pct 2
     --reason ...` bumps version; `budget set` with no field flags →
     `MISSING_ARGUMENT`.
-12. `audit verify` OK path; tampered line in `audit.jsonl` → failure.
-13. JSON mode for at least propose/approve/list/report asserting the
+14. `audit verify` OK path; tampered line in `audit.jsonl` → failure.
+15. JSON mode for at least propose/approve/list/report asserting the
     `CliResponse` envelope per CLAUDE.md patterns
     (`result.errors[0].code == CliErrorCode.POLICY_VIOLATION.value`).
 

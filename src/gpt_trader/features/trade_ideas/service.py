@@ -668,15 +668,20 @@ class TradeIdeaService:
         """Return a filtered, stable page of closeout attribution records."""
         requested_actor_type = ActorType(actor_type).value if actor_type is not None else None
         requested_resolution = CloseoutResolution(resolution) if resolution is not None else None
-        records = tuple(
-            record
-            for record in self._closeouts.read_records(decision_id)
-            if (actor_id is None or record.actor_id == actor_id)
-            and (requested_actor_type is None or record.actor_type == requested_actor_type)
-            and (requested_resolution is None or record.resolution is requested_resolution)
-            and (has_evidence is None or bool(record.evidence) is has_evidence)
-            and _timestamp_in_window(record.timestamp, since=since, until=until)
-        )
+        records: list[CloseoutAttribution] = []
+        for view in self.list_views():
+            record = view.closeout_attribution
+            if record is None:
+                continue
+            if (
+                (decision_id is None or record.decision_id == decision_id)
+                and (actor_id is None or record.actor_id == actor_id)
+                and (requested_actor_type is None or record.actor_type == requested_actor_type)
+                and (requested_resolution is None or record.resolution is requested_resolution)
+                and (has_evidence is None or bool(record.evidence) is has_evidence)
+                and _timestamp_in_window(record.timestamp, since=since, until=until)
+            ):
+                records.append(record)
         ordered_records = tuple(
             sorted(records, key=lambda record: (record.timestamp, record.decision_id))
         )

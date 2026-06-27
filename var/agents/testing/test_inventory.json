@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6889,
-    "total_files": 815,
+    "total_tests": 6892,
+    "total_files": 817,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6724,
+    "unit": 6727,
     "asyncio": 411,
-    "parametrize": 200,
+    "parametrize": 201,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -207,6 +207,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_closeout_evidence_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_csv.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
@@ -556,6 +557,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
@@ -9199,6 +9201,16 @@
       {
         "name": "test_closeout_show_without_attribution_is_successful_noop",
         "line": 295,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_closeout_evidence_integrity.py": [
+      {
+        "name": "test_closeout_list_and_export_omit_orphaned_closeout_records",
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -33754,6 +33766,25 @@
       {
         "name": "test_persisted_closeout_log_rejects_negative_max_loss_values_with_line_context",
         "line": 353,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout_query.py": [
+      {
+        "name": "test_query_closeout_records_excludes_orphaned_log_records",
+        "line": 51,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_query_closeout_records_rejects_tampered_current_attribution",
+        "line": 82,
         "markers": [
           "parametrize",
           "unit"

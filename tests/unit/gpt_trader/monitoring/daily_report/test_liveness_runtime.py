@@ -15,16 +15,14 @@ from gpt_trader.monitoring.daily_report.loaders import (
 
 def _create_events_db(db_path: Path) -> None:
     connection = sqlite3.connect(str(db_path))
-    connection.executescript(
-        """
+    connection.executescript("""
         CREATE TABLE events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT NOT NULL,
             event_type TEXT NOT NULL,
             payload TEXT NOT NULL
         );
-        """
-    )
+        """)
     connection.commit()
     connection.close()
 

@@ -66,16 +66,14 @@ def test_load_events_since_filters_by_cutoff(tmp_path) -> None:
 def test_load_events_since_falls_back_to_db(tmp_path) -> None:
     events_db = tmp_path / "events.db"
     connection = sqlite3.connect(str(events_db))
-    connection.executescript(
-        """
+    connection.executescript("""
         CREATE TABLE events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT NOT NULL,
             event_type TEXT NOT NULL,
             payload TEXT NOT NULL
         );
-        """
-    )
+        """)
     connection.execute(
         "INSERT INTO events (timestamp, event_type, payload) VALUES (?, ?, ?)",
         ("2024-01-01 00:00:00", "guard_triggered", json.dumps({"guard": "alpha"})),
@@ -114,16 +112,14 @@ def test_load_events_since_normalizes_timestamp(tmp_path) -> None:
 def test_load_metrics_falls_back_to_db(tmp_path) -> None:
     events_db = tmp_path / "events.db"
     connection = sqlite3.connect(str(events_db))
-    connection.executescript(
-        """
+    connection.executescript("""
         CREATE TABLE events (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT NOT NULL,
             event_type TEXT NOT NULL,
             payload TEXT NOT NULL
         );
-        """
-    )
+        """)
     metrics_payload = {
         "bot_id": "bot-1",
         "metrics": {"event_type": "cycle_metrics", "account": {"equity": 123.0}},
@@ -143,15 +139,13 @@ def test_load_metrics_falls_back_to_db(tmp_path) -> None:
 def test_load_unfilled_orders_count_uses_threshold(tmp_path) -> None:
     orders_db = tmp_path / "orders.db"
     connection = sqlite3.connect(str(orders_db))
-    connection.executescript(
-        """
+    connection.executescript("""
         CREATE TABLE orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             status TEXT NOT NULL,
             created_at TEXT NOT NULL
         );
-        """
-    )
+        """)
     connection.execute(
         "INSERT INTO orders (status, created_at) VALUES (?, ?)",
         ("open", "2024-01-01T00:00:00+00:00"),

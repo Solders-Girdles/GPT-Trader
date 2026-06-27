@@ -9,15 +9,13 @@ import scripts.ops.readiness_window as readiness_window
 
 def _create_events_db(db_path: Path) -> None:
     with sqlite3.connect(str(db_path)) as connection:
-        connection.executescript(
-            """
+        connection.executescript("""
             CREATE TABLE events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp TEXT,
                 event_type TEXT
             );
-            """
-        )
+            """)
         connection.commit()
 
 

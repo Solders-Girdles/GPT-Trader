@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6884,
-    "total_files": 813,
+    "total_tests": 6886,
+    "total_files": 814,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6719,
+    "unit": 6721,
     "asyncio": 411,
     "parametrize": 200,
     "endpoints": 83,
@@ -218,6 +218,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
@@ -9705,6 +9706,24 @@
       {
         "name": "test_report_is_read_only_and_does_not_seed_budget",
         "line": 312,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py": [
+      {
+        "name": "test_windowed_report_ignores_lifecycle_after_cutoff",
+        "line": 25,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_windowed_report_uses_cutoff_for_approval_readiness",
+        "line": 74,
         "markers": [
           "unit"
         ],

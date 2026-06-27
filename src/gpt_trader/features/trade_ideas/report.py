@@ -42,7 +42,8 @@ def build_trade_idea_track_record_report(
 ) -> dict[str, Any]:
     """Build a read-only report from stored records, audit events, and closeouts."""
     current_time = now or datetime.now(UTC)
-    views = _filter_views_by_window(service.list_views(), since=since, until=until)
+    report_cutoff = until or current_time
+    views = _snapshot_views_by_window(service.list_views(), since=since, until=report_cutoff)
     total_ideas = len(views)
 
     event_counts = _zero_action_counts()
@@ -55,7 +56,7 @@ def build_trade_idea_track_record_report(
         for event in view.events:
             event_counts[_ACTION_KEYS[event.action]] += 1
 
-    quality = _quality_summary(views, now=current_time)
+    quality = _quality_summary(views, now=report_cutoff)
     workflow = _workflow_summary(views, event_counts, state_counts)
     closeouts = _closeout_summary(views)
     monthly = _monthly_summary(views)
@@ -197,17 +198,43 @@ def _workflow_summary(
     }
 
 
-def _filter_views_by_window(
+def _snapshot_views_by_window(
     views: list[TradeIdeaView],
     *,
     since: datetime | None,
     until: datetime | None,
 ) -> list[TradeIdeaView]:
-    return [
-        view
-        for view in views
-        if view.events and _timestamp_in_window(view.events[0].timestamp, since=since, until=until)
-    ]
+    snapshots: list[TradeIdeaView] = []
+    for view in views:
+        if not view.events or not _timestamp_in_window(
+            view.events[0].timestamp,
+            since=since,
+            until=until,
+        ):
+            continue
+        events = tuple(
+            event
+            for event in view.events
+            if _timestamp_in_window(event.timestamp, since=since, until=until)
+        )
+        if not events:
+            continue
+        closeout = view.closeout_attribution
+        if closeout is not None and not _timestamp_in_window(
+            closeout.timestamp,
+            since=since,
+            until=until,
+        ):
+            closeout = None
+        snapshots.append(
+            TradeIdeaView(
+                idea=view.idea,
+                state=events[-1].after_state,
+                events=events,
+                closeout_attribution=closeout,
+            )
+        )
+    return snapshots
 
 
 def _timestamp_in_window(

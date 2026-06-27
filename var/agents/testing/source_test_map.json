@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 727,
+    "tests_scanned": 728,
     "source_modules": 377,
     "unresolved_modules": 3
   },
@@ -1307,6 +1307,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
@@ -1332,10 +1333,12 @@
       "tests/unit/gpt_trader/tui/test_snapshots_ideas_review.py"
     ],
     "gpt_trader.features.trade_ideas.report": [
-      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py"
+      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py"
     ],
     "gpt_trader.features.trade_ideas.service": [
       "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py"
     ],
     "gpt_trader.logging.correlation": [
@@ -2763,6 +2766,11 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_report.py": [
       "gpt_trader",
       "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py": [
+      "gpt_trader.features.trade_ideas",
+      "gpt_trader.features.trade_ideas.report",
+      "gpt_trader.features.trade_ideas.service"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py": [
       "gpt_trader",

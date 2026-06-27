@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6877,
-    "total_files": 811,
+    "total_tests": 6886,
+    "total_files": 813,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6712,
+    "unit": 6721,
     "asyncio": 411,
     "parametrize": 200,
     "endpoints": 83,
@@ -211,6 +211,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_paper_reconciliation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
@@ -544,6 +545,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
@@ -3283,7 +3285,7 @@
       },
       {
         "name": "test_from_yaml_rejects_invalid_session_times",
-        "line": 53,
+        "line": 51,
         "markers": [
           "parametrize",
           "unit"
@@ -3292,7 +3294,7 @@
       },
       {
         "name": "test_from_yaml_preserves_explicit_null_session_times",
-        "line": 70,
+        "line": 68,
         "markers": [
           "unit"
         ],
@@ -3300,7 +3302,7 @@
       },
       {
         "name": "test_from_yaml_accepts_documented_session_time_shapes",
-        "line": 92,
+        "line": 90,
         "markers": [
           "parametrize",
           "unit"
@@ -3309,7 +3311,7 @@
       },
       {
         "name": "test_from_yaml_rejects_non_contract_session_time_shapes",
-        "line": 116,
+        "line": 114,
         "markers": [
           "parametrize",
           "unit"
@@ -9310,6 +9312,32 @@
         "line": 74,
         "markers": [
           "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_paper_reconciliation.py": [
+      {
+        "name": "test_reconcile_paper_fills_dry_run_does_not_mutate_audit",
+        "line": 62,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reconcile_paper_fills_apply_records_submission_and_fill",
+        "line": 92,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reconcile_paper_fills_rejects_live_profile_without_mutation",
+        "line": 122,
+        "markers": [
           "unit"
         ],
         "docstring": ""
@@ -31129,7 +31157,7 @@
       },
       {
         "name": "test_storage_list_runs_includes_legacy_default_dir",
-        "line": 267,
+        "line": 265,
         "markers": [
           "unit"
         ],
@@ -31151,7 +31179,7 @@
     "tests/unit/gpt_trader/features/optimize/study/test_manager.py": [
       {
         "name": "TestOptimizationStudyManager::test_create_study",
-        "line": 31,
+        "line": 34,
         "markers": [
           "unit"
         ],
@@ -31160,11 +31188,20 @@
       },
       {
         "name": "TestOptimizationStudyManager::test_suggest_parameters",
-        "line": 44,
+        "line": 47,
         "markers": [
           "unit"
         ],
         "docstring": "Test parameter suggestion.",
+        "class": "TestOptimizationStudyManager"
+      },
+      {
+        "name": "TestOptimizationStudyManager::test_missing_optuna_raises_install_extra_message",
+        "line": 59,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Study manager imports cleanly without Optuna and fails with install guidance.",
         "class": "TestOptimizationStudyManager"
       }
     ],
@@ -32908,6 +32945,48 @@
       {
         "name": "test_closeout_attribution_requires_profit_loss_or_unavailable_reason",
         "line": 235,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py": [
+      {
+        "name": "test_reconciler_records_matched_approved_fill_through_service",
+        "line": 56,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reconciler_reports_unmatched_fill_without_mutation",
+        "line": 81,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reconciler_dry_run_reports_match_without_mutation",
+        "line": 99,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_reconciler_skips_duplicate_fill_in_same_apply_pass",
+        "line": 114,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_live_profiles_are_rejected_for_paper_reconciliation",
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -35085,7 +35164,7 @@
     "tests/unit/gpt_trader/monitoring/daily_report/test_liveness_runtime.py": [
       {
         "name": "test_liveness_green",
-        "line": 48,
+        "line": 46,
         "markers": [
           "unit"
         ],
@@ -35093,7 +35172,7 @@
       },
       {
         "name": "test_liveness_green_with_one_fresh_event",
-        "line": 73,
+        "line": 71,
         "markers": [
           "unit"
         ],
@@ -35101,7 +35180,7 @@
       },
       {
         "name": "test_liveness_red",
-        "line": 98,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -35109,7 +35188,7 @@
       },
       {
         "name": "test_liveness_unknown_when_missing_events",
-        "line": 116,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -35117,7 +35196,7 @@
       },
       {
         "name": "test_runtime_fingerprint_parses_payload",
-        "line": 127,
+        "line": 125,
         "markers": [
           "unit"
         ],
@@ -35125,7 +35204,7 @@
       },
       {
         "name": "test_runtime_fingerprint_does_not_echo_secrets",
-        "line": 150,
+        "line": 148,
         "markers": [
           "unit"
         ],
@@ -35175,7 +35254,7 @@
       },
       {
         "name": "test_load_events_since_normalizes_timestamp",
-        "line": 98,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -35183,7 +35262,7 @@
       },
       {
         "name": "test_load_metrics_falls_back_to_db",
-        "line": 114,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -35191,7 +35270,7 @@
       },
       {
         "name": "test_load_unfilled_orders_count_uses_threshold",
-        "line": 143,
+        "line": 139,
         "markers": [
           "unit"
         ],
@@ -35199,7 +35278,7 @@
       },
       {
         "name": "test_load_liveness_snapshot_missing_db",
-        "line": 180,
+        "line": 174,
         "markers": [
           "unit"
         ],
@@ -35207,7 +35286,7 @@
       },
       {
         "name": "test_load_runtime_fingerprint_missing_db",
-        "line": 186,
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -62687,7 +62766,7 @@
     "tests/unit/scripts/test_export_metrics.py": [
       {
         "name": "test_load_metrics_reads_file",
-        "line": 41,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -62695,7 +62774,7 @@
       },
       {
         "name": "test_load_metrics_falls_back_to_db_when_missing",
-        "line": 51,
+        "line": 49,
         "markers": [
           "unit"
         ],
@@ -62703,7 +62782,7 @@
       },
       {
         "name": "test_load_latest_metrics_prefers_cycle_metrics",
-        "line": 68,
+        "line": 66,
         "markers": [
           "unit"
         ],
@@ -62711,7 +62790,7 @@
       },
       {
         "name": "test_load_latest_event_from_db_normalizes_payload",
-        "line": 90,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -62719,7 +62798,7 @@
       },
       {
         "name": "test_load_latest_event_falls_back_to_file",
-        "line": 108,
+        "line": 106,
         "markers": [
           "unit"
         ],
@@ -62727,7 +62806,7 @@
       },
       {
         "name": "test_count_events_uses_database_when_available",
-        "line": 121,
+        "line": 119,
         "markers": [
           "unit"
         ],
@@ -62735,7 +62814,7 @@
       },
       {
         "name": "test_extract_limit_remaining_reads_nested_balances",
-        "line": 134,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -62743,7 +62822,7 @@
       },
       {
         "name": "test_render_prometheus_includes_key_metrics",
-        "line": 142,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -62751,7 +62830,7 @@
       },
       {
         "name": "test_render_prometheus_includes_trade_counters_zero_from_metrics",
-        "line": 201,
+        "line": 199,
         "markers": [
           "unit"
         ],
@@ -62759,7 +62838,7 @@
       },
       {
         "name": "test_render_prometheus_includes_trade_counters_nonzero_string_values",
-        "line": 221,
+        "line": 219,
         "markers": [
           "unit"
         ],
@@ -62767,7 +62846,7 @@
       },
       {
         "name": "test_render_prometheus_prefers_trade_counters_when_available",
-        "line": 241,
+        "line": 239,
         "markers": [
           "unit"
         ],
@@ -62839,7 +62918,7 @@
     "tests/unit/scripts/test_liveness_check.py": [
       {
         "name": "test_only_decision_trace_is_red",
-        "line": 41,
+        "line": 39,
         "markers": [
           "unit"
         ],
@@ -62847,7 +62926,7 @@
       },
       {
         "name": "test_fresh_heartbeat_is_green",
-        "line": 59,
+        "line": 57,
         "markers": [
           "unit"
         ],
@@ -62855,7 +62934,7 @@
       },
       {
         "name": "test_fresh_price_tick_is_green",
-        "line": 77,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -62863,7 +62942,7 @@
       },
       {
         "name": "test_both_stale_is_red",
-        "line": 95,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -62871,7 +62950,7 @@
       },
       {
         "name": "test_liveness_min_event_id_requires_newer_event",
-        "line": 113,
+        "line": 111,
         "markers": [
           "unit"
         ],
@@ -63115,7 +63194,7 @@
     "tests/unit/scripts/test_readiness_window.py": [
       {
         "name": "test_parse_timestamp_normalizes_to_utc",
-        "line": 44,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -63123,7 +63202,7 @@
       },
       {
         "name": "test_main_clears_on_exact_boundary_at_midnight",
-        "line": 54,
+        "line": 52,
         "markers": [
           "unit"
         ],
@@ -63131,7 +63210,7 @@
       },
       {
         "name": "test_main_pending_just_before_boundary",
-        "line": 74,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -63139,7 +63218,7 @@
       },
       {
         "name": "test_main_clears_just_after_boundary",
-        "line": 94,
+        "line": 92,
         "markers": [
           "unit"
         ],
@@ -63220,7 +63299,7 @@
     "tests/unit/scripts/test_runtime_fingerprint.py": [
       {
         "name": "test_read_latest_runtime_start_payload",
-        "line": 37,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -63228,7 +63307,7 @@
       },
       {
         "name": "test_read_latest_runtime_start_missing_returns_none",
-        "line": 64,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -63236,7 +63315,7 @@
       },
       {
         "name": "test_validate_runtime_start_fails_on_event_id",
-        "line": 72,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -63244,7 +63323,7 @@
       },
       {
         "name": "test_validate_runtime_start_fails_on_build_sha",
-        "line": 85,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -63252,7 +63331,7 @@
       },
       {
         "name": "test_validate_runtime_start_passes_when_matching",
-        "line": 98,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -63260,7 +63339,7 @@
       },
       {
         "name": "test_validate_runtime_start_returns_multiple_reason_codes",
-        "line": 111,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -63268,7 +63347,7 @@
       },
       {
         "name": "test_print_payload_normalizes_timestamp",
-        "line": 128,
+        "line": 126,
         "markers": [
           "unit"
         ],
@@ -63276,7 +63355,7 @@
       },
       {
         "name": "test_main_success_does_not_emit_reason_codes",
-        "line": 143,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -63284,7 +63363,7 @@
       },
       {
         "name": "test_main_failure_emits_reason_codes",
-        "line": 180,
+        "line": 178,
         "markers": [
           "unit"
         ],
@@ -63292,7 +63371,7 @@
       },
       {
         "name": "test_main_detects_fingerprint_mismatch",
-        "line": 222,
+        "line": 220,
         "markers": [
           "unit"
         ],
@@ -63300,7 +63379,7 @@
       },
       {
         "name": "test_direct_script_execution_without_site_packages",
-        "line": 271,
+        "line": 269,
         "markers": [
           "unit"
         ],
@@ -63310,7 +63389,7 @@
     "tests/unit/scripts/test_tail_decision_traces.py": [
       {
         "name": "test_resolve_decision_id_prefers_decision_id",
-        "line": 26,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -63318,7 +63397,7 @@
       },
       {
         "name": "test_resolve_decision_id_falls_back_to_client_order_id",
-        "line": 31,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -63326,7 +63405,7 @@
       },
       {
         "name": "test_read_traces_normalizes_timestamp",
-        "line": 36,
+        "line": 34,
         "markers": [
           "unit"
         ],

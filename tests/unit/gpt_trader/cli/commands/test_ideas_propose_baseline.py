@@ -9,6 +9,12 @@ import pytest
 
 from gpt_trader import cli
 from gpt_trader.cli.response import CliErrorCode
+from gpt_trader.features.trade_ideas import (
+    BaselineProposer,
+    MarketSnapshot,
+    TradeIdea,
+    TradeIdeaAuditLog,
+)
 
 AS_OF = datetime(2035, 6, 12, 0, 0, tzinfo=UTC)
 GOLDEN_CROSS = ["100"] * 50 + ["102", "104", "106"]
@@ -143,6 +149,63 @@ def test_propose_baseline_duplicate_decision_fails_without_extra_audit(
     decision_id = first_response["data"]["proposed"][0]["decision_id"]
     latest = json.loads((root / "records" / decision_id / "latest.json").read_text())
     assert latest["decision_id"] == decision_id
+
+
+def test_propose_baseline_rejects_duplicate_generated_decisions_before_writes(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path / "ideas"
+    snapshot_path = _write_snapshot(tmp_path / "duplicates.json", _snapshot_payload())
+
+    original_propose = BaselineProposer.propose
+
+    def duplicate_proposal(self: BaselineProposer, snapshot: MarketSnapshot) -> list[TradeIdea]:
+        ideas = original_propose(self, snapshot)
+        return [ideas[0], ideas[0]]
+
+    monkeypatch.setattr(BaselineProposer, "propose", duplicate_proposal)
+
+    exit_code, response = _propose_baseline(capsys, root, snapshot_path)
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.VALIDATION_ERROR.value
+    assert response["errors"][0]["details"]["field"] == "decision_id"
+    assert "appears more than once" in response["errors"][0]["message"]
+    assert not (root / "records").exists()
+    assert not (root / "audit.jsonl").exists()
+
+
+def test_propose_baseline_rolls_back_batch_when_later_write_fails(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path / "ideas"
+    payload = _snapshot_payload()
+    payload["series"].append(_series_payload(GOLDEN_CROSS, symbol="ETH-USD", as_of=AS_OF))
+    snapshot_path = _write_snapshot(tmp_path / "two-proposals.json", payload)
+    original_append = TradeIdeaAuditLog.append
+    append_calls = 0
+
+    def fail_second_append(*args: Any, **kwargs: Any) -> None:
+        nonlocal append_calls
+        append_calls += 1
+        if append_calls == 2:
+            raise RuntimeError("forced second append failure")
+        original_append(*args, **kwargs)
+
+    monkeypatch.setattr(TradeIdeaAuditLog, "append", fail_second_append)
+
+    exit_code, response = _propose_baseline(capsys, root, snapshot_path)
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.OPERATION_FAILED.value
+    assert response["errors"][0]["message"] == "forced second append failure"
+    assert append_calls == 2
+    assert not list((root / "records").glob("*/latest.json"))
+    assert not (root / "audit.jsonl").exists()
 
 
 def test_propose_baseline_malformed_snapshot_returns_invalid_argument(

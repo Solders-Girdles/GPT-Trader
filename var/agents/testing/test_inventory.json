@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6857,
-    "total_files": 808,
+    "total_tests": 6864,
+    "total_files": 809,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6692,
+    "unit": 6699,
     "asyncio": 411,
     "parametrize": 198,
     "endpoints": 83,
@@ -9316,7 +9316,7 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py": [
       {
         "name": "test_propose_baseline_persists_generated_proposal",
-        "line": 87,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -9324,7 +9324,7 @@
       },
       {
         "name": "test_propose_baseline_no_signal_is_noop",
-        "line": 112,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -9332,7 +9332,23 @@
       },
       {
         "name": "test_propose_baseline_duplicate_decision_fails_without_extra_audit",
-        "line": 128,
+        "line": 134,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_rejects_duplicate_generated_decisions_before_writes",
+        "line": 154,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_rolls_back_batch_when_later_write_fails",
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -9340,7 +9356,7 @@
       },
       {
         "name": "test_propose_baseline_malformed_snapshot_returns_invalid_argument",
-        "line": 148,
+        "line": 211,
         "markers": [
           "unit"
         ],
@@ -9348,7 +9364,7 @@
       },
       {
         "name": "test_propose_baseline_json_output_includes_approval_preview_warnings",
-        "line": 166,
+        "line": 229,
         "markers": [
           "unit"
         ],

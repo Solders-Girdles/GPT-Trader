@@ -627,20 +627,17 @@ def _handle_propose_baseline(args: Namespace) -> CliResponse:
             return _success(command, args, payload, text, was_noop=True)
 
         service = _service(args)
-        for idea in ideas:
-            service.validate_new_proposal(idea)
+        proposal_batch = tuple(ideas)
+        service.validate_new_proposals(proposal_batch)
         previews = [service.approval_violations(idea, actor_type=ActorType.HUMAN) for idea in ideas]
         actor_id = _baseline_actor_id(args, proposer.proposer_id)
-        views = [
-            service.propose(
-                idea,
-                actor_id=actor_id,
-                actor_type=ActorType.AI,
-                reason=args.reason,
-                evidence=_baseline_evidence(args.snapshot, snapshot, proposer.proposer_id),
-            )
-            for idea in ideas
-        ]
+        views = service.propose_batch(
+            proposal_batch,
+            actor_id=actor_id,
+            actor_type=ActorType.AI,
+            reason=args.reason,
+            evidence=_baseline_evidence(args.snapshot, snapshot, proposer.proposer_id),
+        )
     except SnapshotInputError as error:
         return _input_error(command, args, error)
     except Exception as error:

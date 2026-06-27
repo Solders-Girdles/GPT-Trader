@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 723,
+    "tests_scanned": 724,
     "source_modules": 374,
     "unresolved_modules": 3
   },
@@ -1296,6 +1296,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
@@ -2720,7 +2721,8 @@
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py": [
       "gpt_trader",
-      "gpt_trader.cli.response"
+      "gpt_trader.cli.response",
+      "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py": [
       "gpt_trader",

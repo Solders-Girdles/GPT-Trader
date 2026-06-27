@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import getpass
 import os
+import shutil
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -187,6 +188,20 @@ class TradeIdeaService:
         self._require_default_preapproval_broker_ticket(idea)
         self._require_new_decision_id(idea.decision_id)
 
+    def validate_new_proposals(self, ideas: tuple[TradeIdea, ...]) -> None:
+        """Validate proposal batch preconditions without writing state."""
+        seen_decision_ids: set[str] = set()
+        for idea in ideas:
+            if idea.decision_id in seen_decision_ids:
+                raise DuplicateTradeIdeaError(
+                    f"Trade idea decision_id '{idea.decision_id}' appears more than once "
+                    "in the proposal batch",
+                    field="decision_id",
+                    value=idea.decision_id,
+                )
+            seen_decision_ids.add(idea.decision_id)
+            self.validate_new_proposal(idea)
+
     def validate_resubmission(self, idea: TradeIdea) -> None:
         """Validate resubmission lifecycle preconditions without writing state."""
         self._require_default_preapproval_broker_ticket(idea)
@@ -241,6 +256,46 @@ class TradeIdeaService:
             evidence=evidence,
         )
         return self.get(idea.decision_id)
+
+    def propose_batch(
+        self,
+        ideas: tuple[TradeIdea, ...],
+        *,
+        actor_id: str,
+        actor_type: ActorType = ActorType.AI,
+        reason: str = "New trade idea proposed",
+        evidence: tuple[str, ...] = (),
+    ) -> list[TradeIdeaView]:
+        """Persist a batch of new proposals as an all-or-nothing operation."""
+        self.validate_new_proposals(ideas)
+        if not ideas:
+            return []
+
+        audit_path = self._audit.path
+        original_audit = audit_path.read_bytes() if audit_path.exists() else None
+        created_decision_ids: list[str] = []
+        try:
+            views: list[TradeIdeaView] = []
+            for idea in ideas:
+                self._store.save(idea)
+                created_decision_ids.append(idea.decision_id)
+                self._append(
+                    idea,
+                    action=AuditAction.PROPOSED,
+                    after_state=TradeIdeaState.PROPOSED,
+                    actor_type=actor_type,
+                    actor_id=actor_id,
+                    reason=reason,
+                    evidence=evidence,
+                )
+                views.append(self.get(idea.decision_id))
+        except Exception:
+            self._restore_failed_proposal_batch(
+                created_decision_ids=tuple(created_decision_ids),
+                original_audit=original_audit,
+            )
+            raise
+        return views
 
     def request_changes(self, decision_id: str, actor_id: str, reason: str) -> TradeIdeaView:
         idea = self._require_idea(decision_id)
@@ -653,6 +708,22 @@ class TradeIdeaService:
                 field="decision_id",
                 value=decision_id,
             )
+
+    def _restore_failed_proposal_batch(
+        self,
+        *,
+        created_decision_ids: tuple[str, ...],
+        original_audit: bytes | None,
+    ) -> None:
+        for decision_id in created_decision_ids:
+            shutil.rmtree(self._store.root / decision_id, ignore_errors=True)
+
+        audit_path = self._audit.path
+        if original_audit is None:
+            audit_path.unlink(missing_ok=True)
+            return
+        audit_path.parent.mkdir(parents=True, exist_ok=True)
+        audit_path.write_bytes(original_audit)
 
     def _require_default_preapproval_broker_ticket(self, idea: TradeIdea) -> None:
         broker_ticket = idea.broker_ticket

@@ -1,7 +1,7 @@
 ---
 name: Refactor spot filter pipeline into composable filter strategies
 about: Extract filter logic into testable, composable strategies
-labels: refactoring, code-quality, strategy, enhancement
+labels: architecture, live-trade
 ---
 
 ## Objective

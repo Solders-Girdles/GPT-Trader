@@ -396,7 +396,6 @@ def copy_to_clipboard(text: str) -> bool:
                 input=text.encode("utf-8"),
                 check=True,
                 capture_output=True,
-                shell=True,
             )
             return True
 

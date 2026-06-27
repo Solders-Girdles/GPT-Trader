@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -9,7 +10,7 @@ import pytest
 
 from gpt_trader import cli
 from gpt_trader.cli.response import CliErrorCode
-from gpt_trader.features.trade_ideas import TimeHorizon
+from gpt_trader.features.trade_ideas import TimeHorizon, canonical_ticket_json
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 
@@ -43,6 +44,22 @@ def _run_json(capsys: pytest.CaptureFixture[str], argv: list[str]) -> tuple[int,
 
 def _root_args(root: Path) -> list[str]:
     return ["--ideas-root", str(root), "--format", "json"]
+
+
+def _assert_ticket_hash_matches_canonical_payload(ticket: dict[str, Any]) -> None:
+    ticket_without_hash = dict(ticket)
+    ticket_hash = ticket_without_hash.pop("ticket_hash")
+    expected_hash = hashlib.sha256(
+        canonical_ticket_json(ticket_without_hash).encode("utf-8")
+    ).hexdigest()
+    assert ticket_hash == expected_hash
+
+
+def _stable_ticket_payload(ticket: dict[str, Any]) -> dict[str, Any]:
+    stable = json.loads(json.dumps(ticket))
+    stable.pop("ticket_hash")
+    stable["policy_budget_snapshot"]["evaluated_at"] = "<export-evaluation-time>"
+    return stable
 
 
 def _propose_and_approve(
@@ -195,7 +212,7 @@ def test_export_ticket_error_does_not_write_to_out_artifact_path(
     assert output_path.read_text(encoding="utf-8") == "keep-existing-ticket"
 
 
-def test_export_ticket_stdout_json_is_byte_deterministic(
+def test_export_ticket_stdout_json_is_stable_except_evaluation_time(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -208,8 +225,11 @@ def test_export_ticket_stdout_json_is_byte_deterministic(
     exit_code, second = _run(capsys, _export_args(root, payload["decision_id"]))
     assert exit_code == 0
 
-    assert first == second
-    assert json.loads(first)["ticket_hash"] == json.loads(second)["ticket_hash"]
+    first_ticket = json.loads(first)
+    second_ticket = json.loads(second)
+    _assert_ticket_hash_matches_canonical_payload(first_ticket)
+    _assert_ticket_hash_matches_canonical_payload(second_ticket)
+    assert _stable_ticket_payload(first_ticket) == _stable_ticket_payload(second_ticket)
 
 
 def test_export_ticket_writes_raw_json_to_out_path(

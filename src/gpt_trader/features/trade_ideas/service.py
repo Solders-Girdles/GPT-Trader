@@ -587,6 +587,7 @@ class TradeIdeaService:
             request=request,
             budget=effective_budget,
             budget_source=budget_source,
+            export_time=export_time,
             approval_policy_violations=policy_violations,
         )
 

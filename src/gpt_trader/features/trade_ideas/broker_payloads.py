@@ -11,6 +11,7 @@ import hashlib
 import json
 import re
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from gpt_trader.errors import ValidationError
@@ -92,6 +93,7 @@ def build_broker_neutral_ticket_payload(
     request: BrokerTicketExportRequest,
     budget: RiskBudget,
     budget_source: str,
+    export_time: datetime,
     approval_policy_violations: list[str],
 ) -> dict[str, Any]:
     """Build a stable broker-neutral ticket payload from audited local state."""
@@ -141,7 +143,7 @@ def build_broker_neutral_ticket_payload(
             "do_not_trade_if": list(idea.do_not_trade_if),
         },
         "policy_budget_snapshot": {
-            "evaluated_at": latest_event.timestamp.isoformat(),
+            "evaluated_at": export_time.isoformat(),
             "autonomy_mode": idea.autonomy_mode.value,
             "risk_budget_source": budget_source,
             "risk_budget": budget.to_dict(),

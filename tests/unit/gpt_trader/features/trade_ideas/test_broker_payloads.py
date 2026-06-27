@@ -244,7 +244,14 @@ def test_export_broker_ticket_policy_violations_use_export_time(
     service.propose(idea, actor_id="idea-generator-v1")
     service.approve(idea.decision_id, actor_id="rj", reason="Risk verified")
     service.record_submission(idea.decision_id, actor_id="operator", venue="manual")
-    current_time = datetime(2026, 6, 14, 10, 0, tzinfo=UTC)
+    service.record_fill(
+        idea.decision_id,
+        actor_id="manual",
+        venue="manual",
+        external_order_id="terminal-fill-123",
+    )
+    export_time = datetime(2026, 6, 14, 10, 0, tzinfo=UTC)
+    current_time = export_time
 
     payload = service.export_broker_ticket_payload(
         idea.decision_id,
@@ -254,6 +261,13 @@ def test_export_broker_ticket_policy_violations_use_export_time(
     )
 
     policy_budget_snapshot = _mapping(payload["policy_budget_snapshot"])
+    provenance = _mapping(payload["provenance"])
+    latest_event = _mapping(provenance["latest_event"])
+    terminal_event = _mapping(provenance["terminal_event"])
     violations = policy_budget_snapshot["approval_policy_violations"]
     assert isinstance(violations, list)
     assert any(isinstance(item, str) and "approve nothing stale" in item for item in violations)
+    assert policy_budget_snapshot["evaluated_at"] == export_time.isoformat()
+    assert latest_event["action"] == "filled"
+    assert latest_event["timestamp"] != policy_budget_snapshot["evaluated_at"]
+    assert terminal_event["timestamp"] != policy_budget_snapshot["evaluated_at"]

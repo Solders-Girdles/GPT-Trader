@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6865,
+    "total_tests": 6866,
     "total_files": 809,
     "markers_used": 16
   },
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6700,
+    "unit": 6701,
     "asyncio": 411,
-    "parametrize": 199,
+    "parametrize": 200,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -9474,8 +9474,17 @@
         "docstring": ""
       },
       {
+        "name": "test_replay_baseline_rejects_non_positive_ohlc_prices",
+        "line": 187,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_replay_baseline_default_history_uses_largest_window",
-        "line": 186,
+        "line": 204,
         "markers": [
           "unit"
         ],
@@ -9483,7 +9492,7 @@
       },
       {
         "name": "test_replay_baseline_help_documents_required_flags_and_read_only_contract",
-        "line": 217,
+        "line": 235,
         "markers": [
           "unit"
         ],
@@ -9491,7 +9500,7 @@
       },
       {
         "name": "test_replay_baseline_no_idea_replay_is_successful_noop",
-        "line": 230,
+        "line": 248,
         "markers": [
           "unit"
         ],
@@ -9499,7 +9508,7 @@
       },
       {
         "name": "test_replay_baseline_json_output_returns_replay_report",
-        "line": 247,
+        "line": 265,
         "markers": [
           "unit"
         ],

@@ -592,6 +592,12 @@ def _parse_candle_decimal(value: Any, index: int, field_name: str) -> Decimal:
 
 
 def _validate_candle_semantics(candle: Candle, index: int) -> None:
+    for field_name in ("open", "high", "low", "close"):
+        if getattr(candle, field_name) <= 0:
+            raise CandleInputError(
+                f"candle at index {index} has non-positive {field_name}",
+                field=f"candles[{index}].{field_name}",
+            )
     if candle.high < candle.low:
         raise CandleInputError(
             f"candle at index {index} has high below low",

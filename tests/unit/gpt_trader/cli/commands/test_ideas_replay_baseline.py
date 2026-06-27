@@ -183,6 +183,24 @@ def test_replay_baseline_rejects_semantically_invalid_ohlcv_rows(
     assert response["errors"][0]["details"]["field"] == expected_field
 
 
+@pytest.mark.parametrize("field", ["open", "high", "low", "close"])
+def test_replay_baseline_rejects_non_positive_ohlc_prices(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    field: str,
+) -> None:
+    payload = _baseline_hit_fixture()
+    payload["candles"][0][field] = "0"
+    fixture = _write_fixture(tmp_path / "non-positive-ohlc.json", payload)
+
+    exit_code, response = _run_json(capsys, _baseline_args(fixture))
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert response["errors"][0]["details"]["field"] == f"candles[0].{field}"
+    assert f"non-positive {field}" in response["errors"][0]["message"]
+
+
 def test_replay_baseline_default_history_uses_largest_window(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
@@ -199,9 +217,9 @@ def test_replay_baseline_default_history_uses_largest_window(
         "--granularity",
         "ONE_HOUR",
         "--short-window",
-        "5",
-        "--long-window",
         "2",
+        "--long-window",
+        "5",
         "--crossover-lookback",
         "1",
         "--format",

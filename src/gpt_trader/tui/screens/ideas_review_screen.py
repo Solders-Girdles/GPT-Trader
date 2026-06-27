@@ -184,6 +184,7 @@ class IdeasReviewScreen(Screen[None]):
         self._service = service
         self._reviewer_id = reviewer_id
         self._views: list[TradeIdeaView] = []
+        self._total_count = 0
         self._selected_decision_id: str | None = None
         self._filter_index = 0
         self._instrument_filter: str | None = None
@@ -233,6 +234,7 @@ class IdeasReviewScreen(Screen[None]):
         try:
             result = self.service.list_view_result(self._list_query())
             self._views = list(result.views)
+            self._total_count = result.total_count
         except ValidationError as error:
             self.notify(str(error), title="Ideas Review", severity="error", timeout=6)
             return
@@ -353,7 +355,7 @@ class IdeasReviewScreen(Screen[None]):
             )
         self.query_one("#ideas-review-filter", Label).update(
             f"Filter: {self._filter_label(self.FILTERS[self._filter_index])} "
-            f"({len(self._views)} of {len(self._views)})"
+            f"({len(self._views)} of {self._total_count})"
         )
         if self._views:
             visible_decision_ids = [view.idea.decision_id for view in self._views]

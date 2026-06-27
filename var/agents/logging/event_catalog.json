@@ -1663,7 +1663,7 @@
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 3,
+      "occurrence_count": 4,
       "source_files": [
         "app/config/profile_loader.py"
       ],
@@ -2510,9 +2510,9 @@
     "client_ip": 4,
     "client_order_id": 20,
     "consecutive_failures": 6,
-    "details": 4,
+    "details": 5,
     "environment": 12,
-    "error": 65,
+    "error": 66,
     "error_message": 89,
     "error_type": 87,
     "event_type": 5,
@@ -2525,7 +2525,7 @@
     "mode": 4,
     "order_id": 29,
     "outcome": 5,
-    "path": 11,
+    "path": 12,
     "portfolio_id": 4,
     "price": 4,
     "quantity": 10,
@@ -2541,7 +2541,7 @@
     "DEBUG": 49,
     "ERROR": 123,
     "INFO": 90,
-    "WARNING": 101
+    "WARNING": 102
   },
   "total_event_types": 136,
   "version": "1.0"

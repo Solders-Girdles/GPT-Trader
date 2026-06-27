@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6843,
-    "total_files": 806,
+    "total_tests": 6877,
+    "total_files": 811,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6678,
+    "unit": 6712,
     "asyncio": 411,
-    "parametrize": 195,
+    "parametrize": 200,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -131,6 +131,7 @@
       "tests/unit/gpt_trader/app/config/test_defaults.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
+      "tests/unit/gpt_trader/app/config/test_profile_loader_session_times.py",
       "tests/unit/gpt_trader/app/config/test_validation.py",
       "tests/unit/gpt_trader/app/config/test_validation_rules.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
@@ -205,12 +206,15 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
@@ -546,6 +550,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
@@ -3020,7 +3025,7 @@
     "tests/unit/gpt_trader/app/config/test_profile_loader.py": [
       {
         "name": "TestProfileLoader::test_load_from_yaml_file",
-        "line": 28,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -3029,7 +3034,7 @@
       },
       {
         "name": "TestProfileLoader::test_fallback_to_hardcoded_defaults",
-        "line": 68,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -3038,7 +3043,7 @@
       },
       {
         "name": "TestProfileLoader::test_hardcoded_defaults_exist_for_all_profiles",
-        "line": 81,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -3047,7 +3052,7 @@
       },
       {
         "name": "TestProfileLoader::test_profile_yaml_files_are_registered_profiles",
-        "line": 92,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -3056,7 +3061,7 @@
       },
       {
         "name": "TestProfileLoader::test_observe_profile_is_read_only_live_data_shape",
-        "line": 99,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -3065,7 +3070,7 @@
       },
       {
         "name": "TestProfileLoader::test_logs_payload_on_yaml_parse_error",
-        "line": 108,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -3074,7 +3079,7 @@
       },
       {
         "name": "TestProfileLoader::test_logs_payload_when_profile_missing",
-        "line": 134,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -3083,7 +3088,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_minimal",
-        "line": 156,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -3092,7 +3097,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_full",
-        "line": 168,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -3101,7 +3106,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_uses_trading_execution_when_top_level_execution_missing",
-        "line": 221,
+        "line": 224,
         "markers": [
           "unit"
         ],
@@ -3110,7 +3115,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_get_env_defaults_for_unknown_profile_uses_prod_defaults",
-        "line": 248,
+        "line": 251,
         "markers": [
           "unit"
         ],
@@ -3119,7 +3124,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_is_dev_profile",
-        "line": 268,
+        "line": 271,
         "markers": [
           "parametrize",
           "unit"
@@ -3129,7 +3134,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_registry_lookup_is_case_insensitive",
-        "line": 271,
+        "line": 274,
         "markers": [
           "unit"
         ],
@@ -3138,7 +3143,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_cli_profile_wins",
-        "line": 280,
+        "line": 283,
         "markers": [
           "unit"
         ],
@@ -3147,7 +3152,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_file_profile_overrides_env",
-        "line": 291,
+        "line": 294,
         "markers": [
           "unit"
         ],
@@ -3156,7 +3161,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_env_profile_overrides_default",
-        "line": 302,
+        "line": 305,
         "markers": [
           "unit"
         ],
@@ -3165,7 +3170,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_falls_back_to_default",
-        "line": 313,
+        "line": 316,
         "markers": [
           "unit"
         ],
@@ -3174,7 +3179,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_blank_values_are_ignored",
-        "line": 324,
+        "line": 327,
         "markers": [
           "unit"
         ],
@@ -3183,7 +3188,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_env_helper_uses_bot_profile_when_primary_is_whitespace",
-        "line": 335,
+        "line": 338,
         "markers": [
           "unit"
         ],
@@ -3265,6 +3270,51 @@
         ],
         "docstring": "Test that all profiles can be loaded.",
         "class": "TestLoadProfile"
+      }
+    ],
+    "tests/unit/gpt_trader/app/config/test_profile_loader_session_times.py": [
+      {
+        "name": "test_loader_invalid_session_time_re_raises_with_field_path",
+        "line": 19,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_yaml_rejects_invalid_session_times",
+        "line": 53,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_yaml_preserves_explicit_null_session_times",
+        "line": 70,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_yaml_accepts_documented_session_time_shapes",
+        "line": 92,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_yaml_rejects_non_contract_session_time_shapes",
+        "line": 116,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/app/config/test_validation.py": [
@@ -9109,6 +9159,48 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py": [
+      {
+        "name": "test_closeout_record_and_show_for_filled_idea",
+        "line": 135,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_record_accepts_unavailable_profit_loss_reason",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_record_rejects_non_terminal_idea",
+        "line": 236,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_record_requires_profit_loss_or_unavailable_reason",
+        "line": 266,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_show_without_attribution_is_successful_noop",
+        "line": 295,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py": [
       {
         "name": "test_futures_preview_and_approval_follow_budget_leverage_flag",
@@ -9218,6 +9310,64 @@
         "line": 74,
         "markers": [
           "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py": [
+      {
+        "name": "test_propose_baseline_persists_generated_proposal",
+        "line": 93,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_no_signal_is_noop",
+        "line": 118,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_duplicate_decision_fails_without_extra_audit",
+        "line": 134,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_rejects_duplicate_generated_decisions_before_writes",
+        "line": 154,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_rolls_back_batch_when_later_write_fails",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_malformed_snapshot_returns_invalid_argument",
+        "line": 211,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_json_output_includes_approval_preview_warnings",
+        "line": 229,
+        "markers": [
           "unit"
         ],
         "docstring": ""
@@ -9343,6 +9493,98 @@
       {
         "name": "test_help_lists_ideas_subcommands",
         "line": 221,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py": [
+      {
+        "name": "test_replay_baseline_text_success_reports_replay_summary",
+        "line": 103,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_malformed_input_returns_invalid_argument",
+        "line": 118,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_rejects_unsupported_granularity",
+        "line": 133,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_preserves_json_number_precision",
+        "line": 150,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_rejects_semantically_invalid_ohlcv_rows",
+        "line": 185,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_rejects_non_positive_ohlc_prices",
+        "line": 204,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_default_history_uses_largest_window",
+        "line": 221,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_rejects_custom_min_history_below_largest_window",
+        "line": 252,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_help_documents_required_flags_and_read_only_contract",
+        "line": 270,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_no_idea_replay_is_successful_noop",
+        "line": 283,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_replay_baseline_json_output_returns_replay_report",
+        "line": 300,
         "markers": [
           "unit"
         ],
@@ -33301,6 +33543,24 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py": [
+      {
+        "name": "test_propose_batch_rolls_back_partial_record_when_save_fails",
+        "line": 14,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_batch_surfaces_rollback_delete_failure",
+        "line": 50,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py": [
       {
         "name": "test_record_closeout_attribution_for_filled_idea",
@@ -41310,7 +41570,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_system.py": [
       {
         "name": "TestCheckPythonVersion::test_passes_on_python_312_or_higher",
-        "line": 23,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -41319,7 +41579,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_passes_on_current_python",
-        "line": 35,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -41328,7 +41588,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_logs_python_version",
-        "line": 43,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -41337,7 +41597,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_version_check_logic",
-        "line": 51,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -41346,7 +41606,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_prints_section_header",
-        "line": 57,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -41355,7 +41615,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_passes_with_plenty_of_space",
-        "line": 75,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -41364,7 +41624,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_warns_with_low_space",
-        "line": 94,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -41373,7 +41633,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_fails_with_critical_space",
-        "line": 113,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -41382,7 +41642,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_handles_exception",
-        "line": 132,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -41391,7 +41651,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_passes_with_reasonable_time_no_credentials",
-        "line": 168,
+        "line": 172,
         "markers": [
           "unit"
         ],
@@ -41399,8 +41659,44 @@
         "class": "TestCheckSystemTime"
       },
       {
+        "name": "TestCheckSystemTime::test_passes_with_credentialed_server_time",
+        "line": 188,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
+        "name": "TestCheckSystemTime::test_fails_closed_when_credentialed_time_client_raises",
+        "line": 209,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
+        "name": "TestCheckSystemTime::test_fails_closed_when_credentialed_time_response_missing_iso",
+        "line": 232,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
+        "name": "TestCheckSystemTime::test_explicit_remote_skip_preserves_local_time_sanity_path",
+        "line": 252,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
         "name": "TestCheckSystemTime::test_fails_with_unreasonable_time",
-        "line": 184,
+        "line": 273,
         "markers": [
           "unit"
         ],
@@ -41409,7 +41705,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_handles_exception",
-        "line": 201,
+        "line": 290,
         "markers": [
           "unit"
         ],
@@ -41418,7 +41714,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_prints_section_header",
-        "line": 213,
+        "line": 302,
         "markers": [
           "unit"
         ],

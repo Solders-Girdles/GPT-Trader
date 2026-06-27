@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import time
 from decimal import Decimal
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -215,6 +216,8 @@ class TestProfileSchema:
         assert schema.risk.max_leverage == 5
         assert schema.risk.daily_loss_limit_pct == 0.1
         assert schema.execution.time_in_force == "FOK"
+        assert schema.session.start_time == time(9, 0)
+        assert schema.session.end_time == time(17, 0)
         assert schema.session.trading_days == ["monday", "wednesday", "friday"]
         assert schema.monitoring.update_interval == 120
 

@@ -24,17 +24,17 @@ class SymbolValidator(Validator):
             raise ValidationError(f"{field_name} must be a string", field=field_name, value=value)
 
         # Normalize to uppercase
-        value = value.upper()
+        normalized_value: str = value.upper()
 
         # Allow simple tickers or hyphenated pairs/suffixes (e.g., BTC-USD, BTC-PERP)
-        if not re.match(r"^[A-Z0-9]{1,10}(-[A-Z0-9]{2,10})?$", value):
+        if not re.match(r"^[A-Z0-9]{1,10}(-[A-Z0-9]{2,10})?$", normalized_value):
             raise ValidationError(
                 f"{field_name} must be a valid symbol (e.g., AAPL, BTC-USD, BTC-PERP)",
                 field=field_name,
-                value=value,
+                value=normalized_value,
             )
 
-        return value
+        return normalized_value
 
 
 class StrategyNameValidator(Validator):

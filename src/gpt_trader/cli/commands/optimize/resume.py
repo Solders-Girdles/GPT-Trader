@@ -181,10 +181,8 @@ def execute(args: Namespace) -> CliResponse | int:
         logger.error(f"Failed to create objective: {e}")
         return 1
 
-    # Create study manager with storage URL to load existing study
-    study_manager = OptimizationStudyManager(opt_config)
-
     try:
+        study_manager = OptimizationStudyManager(opt_config)
         study = study_manager.create_or_load_study()
     except Exception as e:
         if output_format == "json":

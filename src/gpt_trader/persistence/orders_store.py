@@ -255,7 +255,7 @@ class OrdersStore:
             check_same_thread=False,
             isolation_level=None,  # Autocommit mode
         )
-        new_holder: _ConnectionHolder | None = None
+        cleanup_holder: _ConnectionHolder | None = None
         try:
             connection.execute("PRAGMA journal_mode=WAL")
             connection.execute("PRAGMA synchronous=NORMAL")
@@ -263,31 +263,32 @@ class OrdersStore:
             connection.row_factory = sqlite3.Row
 
             retry_connection = False
-            new_holder = _ConnectionHolder(self, connection)
+            connection_holder = _ConnectionHolder(self, connection)
+            cleanup_holder = connection_holder
             with self._connection_lock:
                 if generation != self._connection_generation:
                     retry_connection = True
                 else:
-                    self._connections[id(new_holder)] = new_holder
-                    self._local.connection_holder = new_holder
+                    self._connections[id(connection_holder)] = connection_holder
+                    self._local.connection_holder = connection_holder
                     self._local.connection_generation = generation
 
             if retry_connection:
-                new_holder.close()
+                connection_holder.close()
                 return self._get_connection()
 
-            if new_holder.closed or generation != self._connection_generation:
-                if getattr(self._local, "connection_holder", None) is new_holder:
+            if connection_holder.closed or generation != self._connection_generation:
+                if getattr(self._local, "connection_holder", None) is connection_holder:
                     del self._local.connection_holder
                 if hasattr(self._local, "connection_generation"):
                     del self._local.connection_generation
-                new_holder.close()
+                connection_holder.close()
                 return self._get_connection()
 
             return connection
         except Exception:
-            if new_holder is not None:
-                new_holder.close()
+            if cleanup_holder is not None:
+                cleanup_holder.close()
             else:
                 with suppress(sqlite3.Error):
                     connection.close()

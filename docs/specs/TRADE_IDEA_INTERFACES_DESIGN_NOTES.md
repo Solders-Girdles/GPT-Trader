@@ -31,12 +31,15 @@ reject, request-changes, expire, resubmit, mark-submitted, mark-filled, budget,
 audit, and report. It also exposes the read-only Stage 1 baseline calibration
 surface, `gpt-trader ideas replay baseline`, which parses a local candle fixture
 and formats `TradeIdeaReplayRunner` / `ReplayReport` output without using
-`TradeIdeaService` storage. The TUI `IdeasReviewScreen` is the implemented human
-review surface: it lists proposed ideas, renders record details, previews policy
-violations, and records approve, reject, request-changes, and expire decisions
-through `TradeIdeaService`. MCP or other remote surfaces remain future work. The
-service docstring still states the adapter boundary explicitly: *"interfaces such
-as CLI, TUI, or MCP servers must stay thin adapters over these methods."*
+`TradeIdeaService` storage. `ideas list` and the TUI review queue share
+`TradeIdeaService.list_view_result(TradeIdeaListQuery(...))` for filters,
+sorting, and pagination metadata. The TUI `IdeasReviewScreen` is the
+implemented human review surface: it lists proposed ideas, applies state and
+instrument filters, renders record details, previews policy violations, and
+records approve, reject, request-changes, and expire decisions through
+`TradeIdeaService`. MCP or other remote surfaces remain future work. The service
+docstring still states the adapter boundary explicitly: *"interfaces such as
+CLI, TUI, or MCP servers must stay thin adapters over these methods."*
 
 These notes preserve the interface decisions that shaped the implemented CLI and
 TUI surfaces. They are not a request to re-promote the TUI review workstream.

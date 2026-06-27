@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6848,
+    "total_tests": 6852,
     "total_files": 807,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6683,
+    "unit": 6687,
     "asyncio": 411,
     "parametrize": 198,
     "endpoints": 83,
@@ -41356,7 +41356,7 @@
     "tests/unit/gpt_trader/preflight/test_checks_system.py": [
       {
         "name": "TestCheckPythonVersion::test_passes_on_python_312_or_higher",
-        "line": 23,
+        "line": 25,
         "markers": [
           "unit"
         ],
@@ -41365,7 +41365,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_passes_on_current_python",
-        "line": 35,
+        "line": 37,
         "markers": [
           "unit"
         ],
@@ -41374,7 +41374,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_logs_python_version",
-        "line": 43,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -41383,7 +41383,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_version_check_logic",
-        "line": 51,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -41392,7 +41392,7 @@
       },
       {
         "name": "TestCheckPythonVersion::test_prints_section_header",
-        "line": 57,
+        "line": 59,
         "markers": [
           "unit"
         ],
@@ -41401,7 +41401,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_passes_with_plenty_of_space",
-        "line": 75,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -41410,7 +41410,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_warns_with_low_space",
-        "line": 94,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -41419,7 +41419,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_fails_with_critical_space",
-        "line": 113,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -41428,7 +41428,7 @@
       },
       {
         "name": "TestCheckDiskSpace::test_handles_exception",
-        "line": 132,
+        "line": 134,
         "markers": [
           "unit"
         ],
@@ -41437,7 +41437,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_passes_with_reasonable_time_no_credentials",
-        "line": 168,
+        "line": 172,
         "markers": [
           "unit"
         ],
@@ -41445,8 +41445,44 @@
         "class": "TestCheckSystemTime"
       },
       {
+        "name": "TestCheckSystemTime::test_passes_with_credentialed_server_time",
+        "line": 188,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
+        "name": "TestCheckSystemTime::test_fails_closed_when_credentialed_time_client_raises",
+        "line": 209,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
+        "name": "TestCheckSystemTime::test_fails_closed_when_credentialed_time_response_missing_iso",
+        "line": 232,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
+        "name": "TestCheckSystemTime::test_explicit_remote_skip_preserves_local_time_sanity_path",
+        "line": 252,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
         "name": "TestCheckSystemTime::test_fails_with_unreasonable_time",
-        "line": 184,
+        "line": 273,
         "markers": [
           "unit"
         ],
@@ -41455,7 +41491,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_handles_exception",
-        "line": 201,
+        "line": 290,
         "markers": [
           "unit"
         ],
@@ -41464,7 +41500,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_prints_section_header",
-        "line": 213,
+        "line": 302,
         "markers": [
           "unit"
         ],

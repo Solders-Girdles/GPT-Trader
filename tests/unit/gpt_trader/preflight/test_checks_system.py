@@ -16,6 +16,8 @@ from gpt_trader.preflight.checks.system import (
 )
 from gpt_trader.preflight.core import PreflightCheck
 
+FAKE_COINBASE_PRIVATE_KEY = "test-private-key"
+
 
 class TestCheckPythonVersion:
     """Test Python version check."""
@@ -155,6 +157,8 @@ class TestCheckSystemTime:
     @pytest.fixture
     def cleared_env(self, monkeypatch: pytest.MonkeyPatch) -> None:
         for key in (
+            "COINBASE_PREFLIGHT_FORCE_REMOTE",
+            "COINBASE_PREFLIGHT_SKIP_REMOTE",
             "COINBASE_CREDENTIALS_FILE",
             "COINBASE_PROD_CDP_API_KEY",
             "COINBASE_CDP_API_KEY",
@@ -179,6 +183,91 @@ class TestCheckSystemTime:
         result = check_system_time(checker)
 
         assert result is True
+        assert any("seems reasonable" in w for w in checker.warnings)
+
+    def test_passes_with_credentialed_server_time(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        mock_datetime: MagicMock,
+        cleared_env: None,
+    ) -> None:
+        checker = PreflightCheck(profile="dev")
+        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/abc/apiKeys/xyz")
+        monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", FAKE_COINBASE_PRIVATE_KEY)
+        mock_now = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        mock_datetime.now.return_value = mock_now
+        client = MagicMock()
+        client.get_time.return_value = {"iso": "2025-06-15T12:00:00Z"}
+        monkeypatch.setattr(system_checks, "_build_coinbase_time_client", lambda **_: client)
+
+        result = check_system_time(checker)
+
+        assert result is True
+        assert any("synchronized" in s for s in checker.successes)
+
+    def test_fails_closed_when_credentialed_time_client_raises(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        mock_datetime: MagicMock,
+        cleared_env: None,
+    ) -> None:
+        checker = PreflightCheck(profile="dev")
+        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/abc/apiKeys/xyz")
+        monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", FAKE_COINBASE_PRIVATE_KEY)
+        mock_datetime.now.return_value = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+
+        def raise_client_error(**_: str) -> object:
+            raise RuntimeError("network unavailable")
+
+        monkeypatch.setattr(system_checks, "_build_coinbase_time_client", raise_client_error)
+
+        result = check_system_time(checker)
+
+        assert result is False
+        assert any("Cannot verify Coinbase server time" in e for e in checker.errors)
+        assert not any("seems reasonable" in w for w in checker.warnings)
+
+    def test_fails_closed_when_credentialed_time_response_missing_iso(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        mock_datetime: MagicMock,
+        cleared_env: None,
+    ) -> None:
+        checker = PreflightCheck(profile="dev")
+        monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/abc/apiKeys/xyz")
+        monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", FAKE_COINBASE_PRIVATE_KEY)
+        mock_datetime.now.return_value = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        client = MagicMock()
+        client.get_time.return_value = {"epoch": 1_750_000_000}
+        monkeypatch.setattr(system_checks, "_build_coinbase_time_client", lambda **_: client)
+
+        result = check_system_time(checker)
+
+        assert result is False
+        assert any("missing 'iso'" in e for e in checker.errors)
+
+    def test_explicit_remote_skip_preserves_local_time_sanity_path(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+        mock_datetime: MagicMock,
+        cleared_env: None,
+    ) -> None:
+        checker = PreflightCheck(profile="dev")
+        monkeypatch.setenv("COINBASE_PREFLIGHT_SKIP_REMOTE", "1")
+        monkeypatch.setenv("COINBASE_CDP_API_KEY", "organizations/abc/apiKeys/xyz")
+        monkeypatch.setenv("COINBASE_CDP_PRIVATE_KEY", FAKE_COINBASE_PRIVATE_KEY)
+        mock_datetime.now.return_value = datetime(2025, 6, 15, 12, 0, 0, tzinfo=timezone.utc)
+        client_factory = MagicMock()
+        monkeypatch.setattr(system_checks, "_build_coinbase_time_client", client_factory)
+
+        result = check_system_time(checker)
+
+        assert result is True
+        client_factory.assert_not_called()
+        assert any("Skipping Coinbase server time verification" in w for w in checker.warnings)
         assert any("seems reasonable" in w for w in checker.warnings)
 
     def test_fails_with_unreasonable_time(

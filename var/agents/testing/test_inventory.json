@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6892,
+    "total_tests": 6893,
     "total_files": 817,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6727,
+    "unit": 6728,
     "asyncio": 411,
     "parametrize": 201,
     "endpoints": 83,
@@ -33776,7 +33776,15 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout_query.py": [
       {
         "name": "test_query_closeout_records_excludes_orphaned_log_records",
-        "line": 51,
+        "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_query_closeout_records_scoped_decision_ignores_unrelated_tampered_closeout",
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -33784,7 +33792,7 @@
       },
       {
         "name": "test_query_closeout_records_rejects_tampered_current_attribution",
-        "line": 82,
+        "line": 118,
         "markers": [
           "parametrize",
           "unit"

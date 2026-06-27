@@ -24,8 +24,12 @@ def service(tmp_path: Path) -> TradeIdeaService:
     )
 
 
-def _record_expired_closeout(service: TradeIdeaService) -> CloseoutAttribution:
-    idea = build_trade_idea()
+def _record_expired_closeout(
+    service: TradeIdeaService,
+    *,
+    decision_id: str = "trade-20260612-001",
+) -> CloseoutAttribution:
+    idea = build_trade_idea(decision_id=decision_id)
     service.propose(idea, actor_id="idea-generator-v1")
     service.expire(idea.decision_id)
     return service.record_closeout_attribution(
@@ -69,6 +73,38 @@ def test_query_closeout_records_excludes_orphaned_log_records(
     assert page.total_count == 1
     assert orphan_page.items == ()
     assert orphan_page.total_count == 0
+
+
+def test_query_closeout_records_scoped_decision_ignores_unrelated_tampered_closeout(
+    service: TradeIdeaService,
+) -> None:
+    healthy_closeout = _record_expired_closeout(
+        service,
+        decision_id="trade-healthy-closeout",
+    )
+    tampered_closeout = _record_expired_closeout(
+        service,
+        decision_id="trade-tampered-closeout",
+    )
+    tampered_payload = tampered_closeout.to_dict()
+    tampered_payload["record_hash"] = "stale-record-hash"
+    service.closeout_log.path.write_text(
+        "\n".join(
+            (
+                json.dumps(healthy_closeout.to_dict()),
+                json.dumps(tampered_payload),
+            )
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    page = service.query_closeout_records(decision_id=healthy_closeout.decision_id)
+
+    assert page.items == (healthy_closeout,)
+    assert page.total_count == 1
+    with pytest.raises(CloseoutAttributionIntegrityError, match="record_hash expected"):
+        service.query_closeout_records()
 
 
 @pytest.mark.parametrize(

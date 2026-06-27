@@ -669,7 +669,14 @@ class TradeIdeaService:
         requested_actor_type = ActorType(actor_type).value if actor_type is not None else None
         requested_resolution = CloseoutResolution(resolution) if resolution is not None else None
         records: list[CloseoutAttribution] = []
-        for view in self.list_views():
+        if decision_id is not None:
+            try:
+                views = [self.get(decision_id)]
+            except UnknownTradeIdeaError:
+                views = []
+        else:
+            views = self.list_views()
+        for view in views:
             record = view.closeout_attribution
             if record is None:
                 continue

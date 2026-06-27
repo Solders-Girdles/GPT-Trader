@@ -41,6 +41,7 @@ from gpt_trader.features.trade_ideas import (
     is_safe_decision_id,
     resolve_trade_idea_actor_id,
 )
+from gpt_trader.features.trade_ideas.replay import _granularity_duration
 from gpt_trader.features.trade_ideas.report import (
     build_trade_idea_track_record_report,
     format_trade_idea_track_record_report,
@@ -624,6 +625,14 @@ def _default_replay_min_history(config: BaselineProposerConfig) -> int:
     return max(config.short_window, config.long_window) + config.crossover_lookback
 
 
+def _validate_replay_granularity(granularity: str) -> None:
+    if _granularity_duration(granularity) is None:
+        raise CandleInputError(
+            f"Unsupported replay granularity: {granularity}",
+            field="granularity",
+        )
+
+
 def _handle_propose(args: Namespace) -> CliResponse:
     command = "ideas propose"
     try:
@@ -727,6 +736,7 @@ def _handle_report(args: Namespace) -> CliResponse:
 def _handle_replay_baseline(args: Namespace) -> CliResponse:
     command = "ideas replay baseline"
     try:
+        _validate_replay_granularity(args.granularity)
         candles = _load_candle_fixture(args.file)
         proposer_config = BaselineProposerConfig(
             short_window=args.short_window,

@@ -130,6 +130,23 @@ def test_replay_baseline_malformed_input_returns_invalid_argument(
     assert response["errors"][0]["details"]["field"] == "candles[0].open"
 
 
+def test_replay_baseline_rejects_unsupported_granularity(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    fixture = _write_fixture(tmp_path / "candles.json", _baseline_hit_fixture())
+    argv = _baseline_args(fixture)
+    granularity_index = argv.index("--granularity") + 1
+    argv[granularity_index] = "BAD"
+
+    exit_code, response = _run_json(capsys, argv)
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert response["errors"][0]["details"]["field"] == "granularity"
+    assert "Unsupported replay granularity: BAD" in response["errors"][0]["message"]
+
+
 def test_replay_baseline_preserves_json_number_precision(tmp_path: Path) -> None:
     fixture = tmp_path / "precise-candles.json"
     fixture.write_text(

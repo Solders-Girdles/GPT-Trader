@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6866,
+    "total_tests": 6867,
     "total_files": 809,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6701,
+    "unit": 6702,
     "asyncio": 411,
     "parametrize": 200,
     "endpoints": 83,
@@ -9457,7 +9457,7 @@
         "docstring": ""
       },
       {
-        "name": "test_replay_baseline_preserves_json_number_precision",
+        "name": "test_replay_baseline_rejects_unsupported_granularity",
         "line": 133,
         "markers": [
           "unit"
@@ -9465,8 +9465,16 @@
         "docstring": ""
       },
       {
+        "name": "test_replay_baseline_preserves_json_number_precision",
+        "line": 150,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_replay_baseline_rejects_semantically_invalid_ohlcv_rows",
-        "line": 168,
+        "line": 185,
         "markers": [
           "parametrize",
           "unit"
@@ -9475,7 +9483,7 @@
       },
       {
         "name": "test_replay_baseline_rejects_non_positive_ohlc_prices",
-        "line": 187,
+        "line": 204,
         "markers": [
           "parametrize",
           "unit"
@@ -9484,7 +9492,7 @@
       },
       {
         "name": "test_replay_baseline_default_history_uses_largest_window",
-        "line": 204,
+        "line": 221,
         "markers": [
           "unit"
         ],
@@ -9492,7 +9500,7 @@
       },
       {
         "name": "test_replay_baseline_help_documents_required_flags_and_read_only_contract",
-        "line": 235,
+        "line": 252,
         "markers": [
           "unit"
         ],
@@ -9500,7 +9508,7 @@
       },
       {
         "name": "test_replay_baseline_no_idea_replay_is_successful_noop",
-        "line": 248,
+        "line": 265,
         "markers": [
           "unit"
         ],
@@ -9508,7 +9516,7 @@
       },
       {
         "name": "test_replay_baseline_json_output_returns_replay_report",
-        "line": 265,
+        "line": 282,
         "markers": [
           "unit"
         ],

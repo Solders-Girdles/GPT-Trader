@@ -206,7 +206,7 @@ def register(subparsers: Any) -> None:
         "--out",
         "--output",
         "-o",
-        dest="output",
+        dest="ticket_output",
         type=Path,
         help="Write the ticket artifact to this path instead of stdout",
     )
@@ -1088,6 +1088,13 @@ def _handle_export_ticket(args: Namespace) -> CliResponse | RawCliOutput:
             client_order_id=args.client_order_id,
         )
         ticket_json = canonical_ticket_json(payload)
+        ticket_output = getattr(args, "ticket_output", None)
+        if ticket_output is not None:
+            ticket_output.parent.mkdir(parents=True, exist_ok=True)
+            ticket_output.write_text(ticket_json, encoding="utf-8")
+            if _output_format(args) == "text":
+                return RawCliOutput(_ticket_export_text(payload, written_to=ticket_output) + "\n")
+            return RawCliOutput("")
         if _output_format(args) == "text":
             return RawCliOutput(_ticket_export_text(payload) + "\n")
         return RawCliOutput(ticket_json)
@@ -1097,7 +1104,7 @@ def _handle_export_ticket(args: Namespace) -> CliResponse | RawCliOutput:
             args,
             CliErrorCode.OPERATION_FAILED,
             f"Could not write ticket artifact: {error}",
-            details={"path": str(getattr(args, "output", ""))},
+            details={"path": str(getattr(args, "ticket_output", ""))},
         )
     except Exception as error:
         return _mapped_error(command, args, error)

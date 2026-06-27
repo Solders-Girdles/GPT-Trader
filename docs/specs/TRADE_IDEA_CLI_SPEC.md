@@ -263,9 +263,10 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
     `CliResponse` envelope, so repeated exports of the same audited state are
     byte-identical.
   - `--out PATH` / `--output PATH` / `-o PATH` writes that same canonical JSON
-    artifact to a file instead of stdout.
-  - `--format text` prints a compact human summary; errors still use the normal
-    CLI error response conventions.
+    artifact to a file instead of stdout. With default JSON output, successful
+    file writes are quiet; with `--format text`, the summary includes a
+    `written_to: PATH` confirmation line.
+  - Errors still use the normal CLI error response conventions.
 - State guard: export succeeds only for `approved`, `submitted`, `filled`,
   `cancelled`, or `expired` ideas that have an approval event. It fails with
   `VALIDATION_ERROR` for unapproved states such as `proposed`,

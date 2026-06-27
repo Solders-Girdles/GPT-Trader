@@ -197,3 +197,51 @@ def test_export_ticket_writes_raw_json_to_out_path(
     ticket = json.loads(output_path.read_text(encoding="utf-8"))
     assert ticket["decision_id"] == payload["decision_id"]
     assert ticket["venue_request"]["venue"] == "coinbase"
+
+
+def test_export_ticket_text_out_path_confirms_written_file(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "ideas"
+    output_path = tmp_path / "tickets" / "trade-ticket.json"
+    payload = _idea_payload(decision_id="trade-export-text-file")
+    _propose_and_approve(capsys, root, payload)
+
+    exit_code, output = _run(
+        capsys,
+        [
+            *_export_args(root, payload["decision_id"]),
+            "--format",
+            "text",
+            "--out",
+            str(output_path),
+        ],
+    )
+
+    assert exit_code == 0
+    assert "ideas export-ticket OK" in output
+    assert f"written_to: {output_path}" in output
+    ticket = json.loads(output_path.read_text(encoding="utf-8"))
+    assert ticket["decision_id"] == payload["decision_id"]
+
+
+def test_export_ticket_out_path_write_failure_returns_operation_failed(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    root = tmp_path / "ideas"
+    output_path = tmp_path / "ticket-output-directory"
+    output_path.mkdir()
+    payload = _idea_payload(decision_id="trade-export-write-failure")
+    _propose_and_approve(capsys, root, payload)
+
+    exit_code, response = _run_json(
+        capsys,
+        [*_export_args(root, payload["decision_id"]), "--out", str(output_path)],
+    )
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.OPERATION_FAILED.value
+    assert "Could not write ticket artifact" in response["errors"][0]["message"]
+    assert response["errors"][0]["details"]["path"] == str(output_path)

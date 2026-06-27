@@ -55,6 +55,10 @@ if TYPE_CHECKING:
 logger = get_logger(__name__, component="profile_loader")
 
 
+class ProfileValidationError(ValueError):
+    """Raised when profile YAML contains invalid configuration values."""
+
+
 @dataclass
 class TradingConfig:
     """Trading section of profile configuration."""
@@ -110,6 +114,24 @@ class SessionConfig:
     trading_days: list[str] = field(
         default_factory=lambda: ["monday", "tuesday", "wednesday", "thursday", "friday"]
     )
+
+
+def _parse_session_time(
+    session_data: Mapping[str, Any], field_name: str, profile_name: str
+) -> time | None:
+    if field_name not in session_data:
+        return None
+
+    value = session_data[field_name]
+    if isinstance(value, time):
+        return value
+    try:
+        return time.fromisoformat(value)
+    except (TypeError, ValueError) as exc:
+        raise ProfileValidationError(
+            f"session.{field_name} for profile '{profile_name}' must be a valid "
+            f"HH:MM or HH:MM:SS time string; got {value!r}"
+        ) from exc
 
 
 @dataclass
@@ -193,18 +215,8 @@ class ProfileSchema:
         )
 
         # Parse session config
-        start_time = None
-        end_time = None
-        if "start_time" in session_data:
-            try:
-                start_time = time.fromisoformat(session_data["start_time"])
-            except (ValueError, TypeError):
-                pass
-        if "end_time" in session_data:
-            try:
-                end_time = time.fromisoformat(session_data["end_time"])
-            except (ValueError, TypeError):
-                pass
+        start_time = _parse_session_time(session_data, "start_time", profile_name)
+        end_time = _parse_session_time(session_data, "end_time", profile_name)
 
         session = SessionConfig(
             start_time=start_time,
@@ -598,6 +610,21 @@ class ProfileLoader:
                 )
 
                 return schema
+            except ProfileValidationError as exc:
+                payload = profile_yaml_parse_error_payload(
+                    profile=profile.value,
+                    path=yaml_path,
+                    exception=exc,
+                )
+                logger.warning(
+                    "Failed to validate profile YAML",
+                    operation="profile_load",
+                    profile=profile.value,
+                    path=str(yaml_path),
+                    error=payload["reason"],
+                    details=payload,
+                )
+                raise
             except Exception as exc:
                 payload = profile_yaml_parse_error_payload(
                     profile=profile.value,
@@ -809,6 +836,7 @@ __all__ = [
     "ProfileLoader",
     "ProfileOverrideDecision",
     "ProfileOverrideSource",
+    "ProfileValidationError",
     "ProfileSchema",
     "ProfileRegistryEntry",
     "PROFILE_REGISTRY",

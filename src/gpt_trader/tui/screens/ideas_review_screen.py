@@ -9,7 +9,7 @@ does not place, modify, or cancel broker orders.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 
@@ -26,6 +26,8 @@ from gpt_trader.features.trade_ideas import (
     AuditEvent,
     PolicyViolationError,
     TradeIdea,
+    TradeIdeaListQuery,
+    TradeIdeaListSortKey,
     TradeIdeaService,
     TradeIdeaState,
     TradeIdeaView,
@@ -107,6 +109,49 @@ class ReasonModal(ModalScreen[str | None]):
         self.dismiss(None)
 
 
+class InstrumentFilterModal(ModalScreen[str | None]):
+    """Collect an optional instrument filter for the review queue."""
+
+    BINDINGS = [
+        Binding("escape", "cancel", "Cancel", show=True),
+        Binding("ctrl+s", "submit", "Apply", show=True),
+    ]
+
+    def __init__(self, *, current_value: str | None = None) -> None:
+        super().__init__()
+        self._current_value = current_value or ""
+
+    def compose(self) -> ComposeResult:
+        with Container(id="ideas-instrument-filter-modal"):
+            yield Label("Instrument Filter", classes="modal-title")
+            yield Input(
+                value=self._current_value,
+                placeholder="BTC-USD",
+                id="ideas-instrument-filter-input",
+            )
+            with Horizontal(classes="button-row"):
+                yield Button("Apply", id="ideas-instrument-filter-apply", variant="primary")
+                yield Button("Clear", id="ideas-instrument-filter-clear", variant="warning")
+                yield Button("Cancel", id="ideas-instrument-filter-cancel", variant="default")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "ideas-instrument-filter-cancel":
+            self.dismiss(None)
+            return
+        if event.button.id == "ideas-instrument-filter-clear":
+            self.dismiss("")
+            return
+        if event.button.id == "ideas-instrument-filter-apply":
+            self.action_submit()
+
+    def action_submit(self) -> None:
+        value = self.query_one("#ideas-instrument-filter-input", Input).value.strip()
+        self.dismiss(value)
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)
+
+
 class IdeasReviewScreen(Screen[None]):
     """Keyboard-first trade-idea review surface."""
 
@@ -116,6 +161,8 @@ class IdeasReviewScreen(Screen[None]):
         Binding("c", "review_action('request_changes')", "Changes", show=True),
         Binding("e", "review_action('expire')", "Expire", show=True),
         Binding("f", "cycle_filter", "Filter", show=True),
+        Binding("/", "instrument_filter", "Instrument", show=True),
+        Binding("F", "clear_filters", "Clear", show=True),
         Binding("r", "refresh", "Refresh", show=True),
         Binding("escape", "back", "Back", show=True),
     ]
@@ -139,6 +186,7 @@ class IdeasReviewScreen(Screen[None]):
         self._views: list[TradeIdeaView] = []
         self._selected_decision_id: str | None = None
         self._filter_index = 0
+        self._instrument_filter: str | None = None
 
     @property
     def reviewer_id(self) -> str:
@@ -183,7 +231,8 @@ class IdeasReviewScreen(Screen[None]):
 
     def refresh_views(self, *, notify: bool = True) -> None:
         try:
-            self._views = self._sorted_views(self.service.list_views())
+            result = self.service.list_view_result(self._list_query())
+            self._views = list(result.views)
         except ValidationError as error:
             self.notify(str(error), title="Ideas Review", severity="error", timeout=6)
             return
@@ -193,12 +242,24 @@ class IdeasReviewScreen(Screen[None]):
 
     def action_cycle_filter(self) -> None:
         self._filter_index = (self._filter_index + 1) % len(self.FILTERS)
-        self._render_queue()
+        self.refresh_views(notify=False)
         self.notify(
             f"Filter: {self._filter_label(self.FILTERS[self._filter_index])}",
             title="Ideas Review",
             timeout=2,
         )
+
+    def action_instrument_filter(self) -> None:
+        self.app.push_screen(
+            InstrumentFilterModal(current_value=self._instrument_filter),
+            callback=self._apply_instrument_filter,
+        )
+
+    def action_clear_filters(self) -> None:
+        self._filter_index = 0
+        self._instrument_filter = None
+        self.refresh_views(notify=False)
+        self.notify("Filters cleared", title="Ideas Review", timeout=2)
 
     def action_back(self) -> None:
         self.app.pop_screen()
@@ -279,8 +340,7 @@ class IdeasReviewScreen(Screen[None]):
     def _render_queue(self) -> None:
         table = self.query_one("#ideas-review-table", DataTable)
         table.clear()
-        visible = self._visible_views()
-        for view in visible:
+        for view in self._views:
             idea = view.idea
             table.add_row(
                 idea.decision_id,
@@ -293,10 +353,10 @@ class IdeasReviewScreen(Screen[None]):
             )
         self.query_one("#ideas-review-filter", Label).update(
             f"Filter: {self._filter_label(self.FILTERS[self._filter_index])} "
-            f"({len(visible)} of {len(self._views)})"
+            f"({len(self._views)} of {len(self._views)})"
         )
-        if visible:
-            visible_decision_ids = [view.idea.decision_id for view in visible]
+        if self._views:
+            visible_decision_ids = [view.idea.decision_id for view in self._views]
             if self._selected_decision_id not in visible_decision_ids:
                 self._selected_decision_id = visible_decision_ids[0]
             table.move_cursor(row=visible_decision_ids.index(self._selected_decision_id))
@@ -320,25 +380,11 @@ class IdeasReviewScreen(Screen[None]):
                 return view
         return None
 
-    def _visible_views(self) -> list[TradeIdeaView]:
-        active_filter = self.FILTERS[self._filter_index]
-        if active_filter is None:
-            return self._views
-        return [view for view in self._views if view.state is active_filter]
-
-    def _sorted_views(self, views: list[TradeIdeaView]) -> list[TradeIdeaView]:
-        state_rank = {
-            TradeIdeaState.PROPOSED: 0,
-            TradeIdeaState.NEEDS_CHANGES: 1,
-            TradeIdeaState.APPROVED: 2,
-        }
-        return sorted(
-            views,
-            key=lambda view: (
-                state_rank.get(view.state, 9),
-                view.idea.time_horizon.expires_at or datetime.max.replace(tzinfo=UTC),
-                view.idea.decision_id,
-            ),
+    def _list_query(self) -> TradeIdeaListQuery:
+        return TradeIdeaListQuery(
+            state=self.FILTERS[self._filter_index],
+            instrument=self._instrument_filter,
+            sort_by=TradeIdeaListSortKey.STATE,
         )
 
     def _detail_text(self, view: TradeIdeaView) -> str:
@@ -410,7 +456,21 @@ class IdeasReviewScreen(Screen[None]):
         ]
 
     def _filter_label(self, state: TradeIdeaState | None) -> str:
-        return "all" if state is None else state.value
+        label = "all" if state is None else state.value
+        if self._instrument_filter:
+            label = f"{label}; instrument={self._instrument_filter}"
+        return label
+
+    def _apply_instrument_filter(self, value: str | None) -> None:
+        if value is None:
+            return
+        self._instrument_filter = value.strip() or None
+        self.refresh_views(notify=False)
+        self.notify(
+            f"Filter: {self._filter_label(self.FILTERS[self._filter_index])}",
+            title="Ideas Review",
+            timeout=2,
+        )
 
     def _list_text(self, values: tuple[str, ...]) -> str:
         return ", ".join(values) if values else "none"

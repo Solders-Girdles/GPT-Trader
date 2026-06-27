@@ -199,6 +199,38 @@ async def test_filter_cycle_changes_visible_rows(service: TradeIdeaService) -> N
 
 
 @pytest.mark.asyncio
+async def test_instrument_filter_modal_applies_and_clears_summary(
+    service: TradeIdeaService,
+) -> None:
+    btc = build_trade_idea(decision_id="trade-20260612-btc", instrument="BTC-USD")
+    eth = build_trade_idea(decision_id="trade-20260612-eth", instrument="ETH-USD")
+    service.propose(btc, actor_id="idea-generator-v1")
+    service.propose(eth, actor_id="idea-generator-v1")
+
+    async with _app(service).run_test(size=(120, 36)) as pilot:
+        screen = await _push_ideas_screen(pilot)
+        table = screen.query_one("#ideas-review-table")
+        assert table.row_count == 2
+
+        await pilot.press("/")
+        await pilot.pause()
+        await pilot.click("#ideas-instrument-filter-input")
+        await pilot.press(*"ETH-USD")
+        await pilot.press("ctrl+s")
+        await pilot.pause()
+
+        assert table.row_count == 1
+        assert "instrument=ETH-USD" in _text(screen.query_one("#ideas-review-filter"))
+        assert eth.decision_id in _text(screen.query_one("#ideas-review-detail"))
+
+        await pilot.press("F")
+        await pilot.pause()
+
+        assert table.row_count == 2
+        assert "instrument=" not in _text(screen.query_one("#ideas-review-filter"))
+
+
+@pytest.mark.asyncio
 async def test_refresh_preserves_selected_visible_idea(service: TradeIdeaService) -> None:
     first = build_trade_idea(decision_id="trade-20260612-001")
     selected = build_trade_idea(decision_id="trade-20260612-002")

@@ -124,6 +124,94 @@ def test_reconcile_paper_fills_apply_records_submission_and_fill(
     assert TradeIdeaService(ideas_root).get(decision_id).state is TradeIdeaState.FILLED
 
 
+def test_reconcile_paper_fills_uses_runtime_event_store_root_when_omitted(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ideas_root = tmp_path / "ideas"
+    runtime_root = tmp_path / "runtime"
+    event_store_root = runtime_root / "runtime_data" / "paper"
+    decision_id = _seed_approved_idea(ideas_root)
+    _append_fill_event(event_store_root, decision_id)
+    monkeypatch.delenv("EVENT_STORE_ROOT", raising=False)
+    monkeypatch.setenv("GPT_TRADER_RUNTIME_ROOT", str(runtime_root))
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "reconcile-paper-fills",
+            *_root_args(ideas_root),
+            "--profile",
+            "paper",
+        ],
+    )
+
+    assert exit_code == 0
+    assert response["data"]["matched_count"] == 1
+    assert response["data"]["event_store_root"] == str(event_store_root)
+
+
+def test_reconcile_paper_fills_uses_event_store_root_env_when_omitted(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ideas_root = tmp_path / "ideas"
+    configured_event_store_root = tmp_path / "env-events"
+    event_store_root = configured_event_store_root / "runtime_data" / "paper"
+    decision_id = _seed_approved_idea(ideas_root)
+    _append_fill_event(event_store_root, decision_id)
+    monkeypatch.setenv("GPT_TRADER_RUNTIME_ROOT", str(tmp_path / "runtime"))
+    monkeypatch.setenv("EVENT_STORE_ROOT", str(configured_event_store_root))
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "reconcile-paper-fills",
+            *_root_args(ideas_root),
+            "--profile",
+            "paper",
+        ],
+    )
+
+    assert exit_code == 0
+    assert response["data"]["matched_count"] == 1
+    assert response["data"]["event_store_root"] == str(event_store_root)
+
+
+def test_reconcile_paper_fills_prefers_explicit_event_store_root_over_runtime_env(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    ideas_root = tmp_path / "ideas"
+    explicit_event_store_root = tmp_path / "explicit-events"
+    decision_id = _seed_approved_idea(ideas_root)
+    _append_fill_event(explicit_event_store_root, decision_id)
+    monkeypatch.setenv("GPT_TRADER_RUNTIME_ROOT", str(tmp_path / "runtime"))
+    monkeypatch.setenv("EVENT_STORE_ROOT", str(tmp_path / "env-events"))
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "reconcile-paper-fills",
+            *_root_args(ideas_root),
+            "--profile",
+            "paper",
+            "--event-store-root",
+            str(explicit_event_store_root),
+        ],
+    )
+
+    assert exit_code == 0
+    assert response["data"]["matched_count"] == 1
+    assert response["data"]["event_store_root"] == str(explicit_event_store_root)
+
+
 def test_reconcile_paper_fills_rejects_live_profile_without_mutation(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

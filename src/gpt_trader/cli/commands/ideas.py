@@ -18,6 +18,8 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, cast
 
+from gpt_trader.app.config import BotConfig
+from gpt_trader.app.runtime import resolve_runtime_paths
 from gpt_trader.cli import options
 from gpt_trader.cli.response import CliError, CliErrorCode, CliResponse
 from gpt_trader.core import Candle
@@ -472,7 +474,7 @@ def register(subparsers: Any) -> None:
     reconcile_paper_fills.add_argument(
         "--event-store-root",
         type=Path,
-        help="Runtime EventStore root (default: runtime_data/<profile>)",
+        help="Runtime EventStore root (default: bot runtime path for profile)",
     )
     reconcile_paper_fills.add_argument(
         "--venue",
@@ -648,7 +650,11 @@ def _paper_reconciliation_event_store_root(args: Namespace, profile: str) -> Pat
     if configured_root is not None:
         return cast(Path, configured_root)
     profile_root = "dev" if profile == "mock" else profile
-    return Path("runtime_data") / profile_root
+    runtime_paths = resolve_runtime_paths(
+        config=BotConfig.from_env(),
+        profile=profile_root,
+    )
+    return runtime_paths.event_store_root
 
 
 def _output_format(args: Namespace) -> str:

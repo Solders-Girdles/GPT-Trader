@@ -207,11 +207,7 @@ class PaperFillReconciler:
         """Reconcile normalized paper fill events."""
         views = tuple(self._service.list_views())
         view_by_decision_id = {view.idea.decision_id: view for view in views}
-        recordable_views = tuple(
-            view
-            for view in views
-            if view.state in {TradeIdeaState.APPROVED, TradeIdeaState.SUBMITTED}
-        )
+        recordable_views = _recordable_views(views)
 
         matched: list[PaperFillReconciliationEntry] = []
         unmatched: list[PaperFillReconciliationEntry] = []
@@ -315,6 +311,7 @@ class PaperFillReconciler:
                 recorded_fill = True
                 final_state = view.state.value
                 view_by_decision_id[decision_id] = view
+                recordable_views = _recordable_views(view_by_decision_id.values())
 
             matched.append(
                 PaperFillReconciliationEntry(
@@ -398,6 +395,12 @@ def _match_client_order_id(
         if _client_order_id_contains_decision_id(client_order_id, decision_id)
     ]
     return matches[0] if len(matches) == 1 else None
+
+
+def _recordable_views(views: Iterable[TradeIdeaView]) -> tuple[TradeIdeaView, ...]:
+    return tuple(
+        view for view in views if view.state in {TradeIdeaState.APPROVED, TradeIdeaState.SUBMITTED}
+    )
 
 
 def _client_order_id_contains_decision_id(client_order_id: str, decision_id: str) -> bool:

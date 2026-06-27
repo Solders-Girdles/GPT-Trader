@@ -261,8 +261,11 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
     within the same 128-character validation bound as explicit ids)
 - Output:
   - Default success output is the raw canonical ticket JSON on stdout, not a
-    `CliResponse` envelope, so repeated exports of the same audited state are
-    byte-identical.
+    `CliResponse` envelope. Canonical JSON uses sorted keys and stable
+    formatting, so exports are byte-stable for the same audited state and fixed
+    export/evaluation time. Re-exporting at a different wall-clock instant
+    intentionally changes `policy_budget_snapshot.evaluated_at`, the raw bytes,
+    and `ticket_hash`.
   - `--out PATH` / `--output PATH` / `-o PATH` writes that same canonical JSON
     artifact to a file instead of stdout. With default JSON output, successful
     file writes are quiet; with `--format text`, the summary includes a
@@ -520,7 +523,8 @@ Required cases:
     JSON output with decision ids, record hashes, states, and approval-preview
     warnings/violations.
 18. `export-ticket` happy path for an approved idea, unapproved state guard
-    failure, byte-deterministic raw JSON output, and `--out` file behavior.
+    failure, canonical raw JSON output stable for fixed evaluation time, and
+    `--out` file behavior.
 
 ## Acceptance criteria
 

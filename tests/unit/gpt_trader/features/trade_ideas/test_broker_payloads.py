@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
@@ -36,6 +37,15 @@ def _mapping(value: object) -> Mapping[str, object]:
 def _text(value: object) -> str:
     assert isinstance(value, str)
     return value
+
+
+def _payload_without_export_time_and_hash(payload: dict[str, object]) -> dict[str, object]:
+    normalized = json.loads(canonical_ticket_json(payload))
+    normalized.pop("ticket_hash")
+    policy_budget_snapshot = normalized["policy_budget_snapshot"]
+    assert isinstance(policy_budget_snapshot, dict)
+    policy_budget_snapshot["evaluated_at"] = "<export-evaluation-time>"
+    return normalized
 
 
 def test_export_broker_ticket_payload_for_approved_idea(service: TradeIdeaService) -> None:
@@ -121,6 +131,51 @@ def test_export_broker_ticket_payload_is_canonical_and_deterministic(
 
     assert first == second
     assert canonical_ticket_json(first) == canonical_ticket_json(second)
+
+
+def test_export_broker_ticket_payload_is_stable_only_for_fixed_export_time(
+    tmp_path: Path,
+) -> None:
+    current_time = datetime(2026, 6, 12, 10, 0, tzinfo=UTC)
+
+    def now() -> datetime:
+        return current_time
+
+    service = TradeIdeaService(tmp_path / "trade_ideas", now_factory=now)
+    idea = build_trade_idea(decision_id="trade-export-time-sensitive-hash")
+    service.propose(idea, actor_id="idea-generator-v1")
+    service.approve(idea.decision_id, actor_id="rj", reason="Risk verified")
+
+    first = service.export_broker_ticket_payload(
+        idea.decision_id,
+        venue="manual",
+        venue_order_type="operator_selected",
+        time_in_force="operator_selected",
+    )
+    fixed_time_repeat = service.export_broker_ticket_payload(
+        idea.decision_id,
+        venue="manual",
+        venue_order_type="operator_selected",
+        time_in_force="operator_selected",
+    )
+    current_time = datetime(2026, 6, 12, 11, 0, tzinfo=UTC)
+    later_export = service.export_broker_ticket_payload(
+        idea.decision_id,
+        venue="manual",
+        venue_order_type="operator_selected",
+        time_in_force="operator_selected",
+    )
+
+    assert canonical_ticket_json(first) == canonical_ticket_json(fixed_time_repeat)
+    assert canonical_ticket_json(first) != canonical_ticket_json(later_export)
+    assert first["ticket_hash"] != later_export["ticket_hash"]
+    assert (
+        _mapping(first["policy_budget_snapshot"])["evaluated_at"]
+        != _mapping(later_export["policy_budget_snapshot"])["evaluated_at"]
+    )
+    assert _payload_without_export_time_and_hash(first) == _payload_without_export_time_and_hash(
+        later_export
+    )
 
 
 def test_export_broker_ticket_rejects_unapproved_state(service: TradeIdeaService) -> None:

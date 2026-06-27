@@ -47,6 +47,10 @@ Every mutating subcommand accepts:
 
 - `--actor ID` — actor identity (default: `GPT_TRADER_ACTOR` env, then OS user)
 
+Exception: `propose-baseline` defaults to the deterministic baseline proposer
+id so generated proposal audit events identify the proposer unless an operator
+explicitly overrides `--actor`.
+
 Current behavior is discoverable with:
 
 ```bash
@@ -58,6 +62,7 @@ uv run gpt-trader ideas --help
 ```
 gpt-trader ideas
 ├── propose          --file PATH | --stdin   [--actor-type {ai,human}] [--reason TEXT]
+├── propose-baseline --snapshot PATH         [--actor ID] [--reason TEXT]
 ├── resubmit         --file PATH | --stdin   [--actor-type {ai,human}] [--reason TEXT]
 ├── list             [--state STATE]
 ├── show             DECISION_ID [--events]
@@ -108,6 +113,76 @@ gpt-trader ideas
   still succeeds (rejection happens at review, per the framework).
 - Text: `✓ ideas propose OK (trade-20260612-001, state=proposed)` followed by
   `⚠ would fail approval: <reason>` lines if any.
+
+### `ideas propose-baseline`
+
+- Input: a local `MarketSnapshot` JSON fixture from `--snapshot PATH`.
+- Never calls broker, account, credential, preflight, canary, or live market
+  surfaces. The snapshot file is the complete data source for the command.
+- Parse the fixture into `MarketSnapshot` / `SymbolSeries`, run
+  `BaselineProposer`, preflight every emitted `TradeIdea` with
+  `service.validate_new_proposal`, preview approval policy with
+  `service.approval_violations`, then persist through
+  `service.propose(..., actor_type=ai)`.
+- The default actor id is the deterministic proposer id
+  (`baseline-ma-10-50` today); `--actor` overrides it when an operator needs a
+  different audit identity.
+- No-signal snapshots return success with `proposal_count=0` and
+  `was_noop=true`; they do not create trade-idea records.
+- Duplicate decision ids fail before any proposed record or audit event is
+  written for that invocation.
+- JSON `data` contains `proposer_id`, snapshot metadata, `proposal_count`, and
+  one entry per proposal:
+
+  ```json
+  {
+    "decision_id": "trade-20350612-btcusd-4c5a9e2d",
+    "state": "proposed",
+    "instrument": "BTC-USD",
+    "direction": "long",
+    "record_hash": "sha256...",
+    "approval_preview": {
+      "violations": [],
+      "warnings": []
+    }
+  }
+  ```
+
+  Approval-preview warnings are also mirrored into the top-level
+  `CliResponse.warnings` list for agent callers that already consume warning
+  envelopes.
+
+#### `propose-baseline` snapshot fixture shape
+
+The JSON file uses strings for timestamps and decimal fields so fixtures remain
+stable across languages and shells:
+
+```json
+{
+  "as_of": "2035-06-12T00:00:00+00:00",
+  "source": "local-fixture:coinbase-candles",
+  "series": [
+    {
+      "symbol": "BTC-USD",
+      "granularity": "1d",
+      "candles": [
+        {
+          "ts": "2035-04-20T00:00:00+00:00",
+          "open": "100",
+          "high": "100",
+          "low": "100",
+          "close": "100",
+          "volume": "1000"
+        }
+      ]
+    }
+  ]
+}
+```
+
+All candle timestamps must include a timezone, be strictly ascending within a
+series, and be strictly before `as_of`. The command rejects malformed fixtures
+as `INVALID_ARGUMENT`.
 
 ### `ideas resubmit`
 
@@ -374,6 +449,10 @@ Required cases:
 16. JSON mode for at least propose/approve/list/report/replay baseline asserting the
     `CliResponse` envelope per CLAUDE.md patterns
     (`result.errors[0].code == CliErrorCode.POLICY_VIOLATION.value`).
+14. `propose-baseline` success from a local snapshot fixture, no-signal
+    no-op behavior, duplicate decision handling, malformed snapshot input, and
+    JSON output with decision ids, record hashes, states, and approval-preview
+    warnings/violations.
 
 ## Acceptance criteria
 
@@ -386,6 +465,9 @@ Required cases:
 - [x] No import from `features/brokerages/` or `features/live_trade/` in
       `ideas.py` (enforce by review; this surface must stay execution-free).
 - [x] All policy violations reach the user; no first-error-only truncation.
+- [x] `propose-baseline` turns local candle fixtures into proposed records
+      without broker/API access, and reports approval-preview warnings per
+      proposal.
 - [x] The focused `tests/unit/gpt_trader/cli/commands/test_ideas_*.py` suite
       covers the implemented command group.
 - [ ] Re-run the repo-required quality bundle before merging any future change

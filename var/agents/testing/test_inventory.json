@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6867,
-    "total_files": 809,
+    "total_tests": 6876,
+    "total_files": 811,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6702,
+    "unit": 6711,
     "asyncio": 411,
     "parametrize": 200,
     "endpoints": 83,
@@ -211,6 +211,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
@@ -549,6 +550,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
@@ -9308,6 +9310,64 @@
         "line": 74,
         "markers": [
           "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py": [
+      {
+        "name": "test_propose_baseline_persists_generated_proposal",
+        "line": 93,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_no_signal_is_noop",
+        "line": 118,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_duplicate_decision_fails_without_extra_audit",
+        "line": 134,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_rejects_duplicate_generated_decisions_before_writes",
+        "line": 154,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_rolls_back_batch_when_later_write_fails",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_malformed_snapshot_returns_invalid_argument",
+        "line": 211,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_baseline_json_output_includes_approval_preview_warnings",
+        "line": 229,
+        "markers": [
           "unit"
         ],
         "docstring": ""
@@ -33468,6 +33528,24 @@
       },
       {
         "name": "test_approval_count_ignores_unaudited_latest_for_nonapproved_records",
+        "line": 50,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py": [
+      {
+        "name": "test_propose_batch_rolls_back_partial_record_when_save_fails",
+        "line": 14,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_batch_surfaces_rollback_delete_failure",
         "line": 50,
         "markers": [
           "unit"

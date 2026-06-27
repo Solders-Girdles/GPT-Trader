@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6848,
+    "total_tests": 6852,
     "total_files": 807,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6683,
+    "unit": 6687,
     "asyncio": 411,
     "parametrize": 198,
     "endpoints": 83,
@@ -41437,7 +41437,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_passes_with_reasonable_time_no_credentials",
-        "line": 168,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -41445,8 +41445,44 @@
         "class": "TestCheckSystemTime"
       },
       {
+        "name": "TestCheckSystemTime::test_passes_with_credentialed_server_time",
+        "line": 186,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
+        "name": "TestCheckSystemTime::test_fails_closed_when_credentialed_time_client_raises",
+        "line": 209,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
+        "name": "TestCheckSystemTime::test_fails_closed_when_credentialed_time_response_missing_iso",
+        "line": 234,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
+        "name": "TestCheckSystemTime::test_explicit_remote_skip_preserves_local_time_sanity_path",
+        "line": 256,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestCheckSystemTime"
+      },
+      {
         "name": "TestCheckSystemTime::test_fails_with_unreasonable_time",
-        "line": 184,
+        "line": 280,
         "markers": [
           "unit"
         ],
@@ -41455,7 +41491,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_handles_exception",
-        "line": 201,
+        "line": 297,
         "markers": [
           "unit"
         ],
@@ -41464,7 +41500,7 @@
       },
       {
         "name": "TestCheckSystemTime::test_prints_section_header",
-        "line": 213,
+        "line": 309,
         "markers": [
           "unit"
         ],

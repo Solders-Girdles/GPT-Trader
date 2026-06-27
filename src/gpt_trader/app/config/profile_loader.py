@@ -119,10 +119,13 @@ class SessionConfig:
 def _parse_session_time(
     session_data: Mapping[str, Any], field_name: str, profile_name: str
 ) -> time | None:
+    """Parse an optional session time while preserving explicit YAML nulls."""
     if field_name not in session_data:
         return None
 
     value = session_data[field_name]
+    if value is None:
+        return None
     if isinstance(value, time):
         return value
     try:

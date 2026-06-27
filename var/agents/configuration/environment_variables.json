@@ -12,7 +12,7 @@
       ],
       "code_references": [
         {
-          "line": 306,
+          "line": 309,
           "path": "src/gpt_trader/app/config/profile_loader.py",
           "reader": "os.getenv"
         }
@@ -1497,7 +1497,7 @@
       ],
       "code_references": [
         {
-          "line": 303,
+          "line": 306,
           "path": "src/gpt_trader/app/config/profile_loader.py",
           "reader": "os.getenv"
         }

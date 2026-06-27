@@ -14,7 +14,6 @@ from gpt_trader.app.config.profile_loader import (
     ProfileLoader,
     ProfileOverrideSource,
     ProfileSchema,
-    ProfileValidationError,
     get_env_defaults_for_profile,
     get_env_profile_override,
     get_profile_registry_entry_by_name,
@@ -151,32 +150,6 @@ monitoring:
         assert details["severity"] == "warning"
         assert details["reason"].startswith("Profile YAML not found")
 
-    def test_invalid_session_time_re_raises_with_field_path(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        mock_logger = MagicMock()
-        monkeypatch.setattr("gpt_trader.app.config.profile_loader.logger", mock_logger)
-
-        yaml_path = tmp_path / "dev.yaml"
-        yaml_path.write_text(
-            """
-profile_name: "dev"
-session:
-  start_time: "09:00"
-  end_time: "2026-06-27 15:00"
-"""
-        )
-
-        loader = ProfileLoader(profiles_dir=tmp_path)
-        with pytest.raises(ProfileValidationError, match=r"session\.end_time"):
-            loader.load(Profile.DEV)
-
-        assert mock_logger.warning.call_count == 1
-        logged_kwargs = mock_logger.warning.call_args.kwargs
-        details = logged_kwargs.get("details", {})
-        assert "session.end_time" in details["reason"]
-        assert details["path"].endswith("dev.yaml")
-
 
 class TestProfileSchema:
     """Tests for ProfileSchema dataclass."""
@@ -270,29 +243,6 @@ class TestProfileSchema:
         assert schema.execution.mock_broker is True
         assert schema.execution.use_limit_orders is True
         assert schema.execution.market_order_fallback is False
-
-    @pytest.mark.parametrize(
-        ("field_name", "value"),
-        [
-            ("start_time", "not-a-time"),
-            ("end_time", "2026-06-27 15:00"),
-        ],
-    )
-    def test_from_yaml_rejects_invalid_session_times(self, field_name: str, value: str) -> None:
-        data = {
-            "profile_name": "invalid-session",
-            "session": {
-                "start_time": "09:00",
-                "end_time": "17:00",
-                field_name: value,
-            },
-        }
-
-        with pytest.raises(
-            ProfileValidationError,
-            match=rf"session\.{field_name}.*HH:MM",
-        ):
-            ProfileSchema.from_yaml(data, "invalid-session")
 
 
 class TestProfileRegistryHelpers:

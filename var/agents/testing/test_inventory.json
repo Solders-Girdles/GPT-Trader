@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6845,
-    "total_files": 806,
+    "total_tests": 6846,
+    "total_files": 807,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6680,
+    "unit": 6681,
     "asyncio": 411,
     "parametrize": 196,
     "endpoints": 83,
@@ -131,6 +131,7 @@
       "tests/unit/gpt_trader/app/config/test_defaults.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
+      "tests/unit/gpt_trader/app/config/test_profile_loader_session_times.py",
       "tests/unit/gpt_trader/app/config/test_validation.py",
       "tests/unit/gpt_trader/app/config/test_validation_rules.py",
       "tests/unit/gpt_trader/app/containers/test_risk_validation.py",
@@ -3020,7 +3021,7 @@
     "tests/unit/gpt_trader/app/config/test_profile_loader.py": [
       {
         "name": "TestProfileLoader::test_load_from_yaml_file",
-        "line": 30,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -3029,7 +3030,7 @@
       },
       {
         "name": "TestProfileLoader::test_fallback_to_hardcoded_defaults",
-        "line": 70,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -3038,7 +3039,7 @@
       },
       {
         "name": "TestProfileLoader::test_hardcoded_defaults_exist_for_all_profiles",
-        "line": 83,
+        "line": 82,
         "markers": [
           "unit"
         ],
@@ -3047,7 +3048,7 @@
       },
       {
         "name": "TestProfileLoader::test_profile_yaml_files_are_registered_profiles",
-        "line": 94,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -3056,7 +3057,7 @@
       },
       {
         "name": "TestProfileLoader::test_observe_profile_is_read_only_live_data_shape",
-        "line": 101,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -3065,7 +3066,7 @@
       },
       {
         "name": "TestProfileLoader::test_logs_payload_on_yaml_parse_error",
-        "line": 110,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -3074,7 +3075,7 @@
       },
       {
         "name": "TestProfileLoader::test_logs_payload_when_profile_missing",
-        "line": 136,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -3082,17 +3083,8 @@
         "class": "TestProfileLoader"
       },
       {
-        "name": "TestProfileLoader::test_invalid_session_time_re_raises_with_field_path",
-        "line": 154,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestProfileLoader"
-      },
-      {
         "name": "TestProfileSchema::test_from_yaml_minimal",
-        "line": 184,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -3101,7 +3093,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_full",
-        "line": 196,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -3110,7 +3102,7 @@
       },
       {
         "name": "TestProfileSchema::test_from_yaml_uses_trading_execution_when_top_level_execution_missing",
-        "line": 251,
+        "line": 224,
         "markers": [
           "unit"
         ],
@@ -3118,18 +3110,8 @@
         "class": "TestProfileSchema"
       },
       {
-        "name": "TestProfileSchema::test_from_yaml_rejects_invalid_session_times",
-        "line": 281,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestProfileSchema"
-      },
-      {
         "name": "TestProfileRegistryHelpers::test_get_env_defaults_for_unknown_profile_uses_prod_defaults",
-        "line": 301,
+        "line": 251,
         "markers": [
           "unit"
         ],
@@ -3138,7 +3120,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_is_dev_profile",
-        "line": 321,
+        "line": 271,
         "markers": [
           "parametrize",
           "unit"
@@ -3148,7 +3130,7 @@
       },
       {
         "name": "TestProfileRegistryHelpers::test_registry_lookup_is_case_insensitive",
-        "line": 324,
+        "line": 274,
         "markers": [
           "unit"
         ],
@@ -3157,7 +3139,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_cli_profile_wins",
-        "line": 333,
+        "line": 283,
         "markers": [
           "unit"
         ],
@@ -3166,7 +3148,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_file_profile_overrides_env",
-        "line": 344,
+        "line": 294,
         "markers": [
           "unit"
         ],
@@ -3175,7 +3157,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_env_profile_overrides_default",
-        "line": 355,
+        "line": 305,
         "markers": [
           "unit"
         ],
@@ -3184,7 +3166,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_falls_back_to_default",
-        "line": 366,
+        "line": 316,
         "markers": [
           "unit"
         ],
@@ -3193,7 +3175,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_blank_values_are_ignored",
-        "line": 377,
+        "line": 327,
         "markers": [
           "unit"
         ],
@@ -3202,7 +3184,7 @@
       },
       {
         "name": "TestProfileOverridePrecedence::test_env_helper_uses_bot_profile_when_primary_is_whitespace",
-        "line": 388,
+        "line": 338,
         "markers": [
           "unit"
         ],
@@ -3284,6 +3266,33 @@
         ],
         "docstring": "Test that all profiles can be loaded.",
         "class": "TestLoadProfile"
+      }
+    ],
+    "tests/unit/gpt_trader/app/config/test_profile_loader_session_times.py": [
+      {
+        "name": "test_loader_invalid_session_time_re_raises_with_field_path",
+        "line": 18,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_yaml_rejects_invalid_session_times",
+        "line": 52,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_yaml_preserves_explicit_null_session_times",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/app/config/test_validation.py": [

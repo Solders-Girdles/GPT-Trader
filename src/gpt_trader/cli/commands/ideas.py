@@ -45,6 +45,7 @@ from gpt_trader.features.trade_ideas import (
     TradeIdeaState,
     UnknownTradeIdeaError,
     create_trade_idea_service,
+    granularity_duration,
     is_safe_decision_id,
     market_snapshot_to_payload,
     resolve_trade_idea_actor_id,
@@ -161,7 +162,22 @@ def register(subparsers: Any) -> None:
             "places, modifies, or cancels orders."
         ),
     )
-    options.add_output_options(snapshot_build, include_quiet=False)
+    snapshot_build.add_argument(
+        "--format",
+        "--output-format",
+        dest="output_format",
+        type=str,
+        choices=options.OUTPUT_FORMAT_CHOICES,
+        default="text",
+        help="Output format: text for human-readable, json for machine-readable",
+    )
+    snapshot_build.add_argument(
+        "--output",
+        "-o",
+        dest="response_output_disallowed",
+        type=Path,
+        help=argparse.SUPPRESS,
+    )
     snapshot_build.add_argument(
         "--from-coinbase",
         action="store_true",
@@ -962,9 +978,15 @@ def _handle_propose_baseline(args: Namespace) -> CliResponse:
 def _handle_snapshot_build(args: Namespace) -> CliResponse:
     command = "ideas snapshot build"
     try:
+        if getattr(args, "response_output_disallowed", None) is not None:
+            raise SnapshotBuildInputError(
+                "ideas snapshot build does not support response --output; use --out for the "
+                "MarketSnapshot JSON file",
+                field="output",
+            )
         request = MarketSnapshotBuildRequest(
             symbols=_snapshot_symbols(args.symbols),
-            granularity=args.granularity,
+            granularity=_snapshot_granularity(args.granularity),
             lookback=args.lookback,
             as_of=_snapshot_as_of(args.as_of),
         )
@@ -1021,6 +1043,15 @@ def _snapshot_symbols(value: str) -> tuple[str, ...]:
     if len(set(symbols)) != len(symbols):
         raise SnapshotBuildInputError("--symbols must not contain duplicates", field="symbols")
     return symbols
+
+
+def _snapshot_granularity(value: str) -> str:
+    if granularity_duration(value) is None:
+        raise SnapshotBuildInputError(
+            f"Unsupported snapshot granularity: {value}",
+            field="granularity",
+        )
+    return value
 
 
 def _snapshot_as_of(value: str | None) -> datetime:

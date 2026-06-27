@@ -210,8 +210,10 @@ as `INVALID_ARGUMENT`.
 - Point-in-time rules:
   - Fetch window is `[as_of - granularity * lookback, as_of)`.
   - Source candles must be strictly ascending by timestamp.
-  - Candles starting at or after `as_of` are skipped so current or future bars
-    cannot leak into proposer input.
+  - Candle selection includes only fully closed bars: for each source candle,
+    `candle.ts + granularity <= as_of`. Candles that start before `as_of` but
+    are still open are skipped so current or future bars cannot leak into
+    proposer input.
   - Each configured symbol must have at least one completed candle in the
     window.
 - JSON `data` contains `out` plus snapshot metadata: `as_of`, `source`,

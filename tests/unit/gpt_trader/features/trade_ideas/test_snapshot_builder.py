@@ -106,6 +106,19 @@ async def test_builder_skips_candles_at_or_after_as_of_without_lookahead() -> No
 
 
 @pytest.mark.asyncio
+async def test_builder_excludes_open_bucket_for_unaligned_as_of() -> None:
+    unaligned_as_of = AS_OF + timedelta(minutes=30)
+    source = FakeCandleSource({"BTC-USD": (candle(-1), candle(0), candle(1))})
+
+    snapshot = await MarketSnapshotBuilder(source).build(request(lookback=3, as_of=unaligned_as_of))
+
+    series = snapshot.series_for("BTC-USD")
+    assert series is not None
+    assert [item.ts for item in series.candles] == [AS_OF - timedelta(hours=1)]
+    assert all(item.ts + timedelta(hours=1) <= snapshot.as_of for item in series.candles)
+
+
+@pytest.mark.asyncio
 async def test_builder_rejects_non_ascending_source_candles() -> None:
     source = FakeCandleSource({"BTC-USD": (candle(-1), candle(-2))})
 

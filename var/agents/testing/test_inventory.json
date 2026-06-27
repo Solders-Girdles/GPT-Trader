@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6887,
+    "total_tests": 6890,
     "total_files": 813,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6722,
-    "asyncio": 416,
+    "unit": 6725,
+    "asyncio": 417,
     "parametrize": 200,
     "endpoints": 83,
     "property": 82,
@@ -9725,8 +9725,24 @@
         "docstring": ""
       },
       {
-        "name": "test_snapshot_build_rejects_duplicate_symbols",
+        "name": "test_snapshot_build_rejects_unsupported_granularity_before_fetch",
         "line": 136,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_snapshot_build_does_not_accept_response_output_sink",
+        "line": 155,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_snapshot_build_rejects_duplicate_symbols",
+        "line": 176,
         "markers": [
           "unit"
         ],
@@ -33822,7 +33838,7 @@
         "docstring": ""
       },
       {
-        "name": "test_builder_rejects_non_ascending_source_candles",
+        "name": "test_builder_excludes_open_bucket_for_unaligned_as_of",
         "line": 109,
         "markers": [
           "asyncio",
@@ -33831,8 +33847,17 @@
         "docstring": ""
       },
       {
+        "name": "test_builder_rejects_non_ascending_source_candles",
+        "line": 122,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_builder_rejects_symbols_with_no_completed_candles",
-        "line": 119,
+        "line": 132,
         "markers": [
           "asyncio",
           "unit"
@@ -33841,7 +33866,7 @@
       },
       {
         "name": "test_build_request_rejects_unsupported_granularity",
-        "line": 128,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -33849,7 +33874,7 @@
       },
       {
         "name": "test_market_snapshot_payload_serializes_existing_fixture_shape",
-        "line": 139,
+        "line": 152,
         "markers": [
           "asyncio",
           "unit"

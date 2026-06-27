@@ -112,6 +112,7 @@ class MarketSnapshotBuilder:
                 candles=candles,
                 start=start,
                 as_of=as_of,
+                duration=duration,
                 lookback=request.lookback,
             )
             series.append(
@@ -204,11 +205,14 @@ def _completed_window(
     candles: Sequence[Candle],
     start: datetime,
     as_of: datetime,
+    duration: timedelta,
     lookback: int,
 ) -> tuple[Candle, ...]:
     normalized = tuple(_normalize_candle(candle) for candle in candles)
     _require_ascending(symbol, normalized)
-    completed = tuple(candle for candle in normalized if start <= candle.ts < as_of)
+    completed = tuple(
+        candle for candle in normalized if start <= candle.ts and candle.ts + duration <= as_of
+    )
     if not completed:
         raise SnapshotIntegrityError(
             f"No completed candles for '{symbol}' before snapshot as_of {as_of.isoformat()}",

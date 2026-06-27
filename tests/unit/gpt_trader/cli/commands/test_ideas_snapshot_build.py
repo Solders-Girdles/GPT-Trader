@@ -133,6 +133,46 @@ def test_snapshot_build_rejects_as_of_without_timezone(
     assert response["errors"][0]["details"]["field"] == "as_of"
 
 
+def test_snapshot_build_rejects_unsupported_granularity_before_fetch(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_build(args: Any, request: Any) -> MarketSnapshot:
+        raise AssertionError("snapshot build should reject input before fetching")
+
+    monkeypatch.setattr(ideas, "_build_coinbase_market_snapshot", fake_build)
+    argv = _snapshot_build_args(tmp_path / "snapshot.json")
+    argv[argv.index("--granularity") + 1] = "BAD"
+
+    exit_code, response = _run_json(capsys, argv)
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert response["errors"][0]["details"]["field"] == "granularity"
+
+
+def test_snapshot_build_does_not_accept_response_output_sink(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def fake_build(args: Any, request: Any) -> MarketSnapshot:
+        raise AssertionError("snapshot build should reject input before fetching")
+
+    monkeypatch.setattr(ideas, "_build_coinbase_market_snapshot", fake_build)
+    out = tmp_path / "snapshot.json"
+    out.write_text('{"snapshot": true}\n', encoding="utf-8")
+    argv = [*_snapshot_build_args(out), "--output", str(out)]
+
+    exit_code, response = _run_json(capsys, argv)
+
+    assert exit_code == 1
+    assert response["errors"][0]["code"] == CliErrorCode.INVALID_ARGUMENT.value
+    assert response["errors"][0]["details"]["field"] == "output"
+    assert json.loads(out.read_text(encoding="utf-8")) == {"snapshot": True}
+
+
 def test_snapshot_build_rejects_duplicate_symbols(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],

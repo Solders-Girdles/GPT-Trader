@@ -23,14 +23,12 @@ def test_loader_invalid_session_time_re_raises_with_field_path(
     monkeypatch.setattr("gpt_trader.app.config.profile_loader.logger", mock_logger)
 
     yaml_path = tmp_path / "dev.yaml"
-    yaml_path.write_text(
-        """
+    yaml_path.write_text("""
 profile_name: "dev"
 session:
   start_time: "09:00"
   end_time: "2026-06-27 15:00"
-"""
-    )
+""")
 
     loader = ProfileLoader(profiles_dir=tmp_path)
     with pytest.raises(ProfileValidationError, match=r"session\.end_time"):

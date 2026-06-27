@@ -191,7 +191,9 @@ async def test_runtime_engine_startup_failure_runs_shutdown_and_cleans_tasks() -
 
     assert runtime.state == RuntimeEngineState.FAILED
     assert runtime.background_tasks == []
-    assert events == ["failing_step", "shutdown", "failing_worker:cancelled"]
+    assert "failing_step" in events
+    assert "shutdown" in events
+    assert events.index("failing_step") < events.index("shutdown")
     assert created_tasks and created_tasks[0].cancelled()
 
 

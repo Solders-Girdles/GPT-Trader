@@ -76,6 +76,7 @@ class RuntimeEngine(BaseEngine):
         self._shutdown_timeout_seconds = _coerce_timeout(shutdown_timeout_seconds, 5.0)
         self._last_error: str | None = None
         self._graceful_shutdown_failed = False
+        self._drain_task: asyncio.Task[None] | None = None
 
     @property
     def name(self) -> str:
@@ -134,7 +135,7 @@ class RuntimeEngine(BaseEngine):
                 operation="runtime_lifecycle",
                 stage="startup",
             )
-            await self._drain(plan, failed=True, reason="startup_failed")
+            await self._run_drain(plan, failed=True, reason="startup_failed")
             if isinstance(exc, RuntimeLifecycleError):
                 raise
             raise RuntimeLifecycleError(f"Runtime startup failed: {exc}") from exc
@@ -153,7 +154,7 @@ class RuntimeEngine(BaseEngine):
                 task_cleanup_timeout_seconds=self._shutdown_timeout_seconds,
                 shutdown_step_timeout_seconds=self._shutdown_timeout_seconds,
             )
-        await self._drain(plan, failed=False, reason="shutdown_called")
+        await self._run_drain(plan, failed=False, reason="shutdown_called")
 
     @property
     def background_tasks(self) -> list[asyncio.Task[Any]]:
@@ -275,6 +276,31 @@ class RuntimeEngine(BaseEngine):
         if isinstance(result, Sequence) and not isinstance(result, (str, bytes, bytearray)):
             return [task for task in result if isinstance(task, asyncio.Task)]
         return []
+
+    async def _run_drain(
+        self,
+        plan: RuntimeLifecyclePlan,
+        *,
+        failed: bool,
+        reason: str,
+    ) -> None:
+        active_drain = self._drain_task
+        if active_drain is not None and not active_drain.done():
+            if active_drain is asyncio.current_task():
+                return
+            await asyncio.shield(active_drain)
+            return
+
+        drain_task = asyncio.create_task(
+            self._drain(plan, failed=failed, reason=reason),
+            name="runtime_drain",
+        )
+        self._drain_task = drain_task
+        try:
+            await drain_task
+        finally:
+            if self._drain_task is drain_task:
+                self._drain_task = None
 
     async def _drain(
         self,

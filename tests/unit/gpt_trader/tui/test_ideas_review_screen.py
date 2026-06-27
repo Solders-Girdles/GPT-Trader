@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -12,6 +13,8 @@ from gpt_trader.features.trade_ideas import (
     ActorType,
     AuditAction,
     MaxLoss,
+    TradeIdeaListQuery,
+    TradeIdeaListResult,
     TradeIdeaService,
     TradeIdeaState,
 )
@@ -22,6 +25,11 @@ class IdeasReviewTestApp(App):
     def __init__(self, screen: IdeasReviewScreen) -> None:
         super().__init__()
         self.ideas_screen = screen
+
+
+class LimitedTradeIdeaService(TradeIdeaService):
+    def list_view_result(self, query: TradeIdeaListQuery) -> TradeIdeaListResult:
+        return super().list_view_result(replace(query, limit=1))
 
 
 @pytest.fixture
@@ -196,6 +204,63 @@ async def test_filter_cycle_changes_visible_rows(service: TradeIdeaService) -> N
         await pilot.pause()
         assert table.row_count == 0
         assert "needs_changes" in _text(screen.query_one("#ideas-review-filter"))
+
+
+@pytest.mark.asyncio
+async def test_instrument_filter_modal_applies_and_clears_summary(
+    service: TradeIdeaService,
+) -> None:
+    btc = build_trade_idea(decision_id="trade-20260612-btc", instrument="BTC-USD")
+    eth = build_trade_idea(decision_id="trade-20260612-eth", instrument="ETH-USD")
+    service.propose(btc, actor_id="idea-generator-v1")
+    service.propose(eth, actor_id="idea-generator-v1")
+
+    async with _app(service).run_test(size=(120, 36)) as pilot:
+        screen = await _push_ideas_screen(pilot)
+        table = screen.query_one("#ideas-review-table")
+        assert table.row_count == 2
+
+        await pilot.press("/")
+        await pilot.pause()
+        await pilot.click("#ideas-instrument-filter-input")
+        await pilot.press(*"ETH-USD")
+        await pilot.press("ctrl+s")
+        await pilot.pause()
+
+        assert table.row_count == 1
+        assert "instrument=ETH-USD" in _text(screen.query_one("#ideas-review-filter"))
+        assert eth.decision_id in _text(screen.query_one("#ideas-review-detail"))
+
+        await pilot.press("F")
+        await pilot.pause()
+
+        assert table.row_count == 2
+        assert "instrument=" not in _text(screen.query_one("#ideas-review-filter"))
+
+
+@pytest.mark.asyncio
+async def test_filter_summary_shows_returned_count_against_total(tmp_path: Path) -> None:
+    service = LimitedTradeIdeaService(
+        tmp_path / "trade_ideas",
+        now_factory=lambda: datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
+    )
+    first = build_trade_idea(decision_id="trade-20260612-btc-001", instrument="BTC-USD")
+    second = build_trade_idea(decision_id="trade-20260612-btc-002", instrument="BTC-USD")
+    eth = build_trade_idea(decision_id="trade-20260612-eth", instrument="ETH-USD")
+    service.propose(first, actor_id="idea-generator-v1")
+    service.propose(second, actor_id="idea-generator-v1")
+    service.propose(eth, actor_id="idea-generator-v1")
+
+    async with _app(service).run_test(size=(120, 36)) as pilot:
+        screen = await _push_ideas_screen(pilot)
+        screen._apply_instrument_filter("BTC-USD")
+        await pilot.pause()
+        table = screen.query_one("#ideas-review-table")
+        filter_summary = _text(screen.query_one("#ideas-review-filter"))
+
+    assert table.row_count == 1
+    assert "instrument=BTC-USD" in filter_summary
+    assert "(1 of 2)" in filter_summary
 
 
 @pytest.mark.asyncio

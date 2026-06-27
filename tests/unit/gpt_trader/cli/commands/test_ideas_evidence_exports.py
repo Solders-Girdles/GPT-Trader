@@ -16,7 +16,11 @@ from gpt_trader.features.trade_ideas import (
     CloseoutResolution,
     TimeHorizon,
 )
-from gpt_trader.features.trade_ideas.report import build_trade_idea_track_record_report
+from gpt_trader.features.trade_ideas.artifacts import trade_idea_report_to_csv
+from gpt_trader.features.trade_ideas.report import (
+    REPORT_SCHEMA_VERSION,
+    build_trade_idea_track_record_report,
+)
 from gpt_trader.features.trade_ideas.service import TradeIdeaService
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
@@ -179,6 +183,41 @@ def test_report_csv_output_contains_flat_metric_rows(
     assert any(
         row["metric_path"] == "proposal_volume.idea_count" and row["value"] == "2" for row in rows
     )
+
+
+def test_report_csv_preserves_negative_realized_profit_loss_metrics() -> None:
+    report = {
+        "schema_version": REPORT_SCHEMA_VERSION,
+        "quality_report_id": "tir-test",
+        "filters": {"since": "=operator-input"},
+        "closeouts": {
+            "realized_profit_loss": {
+                "total_amount": "-42.00",
+                "max_loss_comparison": {
+                    "by_decision_id": [
+                        {
+                            "decision_id": "=trade-loss",
+                            "realized_profit_loss_amount": "-42.00",
+                        }
+                    ],
+                },
+            }
+        },
+    }
+
+    rows = list(csv.DictReader(io.StringIO(trade_idea_report_to_csv(report))))
+    values_by_path = {row["metric_path"]: row["value"] for row in rows}
+
+    assert values_by_path["closeouts.realized_profit_loss.total_amount"] == "-42.00"
+    assert values_by_path["filters.since"] == "'=operator-input"
+    assert json.loads(
+        values_by_path["closeouts.realized_profit_loss.max_loss_comparison.by_decision_id"]
+    ) == [
+        {
+            "decision_id": "'=trade-loss",
+            "realized_profit_loss_amount": "-42.00",
+        }
+    ]
 
 
 def test_closeout_list_filters_joins_terminal_event_and_exports_csv(

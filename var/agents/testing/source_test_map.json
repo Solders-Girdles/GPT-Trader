@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 733,
-    "source_modules": 378,
+    "source_modules": 379,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -1338,6 +1338,9 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py",
       "tests/unit/gpt_trader/tui/test_ideas_review_screen.py",
       "tests/unit/gpt_trader/tui/test_snapshots_ideas_review.py"
+    ],
+    "gpt_trader.features.trade_ideas.artifacts": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py"
     ],
     "gpt_trader.features.trade_ideas.closeout": [
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout_query.py"
@@ -2742,6 +2745,7 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py": [
       "gpt_trader",
       "gpt_trader.features.trade_ideas",
+      "gpt_trader.features.trade_ideas.artifacts",
       "gpt_trader.features.trade_ideas.report",
       "gpt_trader.features.trade_ideas.service"
     ],
@@ -5340,6 +5344,7 @@
     "gpt_trader.features.strategy_tools.filters": "src/gpt_trader/features/strategy_tools/filters.py",
     "gpt_trader.features.strategy_tools.guards": "src/gpt_trader/features/strategy_tools/guards.py",
     "gpt_trader.features.trade_ideas": "src/gpt_trader/features/trade_ideas/__init__.py",
+    "gpt_trader.features.trade_ideas.artifacts": "src/gpt_trader/features/trade_ideas/artifacts.py",
     "gpt_trader.features.trade_ideas.closeout": "src/gpt_trader/features/trade_ideas/closeout.py",
     "gpt_trader.features.trade_ideas.report": "src/gpt_trader/features/trade_ideas/report.py",
     "gpt_trader.features.trade_ideas.service": "src/gpt_trader/features/trade_ideas/service.py",

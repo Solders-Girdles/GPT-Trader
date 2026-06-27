@@ -13,6 +13,7 @@ import io
 import json
 from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from gpt_trader.features.trade_ideas.audit import AuditEvent
@@ -22,6 +23,20 @@ AUDIT_EXPORT_SCHEMA_VERSION = "gpt-trader.trade_ideas.audit_export.v1"
 CLOSEOUT_EXPORT_SCHEMA_VERSION = "gpt-trader.trade_ideas.closeout_export.v1"
 _CSV_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
 _CSV_FORMULA_ESCAPE = "'"
+_REPORT_NUMERIC_METRIC_PATHS = frozenset(
+    {
+        "closeouts.realized_profit_loss.total_amount",
+        "closeouts.realized_profit_loss.average_amount",
+        "closeouts.realized_profit_loss.max_loss_comparison.total_realized_amount",
+        "closeouts.realized_profit_loss.max_loss_comparison.total_max_loss_amount",
+        "closeouts.realized_profit_loss.max_loss_comparison.total_realized_to_max_loss_ratio",
+        "closeouts.realized_profit_loss.max_loss_comparison.by_decision_id.realized_profit_loss_amount",
+        "closeouts.realized_profit_loss.max_loss_comparison.by_decision_id.max_loss_amount",
+        "closeouts.realized_profit_loss.max_loss_comparison.by_decision_id.realized_to_max_loss_ratio",
+    }
+)
+_REPORT_MONTHLY_REALIZED_PROFIT_LOSS_PREFIX = "proposal_volume.by_month."
+_REPORT_MONTHLY_REALIZED_PROFIT_LOSS_SUFFIX = ".realized_profit_loss_amount"
 
 _AUDIT_CSV_FIELDS = (
     "event_id",
@@ -179,7 +194,7 @@ def trade_idea_report_to_csv(report: Mapping[str, Any]) -> str:
                 "quality_report_id": str(report.get("quality_report_id", "")),
                 "schema_version": str(report.get("schema_version", "")),
                 "metric_path": metric_path,
-                "value": _csv_value(value),
+                "value": _report_csv_value(metric_path, value),
             }
         )
     return _csv_from_rows(
@@ -272,6 +287,59 @@ def _flatten_report(payload: Mapping[str, Any], prefix: str = "") -> list[tuple[
         else:
             flattened.append((path, value))
     return flattened
+
+
+def _report_csv_value(metric_path: str, value: Any) -> str:
+    if isinstance(value, (list, tuple)):
+        sequence_payload = [_report_csv_json_value(metric_path, item) for item in value]
+        return json.dumps(sequence_payload, sort_keys=True, separators=(",", ":"), default=str)
+    if isinstance(value, dict):
+        mapping_payload = {
+            str(key): _report_csv_json_value(f"{metric_path}.{key}", item)
+            for key, item in value.items()
+        }
+        return json.dumps(mapping_payload, sort_keys=True, separators=(",", ":"), default=str)
+    return _csv_value(
+        value,
+        neutralize_formula=not _is_report_numeric_metric_value(metric_path, value),
+    )
+
+
+def _report_csv_json_value(metric_path: str, value: Any) -> Any:
+    if isinstance(value, str):
+        if _is_report_numeric_metric_value(metric_path, value):
+            return value
+        return _neutralize_csv_formula(value)
+    if isinstance(value, (list, tuple)):
+        return [_report_csv_json_value(metric_path, item) for item in value]
+    if isinstance(value, dict):
+        return {
+            str(key): _report_csv_json_value(f"{metric_path}.{key}", item)
+            for key, item in value.items()
+        }
+    return value
+
+
+def _is_report_numeric_metric_value(metric_path: str, value: Any) -> bool:
+    return _is_report_numeric_metric_path(metric_path) and _is_csv_numeric_value(value)
+
+
+def _is_report_numeric_metric_path(metric_path: str) -> bool:
+    return metric_path in _REPORT_NUMERIC_METRIC_PATHS or (
+        metric_path.startswith(_REPORT_MONTHLY_REALIZED_PROFIT_LOSS_PREFIX)
+        and metric_path.endswith(_REPORT_MONTHLY_REALIZED_PROFIT_LOSS_SUFFIX)
+    )
+
+
+def _is_csv_numeric_value(value: Any) -> bool:
+    if value is None or isinstance(value, bool):
+        return False
+    if isinstance(value, (int, float, Decimal, str)):
+        try:
+            return Decimal(str(value)).is_finite()
+        except InvalidOperation:
+            return False
+    return False
 
 
 def _pagination_payload(

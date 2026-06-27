@@ -68,7 +68,12 @@ gpt-trader ideas
 │                    --granularity GRANULARITY --lookback N --out snapshot.json
 │                    [--as-of TIMESTAMP] [--source-label LABEL]
 ├── resubmit         --file PATH | --stdin   [--actor-type {ai,human}] [--reason TEXT]
-├── list             [--state STATE]
+├── list             [--state STATE] [--instrument SYMBOL] [--decision-id ID]
+│                    [--direction DIRECTION]
+│                    [--min-confidence LABEL] [--max-confidence LABEL]
+│                    [--updated-since TS] [--updated-until TS]
+│                    [--sort-by FIELD] [--descending]
+│                    [--limit N] [--offset N]
 ├── show             DECISION_ID [--events]
 ├── report
 ├── replay
@@ -253,8 +258,23 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
 
 ### `ideas list`
 
-- `--state` choices = `TradeIdeaState` values. Calls
-  `service.list_views(state)`.
+- Calls `service.list_view_result(TradeIdeaListQuery(...))` so CLI and TUI
+  share filter, sort, and pagination semantics through the service.
+- Filters:
+  - `--state` choices = `TradeIdeaState` values.
+  - `--instrument` exact instrument match, case-insensitive.
+  - `--decision-id` exact trade idea id.
+  - `--direction` choices = `TradeDirection` values.
+  - `--min-confidence` / `--max-confidence` confidence-label range, ordered
+    `low < medium < high`.
+  - `--updated-since` / `--updated-until` compare the latest audit event
+    timestamp.
+- Sorting: `--sort-by {decision_id,state,instrument,direction,confidence,
+  max_loss_pct,expires_at,created_at,updated_at}` with optional
+  `--descending`. Without `--sort-by`, existing store decision-id order is
+  preserved for backward-compatible text output.
+- Pagination: `--limit` / `--offset`. JSON `data` includes `total_count`,
+  `returned_count`, `offset`, `limit`, and `has_more` alongside `ideas`.
 - Text: aligned table — `DECISION_ID  STATE  INSTRUMENT  DIRECTION
   MAX_LOSS%  EXPIRES_AT`. JSON: `data["ideas"]` = list of
   `{decision_id, state, instrument, direction, max_loss_pct, expires_at,
@@ -478,6 +498,9 @@ Required cases:
    appended, eligibility warnings surfaced for a non-compliant idea.
 2. `propose` with missing required field → `INVALID_ARGUMENT`, names field.
 3. `list` empty store → success, empty list. `list --state proposed` filters.
+   Advanced list coverage includes non-state filters, sorting, pagination
+   metadata, inverted confidence-range validation, and default text-output
+   compatibility.
 4. `show` unknown id → `IDEA_NOT_FOUND`. `show --events` includes history.
 5. `report` empty store, normal records, missing closeout coverage, JSON
    output, and read-only behavior that does not create `risk_budget.jsonl`.

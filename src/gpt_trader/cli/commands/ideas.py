@@ -30,6 +30,7 @@ from gpt_trader.features.trade_ideas import (
     BaselineProposerConfig,
     BudgetIntegrityError,
     CloseoutResolution,
+    ConfidenceLabel,
     InvalidTransitionError,
     MarketSnapshot,
     MarketSnapshotBuilder,
@@ -39,7 +40,11 @@ from gpt_trader.features.trade_ideas import (
     ReplayRunnerConfig,
     SnapshotIntegrityError,
     SymbolSeries,
+    TradeDirection,
     TradeIdea,
+    TradeIdeaListQuery,
+    TradeIdeaListResult,
+    TradeIdeaListSortKey,
     TradeIdeaReplayRunner,
     TradeIdeaService,
     TradeIdeaState,
@@ -245,6 +250,54 @@ def register(subparsers: Any) -> None:
         "--state",
         choices=[state.value for state in TradeIdeaState],
         help="Filter by workflow state",
+    )
+    list_parser.add_argument("--instrument", help="Filter by exact instrument, case-insensitive")
+    list_parser.add_argument("--decision-id", help="Filter by exact trade idea decision id")
+    list_parser.add_argument(
+        "--direction",
+        choices=[direction.value for direction in TradeDirection],
+        help="Filter by trade direction",
+    )
+    list_parser.add_argument(
+        "--min-confidence",
+        choices=[label.value for label in ConfidenceLabel],
+        help="Minimum confidence label to include",
+    )
+    list_parser.add_argument(
+        "--max-confidence",
+        choices=[label.value for label in ConfidenceLabel],
+        help="Maximum confidence label to include",
+    )
+    list_parser.add_argument(
+        "--updated-since",
+        type=_datetime_value,
+        help="Filter by latest audit update at or after this ISO-8601 timestamp",
+    )
+    list_parser.add_argument(
+        "--updated-until",
+        type=_datetime_value,
+        help="Filter by latest audit update at or before this ISO-8601 timestamp",
+    )
+    list_parser.add_argument(
+        "--sort-by",
+        choices=[sort_key.value for sort_key in TradeIdeaListSortKey],
+        help="Sort list results by a trade-idea or audit-derived field",
+    )
+    list_parser.add_argument(
+        "--descending",
+        action="store_true",
+        help="Sort descending instead of ascending",
+    )
+    list_parser.add_argument(
+        "--limit",
+        type=_positive_int_value,
+        help="Maximum number of ideas to return",
+    )
+    list_parser.add_argument(
+        "--offset",
+        type=_non_negative_int_value,
+        default=0,
+        help="Number of matching ideas to skip before returning results",
     )
     list_parser.set_defaults(handler=_handle_list, subcommand="list")
 
@@ -595,6 +648,19 @@ def _positive_int_value(value: str) -> int:
         raise argparse.ArgumentTypeError(f"invalid integer value: {value}") from error
     if parsed <= 0:
         raise argparse.ArgumentTypeError(f"integer value must be positive: {value}")
+    return parsed
+
+
+def _datetime_value(value: str) -> datetime:
+    normalized = value.strip()
+    if normalized.endswith("Z"):
+        normalized = f"{normalized[:-1]}+00:00"
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(f"invalid ISO-8601 timestamp: {value}") from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return parsed.replace(tzinfo=UTC)
     return parsed
 
 
@@ -1187,17 +1253,45 @@ def _baseline_text(command: str, proposed: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+def _list_query_from_args(args: Namespace) -> TradeIdeaListQuery:
+    return TradeIdeaListQuery(
+        state=TradeIdeaState(args.state) if args.state else None,
+        instrument=args.instrument,
+        decision_id=args.decision_id,
+        direction=TradeDirection(args.direction) if args.direction else None,
+        min_confidence=ConfidenceLabel(args.min_confidence) if args.min_confidence else None,
+        max_confidence=ConfidenceLabel(args.max_confidence) if args.max_confidence else None,
+        updated_since=args.updated_since,
+        updated_until=args.updated_until,
+        sort_by=TradeIdeaListSortKey(args.sort_by) if args.sort_by else None,
+        descending=bool(args.descending),
+        limit=args.limit,
+        offset=args.offset,
+    )
+
+
+def _list_metadata(result: TradeIdeaListResult) -> dict[str, Any]:
+    return {
+        "total_count": result.total_count,
+        "returned_count": result.returned_count,
+        "offset": result.offset,
+        "limit": result.limit,
+        "has_more": result.has_more,
+    }
+
+
 def _handle_list(args: Namespace) -> CliResponse:
     command = "ideas list"
     try:
-        requested_state = TradeIdeaState(args.state) if args.state else None
-        views = _service(args).list_views(requested_state)
+        query = _list_query_from_args(args)
+        result = _service(args).list_view_result(query)
     except Exception as error:
         return _mapped_error(command, args, error)
 
-    ideas = [_view_summary(view) for view in views]
+    ideas = [_view_summary(view) for view in result.views]
     text = _ideas_table(ideas)
-    return _success(command, args, {"ideas": ideas}, text, was_noop=not ideas)
+    payload = {"ideas": ideas, **_list_metadata(result)}
+    return _success(command, args, payload, text, was_noop=not ideas)
 
 
 def _handle_show(args: Namespace) -> CliResponse:

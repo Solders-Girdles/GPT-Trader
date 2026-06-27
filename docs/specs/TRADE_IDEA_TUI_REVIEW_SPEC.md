@@ -49,7 +49,7 @@ the bot runtime.
 - **Not wired into `StateRegistry`/`TuiState`:** idea review is reviewer
   workflow state, not bot telemetry. This is deliberate; document it in the
   module docstring. Refresh is manual (`r` key) plus an optional
-  `set_interval` poll (30s) of `list_views()`.
+  `set_interval` poll (30s) of `list_view_result(TradeIdeaListQuery(...))`.
 - **Reviewer identity:** resolve once at screen mount (same precedence as
   CLI: `GPT_TRADER_ACTOR` env → OS user); display it in the header so the
   reviewer knows what the audit log will record. All actions from this screen
@@ -76,11 +76,13 @@ the bot runtime.
 ```
 
 - **Queue table:** columns `decision_id`, `state`, `instrument`,
-  `direction`, `max_loss %`, `expires_at`. Default filter: `proposed` first,
-  then `needs_changes`, then everything else; `f` cycles
-  all → proposed → needs_changes → approved. Highlight rows whose
-  `expires_at` is within `RiskBudget.max_review_latency_hours` (stale-soon)
-  and rows already past expiry.
+  `direction`, `max_loss %`, `expires_at`. Default service sort is proposed
+  first, then `needs_changes`, then `approved`, then everything else; `f`
+  cycles all → proposed → needs_changes → approved. `/` opens an instrument
+  filter modal, and `F` clears active filters. The queue header summarizes
+  active state/instrument filters. Highlight rows whose `expires_at` is within
+  `RiskBudget.max_review_latency_hours` (stale-soon) and rows already past
+  expiry.
 - **Detail pane:** every field of the selected `TradeIdea` (the reviewer must
   be able to check eligibility from recorded data alone, per Decision 2 of
   the framework). Render `data_used` and `do_not_trade_if` as lists.
@@ -102,7 +104,10 @@ the bot runtime.
 | `x` | Reject | `proposed`, `needs_changes` | `reject(...)` |
 | `c` | Request changes | `proposed` | `request_changes(...)` |
 | `e` | Expire | any non-terminal | `expire(id, actor_id=reviewer, actor_type=HUMAN, reason=...)` |
-| `r` | Refresh | — | `list_views()` |
+| `f` | Cycle state filter | — | `list_view_result(...)` |
+| `/` | Apply instrument filter | — | `list_view_result(...)` |
+| `F` | Clear filters | — | `list_view_result(...)` |
+| `r` | Refresh | — | `list_view_result(...)` |
 
 - Every mutating action opens a **reason modal** (`ModalScreen[str | None]`,
   pattern: `api_setup_wizard.py`): a `TextArea`/`Input` for the reason

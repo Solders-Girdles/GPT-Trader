@@ -32,6 +32,7 @@ Schema Structure:
 from __future__ import annotations
 
 import os
+import re
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import time
@@ -53,6 +54,8 @@ if TYPE_CHECKING:
     from gpt_trader.app.config.bot_config import BotConfig
 
 logger = get_logger(__name__, component="profile_loader")
+
+_SESSION_TIME_PATTERN = re.compile(r"\d{2}:\d{2}(?::\d{2})?\Z")
 
 
 class ProfileValidationError(ValueError):
@@ -128,6 +131,11 @@ def _parse_session_time(
         return None
     if isinstance(value, time):
         return value
+    if not isinstance(value, str) or not _SESSION_TIME_PATTERN.fullmatch(value):
+        raise ProfileValidationError(
+            f"session.{field_name} for profile '{profile_name}' must be a valid "
+            f"HH:MM or HH:MM:SS time string; got {value!r}"
+        )
     try:
         return time.fromisoformat(value)
     except (TypeError, ValueError) as exc:

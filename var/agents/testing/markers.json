@@ -95,9 +95,9 @@
     ]
   },
   "counts": {
-    "unit": 6681,
+    "unit": 6683,
     "asyncio": 411,
-    "parametrize": 196,
+    "parametrize": 198,
     "endpoints": 83,
     "property": 82,
     "integration": 79,

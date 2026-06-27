@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6846,
+    "total_tests": 6848,
     "total_files": 807,
     "markers_used": 16
   },
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6681,
+    "unit": 6683,
     "asyncio": 411,
-    "parametrize": 196,
+    "parametrize": 198,
     "endpoints": 83,
     "property": 82,
     "integration": 79,
@@ -3271,7 +3271,7 @@
     "tests/unit/gpt_trader/app/config/test_profile_loader_session_times.py": [
       {
         "name": "test_loader_invalid_session_time_re_raises_with_field_path",
-        "line": 18,
+        "line": 19,
         "markers": [
           "unit"
         ],
@@ -3279,7 +3279,7 @@
       },
       {
         "name": "test_from_yaml_rejects_invalid_session_times",
-        "line": 52,
+        "line": 53,
         "markers": [
           "parametrize",
           "unit"
@@ -3288,8 +3288,26 @@
       },
       {
         "name": "test_from_yaml_preserves_explicit_null_session_times",
-        "line": 69,
+        "line": 70,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_yaml_accepts_documented_session_time_shapes",
+        "line": 92,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_from_yaml_rejects_non_contract_session_time_shapes",
+        "line": 116,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""

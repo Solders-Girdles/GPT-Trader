@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import time
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -79,3 +80,52 @@ def test_from_yaml_preserves_explicit_null_session_times() -> None:
 
     assert schema.session.start_time is None
     assert schema.session.end_time is None
+
+
+@pytest.mark.parametrize(
+    ("start_time", "expected"),
+    [
+        ("09:00", time(9, 0)),
+        ("09:00:30", time(9, 0, 30)),
+    ],
+)
+def test_from_yaml_accepts_documented_session_time_shapes(start_time: str, expected: time) -> None:
+    data = {
+        "profile_name": "valid-session",
+        "session": {
+            "start_time": start_time,
+            "end_time": "17:00",
+        },
+    }
+
+    schema = ProfileSchema.from_yaml(data, "valid-session")
+
+    assert schema.session.start_time == expected
+
+
+@pytest.mark.parametrize(
+    "start_time",
+    [
+        "09",
+        "0900",
+        "T09:00",
+        "09:00Z",
+        "9:00",
+    ],
+)
+def test_from_yaml_rejects_non_contract_session_time_shapes(
+    start_time: str,
+) -> None:
+    data = {
+        "profile_name": "invalid-shape",
+        "session": {
+            "start_time": start_time,
+            "end_time": "17:00",
+        },
+    }
+
+    with pytest.raises(
+        ProfileValidationError,
+        match=r"session\.start_time.*HH:MM",
+    ):
+        ProfileSchema.from_yaml(data, "invalid-shape")

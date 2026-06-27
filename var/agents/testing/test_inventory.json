@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6897,
+    "total_tests": 6898,
     "total_files": 818,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6732,
+    "unit": 6733,
     "asyncio": 411,
     "parametrize": 201,
     "endpoints": 83,
@@ -9772,6 +9772,14 @@
       {
         "name": "test_windowed_report_rejects_tampered_historical_record_hash",
         "line": 143,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_windowed_report_rejects_historical_record_missing_required_field",
+        "line": 173,
         "markers": [
           "unit"
         ],

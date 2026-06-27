@@ -168,3 +168,38 @@ def test_windowed_report_rejects_tampered_historical_record_hash(
             since=datetime(2026, 5, 1, 0, 0, tzinfo=UTC),
             until=datetime(2026, 5, 31, 23, 59, 59, tzinfo=UTC),
         )
+
+
+def test_windowed_report_rejects_historical_record_missing_required_field(
+    tmp_path: Path,
+) -> None:
+    root = tmp_path / "ideas"
+    service = TradeIdeaService(
+        root,
+        now_factory=lambda: datetime(2026, 5, 20, 12, 0, tzinfo=UTC),
+    )
+    original = _idea("trade-window-missing-history-field", max_loss=MaxLoss())
+    service.propose(original, actor_id="idea-generator-v1")
+    proposed_hash = service.audit_log.read_events(original.decision_id)[0].record_hash
+    historical_payload = original.to_dict()
+    del historical_payload["instrument"]
+    historical_path = root / "records" / original.decision_id / f"{proposed_hash}.json"
+    historical_path.write_text(
+        json.dumps(historical_payload, sort_keys=True, indent=2),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(
+        AuditIntegrityError, match="missing required field 'instrument'"
+    ) as exc_info:
+        build_trade_idea_track_record_report(
+            service,
+            now=datetime(2026, 7, 1, 12, 0, tzinfo=UTC),
+            since=datetime(2026, 5, 1, 0, 0, tzinfo=UTC),
+            until=datetime(2026, 5, 31, 23, 59, 59, tzinfo=UTC),
+        )
+
+    assert isinstance(exc_info.value.__cause__, KeyError)
+    assert exc_info.value.context["field"] == "record_hash"
+    assert exc_info.value.context["value"] == proposed_hash
+    assert exc_info.value.context["missing_field"] == "instrument"

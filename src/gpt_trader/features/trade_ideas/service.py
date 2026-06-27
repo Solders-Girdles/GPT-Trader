@@ -583,6 +583,19 @@ class TradeIdeaService:
         """Load the exact record version referenced by an audit event."""
         try:
             idea = self._store.load_version(decision_id, record_hash)
+        except KeyError as error:
+            missing_field = str(error.args[0]) if error.args else "unknown"
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' version '{record_hash}' is missing "
+                f"required field '{missing_field}'",
+                field="record_hash",
+                value=record_hash,
+                context={
+                    "decision_id": decision_id,
+                    "record_hash": record_hash,
+                    "missing_field": missing_field,
+                },
+            ) from error
         except (InvalidOperation, TypeError, ValueError) as error:
             raise AuditIntegrityError(
                 f"Stored trade idea '{decision_id}' version '{record_hash}' is invalid: {error}",

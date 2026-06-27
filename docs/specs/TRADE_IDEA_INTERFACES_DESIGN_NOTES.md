@@ -1,6 +1,6 @@
 ---
 status: current
-last-updated: 2026-06-25
+last-updated: 2026-06-27
 scope: Operator and agent interfaces over the trade_ideas slice
 audience: Implementation agents (Codex) and reviewers
 ---
@@ -29,12 +29,15 @@ already exists and is complete at the domain level:
 `gpt-trader ideas` constructs `TradeIdeaService` through the trade-ideas factory
 and exposes the agent-facing approval workflow: propose, list, show, approve,
 reject, request-changes, expire, resubmit, mark-submitted, mark-filled, budget,
-and audit. The TUI `IdeasReviewScreen` is the implemented human review surface:
-it lists proposed ideas, renders record details, previews policy violations, and
-records approve, reject, request-changes, and expire decisions through
-`TradeIdeaService`. MCP or other remote surfaces remain future work. The service
-docstring still states the adapter boundary explicitly: *"interfaces such as CLI,
-TUI, or MCP servers must stay thin adapters over these methods."*
+audit, and report. It also exposes the read-only Stage 1 baseline calibration
+surface, `gpt-trader ideas replay baseline`, which parses a local candle fixture
+and formats `TradeIdeaReplayRunner` / `ReplayReport` output without using
+`TradeIdeaService` storage. The TUI `IdeasReviewScreen` is the implemented human
+review surface: it lists proposed ideas, renders record details, previews policy
+violations, and records approve, reject, request-changes, and expire decisions
+through `TradeIdeaService`. MCP or other remote surfaces remain future work. The
+service docstring still states the adapter boundary explicitly: *"interfaces such
+as CLI, TUI, or MCP servers must stay thin adapters over these methods."*
 
 These notes preserve the interface decisions that shaped the implemented CLI and
 TUI surfaces. They are not a request to re-promote the TUI review workstream.

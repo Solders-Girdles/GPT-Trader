@@ -86,3 +86,27 @@ def test_suggest_sections_for_representative_paths(path: Path, expected: list[st
     }
 
     assert docs_reachability_check.suggest_sections(path, available_sections) == expected
+
+
+@pytest.mark.parametrize(
+    ("block", "expected"),
+    [
+        # status alone is sufficient (date keys are optional)
+        ("---\nstatus: current\n---", True),
+        ("---\nstatus: current\nlast-updated: 2026-06-27\n---", True),
+        # status must be present and recognized
+        ("---\nlast-updated: 2026-06-27\n---", False),
+        ("---\nstatus: bogus\n---", False),
+        # no metadata block at all
+        ("(no frontmatter here)", False),
+        # a malformed date key must fail even when a later key is valid
+        (
+            "---\nstatus: current\nlast-updated: NOT-A-DATE\nlast-reviewed: 2026-06-27\n---",
+            False,
+        ),
+    ],
+)
+def test_has_required_metadata(tmp_path: Path, block: str, expected: bool) -> None:
+    doc = tmp_path / "doc.md"
+    doc.write_text(f"# Title\n\n{block}\n\nbody\n", encoding="utf-8")
+    assert docs_reachability_check.has_required_metadata(doc) is expected

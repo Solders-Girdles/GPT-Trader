@@ -62,9 +62,10 @@ if position.side == "short":
 
 ### 1. Funding payments (CFM/derivatives)
 
-- **Our system:** live positions (`core.account.Position`) have **no funding
-  field**. Funding is only modeled in backtests via `FundingPnLTracker`. Live
-  realized P&L from `PnLService` therefore excludes funding entirely.
+- **Our system:** the live P&L position model (`PositionState`, held in
+  `PositionStateStore`) has **no funding field**. Funding is only modeled in
+  backtests via `FundingPnLTracker`. Live realized P&L from `PnLService`
+  therefore excludes funding entirely.
 - **Coinbase:** CFM endpoints may fold funding into `realized_pnl`.
 - **Consequence:** for derivatives, our realized P&L and Coinbase's can diverge
   by accumulated funding. Spot trading (the active mode) is unaffected.
@@ -117,7 +118,8 @@ funding and fee gaps above.
 
 | Purpose | Endpoint |
 |---------|----------|
-| CFM positions | `GET /api/v3/brokerage/cfm/positions/{product_id}` (via `cfm_position()`) |
+| CFM positions (list) | `GET /api/v3/brokerage/cfm/positions` (via `cfm_positions()`) |
+| CFM position (single) | `GET /api/v3/brokerage/cfm/positions/{product_id}` (via `cfm_position()`) |
 | Fills (rebuild history) | `GET /api/v3/brokerage/orders/historical/fills` |
 | Portfolio aggregate | `GET /api/v3/brokerage/portfolios/{portfolio_uuid}` |
 

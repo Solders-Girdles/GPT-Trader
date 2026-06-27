@@ -11,7 +11,7 @@ When adding a new doc, link it below in the best-fit section.
 
 Each doc carries a frontmatter block with a single required field:
 
-```
+```yaml
 ---
 status: current   # one of: current, draft, deprecated, superseded
 ---

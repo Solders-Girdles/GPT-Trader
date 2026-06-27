@@ -39,6 +39,10 @@ _CANONICAL_GRANULARITY_BY_ALIAS = {
     "2HR": "TWO_HOUR",
     "2HOUR": "TWO_HOUR",
     "TWO_HOUR": "TWO_HOUR",
+    "4H": "FOUR_HOUR",
+    "4HR": "FOUR_HOUR",
+    "4HOUR": "FOUR_HOUR",
+    "FOUR_HOUR": "FOUR_HOUR",
     "6H": "SIX_HOUR",
     "6HR": "SIX_HOUR",
     "6HOUR": "SIX_HOUR",
@@ -55,6 +59,7 @@ _GRANULARITY_DURATION_BY_NAME = {
     "THIRTY_MINUTE": timedelta(minutes=30),
     "ONE_HOUR": timedelta(hours=1),
     "TWO_HOUR": timedelta(hours=2),
+    "FOUR_HOUR": timedelta(hours=4),
     "SIX_HOUR": timedelta(hours=6),
     "ONE_DAY": timedelta(days=1),
 }

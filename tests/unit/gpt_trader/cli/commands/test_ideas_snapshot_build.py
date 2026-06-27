@@ -138,7 +138,10 @@ def test_snapshot_build_writes_json_accepted_by_propose_baseline(
     )
 
 
-@pytest.mark.parametrize(("alias", "canonical"), [("1H", "ONE_HOUR"), ("1D", "ONE_DAY")])
+@pytest.mark.parametrize(
+    ("alias", "canonical"),
+    [("1H", "ONE_HOUR"), ("4H", "FOUR_HOUR"), ("1D", "ONE_DAY")],
+)
 def test_snapshot_build_normalizes_granularity_alias_before_fetch(
     alias: str,
     canonical: str,

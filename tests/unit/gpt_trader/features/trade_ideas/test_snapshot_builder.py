@@ -107,6 +107,23 @@ async def test_builder_normalizes_granularity_alias_before_fetching() -> None:
 
 
 @pytest.mark.asyncio
+async def test_builder_supports_four_hour_granularity_alias() -> None:
+    source = FakeCandleSource({"BTC-USD": (candle(-8), candle(-4))})
+
+    snapshot = await MarketSnapshotBuilder(source).build(request(granularity="4HR", lookback=2))
+
+    assert source.calls[0]["granularity"] == "FOUR_HOUR"
+    assert source.calls[0]["start"] == AS_OF - timedelta(hours=8)
+    series = snapshot.series_for("BTC-USD")
+    assert series is not None
+    assert series.granularity == "FOUR_HOUR"
+    assert [item.ts for item in series.candles] == [
+        AS_OF - timedelta(hours=8),
+        AS_OF - timedelta(hours=4),
+    ]
+
+
+@pytest.mark.asyncio
 async def test_builder_skips_candles_at_or_after_as_of_without_lookahead() -> None:
     source = FakeCandleSource({"BTC-USD": (candle(-2), candle(-1), candle(0), candle(1))})
 
@@ -168,7 +185,10 @@ def test_build_request_rejects_unsupported_granularity() -> None:
 
     assert exc_info.value.context["field"] == "granularity"
     assert canonical_granularity("1H") == "ONE_HOUR"
+    assert canonical_granularity("4H") == "FOUR_HOUR"
+    assert canonical_granularity("4HOUR") == "FOUR_HOUR"
     assert canonical_granularity("1D") == "ONE_DAY"
+    assert granularity_duration("FOUR_HOUR") == timedelta(hours=4)
     assert granularity_duration("ONE_DAY") == timedelta(days=1)
 
 

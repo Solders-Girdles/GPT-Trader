@@ -197,7 +197,7 @@ def register(subparsers: Any) -> None:
     snapshot_build.add_argument(
         "--granularity",
         required=True,
-        help="Candle granularity, for example ONE_HOUR, ONE_DAY, 1H, or 1D",
+        help="Candle granularity, for example ONE_HOUR, FOUR_HOUR, ONE_DAY, 1H, 4H, or 1D",
     )
     snapshot_build.add_argument(
         "--lookback",

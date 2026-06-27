@@ -129,7 +129,7 @@ class MarketDataClientMixin(CoinbaseClientProtocol):
         def _format(dt: datetime) -> str:
             ts = dt if dt.tzinfo else dt.replace(tzinfo=UTC)
             ts = ts.astimezone(UTC).replace(microsecond=0)
-            return ts.isoformat().replace("+00:00", "Z")
+            return str(int(ts.timestamp()))
 
         if start is not None:
             params["start"] = _format(start)

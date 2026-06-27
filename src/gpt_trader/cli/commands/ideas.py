@@ -11,21 +11,33 @@ import argparse
 import json
 import sys
 from argparse import ArgumentParser, Namespace
+from collections.abc import Mapping
 from dataclasses import replace
+from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from gpt_trader.cli import options
 from gpt_trader.cli.response import CliError, CliErrorCode, CliResponse
+from gpt_trader.core import Candle
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas import (
     ActorType,
     AuditIntegrityError,
+    BaselineProposer,
+    BaselineProposerConfig,
     BudgetIntegrityError,
+    CloseoutResolution,
     InvalidTransitionError,
+    MarketSnapshot,
     PolicyViolationError,
+    ReplayReport,
+    ReplayRunnerConfig,
+    SnapshotIntegrityError,
+    SymbolSeries,
     TradeIdea,
+    TradeIdeaReplayRunner,
     TradeIdeaService,
     TradeIdeaState,
     UnknownTradeIdeaError,
@@ -33,6 +45,7 @@ from gpt_trader.features.trade_ideas import (
     is_safe_decision_id,
     resolve_trade_idea_actor_id,
 )
+from gpt_trader.features.trade_ideas.replay import _granularity_duration
 from gpt_trader.features.trade_ideas.report import (
     build_trade_idea_track_record_report,
     format_trade_idea_track_record_report,
@@ -52,12 +65,24 @@ BUDGET_FIELDS = (
 )
 
 
-class IdeaInputError(ValueError):
-    """Raised when a JSON trade-idea payload cannot be parsed."""
+class InputPayloadError(ValueError):
+    """Raised when a JSON CLI payload cannot be parsed."""
 
     def __init__(self, message: str, *, field: str | None = None) -> None:
         super().__init__(message)
         self.field = field
+
+
+class IdeaInputError(InputPayloadError):
+    """Raised when a JSON trade-idea payload cannot be parsed."""
+
+
+class SnapshotInputError(InputPayloadError):
+    """Raised when a JSON market snapshot payload cannot be parsed."""
+
+
+class CandleInputError(InputPayloadError):
+    """Raised when a replay candle fixture cannot be parsed."""
 
 
 def register(subparsers: Any) -> None:
@@ -84,6 +109,30 @@ def register(subparsers: Any) -> None:
     )
     propose.add_argument("--reason", default="New trade idea proposed", help="Audit reason")
     propose.set_defaults(handler=_handle_propose, subcommand="propose")
+
+    propose_baseline = ideas_subparsers.add_parser(
+        "propose-baseline",
+        help="Generate proposals from a local market snapshot fixture",
+        description=(
+            "Generate deterministic BaselineProposer trade ideas from a local JSON "
+            "market snapshot and persist them through the audited trade-idea service. "
+            "This command reads no broker, account, credential, canary, or preflight data."
+        ),
+    )
+    _add_common_options(propose_baseline)
+    _add_actor_options(propose_baseline, default_description="baseline proposer id")
+    propose_baseline.add_argument(
+        "--snapshot",
+        type=Path,
+        required=True,
+        help="Read a local MarketSnapshot JSON fixture",
+    )
+    propose_baseline.add_argument(
+        "--reason",
+        default="Baseline proposer generated idea from local snapshot",
+        help="Audit reason",
+    )
+    propose_baseline.set_defaults(handler=_handle_propose_baseline, subcommand="propose-baseline")
 
     resubmit = ideas_subparsers.add_parser(
         "resubmit", help="Submit a revised record after requested changes"
@@ -127,6 +176,141 @@ def register(subparsers: Any) -> None:
     )
     _add_common_options(report)
     report.set_defaults(handler=_handle_report, subcommand="report")
+
+    replay = ideas_subparsers.add_parser(
+        "replay",
+        help="Replay proposer calibration against local candle fixtures",
+        description=(
+            "Read-only calibration commands over local candle fixtures. "
+            "Replay commands never contact brokers, accounts, or live market data."
+        ),
+    )
+    replay_subparsers = replay.add_subparsers(dest="replay_command", required=True)
+    baseline = replay_subparsers.add_parser(
+        "baseline",
+        help="Replay the deterministic baseline proposer over candle history",
+        description=(
+            "Feed a local OHLCV candle fixture to the deterministic baseline proposer "
+            "and summarize replay scoring. This command is broker-free and read-only."
+        ),
+    )
+    options.add_output_options(baseline, include_quiet=False)
+    baseline.add_argument(
+        "--file",
+        type=Path,
+        required=True,
+        help="JSON fixture with a top-level candles array of OHLCV bars",
+    )
+    baseline.add_argument("--symbol", required=True, help="Symbol represented by the candles")
+    baseline.add_argument(
+        "--granularity",
+        required=True,
+        help="Candle granularity, for example ONE_HOUR, 1H, or 1D",
+    )
+    baseline.add_argument(
+        "--source",
+        default="fixture:candles",
+        help="Source label stamped into point-in-time replay snapshots",
+    )
+    baseline.add_argument(
+        "--min-history",
+        type=_positive_int_value,
+        help=(
+            "Minimum historical candles before evaluating snapshots "
+            "(default: max(short-window, long-window) + crossover-lookback)"
+        ),
+    )
+    baseline.add_argument("--short-window", type=_positive_int_value, default=10)
+    baseline.add_argument("--long-window", type=_positive_int_value, default=50)
+    baseline.add_argument("--crossover-lookback", type=_positive_int_value, default=3)
+    baseline.add_argument(
+        "--risk-per-idea-pct",
+        type=_non_negative_decimal_value,
+        default=Decimal("2"),
+    )
+    baseline.add_argument(
+        "--entry-band-pct",
+        type=_positive_decimal_value,
+        default=Decimal("1"),
+    )
+    baseline.add_argument(
+        "--reward-multiple",
+        type=_positive_decimal_value,
+        default=Decimal("2"),
+    )
+    baseline.add_argument("--expiry-hours", type=_positive_int_value, default=48)
+    baseline.add_argument("--expected-hold", default="5-15 days")
+    baseline.add_argument(
+        "--price-precision",
+        type=_positive_decimal_value,
+        default=Decimal("0.01"),
+    )
+    baseline.set_defaults(handler=_handle_replay_baseline, subcommand="replay baseline")
+
+    closeout = ideas_subparsers.add_parser(
+        "closeout",
+        help="Record or inspect terminal closeout attribution",
+        description=(
+            "Record and inspect broker-neutral closeout attribution for terminal trade "
+            "ideas. This command never contacts a broker or account."
+        ),
+    )
+    closeout_subparsers = closeout.add_subparsers(dest="closeout_command", required=True)
+
+    closeout_record = closeout_subparsers.add_parser(
+        "record",
+        help="Record terminal closeout attribution; does not call a broker API",
+        description=(
+            "Append closeout attribution for a terminal trade idea. This records external "
+            "evidence only and never places, modifies, or cancels broker orders."
+        ),
+    )
+    _add_common_options(closeout_record)
+    _add_actor_options(closeout_record)
+    closeout_record.add_argument("decision_id", help="Trade idea decision identifier")
+    closeout_record.add_argument(
+        "--resolution",
+        required=True,
+        choices=[resolution.value for resolution in CloseoutResolution],
+        help="Why the terminal idea resolved",
+    )
+    closeout_record.add_argument(
+        "--realized-profit-loss-amount",
+        type=_decimal_value,
+        help="Realized profit/loss amount; negative values represent losses",
+    )
+    closeout_record.add_argument(
+        "--realized-profit-loss-percent",
+        type=_decimal_value,
+        help="Realized profit/loss percent; negative values represent losses",
+    )
+    closeout_record.add_argument(
+        "--realized-profit-loss-unavailable-reason",
+        default="",
+        help="Why realized profit/loss is unavailable",
+    )
+    closeout_record.add_argument(
+        "--evidence",
+        action="append",
+        default=None,
+        help="Evidence string to attach; repeat for multiple evidence entries",
+    )
+    closeout_record.add_argument(
+        "--actor-type",
+        choices=(ActorType.HUMAN.value, ActorType.SYSTEM.value),
+        default=ActorType.HUMAN.value,
+        help="Actor type stamped into the closeout attribution record",
+    )
+    closeout_record.set_defaults(handler=_handle_closeout_record, subcommand="closeout record")
+
+    closeout_show = closeout_subparsers.add_parser(
+        "show",
+        help="Show closeout attribution for one trade idea",
+        description="Read closeout attribution from local trade-idea records only.",
+    )
+    _add_common_options(closeout_show)
+    closeout_show.add_argument("decision_id", help="Trade idea decision identifier")
+    closeout_show.set_defaults(handler=_handle_closeout_show, subcommand="closeout show")
 
     approve = ideas_subparsers.add_parser("approve", help="Approve a proposed trade idea")
     _add_common_options(approve)
@@ -271,10 +455,14 @@ def _add_input_options(parser: ArgumentParser) -> None:
     source.add_argument("--stdin", action="store_true", help="Read TradeIdea JSON from stdin")
 
 
-def _add_actor_options(parser: ArgumentParser) -> None:
+def _add_actor_options(
+    parser: ArgumentParser,
+    *,
+    default_description: str = "GPT_TRADER_ACTOR, then OS user",
+) -> None:
     parser.add_argument(
         "--actor",
-        help="Actor id stamped into audit events (default: GPT_TRADER_ACTOR, then OS user)",
+        help=f"Actor id stamped into audit events (default: {default_description})",
     )
 
 
@@ -302,6 +490,23 @@ def _non_negative_int_value(value: str) -> int:
         raise argparse.ArgumentTypeError(f"invalid integer value: {value}") from error
     if parsed < 0:
         raise argparse.ArgumentTypeError(f"integer value must be non-negative: {value}")
+    return parsed
+
+
+def _positive_decimal_value(value: str) -> Decimal:
+    parsed = _decimal_value(value)
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError(f"decimal value must be positive: {value}")
+    return parsed
+
+
+def _positive_int_value(value: str) -> int:
+    try:
+        parsed = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(f"invalid integer value: {value}") from error
+    if parsed <= 0:
+        raise argparse.ArgumentTypeError(f"integer value must be positive: {value}")
     return parsed
 
 
@@ -346,6 +551,272 @@ def _load_trade_idea(args: Namespace) -> TradeIdea:
         raise IdeaInputError(f"Invalid trade idea field: {error}") from error
 
 
+def _load_market_snapshot(path: Path) -> MarketSnapshot:
+    try:
+        raw_payload = path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise SnapshotInputError(f"Could not read market snapshot input: {error}") from error
+
+    try:
+        payload = json.loads(raw_payload)
+    except json.JSONDecodeError as error:
+        raise SnapshotInputError(f"Malformed market snapshot JSON: {error.msg}") from error
+    if not isinstance(payload, Mapping):
+        raise SnapshotInputError("Market snapshot input must be a JSON object")
+
+    try:
+        return _market_snapshot_from_payload(payload)
+    except SnapshotInputError:
+        raise
+    except SnapshotIntegrityError as error:
+        context_field = _error_context(error).get("field")
+        raise SnapshotInputError(
+            f"Invalid market snapshot field: {error}",
+            field=context_field if isinstance(context_field, str) else None,
+        ) from error
+
+
+def _market_snapshot_from_payload(payload: Mapping[str, Any]) -> MarketSnapshot:
+    series_payloads = _required_payload_array(payload, "series", "series")
+    return MarketSnapshot(
+        as_of=_required_payload_datetime(payload, "as_of", "as_of"),
+        source=_required_payload_string(payload, "source", "source"),
+        series=tuple(
+            _symbol_series_from_payload(series_payload, index)
+            for index, series_payload in enumerate(series_payloads)
+        ),
+    )
+
+
+def _symbol_series_from_payload(payload: Any, index: int) -> SymbolSeries:
+    field_prefix = f"series[{index}]"
+    series_payload = _payload_object(payload, field_prefix)
+    candle_payloads = _required_payload_array(
+        series_payload,
+        "candles",
+        f"{field_prefix}.candles",
+    )
+    return SymbolSeries(
+        symbol=_required_payload_string(series_payload, "symbol", f"{field_prefix}.symbol"),
+        granularity=_required_payload_string(
+            series_payload,
+            "granularity",
+            f"{field_prefix}.granularity",
+        ),
+        candles=tuple(
+            _candle_from_payload(candle_payload, f"{field_prefix}.candles[{candle_index}]")
+            for candle_index, candle_payload in enumerate(candle_payloads)
+        ),
+    )
+
+
+def _candle_from_payload(payload: Any, field_prefix: str) -> Candle:
+    candle_payload = _payload_object(payload, field_prefix)
+    return Candle(
+        ts=_required_payload_datetime(candle_payload, "ts", f"{field_prefix}.ts"),
+        open=_required_payload_decimal(candle_payload, "open", f"{field_prefix}.open"),
+        high=_required_payload_decimal(candle_payload, "high", f"{field_prefix}.high"),
+        low=_required_payload_decimal(candle_payload, "low", f"{field_prefix}.low"),
+        close=_required_payload_decimal(candle_payload, "close", f"{field_prefix}.close"),
+        volume=_required_payload_decimal(candle_payload, "volume", f"{field_prefix}.volume"),
+    )
+
+
+def _payload_object(value: Any, field: str) -> Mapping[str, Any]:
+    if not isinstance(value, Mapping):
+        raise SnapshotInputError(f"{field} must be a JSON object", field=field)
+    return value
+
+
+def _required_payload_value(payload: Mapping[str, Any], key: str, field: str) -> Any:
+    try:
+        return payload[key]
+    except KeyError as error:
+        raise SnapshotInputError(
+            f"Missing required market snapshot field: {field}",
+            field=field,
+        ) from error
+
+
+def _required_payload_array(
+    payload: Mapping[str, Any],
+    key: str,
+    field: str,
+) -> list[Any]:
+    value = _required_payload_value(payload, key, field)
+    if not isinstance(value, list):
+        raise SnapshotInputError(f"{field} must be a JSON array", field=field)
+    return value
+
+
+def _required_payload_string(payload: Mapping[str, Any], key: str, field: str) -> str:
+    value = _required_payload_value(payload, key, field)
+    if not isinstance(value, str) or not value.strip():
+        raise SnapshotInputError(f"{field} must be a non-empty string", field=field)
+    return value
+
+
+def _required_payload_decimal(payload: Mapping[str, Any], key: str, field: str) -> Decimal:
+    value = _required_payload_value(payload, key, field)
+    try:
+        parsed = Decimal(str(value))
+    except (InvalidOperation, ValueError) as error:
+        raise SnapshotInputError(f"{field} must be a decimal value", field=field) from error
+    if not parsed.is_finite():
+        raise SnapshotInputError(f"{field} must be finite", field=field)
+    return parsed
+
+
+def _required_payload_datetime(payload: Mapping[str, Any], key: str, field: str) -> datetime:
+    value = _required_payload_value(payload, key, field)
+    if not isinstance(value, str):
+        raise SnapshotInputError(f"{field} must be an ISO datetime string", field=field)
+    normalized = f"{value[:-1]}+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as error:
+        raise SnapshotInputError(f"{field} must be an ISO datetime string", field=field) from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise SnapshotInputError(f"{field} must include a timezone", field=field)
+    return parsed
+
+
+def _load_candle_fixture(path: Path) -> tuple[Candle, ...]:
+    try:
+        raw_payload = path.read_text(encoding="utf-8")
+    except OSError as error:
+        raise CandleInputError(f"Could not read candle fixture: {error}") from error
+
+    try:
+        payload = json.loads(raw_payload, parse_float=Decimal, parse_int=Decimal)
+    except json.JSONDecodeError as error:
+        raise CandleInputError(f"Malformed candle fixture JSON: {error.msg}") from error
+    if not isinstance(payload, dict):
+        raise CandleInputError("Candle fixture must be a JSON object", field="candles")
+
+    raw_candles = payload.get("candles")
+    if not isinstance(raw_candles, list):
+        raise CandleInputError("Candle fixture must contain a candles array", field="candles")
+
+    return tuple(_parse_candle(row, index) for index, row in enumerate(raw_candles))
+
+
+def _parse_candle(row: Any, index: int) -> Candle:
+    if not isinstance(row, dict):
+        raise CandleInputError(
+            f"candle at index {index} must be a JSON object",
+            field=f"candles[{index}]",
+        )
+    candle = Candle(
+        ts=_parse_candle_timestamp(_required_candle_field(row, "ts", index), index),
+        open=_parse_candle_decimal(_required_candle_field(row, "open", index), index, "open"),
+        high=_parse_candle_decimal(_required_candle_field(row, "high", index), index, "high"),
+        low=_parse_candle_decimal(_required_candle_field(row, "low", index), index, "low"),
+        close=_parse_candle_decimal(_required_candle_field(row, "close", index), index, "close"),
+        volume=_parse_candle_decimal(_required_candle_field(row, "volume", index), index, "volume"),
+    )
+    _validate_candle_semantics(candle, index)
+    return candle
+
+
+def _required_candle_field(row: dict[str, Any], field_name: str, index: int) -> Any:
+    if field_name not in row:
+        raise CandleInputError(
+            f"candle at index {index} is missing required field '{field_name}'",
+            field=f"candles[{index}].{field_name}",
+        )
+    return row[field_name]
+
+
+def _parse_candle_timestamp(value: Any, index: int) -> datetime:
+    field = f"candles[{index}].ts"
+    if not isinstance(value, str):
+        raise CandleInputError("candle ts must be an ISO-8601 string", field=field)
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as error:
+        raise CandleInputError(f"Invalid candle timestamp: {value}", field=field) from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
+
+
+def _parse_candle_decimal(value: Any, index: int, field_name: str) -> Decimal:
+    field = f"candles[{index}].{field_name}"
+    try:
+        parsed = Decimal(str(value))
+    except InvalidOperation as error:
+        raise CandleInputError(
+            f"Invalid decimal candle value for {field_name}: {value}",
+            field=field,
+        ) from error
+    if not parsed.is_finite():
+        raise CandleInputError(
+            f"Candle decimal value must be finite for {field_name}: {value}",
+            field=field,
+        )
+    return parsed
+
+
+def _validate_candle_semantics(candle: Candle, index: int) -> None:
+    for field_name in ("open", "high", "low", "close"):
+        if getattr(candle, field_name) <= 0:
+            raise CandleInputError(
+                f"candle at index {index} has non-positive {field_name}",
+                field=f"candles[{index}].{field_name}",
+            )
+    if candle.high < candle.low:
+        raise CandleInputError(
+            f"candle at index {index} has high below low",
+            field=f"candles[{index}].high",
+        )
+    if not candle.low <= candle.open <= candle.high:
+        raise CandleInputError(
+            f"candle at index {index} has open outside low/high range",
+            field=f"candles[{index}].open",
+        )
+    if not candle.low <= candle.close <= candle.high:
+        raise CandleInputError(
+            f"candle at index {index} has close outside low/high range",
+            field=f"candles[{index}].close",
+        )
+    if candle.volume < 0:
+        raise CandleInputError(
+            f"candle at index {index} has negative volume",
+            field=f"candles[{index}].volume",
+        )
+
+
+def _default_replay_min_history(config: BaselineProposerConfig) -> int:
+    return max(config.short_window, config.long_window) + config.crossover_lookback
+
+
+def _resolve_replay_min_history(args: Namespace, config: BaselineProposerConfig) -> int:
+    minimum_history = _default_replay_min_history(config)
+    requested_min_history = cast(int | None, args.min_history)
+    if requested_min_history is None:
+        return minimum_history
+    if requested_min_history < minimum_history:
+        raise CandleInputError(
+            (
+                "--min-history must be at least "
+                f"{minimum_history} for short-window={config.short_window}, "
+                f"long-window={config.long_window}, "
+                f"crossover-lookback={config.crossover_lookback}"
+            ),
+            field="min_history",
+        )
+    return requested_min_history
+
+
+def _validate_replay_granularity(granularity: str) -> None:
+    if _granularity_duration(granularity) is None:
+        raise CandleInputError(
+            f"Unsupported replay granularity: {granularity}",
+            field="granularity",
+        )
+
+
 def _handle_propose(args: Namespace) -> CliResponse:
     command = "ideas propose"
     try:
@@ -376,6 +847,46 @@ def _handle_propose(args: Namespace) -> CliResponse:
     return _success(command, args, payload, text, warnings=warning_messages)
 
 
+def _handle_propose_baseline(args: Namespace) -> CliResponse:
+    command = "ideas propose-baseline"
+    proposer = BaselineProposer()
+    try:
+        snapshot = _load_market_snapshot(args.snapshot)
+        ideas = proposer.propose(snapshot)
+        if not ideas:
+            payload = _baseline_payload(snapshot, proposer.proposer_id, [])
+            text = _status_line(command, "OK", "0 proposals")
+            return _success(command, args, payload, text, was_noop=True)
+
+        service = _service(args)
+        proposal_batch = tuple(ideas)
+        service.validate_new_proposals(proposal_batch)
+        previews = [service.approval_violations(idea, actor_type=ActorType.HUMAN) for idea in ideas]
+        actor_id = _baseline_actor_id(args, proposer.proposer_id)
+        views = service.propose_batch(
+            proposal_batch,
+            actor_id=actor_id,
+            actor_type=ActorType.AI,
+            reason=args.reason,
+            evidence=_baseline_evidence(args.snapshot, snapshot, proposer.proposer_id),
+        )
+    except SnapshotInputError as error:
+        return _input_error(command, args, error)
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    proposed = [
+        _baseline_proposed_summary(view, violations)
+        for view, violations in zip(views, previews, strict=True)
+    ]
+    payload = _baseline_payload(snapshot, proposer.proposer_id, proposed)
+    warnings = [
+        warning for proposal in proposed for warning in proposal["approval_preview"]["warnings"]
+    ]
+    text = _baseline_text(command, proposed)
+    return _success(command, args, payload, text, warnings=warnings)
+
+
 def _handle_resubmit(args: Namespace) -> CliResponse:
     command = "ideas resubmit"
     try:
@@ -404,6 +915,68 @@ def _handle_resubmit(args: Namespace) -> CliResponse:
     if violations:
         text += "\n" + "\n".join(f"⚠ would fail approval: {violation}" for violation in violations)
     return _success(command, args, payload, text, warnings=warning_messages)
+
+
+def _baseline_actor_id(args: Namespace, proposer_id: str) -> str:
+    explicit_actor = getattr(args, "actor", None)
+    return resolve_trade_idea_actor_id(explicit_actor or proposer_id)
+
+
+def _baseline_evidence(
+    snapshot_path: Path,
+    snapshot: MarketSnapshot,
+    proposer_id: str,
+) -> tuple[str, ...]:
+    return (
+        f"proposer_id={proposer_id}",
+        f"snapshot_path={snapshot_path}",
+        f"snapshot_source={snapshot.source}",
+        f"snapshot_as_of={snapshot.as_of.isoformat()}",
+    )
+
+
+def _baseline_proposed_summary(view: Any, violations: list[str]) -> dict[str, Any]:
+    warning_messages = [f"would fail approval: {violation}" for violation in violations]
+    return {
+        **_view_summary(view),
+        "record_hash": view.idea.record_hash(),
+        "approval_preview": {
+            "violations": violations,
+            "warnings": warning_messages,
+        },
+    }
+
+
+def _baseline_payload(
+    snapshot: MarketSnapshot,
+    proposer_id: str,
+    proposed: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "proposer_id": proposer_id,
+        "snapshot": {
+            "as_of": snapshot.as_of.isoformat(),
+            "source": snapshot.source,
+            "symbols": list(snapshot.symbols()),
+        },
+        "proposal_count": len(proposed),
+        "proposed": proposed,
+    }
+
+
+def _baseline_text(command: str, proposed: list[dict[str, Any]]) -> str:
+    lines = [_status_line(command, "OK", f"{len(proposed)} proposals")]
+    for proposal in proposed:
+        lines.append(
+            "{decision_id}  state={state}  record_hash={record_hash}".format(
+                decision_id=proposal["decision_id"],
+                state=proposal["state"],
+                record_hash=proposal["record_hash"],
+            )
+        )
+        for warning in proposal["approval_preview"]["warnings"]:
+            lines.append(f"⚠ {proposal['decision_id']}: {warning}")
+    return "\n".join(lines)
 
 
 def _handle_list(args: Namespace) -> CliResponse:
@@ -444,6 +1017,89 @@ def _handle_report(args: Namespace) -> CliResponse:
     text = format_trade_idea_track_record_report(payload)
     idea_count = payload["proposal_volume"]["idea_count"]
     return _success(command, args, payload, text, was_noop=idea_count == 0)
+
+
+def _handle_replay_baseline(args: Namespace) -> CliResponse:
+    command = "ideas replay baseline"
+    try:
+        _validate_replay_granularity(args.granularity)
+        candles = _load_candle_fixture(args.file)
+        proposer_config = BaselineProposerConfig(
+            short_window=args.short_window,
+            long_window=args.long_window,
+            crossover_lookback=args.crossover_lookback,
+            risk_per_idea_pct=args.risk_per_idea_pct,
+            entry_band_pct=args.entry_band_pct,
+            reward_multiple=args.reward_multiple,
+            expiry_hours=args.expiry_hours,
+            expected_hold=args.expected_hold,
+            price_precision=args.price_precision,
+        )
+        min_history = _resolve_replay_min_history(args, proposer_config)
+        report = TradeIdeaReplayRunner(
+            BaselineProposer(proposer_config),
+            config=ReplayRunnerConfig(source=args.source, min_history=min_history),
+        ).run_series(symbol=args.symbol, granularity=args.granularity, candles=candles)
+    except CandleInputError as error:
+        return _input_error(command, args, error)
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    payload = report.to_dict()
+    text = _replay_report_text(report)
+    return _success(command, args, payload, text, was_noop=report.ideas_proposed == 0)
+
+
+def _handle_closeout_record(args: Namespace) -> CliResponse:
+    command = "ideas closeout record"
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
+    profit_loss_error = _closeout_profit_loss_error(command, args)
+    if profit_loss_error is not None:
+        return profit_loss_error
+    evidence_error = _evidence_error(command, args)
+    if evidence_error is not None:
+        return evidence_error
+
+    try:
+        record = _service(args).record_closeout_attribution(
+            args.decision_id,
+            actor_id=_actor_id(args),
+            actor_type=ActorType(args.actor_type),
+            resolution=args.resolution,
+            realized_profit_loss_amount=args.realized_profit_loss_amount,
+            realized_profit_loss_percent=args.realized_profit_loss_percent,
+            realized_profit_loss_unavailable_reason=(
+                args.realized_profit_loss_unavailable_reason.strip()
+            ),
+            evidence=_evidence(args),
+        )
+    except Exception as error:
+        return _mapped_error(command, args, error)
+    return _closeout_success(command, args, record)
+
+
+def _handle_closeout_show(args: Namespace) -> CliResponse:
+    command = "ideas closeout show"
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
+    try:
+        record = _service(args).get_closeout_attribution(args.decision_id)
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    payload = {
+        "decision_id": args.decision_id,
+        "closeout_attribution": record.to_dict() if record is not None else None,
+    }
+    if record is None:
+        text = _status_line(command, "OK", f"{args.decision_id}, no closeout attribution")
+        return _success(command, args, payload, text, was_noop=True)
+
+    text = _closeout_text(command, record.to_dict())
+    return _success(command, args, payload, text)
 
 
 def _handle_approve(args: Namespace) -> CliResponse:
@@ -663,10 +1319,56 @@ def _budget_overrides(args: Namespace) -> dict[str, Any]:
     return overrides
 
 
+def _closeout_profit_loss_error(command: str, args: Namespace) -> CliResponse | None:
+    if (
+        args.realized_profit_loss_amount is not None
+        or args.realized_profit_loss_percent is not None
+        or args.realized_profit_loss_unavailable_reason.strip()
+    ):
+        return None
+    return _failure(
+        command,
+        args,
+        CliErrorCode.MISSING_ARGUMENT,
+        (
+            "Provide at least one of --realized-profit-loss-amount, "
+            "--realized-profit-loss-percent, or --realized-profit-loss-unavailable-reason"
+        ),
+        details={"field": "realized_profit_loss"},
+    )
+
+
+def _evidence(args: Namespace) -> tuple[str, ...]:
+    return tuple(item.strip() for item in (getattr(args, "evidence", None) or ()))
+
+
+def _evidence_error(command: str, args: Namespace) -> CliResponse | None:
+    for index, item in enumerate(getattr(args, "evidence", None) or ()):
+        if item.strip():
+            continue
+        return _failure(
+            command,
+            args,
+            CliErrorCode.INVALID_ARGUMENT,
+            "--evidence entries must be non-empty",
+            details={"field": "evidence", "index": index},
+        )
+    return None
+
+
 def _state_change_success(command: str, args: Namespace, view: Any) -> CliResponse:
     payload = _view_summary(view)
     text = _status_line(command, "OK", f"{view.idea.decision_id}, state={view.state.value}")
     return _success(command, args, payload, text)
+
+
+def _closeout_success(command: str, args: Namespace, record: Any) -> CliResponse:
+    record_payload = record.to_dict()
+    payload = {
+        "decision_id": record.decision_id,
+        "closeout_attribution": record_payload,
+    }
+    return _success(command, args, payload, _closeout_text(command, record_payload))
 
 
 def _view_summary(view: Any) -> dict[str, Any]:
@@ -710,7 +1412,7 @@ def _success(
     )
 
 
-def _input_error(command: str, args: Namespace, error: IdeaInputError) -> CliResponse:
+def _input_error(command: str, args: Namespace, error: InputPayloadError) -> CliResponse:
     details = {"field": error.field} if error.field else {}
     return _failure(
         command,
@@ -901,3 +1603,62 @@ def _events_text(events: list[dict[str, Any]]) -> str:
 
 def _budget_text(payload: dict[str, Any]) -> str:
     return "\n".join(f"{key}: {value}" for key, value in payload.items())
+
+
+def _replay_report_text(report: ReplayReport) -> str:
+    average_return_r = report.average_return_r
+    return "\n".join(
+        [
+            _status_line(
+                "ideas replay baseline",
+                "OK",
+                (
+                    f"{report.symbol} {report.granularity}, "
+                    f"snapshots={report.snapshots_evaluated}, "
+                    f"ideas={report.ideas_proposed}"
+                ),
+            ),
+            f"proposer_id: {report.proposer_id}",
+            (
+                "outcomes: "
+                f"target_hits={report.target_hits}, "
+                f"stop_hits={report.stop_hits}, "
+                f"timed_out={report.timed_out}, "
+                f"not_filled={report.not_filled}, "
+                f"no_future_data={report.no_future_data}"
+            ),
+            (
+                "hit_rates: "
+                f"target={_decimal_pct(report.target_hit_rate)}, "
+                f"stop={_decimal_pct(report.stop_hit_rate)}"
+            ),
+            (
+                "average_return_r: "
+                f"{average_return_r.normalize() if average_return_r is not None else 'n/a'}"
+            ),
+        ]
+    )
+
+
+def _decimal_pct(value: Decimal) -> str:
+    return f"{(value * Decimal('100')).quantize(Decimal('0.01'))}%"
+
+
+def _closeout_text(command: str, payload: dict[str, Any]) -> str:
+    lines = [
+        _status_line(
+            command, "OK", f"{payload['decision_id']}, resolution={payload['resolution']}"
+        ),
+        f"actor: {payload['actor_type']}/{payload['actor_id']}",
+        f"realized_profit_loss_amount: {payload['realized_profit_loss_amount']}",
+        f"realized_profit_loss_percent: {payload['realized_profit_loss_percent']}",
+        "realized_profit_loss_unavailable_reason: "
+        f"{payload['realized_profit_loss_unavailable_reason']}",
+        f"terminal_event_id: {payload['terminal_event_id']}",
+        f"record_hash: {payload['record_hash']}",
+    ]
+    evidence = payload.get("evidence", [])
+    if evidence:
+        lines.append("evidence:")
+        lines.extend(f"- {item}" for item in evidence)
+    return "\n".join(lines)

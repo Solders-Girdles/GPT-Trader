@@ -64,7 +64,10 @@ from gpt_trader.features.optimize.parameter_space.definitions import (
 )
 from gpt_trader.features.optimize.persistence.storage import OptimizationRun, OptimizationStorage
 from gpt_trader.features.optimize.runner.batch_runner import BatchBacktestRunner, TrialResult
-from gpt_trader.features.optimize.study.manager import OptimizationStudyManager
+from gpt_trader.features.optimize.study.manager import (
+    MissingOptimizeDependencyError,
+    OptimizationStudyManager,
+)
 from gpt_trader.features.optimize.types import (
     OptimizationConfig,
     ParameterDefinition,
@@ -130,6 +133,7 @@ __all__ = [
     "create_perpetuals_objective",
     "create_tail_risk_aware_objective",
     # Study Management
+    "MissingOptimizeDependencyError",
     "OptimizationStudyManager",
     # Execution
     "BatchBacktestRunner",

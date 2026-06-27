@@ -1,6 +1,6 @@
 ---
 status: current
-last-updated: 2026-06-24
+last-updated: 2026-06-27
 workstream: 1 (see TRADE_IDEA_INTERFACES_DESIGN_NOTES.md)
 depends-on: Workstream 0 (implemented service factory, error codes, actor resolution)
 ---
@@ -34,15 +34,22 @@ The implementation follows the structure of `cli/commands/controls.py`: a
 
 ## Common options
 
-Every subcommand accepts:
+Every storage-backed workflow subcommand accepts:
 
 - `--format {text,json}` (via `options.add_output_options`)
 - `--ideas-root PATH` — override storage root (default: `GPT_TRADER_IDEAS_ROOT`
   env, then `var/data/trade_ideas/`)
 
+Read-only replay commands accept `--format {text,json}` but do not read or
+write `--ideas-root`; they operate only on the local fixture named by `--file`.
+
 Every mutating subcommand accepts:
 
 - `--actor ID` — actor identity (default: `GPT_TRADER_ACTOR` env, then OS user)
+
+Exception: `propose-baseline` defaults to the deterministic baseline proposer
+id so generated proposal audit events identify the proposer unless an operator
+explicitly overrides `--actor`.
 
 Current behavior is discoverable with:
 
@@ -55,10 +62,26 @@ uv run gpt-trader ideas --help
 ```
 gpt-trader ideas
 ├── propose          --file PATH | --stdin   [--actor-type {ai,human}] [--reason TEXT]
+├── propose-baseline --snapshot PATH         [--actor ID] [--reason TEXT]
 ├── resubmit         --file PATH | --stdin   [--actor-type {ai,human}] [--reason TEXT]
 ├── list             [--state STATE]
 ├── show             DECISION_ID [--events]
 ├── report
+├── replay
+│   └── baseline     --file PATH --symbol SYMBOL --granularity GRANULARITY
+│                    [--short-window N] [--long-window N]
+│                    [--crossover-lookback N] [--min-history N]
+│                    [--risk-per-idea-pct DECIMAL] [--entry-band-pct DECIMAL]
+│                    [--reward-multiple DECIMAL] [--expiry-hours N]
+│                    [--expected-hold TEXT] [--price-precision DECIMAL]
+│                    [--source LABEL]
+├── closeout
+│   ├── record       DECISION_ID --resolution {thesis_target,invalidation,expiry}
+│   │                [--realized-profit-loss-amount DECIMAL]
+│   │                [--realized-profit-loss-percent DECIMAL]
+│   │                [--realized-profit-loss-unavailable-reason TEXT]
+│   │                [--evidence TEXT]... [--actor-type {human,system}]
+│   └── show         DECISION_ID
 ├── approve          DECISION_ID --reason TEXT
 ├── reject           DECISION_ID --reason TEXT
 ├── request-changes  DECISION_ID --reason TEXT
@@ -90,6 +113,76 @@ gpt-trader ideas
   still succeeds (rejection happens at review, per the framework).
 - Text: `✓ ideas propose OK (trade-20260612-001, state=proposed)` followed by
   `⚠ would fail approval: <reason>` lines if any.
+
+### `ideas propose-baseline`
+
+- Input: a local `MarketSnapshot` JSON fixture from `--snapshot PATH`.
+- Never calls broker, account, credential, preflight, canary, or live market
+  surfaces. The snapshot file is the complete data source for the command.
+- Parse the fixture into `MarketSnapshot` / `SymbolSeries`, run
+  `BaselineProposer`, preflight every emitted `TradeIdea` with
+  `service.validate_new_proposal`, preview approval policy with
+  `service.approval_violations`, then persist through
+  `service.propose(..., actor_type=ai)`.
+- The default actor id is the deterministic proposer id
+  (`baseline-ma-10-50` today); `--actor` overrides it when an operator needs a
+  different audit identity.
+- No-signal snapshots return success with `proposal_count=0` and
+  `was_noop=true`; they do not create trade-idea records.
+- Duplicate decision ids fail before any proposed record or audit event is
+  written for that invocation.
+- JSON `data` contains `proposer_id`, snapshot metadata, `proposal_count`, and
+  one entry per proposal:
+
+  ```json
+  {
+    "decision_id": "trade-20350612-btcusd-4c5a9e2d",
+    "state": "proposed",
+    "instrument": "BTC-USD",
+    "direction": "long",
+    "record_hash": "sha256...",
+    "approval_preview": {
+      "violations": [],
+      "warnings": []
+    }
+  }
+  ```
+
+  Approval-preview warnings are also mirrored into the top-level
+  `CliResponse.warnings` list for agent callers that already consume warning
+  envelopes.
+
+#### `propose-baseline` snapshot fixture shape
+
+The JSON file uses strings for timestamps and decimal fields so fixtures remain
+stable across languages and shells:
+
+```json
+{
+  "as_of": "2035-06-12T00:00:00+00:00",
+  "source": "local-fixture:coinbase-candles",
+  "series": [
+    {
+      "symbol": "BTC-USD",
+      "granularity": "1d",
+      "candles": [
+        {
+          "ts": "2035-04-20T00:00:00+00:00",
+          "open": "100",
+          "high": "100",
+          "low": "100",
+          "close": "100",
+          "volume": "1000"
+        }
+      ]
+    }
+  ]
+}
+```
+
+All candle timestamps must include a timezone, be strictly ascending within a
+series, and be strictly before `as_of`. The command rejects malformed fixtures
+as `INVALID_ARGUMENT`.
 
 ### `ideas resubmit`
 
@@ -143,6 +236,98 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
   compact `Monthly` section with one line per month showing idea count, approval
   rate, closeout coverage, and realized P/L amount. Empty stores and reports
   without monthly buckets omit the section while still returning success.
+
+### `ideas replay baseline`
+
+- Read-only Stage 1 calibration command over local candle fixtures. It
+  constructs `BaselineProposer(BaselineProposerConfig(...))`, feeds it through
+  `TradeIdeaReplayRunner`, and formats the returned `ReplayReport`.
+- It never reads credentials, contacts brokers/accounts/live market data, writes
+  trade-idea records, creates tickets, or touches closeout attribution.
+- Required options:
+  - `--file PATH`
+  - `--symbol SYMBOL`
+  - `--granularity GRANULARITY`
+- Supported baseline/replay options:
+  - `--source LABEL` (default `fixture:candles`)
+  - `--min-history N` (default `max(short-window, long-window) + crossover-lookback`)
+  - `--short-window N` (default `10`)
+  - `--long-window N` (default `50`)
+  - `--crossover-lookback N` (default `3`)
+  - `--risk-per-idea-pct DECIMAL` (default `2`)
+  - `--entry-band-pct DECIMAL` (default `1`)
+  - `--reward-multiple DECIMAL` (default `2`)
+  - `--expiry-hours N` (default `48`)
+  - `--expected-hold TEXT` (default `5-15 days`)
+  - `--price-precision DECIMAL` (default `0.01`)
+- Candle fixture shape:
+
+  ```json
+  {
+    "candles": [
+      {
+        "ts": "2026-06-12T12:00:00+00:00",
+        "open": "100",
+        "high": "102",
+        "low": "99",
+        "close": "101",
+        "volume": "1000"
+      }
+    ]
+  }
+  ```
+
+  Timestamps are ISO-8601; naive timestamps are treated as UTC. Decimal values
+  may be strings or JSON numbers. Malformed JSON, a missing `candles` array,
+  missing candle fields, invalid timestamps, non-finite decimals, and invalid
+  OHLCV rows (`high < low`, open/close outside `[low, high]`, or negative
+  volume) return `INVALID_ARGUMENT` with the offending field when available.
+- JSON `data` is `ReplayReport.to_dict()` and includes `proposer_id`,
+  `symbol`, `granularity`, `source`, `snapshots_evaluated`, `ideas_proposed`,
+  `target_hits`, `stop_hits`, `timed_out`, `not_filled`, `no_future_data`,
+  `resolved_ideas`, `target_hit_rate`, `stop_hit_rate`, `average_return_r`, and
+  per-idea replay outcomes.
+- Text starts with:
+
+  ```text
+  ✓ ideas replay baseline OK (BTC-USD ONE_HOUR, snapshots=2, ideas=1)
+  proposer_id: baseline-ma-2-4
+  outcomes: target_hits=1, stop_hits=0, timed_out=0, not_filled=0, no_future_data=0
+  hit_rates: target=100.00%, stop=0.00%
+  average_return_r: 2
+  ```
+
+  A replay with zero proposed ideas succeeds with `was_noop=True`.
+
+### `ideas closeout record` / `ideas closeout show`
+
+- `record` wraps `service.record_closeout_attribution`; `show` wraps
+  `service.get_closeout_attribution`. Both use only local trade-idea storage.
+- `record` requires a terminal idea. The service enforces the terminal-state
+  precondition and pins the attribution to the latest terminal audit event and
+  record hash.
+- `record` accepts:
+  - `--resolution {thesis_target,invalidation,expiry}`
+  - `--realized-profit-loss-amount DECIMAL` and/or
+    `--realized-profit-loss-percent DECIMAL` (negative values represent losses)
+  - `--realized-profit-loss-unavailable-reason TEXT` when numeric realized P/L
+    is unavailable
+  - repeated `--evidence TEXT` strings
+  - `--actor-type {human,system}` with default `human`
+- At least one realized P/L value or unavailable reason is required.
+- JSON `data` for both successful commands is
+  `{decision_id, closeout_attribution}`. `closeout_attribution` is the
+  persisted closeout record dictionary, or `null` for `show` when the idea is
+  known but has no attribution (`was_noop=True`).
+- Text starts with:
+
+  ```text
+  ✓ ideas closeout record OK (trade-20260612-001, resolution=thesis_target)
+  ```
+
+- These commands never call broker, account, venue, preflight, canary, ticket
+  payload-generation, or live-trading surfaces. Evidence strings are operator
+  references only.
 
 ### `ideas approve DECISION_ID --reason TEXT`
 
@@ -236,33 +421,53 @@ Required cases:
 4. `show` unknown id → `IDEA_NOT_FOUND`. `show --events` includes history.
 5. `report` empty store, normal records, missing closeout coverage, JSON
    output, and read-only behavior that does not create `risk_budget.jsonl`.
-6. `approve` happy path → state `approved`, human actor in audit event.
-7. `approve` over-budget idea → exit 1, `POLICY_VIOLATION`, all violations in
+6. `replay baseline` text success, malformed fixture input, empty/no-idea
+   replay success with `was_noop=True`, JSON output exposing `ReplayReport`
+   aggregate fields, precision-preserving JSON-number candle parsing, custom
+   moving-average history defaults, semantically invalid OHLCV fixture rows,
+   and help text for required read-only flags.
+7. `closeout record` for a terminal filled idea with realized amount/percent
+   and repeated evidence; `closeout show` returns the persisted attribution.
+8. `closeout record` for an expired idea with unavailable P/L reason; proposed
+   ideas fail with `VALIDATION_ERROR`; missing realized P/L input fails with
+   `MISSING_ARGUMENT`; `closeout show` without attribution succeeds with
+   `was_noop=True`.
+9. `approve` happy path → state `approved`, human actor in audit event.
+10. `approve` over-budget idea → exit 1, `POLICY_VIOLATION`, all violations in
    `data["violations"]` (assert ≥2 violations both present).
-8. `request-changes` → `resubmit` (revised record) → `approve` full loop.
-9. `reject`, `cancel`, `expire` single, `expire --sweep` with explicit expiry
+11. `request-changes` → `resubmit` (revised record) → `approve` full loop.
+12. `reject`, `cancel`, `expire` single, `expire --sweep` with explicit expiry
    coverage (one stale + one fresh idea: only stale expires; `was_noop` when
    none) plus review-latency sweep coverage for a far-future idea whose review
    deadline exceeds `max_review_latency_hours`.
-10. `mark-submitted` then `mark-filled` with venue/external id recorded in
+13. `mark-submitted` then `mark-filled` with venue/external id recorded in
    audit events.
-11. `budget show` seeds defaults; `budget set --max-loss-per-idea-pct 2
+14. `budget show` seeds defaults; `budget set --max-loss-per-idea-pct 2
     --reason ...` bumps version; `budget set` with no field flags →
     `MISSING_ARGUMENT`.
-12. `audit verify` OK path; tampered line in `audit.jsonl` → failure.
-13. JSON mode for at least propose/approve/list/report asserting the
+15. `audit verify` OK path; tampered line in `audit.jsonl` → failure.
+16. JSON mode for at least propose/approve/list/report/replay baseline asserting the
     `CliResponse` envelope per CLAUDE.md patterns
     (`result.errors[0].code == CliErrorCode.POLICY_VIOLATION.value`).
+14. `propose-baseline` success from a local snapshot fixture, no-signal
+    no-op behavior, duplicate decision handling, malformed snapshot input, and
+    JSON output with decision ids, record hashes, states, and approval-preview
+    warnings/violations.
 
 ## Acceptance criteria
 
 - [x] `gpt-trader ideas --help` lists all subcommands with accurate help text.
+- [x] `gpt-trader ideas replay baseline --help` documents the local fixture
+      replay surface and its broker-free boundary.
 - [x] Full loop works on a clean checkout with no env vars:
       propose → list → show → approve → mark-submitted → mark-filled,
       and the audit log verifies afterward.
 - [x] No import from `features/brokerages/` or `features/live_trade/` in
       `ideas.py` (enforce by review; this surface must stay execution-free).
 - [x] All policy violations reach the user; no first-error-only truncation.
+- [x] `propose-baseline` turns local candle fixtures into proposed records
+      without broker/API access, and reports approval-preview warnings per
+      proposal.
 - [x] The focused `tests/unit/gpt_trader/cli/commands/test_ideas_*.py` suite
       covers the implemented command group.
 - [ ] Re-run the repo-required quality bundle before merging any future change

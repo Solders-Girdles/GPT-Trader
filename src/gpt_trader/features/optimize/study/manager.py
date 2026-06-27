@@ -2,17 +2,50 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-import optuna
-from optuna.pruners import BasePruner, HyperbandPruner, MedianPruner, PercentilePruner
-from optuna.samplers import BaseSampler, CmaEsSampler, RandomSampler, TPESampler
-from optuna.trial import Trial
+from typing import TYPE_CHECKING, Any, cast
 
 from gpt_trader.features.optimize.types import OptimizationConfig, ParameterType
 from gpt_trader.utilities.logging_patterns import get_logger
 
+if TYPE_CHECKING:
+    import optuna
+    from optuna.pruners import BasePruner
+    from optuna.samplers import BaseSampler
+    from optuna.trial import Trial
+
+_OPTUNA_IMPORT_ERROR: ImportError | None
+_optuna: Any | None
+
+try:
+    import optuna as _loaded_optuna
+    from optuna.pruners import HyperbandPruner, MedianPruner, PercentilePruner
+    from optuna.samplers import CmaEsSampler, RandomSampler, TPESampler
+except ImportError as exc:
+    _optuna = None
+    _OPTUNA_IMPORT_ERROR = exc
+else:
+    _optuna = _loaded_optuna
+    _OPTUNA_IMPORT_ERROR = None
+
 logger = get_logger(__name__, component="optuna_study")
+
+OPTIMIZE_EXTRA_INSTALL_MESSAGE = (
+    "Optuna is required for optimization studies. Install the optimize extra with "
+    "`pip install 'gpt-trader[optimize]'` or `uv sync --extra optimize`."
+)
+
+
+class MissingOptimizeDependencyError(ImportError):
+    """Raised when optimize study tooling is used without its optional dependency."""
+
+
+def _require_optuna_extra() -> Any:
+    """Return the Optuna module or raise a user-facing install hint."""
+    if _OPTUNA_IMPORT_ERROR is not None or _optuna is None:
+        raise MissingOptimizeDependencyError(OPTIMIZE_EXTRA_INSTALL_MESSAGE) from (
+            _OPTUNA_IMPORT_ERROR
+        )
+    return _optuna
 
 
 class OptimizationStudyManager:
@@ -33,6 +66,7 @@ class OptimizationStudyManager:
             config: Optimization configuration
             storage_url: Database URL for persistent storage (optional)
         """
+        _require_optuna_extra()
         self.config = config
         self.storage_url = storage_url
 
@@ -43,10 +77,11 @@ class OptimizationStudyManager:
         Returns:
             Configured Optuna study
         """
+        optuna_module = _require_optuna_extra()
         sampler = self._create_sampler()
         pruner = self._create_pruner()
 
-        study = optuna.create_study(
+        study = optuna_module.create_study(
             study_name=self.config.study_name,
             storage=self.storage_url,
             direction=self.config.direction,
@@ -59,7 +94,7 @@ class OptimizationStudyManager:
             f"Study '{self.config.study_name}' loaded with sampler={self.config.sampler_type}, "
             f"pruner={self.config.pruner_type}"
         )
-        return study
+        return cast("optuna.Study", study)
 
     def suggest_parameters(self, trial: Trial) -> dict[str, Any]:
         """

@@ -436,6 +436,20 @@ def _run_optimization(
         logger.error(f"Failed to create objective: {e}")
         return 1
 
+    # Create study manager before external data dependencies so missing optimize extras fail clearly.
+    try:
+        study_manager = OptimizationStudyManager(opt_config)
+        study = study_manager.create_or_load_study()
+    except Exception as e:
+        if output_format == "json":
+            return CliResponse.error_response(
+                command=COMMAND_NAME,
+                code=CliErrorCode.OPERATION_FAILED,
+                message=f"Failed to create study: {e}",
+            )
+        logger.error(f"Failed to create study: {e}")
+        return 1
+
     # Initialize Data and Strategy Factory
     try:
         data_provider = _create_data_provider()
@@ -459,21 +473,6 @@ def _run_optimization(
                 message=f"Failed to initialize runner: {e}",
             )
         logger.error(f"Failed to initialize runner: {e}")
-        return 1
-
-    # Create study manager
-    study_manager = OptimizationStudyManager(opt_config)
-
-    try:
-        study = study_manager.create_or_load_study()
-    except Exception as e:
-        if output_format == "json":
-            return CliResponse.error_response(
-                command=COMMAND_NAME,
-                code=CliErrorCode.OPERATION_FAILED,
-                message=f"Failed to create study: {e}",
-            )
-        logger.error(f"Failed to create study: {e}")
         return 1
 
     # Track results

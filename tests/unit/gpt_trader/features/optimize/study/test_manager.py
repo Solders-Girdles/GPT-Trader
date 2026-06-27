@@ -1,5 +1,8 @@
 """Unit tests for OptimizationStudyManager."""
 
+import builtins
+import importlib
+import sys
 from unittest.mock import Mock
 
 import optuna
@@ -52,3 +55,33 @@ class TestOptimizationStudyManager:
 
         assert params["p1"] == 5
         mock_trial.suggest_int.assert_called_with("p1", 1, 10, step=1, log=False)
+
+    def test_missing_optuna_raises_install_extra_message(
+        self, mock_config, monkeypatch: pytest.MonkeyPatch
+    ):
+        """Study manager imports cleanly without Optuna and fails with install guidance."""
+        import gpt_trader.features.optimize.study.manager as manager_module
+
+        real_import = builtins.__import__
+
+        def blocked_import(name, globals=None, locals=None, fromlist=(), level=0):
+            if name == "optuna" or name.startswith("optuna."):
+                raise ImportError("blocked optuna for test")
+            return real_import(name, globals, locals, fromlist, level)
+
+        try:
+            with monkeypatch.context() as context:
+                for module_name in list(sys.modules):
+                    if module_name == "optuna" or module_name.startswith("optuna."):
+                        context.delitem(sys.modules, module_name, raising=False)
+                context.setattr(builtins, "__import__", blocked_import)
+
+                missing_module = importlib.reload(manager_module)
+
+                with pytest.raises(
+                    missing_module.MissingOptimizeDependencyError,
+                    match=r"gpt-trader\[optimize\]",
+                ):
+                    missing_module.OptimizationStudyManager(mock_config)
+        finally:
+            importlib.reload(manager_module)

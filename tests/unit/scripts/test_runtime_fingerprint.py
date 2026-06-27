@@ -20,8 +20,7 @@ from scripts.ops import runtime_fingerprint
 
 def _create_events_db(db_path: Path) -> None:
     with sqlite3.connect(str(db_path)) as connection:
-        connection.executescript(
-            """
+        connection.executescript("""
             CREATE TABLE events (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp TEXT NOT NULL DEFAULT (datetime('now', 'utc')),
@@ -29,8 +28,7 @@ def _create_events_db(db_path: Path) -> None:
                 payload TEXT NOT NULL,
                 bot_id TEXT
             );
-            """
-        )
+            """)
         connection.commit()
 
 

@@ -16,7 +16,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import cast
+from typing import Generic, TypeVar, cast
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import (
@@ -61,6 +61,7 @@ EXPIRABLE_STATES = frozenset(
     }
 )
 _AUDIT_VENUES = frozenset({TicketVenue.COINBASE, TicketVenue.MANUAL})
+_QueryItem = TypeVar("_QueryItem")
 
 
 class UnknownTradeIdeaError(ValidationError):
@@ -85,6 +86,16 @@ class TradeIdeaView:
     closeout_attribution: CloseoutAttribution | None = None
 
 
+@dataclass(frozen=True, slots=True)
+class TradeIdeaQueryPage(Generic[_QueryItem]):
+    """Stable read-only query page for audit and closeout reporting."""
+
+    items: tuple[_QueryItem, ...]
+    total_count: int
+    limit: int | None
+    offset: int
+
+
 def _utc_now() -> datetime:
     return datetime.now(UTC)
 
@@ -105,6 +116,38 @@ def _max_loss_snapshot_context(snapshot: MaxLossSnapshot) -> dict[str, object]:
         ),
         "assumptions": list(snapshot.assumptions),
     }
+
+
+def _timestamp_in_window(
+    timestamp: datetime,
+    *,
+    since: datetime | None,
+    until: datetime | None,
+) -> bool:
+    if since is not None and timestamp < since:
+        return False
+    if until is not None and timestamp > until:
+        return False
+    return True
+
+
+def _page_items(
+    items: tuple[_QueryItem, ...],
+    *,
+    limit: int | None,
+    offset: int,
+) -> TradeIdeaQueryPage[_QueryItem]:
+    normalized_offset = max(offset, 0)
+    if limit is None:
+        selected = items[normalized_offset:]
+    else:
+        selected = items[normalized_offset : normalized_offset + max(limit, 0)]
+    return TradeIdeaQueryPage(
+        items=tuple(selected),
+        total_count=len(items),
+        limit=limit,
+        offset=normalized_offset,
+    )
 
 
 def resolve_ideas_root(root: Path | None = None) -> Path:
@@ -560,6 +603,65 @@ class TradeIdeaService:
         if state is None:
             return views
         return [view for view in views if view.state is state]
+
+    def list_audit_events(
+        self,
+        *,
+        decision_id: str | None = None,
+        actor_id: str | None = None,
+        actor_type: ActorType | str | None = None,
+        action: AuditAction | str | None = None,
+        state: TradeIdeaState | str | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> TradeIdeaQueryPage[AuditEvent]:
+        """Return a filtered, stable page of audit events without mutating storage."""
+        requested_actor_type = ActorType(actor_type) if actor_type is not None else None
+        requested_action = AuditAction(action) if action is not None else None
+        requested_state = TradeIdeaState(state) if state is not None else None
+        events = tuple(
+            event
+            for event in self._audit.read_events(decision_id)
+            if (actor_id is None or event.actor_id == actor_id)
+            and (requested_actor_type is None or event.actor_type is requested_actor_type)
+            and (requested_action is None or event.action is requested_action)
+            and (requested_state is None or event.after_state is requested_state)
+            and _timestamp_in_window(event.timestamp, since=since, until=until)
+        )
+        ordered_events = tuple(sorted(events, key=lambda event: (event.timestamp, event.event_id)))
+        return _page_items(ordered_events, limit=limit, offset=offset)
+
+    def query_closeout_records(
+        self,
+        *,
+        decision_id: str | None = None,
+        actor_id: str | None = None,
+        actor_type: ActorType | str | None = None,
+        resolution: CloseoutResolution | str | None = None,
+        has_evidence: bool | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> TradeIdeaQueryPage[CloseoutAttribution]:
+        """Return a filtered, stable page of closeout attribution records."""
+        requested_actor_type = ActorType(actor_type).value if actor_type is not None else None
+        requested_resolution = CloseoutResolution(resolution) if resolution is not None else None
+        records = tuple(
+            record
+            for record in self._closeouts.read_records(decision_id)
+            if (actor_id is None or record.actor_id == actor_id)
+            and (requested_actor_type is None or record.actor_type == requested_actor_type)
+            and (requested_resolution is None or record.resolution is requested_resolution)
+            and (has_evidence is None or bool(record.evidence) is has_evidence)
+            and _timestamp_in_window(record.timestamp, since=since, until=until)
+        )
+        ordered_records = tuple(
+            sorted(records, key=lambda record: (record.timestamp, record.decision_id))
+        )
+        return _page_items(ordered_records, limit=limit, offset=offset)
 
     def open_approved_count(self) -> int:
         approved_count = 0

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from collections import Counter
 from collections.abc import Mapping
 from datetime import UTC, datetime
@@ -19,6 +21,7 @@ from gpt_trader.features.trade_ideas.workflow import TERMINAL_STATES, TradeIdeaS
 
 _RATE_QUANT = Decimal("0.0000")
 _PERCENT_QUANT = Decimal("0.01")
+REPORT_SCHEMA_VERSION = "gpt-trader.trade_ideas.report.v1"
 _ACTION_KEYS = {
     AuditAction.PROPOSED: "proposed",
     AuditAction.CHANGED: "requested_changes",
@@ -35,10 +38,12 @@ def build_trade_idea_track_record_report(
     service: TradeIdeaService,
     *,
     now: datetime | None = None,
+    since: datetime | None = None,
+    until: datetime | None = None,
 ) -> dict[str, Any]:
     """Build a read-only report from stored records, audit events, and closeouts."""
     current_time = now or datetime.now(UTC)
-    views = service.list_views()
+    views = _filter_views_by_window(service.list_views(), since=since, until=until)
     total_ideas = len(views)
 
     event_counts = _zero_action_counts()
@@ -55,8 +60,9 @@ def build_trade_idea_track_record_report(
     workflow = _workflow_summary(views, event_counts, state_counts)
     closeouts = _closeout_summary(views)
     monthly = _monthly_summary(views)
+    filters = _filters_payload(since=since, until=until)
 
-    return {
+    payload = {
         "proposal_volume": {
             "idea_count": total_ideas,
             "proposal_event_count": event_counts["proposed"],
@@ -69,6 +75,28 @@ def build_trade_idea_track_record_report(
             "confidence_counts": confidence_counts,
         },
         "closeouts": closeouts,
+    }
+    source = {
+        "audit_event_count": sum(len(view.events) for view in views),
+        "closeout_count": sum(1 for view in views if view.closeout_attribution is not None),
+        "idea_count": total_ideas,
+    }
+    quality_report_id = _stable_report_id(
+        {
+            "schema_version": REPORT_SCHEMA_VERSION,
+            "filters": filters,
+            "source": source,
+            "payload": payload,
+        }
+    )
+    return {
+        "schema_version": REPORT_SCHEMA_VERSION,
+        "quality_report_id": quality_report_id,
+        "generated_at": current_time.isoformat(),
+        "filters": filters,
+        "row_count": total_ideas,
+        "source": source,
+        **payload,
     }
 
 
@@ -167,6 +195,49 @@ def _workflow_summary(
         "filled_rate": _rate(ever_filled, total_ideas),
         "filled_rate_pct": _percentage(ever_filled, total_ideas),
     }
+
+
+def _filter_views_by_window(
+    views: list[TradeIdeaView],
+    *,
+    since: datetime | None,
+    until: datetime | None,
+) -> list[TradeIdeaView]:
+    return [
+        view
+        for view in views
+        if view.events and _timestamp_in_window(view.events[0].timestamp, since=since, until=until)
+    ]
+
+
+def _timestamp_in_window(
+    timestamp: datetime,
+    *,
+    since: datetime | None,
+    until: datetime | None,
+) -> bool:
+    if since is not None and timestamp < since:
+        return False
+    if until is not None and timestamp > until:
+        return False
+    return True
+
+
+def _filters_payload(
+    *,
+    since: datetime | None,
+    until: datetime | None,
+) -> dict[str, str | None]:
+    return {
+        "since": since.isoformat() if since is not None else None,
+        "until": until.isoformat() if until is not None else None,
+    }
+
+
+def _stable_report_id(payload: Mapping[str, Any]) -> str:
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str)
+    digest = hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:16]
+    return f"tir-{digest}"
 
 
 def _quality_summary(views: list[TradeIdeaView], *, now: datetime) -> dict[str, Any]:

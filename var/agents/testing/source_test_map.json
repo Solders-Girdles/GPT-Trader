@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 726,
-    "source_modules": 376,
+    "tests_scanned": 727,
+    "source_modules": 377,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -10,6 +10,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
@@ -1297,6 +1298,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
@@ -1328,6 +1330,9 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py",
       "tests/unit/gpt_trader/tui/test_ideas_review_screen.py",
       "tests/unit/gpt_trader/tui/test_snapshots_ideas_review.py"
+    ],
+    "gpt_trader.features.trade_ideas.report": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py"
     ],
     "gpt_trader.features.trade_ideas.service": [
       "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py"
@@ -2707,6 +2712,11 @@
       "gpt_trader",
       "gpt_trader.cli.response",
       "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py": [
+      "gpt_trader",
+      "gpt_trader.features.trade_ideas",
+      "gpt_trader.features.trade_ideas.report"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py": [
       "gpt_trader",
@@ -5288,6 +5298,7 @@
     "gpt_trader.features.strategy_tools.filters": "src/gpt_trader/features/strategy_tools/filters.py",
     "gpt_trader.features.strategy_tools.guards": "src/gpt_trader/features/strategy_tools/guards.py",
     "gpt_trader.features.trade_ideas": "src/gpt_trader/features/trade_ideas/__init__.py",
+    "gpt_trader.features.trade_ideas.report": "src/gpt_trader/features/trade_ideas/report.py",
     "gpt_trader.features.trade_ideas.service": "src/gpt_trader/features/trade_ideas/service.py",
     "gpt_trader.logging.correlation": "src/gpt_trader/logging/correlation.py",
     "gpt_trader.logging.json_formatter": "src/gpt_trader/logging/json_formatter.py",

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6877,
-    "total_files": 811,
+    "total_tests": 6883,
+    "total_files": 812,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6712,
+    "unit": 6718,
     "asyncio": 411,
     "parametrize": 200,
     "endpoints": 83,
@@ -207,6 +207,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
@@ -9195,6 +9196,56 @@
       {
         "name": "test_closeout_show_without_attribution_is_successful_noop",
         "line": 295,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py": [
+      {
+        "name": "test_report_json_artifact_schema_date_window_and_output_dir",
+        "line": 91,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_id_is_deterministic_for_seeded_fixture",
+        "line": 136,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_csv_output_contains_flat_metric_rows",
+        "line": 148,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_list_filters_paginates_and_exports_csv",
+        "line": 173,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_list_filters_joins_terminal_event_and_exports_csv",
+        "line": 233,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_and_closeout_no_match_results_are_successful_noops",
+        "line": 284,
         "markers": [
           "unit"
         ],

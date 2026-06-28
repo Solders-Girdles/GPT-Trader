@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import gpt_trader.observability.tracing as tracing
+import gpt_trader.monitoring.tracing as tracing
 
 
 class _DummySpanContext:

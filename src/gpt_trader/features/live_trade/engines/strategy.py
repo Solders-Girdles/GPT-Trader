@@ -98,7 +98,7 @@ from gpt_trader.monitoring.heartbeat import HeartbeatService
 from gpt_trader.monitoring.metrics_collector import record_histogram, record_trade_blocked
 from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.monitoring.status_reporter import StatusReporter
-from gpt_trader.observability.tracing import trace_span
+from gpt_trader.monitoring.tracing import trace_span
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import (
     OrderRecord,

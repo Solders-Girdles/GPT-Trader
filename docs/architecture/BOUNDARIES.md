@@ -16,7 +16,7 @@ campaign. It is descriptive of the codebase as it exists today (not an aspiratio
 | Shared configuration | `src/gpt_trader/app/config/` | `BotConfig` and profile loading. Imports strategy configs from `features/live_trade/strategies`. Used across layers as a shared input surface. |
 | Feature slices (business logic) | `src/gpt_trader/features/` (live_trade, intelligence, data, optimize, strategy_dev, strategy_tools, trade_ideas) | Trading logic, strategies, guard stack, optimization workflows, trade-idea records. |
 | Shared engines | `src/gpt_trader/backtesting/` | Canonical backtesting engine used by optimization slices. |
-| Adapters + infrastructure | `src/gpt_trader/features/brokerages/`, `src/gpt_trader/persistence/`, `src/gpt_trader/monitoring/`, `src/gpt_trader/observability/`, `src/gpt_trader/security/` | External integrations, IO, stores, telemetry, secrets. `features/brokerages` is an adapter slice. |
+| Adapters + infrastructure | `src/gpt_trader/features/brokerages/`, `src/gpt_trader/persistence/`, `src/gpt_trader/monitoring/`, `src/gpt_trader/security/` | External integrations, IO, stores, telemetry (metrics/health/tracing), secrets. `features/brokerages` is an adapter slice. |
 | App/runtime + entrypoints | `src/gpt_trader/app/`, `src/gpt_trader/cli/`, `src/gpt_trader/tui/`, `src/gpt_trader/preflight/`, `scripts/production_preflight.py` | Composition root, config loading, runtime lifecycle, and operator entrypoints. |
 
 ### Configuration note
@@ -66,9 +66,8 @@ directional hazards:
 
 - Feature slices (`src/gpt_trader/features/`) must not import entrypoint layers
   (`gpt_trader.cli`, `gpt_trader.tui`, `gpt_trader.preflight`) or `gpt_trader.app.container`.
-- Infrastructure layers (`src/gpt_trader/monitoring/`, `src/gpt_trader/observability/`,
-  `src/gpt_trader/persistence/`, `src/gpt_trader/security/`) must not import those same
-  entrypoint/container layers.
+- Infrastructure layers (`src/gpt_trader/monitoring/`, `src/gpt_trader/persistence/`,
+  `src/gpt_trader/security/`) must not import those same entrypoint/container layers.
 
 To extend the rule set:
 - Add a new `ImportRule` entry in `scripts/ci/check_import_boundaries.py` with a clear name.
@@ -84,8 +83,7 @@ To extend the rule set:
   Core backtesting engine changes belong in `src/gpt_trader/backtesting/`.
 - New external integration (exchange, storage, telemetry, secrets)? Use
   `src/gpt_trader/features/brokerages/`, `src/gpt_trader/persistence/`,
-  `src/gpt_trader/monitoring/`, `src/gpt_trader/observability/`, or
-  `src/gpt_trader/security/`.
+  `src/gpt_trader/monitoring/`, or `src/gpt_trader/security/`.
 - New operator workflow or wiring? Use `src/gpt_trader/app/` for wiring and config, and
   `src/gpt_trader/cli/`, `src/gpt_trader/tui/`, or `src/gpt_trader/preflight/` for entrypoints.
 - New shared type, math, or helper used across slices? Prefer `src/gpt_trader/core/`,

@@ -36,7 +36,7 @@ from gpt_trader.monitoring.metrics_collector import (
     record_trade_blocked,
     record_trade_executed,
 )
-from gpt_trader.observability.tracing import trace_span
+from gpt_trader.monitoring.tracing import trace_span
 from gpt_trader.persistence.orders_store import (
     OrderRecord,
     OrdersStore,

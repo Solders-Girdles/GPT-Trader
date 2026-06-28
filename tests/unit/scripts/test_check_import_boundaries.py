@@ -98,6 +98,5 @@ def test_default_rules_cover_lower_layer_entrypoint_guards() -> None:
 
     assert "features_no_entrypoint_imports" in rule_names
     assert "monitoring_no_entrypoint_imports" in rule_names
-    assert "observability_no_entrypoint_imports" in rule_names
     assert "persistence_no_entrypoint_imports" in rule_names
     assert "security_no_entrypoint_imports" in rule_names

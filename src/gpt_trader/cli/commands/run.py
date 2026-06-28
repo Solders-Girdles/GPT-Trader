@@ -14,7 +14,7 @@ from gpt_trader.app.config.validation import ConfigValidationError
 from gpt_trader.app.container import clear_application_container, get_application_container
 from gpt_trader.cli import options, services
 from gpt_trader.config.constants import OTEL_ENABLED, OTEL_EXPORTER_ENDPOINT, OTEL_SERVICE_NAME
-from gpt_trader.observability.tracing import init_tracing, shutdown_tracing
+from gpt_trader.monitoring.tracing import init_tracing, shutdown_tracing
 from gpt_trader.tui.helpers import run_tui_app_with_cleanup
 from gpt_trader.utilities.logging_patterns import get_logger
 

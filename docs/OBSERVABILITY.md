@@ -17,7 +17,7 @@ This page is intentionally thin. Metric names/labels and event schemas are gener
 
 - Metrics collection: `src/gpt_trader/monitoring/metrics_collector.py`
 - Metrics export: `scripts/monitoring/export_metrics.py`
-- Tracing helpers: `src/gpt_trader/observability/tracing.py`
+- Tracing helpers: `src/gpt_trader/monitoring/tracing.py`
 
 ## Heartbeat Metrics
 

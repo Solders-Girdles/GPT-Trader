@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 727,
-    "source_modules": 376,
+    "tests_scanned": 731,
+    "source_modules": 377,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -40,6 +40,7 @@
       "tests/integration/test_container_lifecycle_runtime.py",
       "tests/integration/test_crash_recovery.py",
       "tests/integration/test_end_to_end_buy.py",
+      "tests/integration/test_runtime_engine_lifecycle.py",
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
       "tests/unit/gpt_trader/app/config/test_bot_config.py",
@@ -107,6 +108,7 @@
       "tests/integration/test_container_lifecycle_cli.py",
       "tests/integration/test_container_lifecycle_runtime.py",
       "tests/integration/test_end_to_end_buy.py",
+      "tests/integration/test_runtime_engine_lifecycle.py",
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
       "tests/unit/gpt_trader/app/config/test_profile_loader_container_api.py",
@@ -859,8 +861,12 @@
     ],
     "gpt_trader.features.live_trade.engines.base": [
       "tests/integration/test_crash_recovery.py",
+      "tests/integration/test_runtime_engine_lifecycle.py",
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_shutdown.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_startup.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py"
@@ -871,8 +877,14 @@
     "gpt_trader.features.live_trade.engines.price_tick_store": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_price_tick_store_edges.py"
     ],
+    "gpt_trader.features.live_trade.engines.runtime": [
+      "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_shutdown.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_startup.py"
+    ],
     "gpt_trader.features.live_trade.engines.strategy": [
       "tests/integration/test_crash_recovery.py",
+      "tests/integration/test_runtime_engine_lifecycle.py",
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
@@ -1009,6 +1021,7 @@
     "gpt_trader.features.live_trade.lifecycle": [
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_lifecycle.py"
     ],
     "gpt_trader.features.live_trade.risk": [
@@ -2292,6 +2305,12 @@
     "tests/integration/test_persistence.py": [
       "gpt_trader.persistence.event_store"
     ],
+    "tests/integration/test_runtime_engine_lifecycle.py": [
+      "gpt_trader.app.config",
+      "gpt_trader.app.container",
+      "gpt_trader.features.live_trade.engines.base",
+      "gpt_trader.features.live_trade.engines.strategy"
+    ],
     "tests/integration/test_validation_escalation_flow.py": [
       "gpt_trader.app.config",
       "gpt_trader.app.container",
@@ -3324,6 +3343,18 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_price_tick_store_edges.py": [
       "gpt_trader.features.live_trade.engines.price_tick_store"
     ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine.py": [
+      "gpt_trader.features.live_trade.engines.base",
+      "gpt_trader.features.live_trade.engines.runtime"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_shutdown.py": [
+      "gpt_trader.features.live_trade.engines.base",
+      "gpt_trader.features.live_trade.engines.runtime"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_startup.py": [
+      "gpt_trader.features.live_trade.engines.base",
+      "gpt_trader.features.live_trade.engines.runtime"
+    ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py": [
       "gpt_trader.app.config",
       "gpt_trader.app.container",
@@ -3745,7 +3776,8 @@
       "gpt_trader.features.live_trade.bot"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py": [
-      "gpt_trader.features.live_trade.bot"
+      "gpt_trader.features.live_trade.bot",
+      "gpt_trader.features.live_trade.lifecycle"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_cfm_risk.py": [
       "gpt_trader.features.live_trade.risk.config",
@@ -5216,6 +5248,7 @@
     "gpt_trader.features.live_trade.engines.base": "src/gpt_trader/features/live_trade/engines/base.py",
     "gpt_trader.features.live_trade.engines.equity_calculator": "src/gpt_trader/features/live_trade/engines/equity_calculator.py",
     "gpt_trader.features.live_trade.engines.price_tick_store": "src/gpt_trader/features/live_trade/engines/price_tick_store.py",
+    "gpt_trader.features.live_trade.engines.runtime": "src/gpt_trader/features/live_trade/engines/runtime/__init__.py",
     "gpt_trader.features.live_trade.engines.strategy": "src/gpt_trader/features/live_trade/engines/strategy.py",
     "gpt_trader.features.live_trade.engines.system_maintenance": "src/gpt_trader/features/live_trade/engines/system_maintenance.py",
     "gpt_trader.features.live_trade.engines.telemetry_health": "src/gpt_trader/features/live_trade/engines/telemetry_health.py",

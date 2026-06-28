@@ -69,3 +69,35 @@ decisions that should outlive chat, PR receipts, and local branch state.
 - **Rejected alternatives:** Do not publish stale local branches. Do not use
   OpenClaw's anchor as GPT-Trader's roadmap. Do not promote momentum receipts
   into product direction without a project-native decision entry.
+
+## 2026-06-27 — Re-Orient On Actual State; Stabilize Before Closing The Loop
+
+- **Status:** accepted direction
+- **Owner:** RJ
+- **Context:** An AI issue-generation run produced a large `feat(trade ideas):`
+  backlog implied by the staged-autonomy docs. Review found the backlog reached
+  for breadth (tournaments, MCP, reporting, filtering, exports) ahead of a
+  working loop. Ground-truth check established: Stage 0 rails are complete; Stage
+  1 is ~2/3 built but not a closed loop; and the live TA bot and the trade-idea
+  workflow are fully disconnected (zero references either direction). See
+  [Project Status](STATUS.md).
+- **Decision / direction:**
+  1. **Stabilize and reconcile before extending the loop.** Pause net-new
+     feature surface; reconcile docs to reality and keep rails/tests healthy
+     first. The loop-closing spine (#1031 → #1035 → #1033) is the planned next
+     build, not this stabilization pass.
+  2. **Bridge the existing bot; do not grow a second proposer brain.** When the
+     loop is built, trade ideas come from the existing TA/ensemble intelligence
+     routed through the approval gate (#1033), not from independent duplicate
+     proposers. Standalone proposers (e.g. #1034) are de-prioritized.
+  3. **Docs track reality.** Added the living [Project Status](STATUS.md);
+     corrected stale stage labels in the [Operating Rubric](OPERATING_RUBRIC.md).
+- **Safety boundary:** No change to the autonomy boundary. Still
+  `human_approved_execution`; no broker/API calls, credential reads, money
+  movement, or order submission authorized by this entry.
+- **Backlog action:** Open issues triaged with `triage:build-now`,
+  `triage:build-next`, `triage:blocked`, `triage:defer`; three export duplicates
+  (#1024, #1022, #1020) merged into #1044 and closed.
+- **Rejected alternatives:** Do not build the loop or jump toward Stage 2 before
+  stabilizing. Do not build trade-ideas as a second, independent proposer brain
+  parallel to the existing bot. Do not treat doc-implied stages as a backlog.

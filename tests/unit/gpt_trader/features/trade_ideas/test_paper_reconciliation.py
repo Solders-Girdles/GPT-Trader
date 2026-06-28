@@ -12,6 +12,9 @@ from tests.unit.gpt_trader.features.trade_ideas.conftest import (
 from tests.unit.gpt_trader.features.trade_ideas.conftest import (
     reconciliation_service as _service,
 )
+from tests.unit.gpt_trader.features.trade_ideas.conftest import (
+    submitted_idea as _submitted_idea,
+)
 
 from gpt_trader.features.trade_ideas import (
     ActorType,
@@ -313,6 +316,26 @@ def test_reconciler_rerun_skips_legacy_fill_already_audited_on_other_idea(
     # The legacy fill must not be re-recorded against the newer idea.
     assert service.get(second_decision_id).state is TradeIdeaState.APPROVED
     assert service.get(first_decision_id).state is TradeIdeaState.FILLED
+
+
+def test_submitted_idea_only_matches_legacy_fill_with_its_order_id(tmp_path: Path) -> None:
+    service = _service(tmp_path / "ideas")
+    decision_id = _submitted_idea(service, external_order_id="ORDER_A")
+    reconciler = PaperFillReconciler(service)
+
+    # Legacy fill (no ids) for a different order id must not attach to ORDER_A.
+    mismatched = reconciler.reconcile_fills(
+        [_fill_event(order_id="ORDER_B", client_order_id="")], apply=True
+    )
+    assert mismatched.matched_count == 0
+    assert service.get(decision_id).state is TradeIdeaState.SUBMITTED
+
+    # The fill carrying the submitted order id reconciles normally.
+    matched = reconciler.reconcile_fills(
+        [_fill_event(order_id="ORDER_A", client_order_id="")], apply=True
+    )
+    assert matched.matched_count == 1
+    assert service.get(decision_id).state is TradeIdeaState.FILLED
 
 
 def test_reconciler_dry_run_previews_refreshed_symbol_side_candidates(

@@ -8,6 +8,7 @@ from typing import Any
 import pytest
 
 from gpt_trader.features.trade_ideas import (
+    ActorType,
     AutonomyMode,
     Confidence,
     ConfidenceLabel,
@@ -84,6 +85,25 @@ def approved_idea(
     service.propose(idea, actor_id="idea-generator-v1")
     service.approve(idea.decision_id, actor_id="rj", reason="Risk verified")
     return idea.decision_id
+
+
+def submitted_idea(
+    service: TradeIdeaService,
+    *,
+    decision_id: str = "trade-20260612-001",
+    external_order_id: str = "ORDER_A",
+) -> str:
+    """Approve an idea and record a submission under ``external_order_id``."""
+    decision = approved_idea(service, decision_id=decision_id)
+    service.record_submission(
+        decision,
+        actor_id="paper-fill-reconciler",
+        venue="manual",
+        external_order_id=external_order_id,
+        reason="submitted for reconciliation tests",
+        actor_type=ActorType.SYSTEM,
+    )
+    return decision
 
 
 def paper_fill_event(

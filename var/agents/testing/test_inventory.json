@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6905,
+    "total_tests": 6906,
     "total_files": 814,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6740,
+    "unit": 6741,
     "asyncio": 413,
     "parametrize": 200,
     "endpoints": 83,
@@ -33011,7 +33011,7 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py": [
       {
         "name": "test_reconciler_records_matched_approved_fill_through_service",
-        "line": 26,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -33019,7 +33019,7 @@
       },
       {
         "name": "test_reconciler_reports_unmatched_fill_without_mutation",
-        "line": 51,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -33027,7 +33027,7 @@
       },
       {
         "name": "test_reconciler_does_not_fall_back_from_unknown_decision_id_to_client_order_id",
-        "line": 69,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -33035,7 +33035,7 @@
       },
       {
         "name": "test_reconciler_does_not_fall_back_from_unknown_decision_id_to_symbol_side",
-        "line": 96,
+        "line": 99,
         "markers": [
           "unit"
         ],
@@ -33043,7 +33043,7 @@
       },
       {
         "name": "test_reconciler_rejects_symbol_conflict_on_explicit_decision_id_without_mutation",
-        "line": 123,
+        "line": 126,
         "markers": [
           "unit"
         ],
@@ -33051,7 +33051,7 @@
       },
       {
         "name": "test_reconciler_rejects_side_conflict_on_explicit_decision_id_without_mutation",
-        "line": 151,
+        "line": 154,
         "markers": [
           "unit"
         ],
@@ -33059,7 +33059,7 @@
       },
       {
         "name": "test_reconciler_rejects_symbol_conflict_on_client_order_id_without_mutation",
-        "line": 180,
+        "line": 183,
         "markers": [
           "unit"
         ],
@@ -33067,7 +33067,7 @@
       },
       {
         "name": "test_reconciler_rejects_side_conflict_on_client_order_id_without_mutation",
-        "line": 204,
+        "line": 207,
         "markers": [
           "unit"
         ],
@@ -33075,7 +33075,7 @@
       },
       {
         "name": "test_reconciler_dry_run_reports_match_without_mutation",
-        "line": 228,
+        "line": 231,
         "markers": [
           "unit"
         ],
@@ -33083,7 +33083,7 @@
       },
       {
         "name": "test_reconciler_skips_duplicate_fill_in_same_apply_pass",
-        "line": 243,
+        "line": 246,
         "markers": [
           "unit"
         ],
@@ -33091,7 +33091,7 @@
       },
       {
         "name": "test_reconciler_refreshes_symbol_side_candidates_after_applied_fill",
-        "line": 258,
+        "line": 261,
         "markers": [
           "unit"
         ],
@@ -33099,7 +33099,15 @@
       },
       {
         "name": "test_reconciler_rerun_skips_legacy_fill_already_audited_on_other_idea",
-        "line": 293,
+        "line": 296,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_submitted_idea_only_matches_legacy_fill_with_its_order_id",
+        "line": 321,
         "markers": [
           "unit"
         ],
@@ -33107,7 +33115,7 @@
       },
       {
         "name": "test_reconciler_dry_run_previews_refreshed_symbol_side_candidates",
-        "line": 318,
+        "line": 341,
         "markers": [
           "unit"
         ],
@@ -33115,7 +33123,7 @@
       },
       {
         "name": "test_live_profiles_are_rejected_for_paper_reconciliation",
-        "line": 368,
+        "line": 391,
         "markers": [
           "unit"
         ],

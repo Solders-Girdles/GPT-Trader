@@ -383,7 +383,9 @@ class PaperFillReconciler:
         symbol_side_matches = [
             view
             for view in recordable_views
-            if _symbol_matches(view, event) and _side_matches(view, event)
+            if _symbol_matches(view, event)
+            and _side_matches(view, event)
+            and _submission_order_id_allows(view, event)
         ]
         if len(symbol_side_matches) == 1:
             decision_id = symbol_side_matches[0].idea.decision_id
@@ -423,6 +425,30 @@ def _match_client_order_id(
         if _client_order_id_contains_decision_id(client_order_id, decision_id)
     ]
     return matches[0] if len(matches) == 1 else None
+
+
+def _submission_order_id_allows(view: TradeIdeaView, event: PaperFillEvent) -> bool:
+    """Gate the symbol/side fallback for already-submitted ideas.
+
+    An approved idea has no submission yet, so symbol/side alone is enough. A
+    submitted idea already carries an ``external_order_id``; recording a legacy
+    fill with a different id against it would make the idea look submitted as one
+    order and filled as another. Only allow the fallback when the fill's id
+    matches the submitted order id.
+    """
+    if view.state is not TradeIdeaState.SUBMITTED:
+        return True
+    submitted_order_id = _submitted_external_order_id(view)
+    if not submitted_order_id:
+        return True
+    return event.external_order_id == submitted_order_id
+
+
+def _submitted_external_order_id(view: TradeIdeaView) -> str | None:
+    for audit_event in reversed(view.events):
+        if audit_event.action is AuditAction.SUBMITTED and audit_event.external_order_id:
+            return audit_event.external_order_id
+    return None
 
 
 def _audited_fill_order_ids(views: Iterable[TradeIdeaView]) -> set[str]:

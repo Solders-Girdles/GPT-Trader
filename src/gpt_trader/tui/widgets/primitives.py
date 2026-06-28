@@ -113,35 +113,3 @@ class ProgressBarWidget(Static):
         pct_str = f"{int(value * 100):>3}%"
 
         return f"{label_padded}{bar_str} {pct_str}"
-
-
-class StatusBadgeWidget(Static):
-    """
-    Renders a pill-shaped status badge.
-    """
-
-    status = reactive("UNKNOWN")
-
-    def __init__(self, status: str = "UNKNOWN", id: str | None = None, classes: str | None = None):
-        super().__init__(id=id, classes=classes)
-        self.status = status
-
-    def watch_status(self, status: str) -> None:
-        self._update_badge(status)
-
-    def _update_badge(self, status: str) -> None:
-        self.classes = ""  # Reset
-        icon = "•"
-
-        s_upper = status.upper()
-        if s_upper in ("LIVE", "RUNNING", "CONNECTED"):
-            self.add_class("badge-live")
-            icon = "●"
-        elif s_upper in ("STOPPED", "DISCONNECTED", "ERROR"):
-            self.add_class("badge-stopped")
-            icon = "■"
-        elif s_upper in ("SYNCING", "CONNECTING", "WARNING"):
-            self.add_class("badge-syncing")
-            icon = "○"
-
-        self.update(f"{icon} {s_upper}")

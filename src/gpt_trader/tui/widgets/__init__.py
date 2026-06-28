@@ -5,7 +5,6 @@ All widgets are exported from this module for convenient importing.
 
 from .account import AccountWidget
 from .alert_inbox import AlertInbox
-from .cfm_balance import CFMBalanceWidget
 from .config import ConfigModal
 from .execution import ExecutionWidget
 from .footer import ContextualFooter
@@ -31,7 +30,6 @@ __all__ = [
     "AccountWidget",
     "AlertInbox",
     "BotStatusWidget",
-    "CFMBalanceWidget",
     "ConfigModal",
     "ContextualFooter",
     "ExecutionWidget",

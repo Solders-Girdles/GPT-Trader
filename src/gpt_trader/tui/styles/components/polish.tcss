@@ -30,12 +30,6 @@ $border-medium: #444444;    /* Slightly more visible */
     width: 40%;
 }
 
-.skeleton-line {
-    height: 1;
-    background: $bg-secondary;
-    margin-bottom: 1;
-}
-
 /* === Loading Indicator === */
 
 .loading-dots {

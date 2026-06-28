@@ -1278,20 +1278,6 @@ LoadingSpinner {
     text-style: italic;
 }
 
-/* === Skeleton Loader === */
-SkeletonLoader {
-    width: 100%;
-    height: auto;
-    align: center middle;
-    padding: 1;
-}
-
-.skeleton-line {
-    color: $bg-elevated;
-    height: 1;
-    margin-bottom: 1;
-}
-
 /* Note: Textual doesn't support @keyframes or @media queries
  * Advanced animations and media queries must be implemented in Python
  */
@@ -1696,12 +1682,6 @@ $border-medium: #444444;    /* Slightly more visible */
     background: $bg-elevated;
     color: transparent;
     width: 40%;
-}
-
-.skeleton-line {
-    height: 1;
-    background: $bg-secondary;
-    margin-bottom: 1;
 }
 
 /* === Loading Indicator === */
@@ -2293,30 +2273,7 @@ ProgressBarWidget {
     color: $text-muted;
 }
 
-/* Status Badge Widget */
-StatusBadgeWidget {
-    width: auto;
-    height: 1;
-    padding: 0 1;
-    background: $bg-elevated;
-    color: $text-primary;
-    text-style: bold;
-}
-
-.badge-live {
-    color: $success;
-    border-left: thick $success;
-}
-
-.badge-stopped {
-    color: $error;
-    border-left: thick $error;
-}
-
-.badge-syncing {
-    color: $warning;
-    border-left: thick $warning;
-}
+/* Progress / sparkline primitives only; status badges removed (unused widget). */
 
 
 /* ---------------------------------------------------------------------------- */
@@ -4305,65 +4262,6 @@ ErrorIndicatorWidget .error-detail {
 
 ErrorIndicatorWidget Button {
     min-width: 7;
-}
-
-
-/* ---------------------------------------------------------------------------- */
-/* WIDGETS: Cfm Balance                                                       */
-/* Source: styles/widgets/cfm_balance.tcss                                     */
-/* ---------------------------------------------------------------------------- */
-
-/* ========================================================================== */
-/* CFM BALANCE WIDGET                                                         */
-/* ========================================================================== */
-
-CFMBalanceWidget {
-    layout: vertical;
-    height: auto;
-    padding: 0 1;
-}
-
-CFMBalanceWidget .cfm-header {
-    text-style: bold;
-    color: $text-secondary;
-    margin-bottom: 1;
-}
-
-CFMBalanceWidget .cfm-row {
-    layout: horizontal;
-    height: auto;
-    margin-bottom: 0;
-}
-
-CFMBalanceWidget .cfm-metric {
-    width: 1fr;
-    height: auto;
-}
-
-CFMBalanceWidget .cfm-label {
-    color: $text-muted;
-}
-
-CFMBalanceWidget .cfm-value {
-    color: $text-primary;
-    text-style: bold;
-}
-
-/* Status coloring */
-CFMBalanceWidget .cfm-warning {
-    color: $warning;
-}
-
-CFMBalanceWidget .cfm-danger {
-    color: $error;
-}
-
-CFMBalanceWidget .cfm-ok {
-    color: $success;
-}
-
-CFMBalanceWidget .cfm-hidden {
-    display: none;
 }
 
 

@@ -60,20 +60,6 @@ LoadingSpinner {
     text-style: italic;
 }
 
-/* === Skeleton Loader === */
-SkeletonLoader {
-    width: 100%;
-    height: auto;
-    align: center middle;
-    padding: 1;
-}
-
-.skeleton-line {
-    color: $bg-elevated;
-    height: 1;
-    margin-bottom: 1;
-}
-
 /* Note: Textual doesn't support @keyframes or @media queries
  * Advanced animations and media queries must be implemented in Python
  */

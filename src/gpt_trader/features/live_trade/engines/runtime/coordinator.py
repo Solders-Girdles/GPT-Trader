@@ -469,7 +469,12 @@ class RuntimeEngine(BaseEngine):
         return await next(iter(done))
 
     async def _cleanup_tasks(self, timeout_seconds: float) -> None:
-        tasks = self._tracked_tasks
+        # Never cancel or await the task running cleanup. ``_shutdown`` can call
+        # this directly in the caller's task (idempotent path), and if that
+        # caller is itself a tracked runtime task, cancelling it would abort the
+        # cleanup before ``asyncio.wait`` runs and leave the coordinator wedged.
+        current_task = asyncio.current_task()
+        tasks = [task for task in self._tracked_tasks if task is not current_task]
         for task in tasks:
             task.cancel()
 

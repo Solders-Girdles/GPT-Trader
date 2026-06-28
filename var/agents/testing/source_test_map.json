@@ -1021,6 +1021,7 @@
     "gpt_trader.features.live_trade.lifecycle": [
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop.py",
       "tests/unit/gpt_trader/features/live_trade/test_bot_flatten_and_stop_run_race.py",
+      "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py",
       "tests/unit/gpt_trader/features/live_trade/test_lifecycle.py"
     ],
     "gpt_trader.features.live_trade.risk": [
@@ -3775,7 +3776,8 @@
       "gpt_trader.features.live_trade.bot"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py": [
-      "gpt_trader.features.live_trade.bot"
+      "gpt_trader.features.live_trade.bot",
+      "gpt_trader.features.live_trade.lifecycle"
     ],
     "tests/unit/gpt_trader/features/live_trade/test_cfm_risk.py": [
       "gpt_trader.features.live_trade.risk.config",

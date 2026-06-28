@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6898,
+    "total_tests": 6901,
     "total_files": 816,
     "markers_used": 16
   },
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6732,
-    "asyncio": 427,
+    "unit": 6735,
+    "asyncio": 430,
     "parametrize": 200,
     "endpoints": 83,
     "property": 82,
@@ -20602,7 +20602,7 @@
         "docstring": ""
       },
       {
-        "name": "test_runtime_engine_cancelled_shutdown_caller_preserves_in_flight_drain",
+        "name": "test_cleanup_tasks_does_not_cancel_the_calling_task",
         "line": 82,
         "markers": [
           "asyncio",
@@ -20611,8 +20611,17 @@
         "docstring": ""
       },
       {
+        "name": "test_runtime_engine_cancelled_shutdown_caller_preserves_in_flight_drain",
+        "line": 112,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_runtime_engine_shutdown_waits_for_initializing_startup",
-        "line": 143,
+        "line": 173,
         "markers": [
           "asyncio",
           "unit"
@@ -20621,7 +20630,7 @@
       },
       {
         "name": "test_runtime_engine_shutdown_hook_timeout_keeps_hook_owned_until_cleanup_finishes",
-        "line": 227,
+        "line": 257,
         "markers": [
           "asyncio",
           "unit"
@@ -20630,7 +20639,7 @@
       },
       {
         "name": "test_runtime_engine_task_cleanup_timeout_keeps_worker_owned_until_cleanup_finishes",
-        "line": 288,
+        "line": 318,
         "markers": [
           "asyncio",
           "unit"
@@ -27837,7 +27846,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py": [
       {
         "name": "TestTradingBotRun::test_run_sets_running_flag",
-        "line": 41,
+        "line": 42,
         "markers": [
           "asyncio",
           "unit"
@@ -27847,7 +27856,7 @@
       },
       {
         "name": "TestTradingBotRun::test_run_single_cycle_calls_shutdown",
-        "line": 49,
+        "line": 50,
         "markers": [
           "asyncio",
           "unit"
@@ -27857,7 +27866,7 @@
       },
       {
         "name": "TestTradingBotRun::test_run_starts_background_tasks",
-        "line": 56,
+        "line": 57,
         "markers": [
           "asyncio",
           "unit"
@@ -27867,7 +27876,7 @@
       },
       {
         "name": "TestTradingBotRun::test_run_handles_cancellation",
-        "line": 63,
+        "line": 64,
         "markers": [
           "asyncio",
           "unit"
@@ -27876,8 +27885,18 @@
         "class": "TestTradingBotRun"
       },
       {
+        "name": "TestTradingBotRun::test_run_reports_error_when_engine_shutdown_fails",
+        "line": 83,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "The bot must not report a clean stop when the engine fails to shut down.",
+        "class": "TestTradingBotRun"
+      },
+      {
         "name": "TestTradingBotStop::test_stop_sets_running_false",
-        "line": 102,
+        "line": 114,
         "markers": [
           "asyncio",
           "unit"
@@ -27887,7 +27906,7 @@
       },
       {
         "name": "TestTradingBotStop::test_stop_calls_engine_shutdown",
-        "line": 109,
+        "line": 121,
         "markers": [
           "asyncio",
           "unit"
@@ -27897,7 +27916,7 @@
       },
       {
         "name": "TestTradingBotStop::test_shutdown_is_alias_for_stop",
-        "line": 116,
+        "line": 128,
         "markers": [
           "asyncio",
           "unit"
@@ -27906,8 +27925,18 @@
         "class": "TestTradingBotStop"
       },
       {
+        "name": "TestTradingBotStop::test_stop_reports_error_when_engine_shutdown_fails",
+        "line": 136,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "A failed engine shutdown surfaces as bot ERROR, not a clean STOPPED.",
+        "class": "TestTradingBotStop"
+      },
+      {
         "name": "TestTradingBotStateManagement::test_initial_state",
-        "line": 127,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -27916,7 +27945,7 @@
       },
       {
         "name": "TestTradingBotStateManagement::test_running_state_during_execution",
-        "line": 140,
+        "line": 163,
         "markers": [
           "asyncio",
           "unit"

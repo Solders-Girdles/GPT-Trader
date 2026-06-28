@@ -79,6 +79,36 @@ async def test_runtime_engine_concurrent_shutdown_awaits_in_flight_drain() -> No
 
 
 @pytest.mark.asyncio
+async def test_cleanup_tasks_does_not_cancel_the_calling_task() -> None:
+    # ``_shutdown`` can invoke ``_cleanup_tasks`` directly in the caller's task
+    # (idempotent path). If that caller is itself a tracked runtime task, the
+    # cleanup loop must not cancel it out from under the cleanup.
+    runtime = RuntimeEngine(_context(), shutdown_timeout_seconds=_TEST_LIFECYCLE_TIMEOUT)
+    other = asyncio.create_task(asyncio.sleep(60), name="other")
+    survived = False
+
+    async def caller() -> None:
+        nonlocal survived
+        runtime._track_task("other", other)  # noqa: SLF001
+        runtime._track_task("caller", asyncio.current_task())  # noqa: SLF001
+        await runtime._cleanup_tasks(0.2)  # noqa: SLF001
+        survived = True
+
+    caller_task = asyncio.create_task(caller())
+    try:
+        await asyncio.wait_for(caller_task, timeout=1.0)
+    finally:
+        for task in (other, caller_task):
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(other, caller_task, return_exceptions=True)
+
+    assert survived is True
+    assert not caller_task.cancelled()
+    assert other.cancelled()
+
+
+@pytest.mark.asyncio
 async def test_runtime_engine_cancelled_shutdown_caller_preserves_in_flight_drain() -> None:
     runtime = RuntimeEngine(_context(), shutdown_timeout_seconds=_TEST_LIFECYCLE_TIMEOUT)
     shutdown_started = asyncio.Event()

@@ -23,6 +23,7 @@ from gpt_trader.features.live_trade.execution.status_codec import (
 )
 from gpt_trader.features.live_trade.lifecycle import (
     TRADING_BOT_TRANSITIONS,
+    EngineState,
     LifecycleStateMachine,
     TradingBotState,
 )
@@ -152,6 +153,23 @@ class TradingBot:
             force=force,
         )
 
+    def _finalize_stop_state(self, stopped_reason: str) -> None:
+        """Report STOPPED, or ERROR when the engine failed to shut down.
+
+        ``TradingEngine.shutdown`` records ``EngineState.ERROR`` when the runtime
+        coordinator's graceful shutdown fails (e.g. cleanup-resistant tasks
+        outlive the cleanup timeout and remain owned by the runtime). The bot
+        must surface that instead of reporting a clean stop.
+        """
+        if self.engine.state == EngineState.ERROR:
+            self._transition_state(
+                TradingBotState.ERROR,
+                reason="engine_shutdown_failed",
+                details={"engine_state": self.engine.state.value},
+            )
+            return
+        self._transition_state(TradingBotState.STOPPED, reason=stopped_reason)
+
     def set_ui_adapter(self, adapter: RuntimeUIAdapter | None) -> None:
         """Attach a runtime UI adapter (no-op when None)."""
         if adapter is None:
@@ -236,7 +254,7 @@ class TradingBot:
                 )
             else:
                 self._shutdown_broker_calls()
-                self._transition_state(TradingBotState.STOPPED, reason="shutdown_complete")
+                self._finalize_stop_state("shutdown_complete")
             logger.info("Bot shutdown complete.")
 
     async def stop(self) -> None:
@@ -244,7 +262,7 @@ class TradingBot:
         self._transition_state(TradingBotState.STOPPING, reason="stop_called")
         await self.engine.shutdown()
         self._shutdown_broker_calls()
-        self._transition_state(TradingBotState.STOPPED, reason="stop_complete")
+        self._finalize_stop_state("stop_complete")
 
     async def flatten_and_stop(self) -> list[str]:
         """

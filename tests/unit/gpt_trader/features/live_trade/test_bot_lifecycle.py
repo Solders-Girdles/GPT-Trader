@@ -9,6 +9,7 @@ import pytest
 
 import gpt_trader.features.live_trade.bot as bot_module
 from gpt_trader.features.live_trade.bot import TradingBot
+from gpt_trader.features.live_trade.lifecycle import EngineState, TradingBotState
 
 
 @pytest.fixture
@@ -78,6 +79,17 @@ class TestTradingBotRun:
         bot.engine.shutdown.assert_called()
         assert bot.running is False
 
+    @pytest.mark.asyncio
+    async def test_run_reports_error_when_engine_shutdown_fails(self, bot: TradingBot) -> None:
+        """The bot must not report a clean stop when the engine fails to shut down."""
+        bot.engine.state = EngineState.ERROR
+        bot.engine.last_error = "timed out waiting for runtime task(s)"
+
+        await bot.run(single_cycle=True)
+
+        assert bot.state == TradingBotState.ERROR
+        assert bot.running is False
+
 
 class TestTradingBotStop:
     """Test TradingBot stop/shutdown methods."""
@@ -119,6 +131,17 @@ class TestTradingBotStop:
 
         assert bot.running is False
         bot.engine.shutdown.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_stop_reports_error_when_engine_shutdown_fails(self, bot: TradingBot) -> None:
+        """A failed engine shutdown surfaces as bot ERROR, not a clean STOPPED."""
+        bot.engine.state = EngineState.ERROR
+        bot.engine.last_error = "timed out waiting for runtime task(s)"
+
+        await bot.stop()
+
+        assert bot.state == TradingBotState.ERROR
+        assert bot.running is False
 
 
 class TestTradingBotStateManagement:

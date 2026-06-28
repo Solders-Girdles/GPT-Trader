@@ -56,14 +56,17 @@ def test_reconciler_reports_unmatched_fill_without_mutation(tmp_path: Path) -> N
     decision_id = _approved_idea(service)
     original_events = tuple(service.get(decision_id).events)
 
+    # A non-empty, non-resolving client_order_id must not fall back to symbol/side.
     report = PaperFillReconciler(service).reconcile_fills(
-        [_fill_event(order_id="MOCK_000002", client_order_id="unknown", symbol="ETH-USD")],
+        [_fill_event(order_id="MOCK_000002", client_order_id="stale-decision")],
         apply=True,
     )
 
     assert report.matched_count == 0
     assert report.unmatched_count == 1
-    assert report.unmatched[0].reason == "no approved idea matched fill"
+    assert report.unmatched[0].reason == (
+        "client_order_id did not match a known trade idea: stale-decision"
+    )
     view = service.get(decision_id)
     assert view.state is TradeIdeaState.APPROVED
     assert tuple(view.events) == original_events

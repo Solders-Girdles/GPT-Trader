@@ -373,12 +373,23 @@ class PaperFillReconciler:
                 return None, None, f"explicit decision_id not found: {explicit_decision_id}"
             return explicit_decision_id, "decision_id", "matched explicit decision id"
 
-        client_match = _match_client_order_id(
-            event.client_order_id,
-            view_by_decision_id=view_by_decision_id,
-        )
-        if client_match is not None:
-            return client_match, "client_order_id", "matched client_order_id"
+        client_order_id = _safe_text_or_none(event.client_order_id)
+        if client_order_id is not None:
+            client_match = _match_client_order_id(
+                event.client_order_id,
+                view_by_decision_id=view_by_decision_id,
+            )
+            if client_match is not None:
+                return client_match, "client_order_id", "matched client_order_id"
+            # A fill that carries a client order id expressed explicit intent. If
+            # it does not resolve (stale/moved decision), do not guess via
+            # symbol/side -- that could attach it to an unrelated same-symbol/side
+            # idea. The symbol/side fallback is only for truly id-less fills.
+            return (
+                None,
+                None,
+                f"client_order_id did not match a known trade idea: {client_order_id}",
+            )
 
         symbol_side_matches = [
             view

@@ -33426,7 +33426,7 @@
       },
       {
         "name": "test_reconciler_does_not_fall_back_from_unknown_decision_id_to_client_order_id",
-        "line": 72,
+        "line": 75,
         "markers": [
           "unit"
         ],
@@ -33434,7 +33434,7 @@
       },
       {
         "name": "test_reconciler_does_not_fall_back_from_unknown_decision_id_to_symbol_side",
-        "line": 99,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -33442,7 +33442,7 @@
       },
       {
         "name": "test_reconciler_rejects_symbol_conflict_on_explicit_decision_id_without_mutation",
-        "line": 126,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -33450,7 +33450,7 @@
       },
       {
         "name": "test_reconciler_rejects_side_conflict_on_explicit_decision_id_without_mutation",
-        "line": 154,
+        "line": 157,
         "markers": [
           "unit"
         ],
@@ -33458,7 +33458,7 @@
       },
       {
         "name": "test_reconciler_rejects_symbol_conflict_on_client_order_id_without_mutation",
-        "line": 183,
+        "line": 186,
         "markers": [
           "unit"
         ],
@@ -33466,7 +33466,7 @@
       },
       {
         "name": "test_reconciler_rejects_side_conflict_on_client_order_id_without_mutation",
-        "line": 207,
+        "line": 210,
         "markers": [
           "unit"
         ],
@@ -33474,7 +33474,7 @@
       },
       {
         "name": "test_reconciler_dry_run_reports_match_without_mutation",
-        "line": 231,
+        "line": 234,
         "markers": [
           "unit"
         ],
@@ -33482,7 +33482,7 @@
       },
       {
         "name": "test_reconciler_skips_duplicate_fill_in_same_apply_pass",
-        "line": 246,
+        "line": 249,
         "markers": [
           "unit"
         ],
@@ -33490,7 +33490,7 @@
       },
       {
         "name": "test_reconciler_refreshes_symbol_side_candidates_after_applied_fill",
-        "line": 261,
+        "line": 264,
         "markers": [
           "unit"
         ],
@@ -33498,7 +33498,7 @@
       },
       {
         "name": "test_reconciler_rerun_skips_legacy_fill_already_audited_on_other_idea",
-        "line": 296,
+        "line": 299,
         "markers": [
           "unit"
         ],
@@ -33506,7 +33506,7 @@
       },
       {
         "name": "test_submitted_idea_only_matches_legacy_fill_with_its_order_id",
-        "line": 321,
+        "line": 324,
         "markers": [
           "unit"
         ],
@@ -33514,7 +33514,7 @@
       },
       {
         "name": "test_reconciler_dry_run_previews_refreshed_symbol_side_candidates",
-        "line": 341,
+        "line": 344,
         "markers": [
           "unit"
         ],
@@ -33522,7 +33522,7 @@
       },
       {
         "name": "test_live_profiles_are_rejected_for_paper_reconciliation",
-        "line": 391,
+        "line": 394,
         "markers": [
           "unit"
         ],

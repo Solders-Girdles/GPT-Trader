@@ -1,6 +1,6 @@
 ## Summary
 <!-- What and why. Keep it crisp. Link related issues. -->
-Related issue / finding / RJ-routed package:
+Related issue / finding / routed package:
 
 ## Type of change
 - [ ] Refactor

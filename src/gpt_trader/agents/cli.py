@@ -216,6 +216,6 @@ def dedupe_triage() -> int:
     Examples:
         uv run agent-dedupe-triage --list
         uv run agent-dedupe-triage --show 72948f9bf0a3
-        uv run agent-dedupe-triage --set 72948f9bf0a3 rejected --owner rj --reason "Not redundant"
+        uv run agent-dedupe-triage --set 72948f9bf0a3 rejected --owner operator --reason "Not redundant"
     """
     return _run_script("dedupe_triage.py")

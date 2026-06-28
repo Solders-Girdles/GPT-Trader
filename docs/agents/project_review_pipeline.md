@@ -6,14 +6,14 @@ status: draft
 
 This document defines the recurring project-review pipeline for GPT-Trader. The
 pipeline is intentionally staged: frequent scouts produce candidate findings,
-and only validated, deduped findings are promoted to GitHub issues for Claw,
-Hermes, and Codex review loops.
+and only validated, deduped findings are promoted to GitHub issues for
+implementation or review loops.
 
 ## Goals
 
 - Keep a frequent agent scout close to current repo truth.
 - Promote only actionable, evidence-backed findings.
-- Use GitHub issues as the durable queue for Claw/Hermes implementation.
+- Use GitHub issues as the durable project queue for implementation agents.
 - Preserve GPT-Trader safety boundaries around broker access, trading
   execution, account capability, and explicit decision records.
 - Feed PR review feedback back into implementation agents without broadening
@@ -124,7 +124,7 @@ Required fields:
     "uv run agent-regenerate --verify"
   ],
   "routing": {
-    "candidate_for": ["claw"],
+    "candidate_for": ["implementation"],
     "decision_needed": false,
     "blocked_by": []
   }
@@ -150,7 +150,8 @@ recommend the next policy and implementation route.
 ## Stage 3: Promote
 
 Promotion creates or updates a GitHub issue from a validated packet. Promote at
-most one finding per scout run unless RJ explicitly requests a bulk pass.
+most one finding per scout run unless the project owner explicitly requests a
+bulk pass.
 
 Dry-run first:
 
@@ -180,8 +181,6 @@ GitHub issues are the durable queue. These labels are routing signals:
 | --- | --- |
 | `agent-review` | Finding came from the recurring GPT-Trader review lane |
 | `agent-ready` | Finding passed promotion gates, has no decision/blocker gate, and is ready for implementation |
-| `claw-candidate` | Candidate for Claw implementation |
-| `hermes-candidate` | Candidate for Hermes implementation |
 | `decision-needed` | Requires an explicit decision packet and agent recommendation before implementation or execution |
 | `codex-review-feedback` | Follow-up from Codex review comments or checks |
 
@@ -191,7 +190,8 @@ unknown labels from the GitHub call.
 
 ## Stage 5: Implement
 
-Claw and Hermes should treat each promoted issue as the implementation contract:
+Implementation agents should treat each promoted issue as the implementation
+contract:
 
 - work only the acceptance criteria in the issue
 - preserve out-of-scope boundaries
@@ -204,14 +204,14 @@ issue-backed work, include `Closes #<issue>`.
 
 ### Direct Package Cycles
 
-When RJ or the active agent workspace explicitly routes a build/package cycle,
-a promoted GitHub issue is useful but not required. In that path, the direct
-request, the observed repo evidence, and the PR body form the implementation
-contract.
+When the project owner or the active agent workspace explicitly routes a
+build/package cycle, a promoted GitHub issue is useful but not required. In that
+path, the direct request, the observed repo evidence, and the PR body form the
+implementation contract.
 
 Use this path only when the work is already bounded and safe to verify locally:
 
-- name the package source in the PR body, such as `RJ-routed package`,
+- name the package source in the PR body, such as `owner-routed package`,
   `agent-review finding`, or a specific doc/receipt
 - preserve the same trading boundaries as issue-backed work
 - run the smallest meaningful verification plus repo-required checks
@@ -265,5 +265,5 @@ This supports repeatable review workflow without polluting commits or losing han
 ## Cadence
 
 Start with an hourly Codex automation. Tighten the cadence only after the issue
-promotion rate is low, dedupe is reliable, and Claw/Hermes are not receiving
-stale or duplicate work.
+promotion rate is low, dedupe is reliable, and implementation agents are not
+receiving stale or duplicate work.

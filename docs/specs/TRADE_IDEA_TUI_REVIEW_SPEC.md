@@ -60,7 +60,7 @@ the bot runtime.
 ## Layout
 
 ```
-┌─ Ideas Review ── reviewer: rj ───────────────────────────────────────┐
+┌─ Ideas Review ── reviewer: operator ─────────────────────────────────┐
 │ ┌─ Queue (DataTable) ──────────────┐ ┌─ Detail (VerticalScroll) ───┐ │
 │ │ ID  STATE  INSTR  DIR  LOSS% EXP │ │ thesis, instrument, entry,  │ │
 │ │ ...                              │ │ invalidation, target, loss, │ │

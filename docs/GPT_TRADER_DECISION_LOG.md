@@ -11,7 +11,7 @@ decisions that should outlive chat, PR receipts, and local branch state.
 
 - **Status:** accepted direction; Stage 0 trade-idea rails implemented where
   noted below
-- **Owner:** RJ
+- **Owner:** Project owner
 - **Decision / direction:** Use the
   [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) as
   the execution-migration gate. The accepted path is approval-gated execution
@@ -44,8 +44,8 @@ decisions that should outlive chat, PR receipts, and local branch state.
 ## 2026-06-22 — Continue Trade-Ideas CLI As The Active Discovery Lane
 
 - **Status:** accepted direction, implementation still WIP
-- **Owner:** Claw
-- **Reviewer:** Edison for decision quality; Hermes for explicit evidence receipts
+- **Owner:** Active implementation agent
+- **Reviewer:** Decision and evidence review agents
 - **Decision / direction:** Treat `codex/trade-ideas-cli` as the active viable
   GPT-Trader discovery lane. It is the CLI door into the existing
   human-approved trade-idea workflow, not an execution or broker-action lane.
@@ -73,7 +73,7 @@ decisions that should outlive chat, PR receipts, and local branch state.
 ## 2026-06-27 — Re-Orient On Actual State; Stabilize Before Closing The Loop
 
 - **Status:** accepted direction
-- **Owner:** RJ
+- **Owner:** Project owner
 - **Context:** An AI issue-generation run produced a large `feat(trade ideas):`
   backlog implied by the staged-autonomy docs. Review found the backlog reached
   for breadth (tournaments, MCP, reporting, filtering, exports) ahead of a

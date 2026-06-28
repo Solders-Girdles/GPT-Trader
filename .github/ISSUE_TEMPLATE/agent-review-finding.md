@@ -35,7 +35,7 @@ Touches trading execution: `false`
 
 ## Routing
 
-- Candidate for: claw
+- Candidate for: implementation
 - Decision needed: `false`
 - Blocked by: none
 

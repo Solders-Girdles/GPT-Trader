@@ -26,7 +26,7 @@ CATEGORIES = {
     "tooling",
     "trading-readiness",
 }
-CANDIDATES = {"claw", "hermes", "codex-review", "decision"}
+CANDIDATES = {"implementation", "codex-review", "decision"}
 EVIDENCE_ANCHOR_FIELDS = ("command", "path", "url")
 
 CUSTOM_LABELS = {
@@ -37,14 +37,6 @@ CUSTOM_LABELS = {
     "agent-ready": {
         "color": "0e8a16",
         "description": "Validated and ready for agent implementation",
-    },
-    "claw-candidate": {
-        "color": "1d76db",
-        "description": "Candidate for Claw implementation",
-    },
-    "hermes-candidate": {
-        "color": "006b75",
-        "description": "Candidate for Hermes implementation",
     },
     "decision-needed": {
         "color": "d876e3",
@@ -131,7 +123,7 @@ def example_packet() -> dict[str, Any]:
         "acceptance_criteria": ["`uv run agent-regenerate --verify` passes."],
         "suggested_verification": ["uv run agent-regenerate --verify"],
         "routing": {
-            "candidate_for": ["claw"],
+            "candidate_for": ["implementation"],
             "decision_needed": False,
             "blocked_by": [],
         },
@@ -274,10 +266,6 @@ def packet_labels(packet: dict[str, Any]) -> list[str]:
         if not routing.get("decision_needed") and not blocked_by and not decision_candidate:
             labels.add("agent-ready")
         if isinstance(candidates, list):
-            if "claw" in candidates:
-                labels.add("claw-candidate")
-            if "hermes" in candidates:
-                labels.add("hermes-candidate")
             if "codex-review" in candidates:
                 labels.add("codex-review-feedback")
         if routing.get("decision_needed") or decision_candidate:

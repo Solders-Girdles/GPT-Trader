@@ -12,7 +12,7 @@ Files:
 Usage:
   uv run python scripts/agents/dedupe_triage.py --list
   uv run python scripts/agents/dedupe_triage.py --show 678535a285b3
-  uv run python scripts/agents/dedupe_triage.py --set 72948f9bf0a3 rejected --owner rj --reason "Fanout cluster; not redundant."
+  uv run python scripts/agents/dedupe_triage.py --set 72948f9bf0a3 rejected --owner operator --reason "Fanout cluster; not redundant."
   uv run python scripts/agents/dedupe_triage.py --clear 72948f9bf0a3
 """
 

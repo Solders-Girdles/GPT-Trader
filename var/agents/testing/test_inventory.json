@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6980,
+    "total_tests": 6981,
     "total_files": 829,
     "markers_used": 16
   },
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6814,
+    "unit": 6815,
     "asyncio": 440,
-    "parametrize": 203,
+    "parametrize": 204,
     "endpoints": 83,
     "property": 82,
     "integration": 80,
@@ -63590,6 +63590,15 @@
       {
         "name": "test_suggest_sections_for_representative_paths",
         "line": 74,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_has_required_metadata",
+        "line": 112,
         "markers": [
           "parametrize",
           "unit"

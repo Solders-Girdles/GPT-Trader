@@ -25,6 +25,7 @@ cannot provide. The metadata block is enforced by
 
 ## Start Here
 
+0. **[Project Status](STATUS.md)** - Where we actually are: shipped reality vs the staged-autonomy target
 1. **[Architecture](ARCHITECTURE.md)** - Understand vertical slices before touching code
 2. **[Development Guidelines](DEVELOPMENT_GUIDELINES.md)** - Where to change things + guardrails
 3. **[Readiness Checklist](READINESS.md)** - Gates to move from paper to live trading
@@ -34,6 +35,7 @@ cannot provide. The metadata block is enforced by
 
 | Document | Purpose |
 |----------|---------|
+| [Project Status](STATUS.md) | Living "you are here": shipped state per stage vs the target |
 | [Architecture](ARCHITECTURE.md) | System design and capabilities |
 | [Architecture Boundaries](architecture/BOUNDARIES.md) | Layer ownership and dependency direction |
 | [Ownership Map](architecture/OWNERSHIP.md) | Module ownership map and boundaries |
@@ -45,6 +47,7 @@ cannot provide. The metadata block is enforced by
 | [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) | AI-assisted trading autonomy, product, venue, approval, and audit gates |
 | [Trade-Idea Interface Design Notes](specs/TRADE_IDEA_INTERFACES_DESIGN_NOTES.md) | Implemented CLI and future TUI workstreams for human-approved trade ideas |
 | [Operating Rubric](OPERATING_RUBRIC.md) | Staged capabilities and graduation evidence for the autonomous entity |
+| [Operating Rubric v2 Draft](OPERATING_RUBRIC_V2.md) | Draft measured-outcome rubric for owner review |
 | [Reliability Guide](RELIABILITY.md) | Guard stack, degradation responses, chaos testing |
 | [TUI Guide](TUI_GUIDE.md) | Launching and operating the terminal UI |
 | [TUI Style Guide](TUI_STYLE_GUIDE.md) | Visual standards for TUI components |

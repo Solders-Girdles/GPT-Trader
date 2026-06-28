@@ -39,7 +39,11 @@ creep.
 Each capability lists the evidence ("graduation evidence") that it works.
 A stage is complete when every capability in it has its evidence.
 
-### Stage 0 — Rails (in progress)
+This rubric defines the **target** for each stage. For the **current shipped
+state** — which capabilities are done, partial, or missing — see
+[Project Status](STATUS.md), the living "you are here" tracker.
+
+### Stage 0 — Rails (complete)
 
 These rails are the implemented evidence for the accepted pre-migration record,
 approval, audit, budget, eligibility, and operator-control triggers in the
@@ -57,7 +61,11 @@ submission policy.
 | Policy module that encodes the autonomy mode | `src/gpt_trader/features/trade_ideas/policy.py` refuses non-human approval in `human_approved_execution` mode |
 | Operator can reject, expire, and amend tickets before execution | `src/gpt_trader/features/trade_ideas/service.py` exposes audited request-changes/resubmit, reject, cancel, expire, and expire-due paths before submission |
 
-### Stage 1 — Human-approved loop
+### Stage 1 — Human-approved loop (in progress)
+
+Reviewer tooling, outcome attribution, and the track-record report are shipped;
+a proposer fed by real market data and automatic paper-fill reconciliation are
+the open gaps. See [Project Status](STATUS.md) for the per-capability state.
 
 | Capability | Evidence |
 |------------|----------|

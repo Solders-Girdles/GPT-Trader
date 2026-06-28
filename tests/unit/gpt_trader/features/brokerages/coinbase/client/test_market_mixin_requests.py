@@ -163,10 +163,10 @@ def test_get_market_product_candles_formats_time_range() -> None:
     start = datetime(2024, 2, 1, 0, 0, 0)
     end = datetime(2024, 2, 1, 0, 5, 0, tzinfo=UTC)
 
-    def _isoz(ts: datetime) -> str:
+    def _epoch_seconds(ts: datetime) -> str:
         value = ts if ts.tzinfo else ts.replace(tzinfo=UTC)
         value = value.astimezone(UTC).replace(microsecond=0)
-        return value.isoformat().replace("+00:00", "Z")
+        return str(int(value.timestamp()))
 
     MarketDataClientMixin.get_market_product_candles(
         client,
@@ -180,8 +180,8 @@ def test_get_market_product_candles_formats_time_range() -> None:
     assert path.startswith("/api/v3/brokerage/market/products/ETH-USD/candles?")
     assert "granularity=FIVE_MINUTE" in path
     assert "limit=200" in path
-    assert f"start={_isoz(start)}" in path
-    assert f"end={_isoz(end)}" in path
+    assert f"start={_epoch_seconds(start)}" in path
+    assert f"end={_epoch_seconds(end)}" in path
 
 
 def test_get_market_product_book_aliases_product_book() -> None:

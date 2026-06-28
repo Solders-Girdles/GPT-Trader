@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
+from gpt_trader.features.trade_ideas.artifacts import stable_artifact_id
 from gpt_trader.features.trade_ideas.audit import ActorType, AuditAction
 from gpt_trader.features.trade_ideas.budget import DEFAULT_RISK_BUDGET
 from gpt_trader.features.trade_ideas.closeout import CloseoutResolution
@@ -19,6 +20,7 @@ from gpt_trader.features.trade_ideas.workflow import TERMINAL_STATES, TradeIdeaS
 
 _RATE_QUANT = Decimal("0.0000")
 _PERCENT_QUANT = Decimal("0.01")
+REPORT_SCHEMA_VERSION = "gpt-trader.trade_ideas.report.v1"
 _ACTION_KEYS = {
     AuditAction.PROPOSED: "proposed",
     AuditAction.CHANGED: "requested_changes",
@@ -35,10 +37,18 @@ def build_trade_idea_track_record_report(
     service: TradeIdeaService,
     *,
     now: datetime | None = None,
+    since: datetime | None = None,
+    until: datetime | None = None,
 ) -> dict[str, Any]:
     """Build a read-only report from stored records, audit events, and closeouts."""
     current_time = now or datetime.now(UTC)
-    views = service.list_views()
+    report_cutoff = until or current_time
+    views = _snapshot_views_by_window(
+        service,
+        service.list_views(),
+        since=since,
+        until=report_cutoff,
+    )
     total_ideas = len(views)
 
     event_counts = _zero_action_counts()
@@ -51,12 +61,13 @@ def build_trade_idea_track_record_report(
         for event in view.events:
             event_counts[_ACTION_KEYS[event.action]] += 1
 
-    quality = _quality_summary(views, now=current_time)
+    quality = _quality_summary(views, now=report_cutoff)
     workflow = _workflow_summary(views, event_counts, state_counts)
     closeouts = _closeout_summary(views)
     monthly = _monthly_summary(views)
+    filters = _filters_payload(since=since, until=until)
 
-    return {
+    payload = {
         "proposal_volume": {
             "idea_count": total_ideas,
             "proposal_event_count": event_counts["proposed"],
@@ -69,6 +80,29 @@ def build_trade_idea_track_record_report(
             "confidence_counts": confidence_counts,
         },
         "closeouts": closeouts,
+    }
+    source = {
+        "audit_event_count": sum(len(view.events) for view in views),
+        "closeout_count": sum(1 for view in views if view.closeout_attribution is not None),
+        "idea_count": total_ideas,
+    }
+    quality_report_id = stable_artifact_id(
+        "tir",
+        {
+            "schema_version": REPORT_SCHEMA_VERSION,
+            "filters": filters,
+            "source": source,
+            "payload": payload,
+        },
+    )
+    return {
+        "schema_version": REPORT_SCHEMA_VERSION,
+        "quality_report_id": quality_report_id,
+        "generated_at": current_time.isoformat(),
+        "filters": filters,
+        "row_count": total_ideas,
+        "source": source,
+        **payload,
     }
 
 
@@ -166,6 +200,71 @@ def _workflow_summary(
         "ever_filled_count": ever_filled,
         "filled_rate": _rate(ever_filled, total_ideas),
         "filled_rate_pct": _percentage(ever_filled, total_ideas),
+    }
+
+
+def _snapshot_views_by_window(
+    service: TradeIdeaService,
+    views: list[TradeIdeaView],
+    *,
+    since: datetime | None,
+    until: datetime | None,
+) -> list[TradeIdeaView]:
+    snapshots: list[TradeIdeaView] = []
+    for view in views:
+        if not view.events or not _timestamp_in_window(
+            view.events[0].timestamp,
+            since=since,
+            until=until,
+        ):
+            continue
+        events = tuple(
+            event
+            for event in view.events
+            if _timestamp_in_window(event.timestamp, since=since, until=until)
+        )
+        if not events:
+            continue
+        idea = service.load_record_version(view.idea.decision_id, events[-1].record_hash)
+        closeout = view.closeout_attribution
+        if closeout is not None and not _timestamp_in_window(
+            closeout.timestamp,
+            since=since,
+            until=until,
+        ):
+            closeout = None
+        snapshots.append(
+            TradeIdeaView(
+                idea=idea,
+                state=events[-1].after_state,
+                events=events,
+                closeout_attribution=closeout,
+            )
+        )
+    return snapshots
+
+
+def _timestamp_in_window(
+    timestamp: datetime,
+    *,
+    since: datetime | None,
+    until: datetime | None,
+) -> bool:
+    if since is not None and timestamp < since:
+        return False
+    if until is not None and timestamp > until:
+        return False
+    return True
+
+
+def _filters_payload(
+    *,
+    since: datetime | None,
+    until: datetime | None,
+) -> dict[str, str | None]:
+    return {
+        "since": since.isoformat() if since is not None else None,
+        "until": until.isoformat() if until is not None else None,
     }
 
 

@@ -8,6 +8,8 @@ append audit records for tickets executed elsewhere.
 from __future__ import annotations
 
 import argparse
+import asyncio
+import hashlib
 import json
 import sys
 from argparse import ArgumentParser, Namespace
@@ -26,6 +28,7 @@ from gpt_trader.core import Candle
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas import (
     ActorType,
+    AuditAction,
     AuditIntegrityError,
     BaselineProposer,
     BaselineProposerConfig,
@@ -34,6 +37,8 @@ from gpt_trader.features.trade_ideas import (
     ConfidenceLabel,
     InvalidTransitionError,
     MarketSnapshot,
+    MarketSnapshotBuilder,
+    MarketSnapshotBuildRequest,
     PaperFillReconciler,
     PolicyViolationError,
     ReplayReport,
@@ -49,10 +54,21 @@ from gpt_trader.features.trade_ideas import (
     TradeIdeaService,
     TradeIdeaState,
     UnknownTradeIdeaError,
+    canonical_granularity,
     create_trade_idea_service,
     is_safe_decision_id,
+    market_snapshot_to_payload,
     resolve_trade_idea_actor_id,
     validate_paper_reconciliation_profile,
+)
+from gpt_trader.features.trade_ideas.artifacts import (
+    audit_events_to_csv,
+    build_audit_export_artifact,
+    build_audit_list_payload,
+    build_closeout_export_artifact,
+    build_closeout_list_payload,
+    closeout_records_to_csv,
+    trade_idea_report_to_csv,
 )
 from gpt_trader.features.trade_ideas.replay import _granularity_duration
 from gpt_trader.features.trade_ideas.report import (
@@ -63,6 +79,9 @@ from gpt_trader.persistence.event_store import EventStore
 
 VENUE_CHOICES = ("coinbase", "manual")
 PAPER_RECONCILIATION_PROFILE_CHOICES = tuple(sorted({*options.PROFILE_CHOICES, "mock"}))
+TEXT_JSON_FORMATS = ("text", "json")
+REPORT_FORMATS = ("text", "json", "csv")
+EXPORT_FORMATS = ("json", "csv")
 BUDGET_FIELDS = (
     "max_loss_per_idea_pct",
     "max_daily_loss_pct",
@@ -94,6 +113,10 @@ class SnapshotInputError(InputPayloadError):
 
 class CandleInputError(InputPayloadError):
     """Raised when a replay candle fixture cannot be parsed."""
+
+
+class SnapshotBuildInputError(InputPayloadError):
+    """Raised when snapshot build CLI input cannot be parsed."""
 
 
 def register(subparsers: Any) -> None:
@@ -144,6 +167,85 @@ def register(subparsers: Any) -> None:
         help="Audit reason",
     )
     propose_baseline.set_defaults(handler=_handle_propose_baseline, subcommand="propose-baseline")
+
+    snapshot = ideas_subparsers.add_parser(
+        "snapshot",
+        help="Build read-only market snapshots for proposer runs",
+        description=(
+            "Build MarketSnapshot JSON files for proposer and replay workflows. "
+            "Snapshot build commands do not read accounts or submit orders."
+        ),
+    )
+    snapshot_subparsers = snapshot.add_subparsers(dest="snapshot_command", required=True)
+    snapshot_build = snapshot_subparsers.add_parser(
+        "build",
+        help="Fetch read-only Coinbase candles and write a MarketSnapshot JSON file",
+        description=(
+            "Fetch public Coinbase market candles, enforce point-in-time snapshot "
+            "bounds, and write a JSON file accepted by ideas propose-baseline. "
+            "This command requires --from-coinbase and never reads accounts or "
+            "places, modifies, or cancels orders."
+        ),
+    )
+    snapshot_build.add_argument(
+        "--format",
+        "--output-format",
+        dest="output_format",
+        type=str,
+        choices=options.OUTPUT_FORMAT_CHOICES,
+        default="text",
+        help="Output format: text for human-readable, json for machine-readable",
+    )
+    snapshot_build.add_argument(
+        "--output",
+        "-o",
+        dest="response_output_disallowed",
+        type=Path,
+        help=argparse.SUPPRESS,
+    )
+    snapshot_build.add_argument(
+        "--from-coinbase",
+        action="store_true",
+        required=True,
+        help="Explicitly fetch read-only public Coinbase market candles",
+    )
+    snapshot_build.add_argument(
+        "--symbols",
+        required=True,
+        help="Comma-separated Coinbase product ids, for example BTC-USD,ETH-USD",
+    )
+    snapshot_build.add_argument(
+        "--granularity",
+        required=True,
+        help="Candle granularity, for example ONE_HOUR, FOUR_HOUR, ONE_DAY, 1H, 4H, or 1D",
+    )
+    snapshot_build.add_argument(
+        "--lookback",
+        type=_positive_int_value,
+        required=True,
+        help="Number of completed candles to include per symbol",
+    )
+    snapshot_build.add_argument(
+        "--as-of",
+        help="Snapshot as-of timestamp with timezone; defaults to current UTC time",
+    )
+    snapshot_build.add_argument(
+        "--out",
+        type=Path,
+        required=True,
+        help="Output MarketSnapshot JSON path",
+    )
+    snapshot_build.add_argument(
+        "--source-label",
+        default="coinbase:market-candles",
+        help="Source label stamped into snapshot metadata",
+    )
+    snapshot_build.add_argument(
+        "--coinbase-base-url",
+        default="https://api.coinbase.com",
+        help="Coinbase API base URL for market-data reads",
+    )
+    snapshot_build.set_defaults(handler=_handle_snapshot_build, subcommand="snapshot build")
 
     resubmit = ideas_subparsers.add_parser(
         "resubmit", help="Submit a revised record after requested changes"
@@ -233,7 +335,13 @@ def register(subparsers: Any) -> None:
             "and closeout attribution. This command never contacts a broker or account."
         ),
     )
-    _add_common_options(report)
+    _add_common_options(report, formats=REPORT_FORMATS)
+    _add_window_options(report)
+    report.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Write a durable report artifact into this directory",
+    )
     report.set_defaults(handler=_handle_report, subcommand="report")
 
     replay = ideas_subparsers.add_parser(
@@ -253,7 +361,7 @@ def register(subparsers: Any) -> None:
             "and summarize replay scoring. This command is broker-free and read-only."
         ),
     )
-    options.add_output_options(baseline, include_quiet=False)
+    _add_output_options(baseline)
     baseline.add_argument(
         "--file",
         type=Path,
@@ -370,6 +478,31 @@ def register(subparsers: Any) -> None:
     _add_common_options(closeout_show)
     closeout_show.add_argument("decision_id", help="Trade idea decision identifier")
     closeout_show.set_defaults(handler=_handle_closeout_show, subcommand="closeout show")
+
+    closeout_list = closeout_subparsers.add_parser(
+        "list",
+        help="List closeout attribution records with filters",
+        description="Read a paginated closeout attribution view from local storage.",
+    )
+    _add_common_options(closeout_list)
+    _add_closeout_filter_options(closeout_list)
+    _add_pagination_options(closeout_list, default_limit=50)
+    closeout_list.set_defaults(handler=_handle_closeout_list, subcommand="closeout list")
+
+    closeout_export = closeout_subparsers.add_parser(
+        "export",
+        help="Export closeout attribution records as JSON or CSV",
+        description="Export local closeout attribution rows without mutating records.",
+    )
+    _add_common_options(closeout_export, formats=EXPORT_FORMATS, default_format="json")
+    _add_closeout_filter_options(closeout_export)
+    _add_pagination_options(closeout_export, default_limit=None)
+    closeout_export.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Write a durable closeout export artifact into this directory",
+    )
+    closeout_export.set_defaults(handler=_handle_closeout_export, subcommand="closeout export")
 
     approve = ideas_subparsers.add_parser("approve", help="Approve a proposed trade idea")
     _add_common_options(approve)
@@ -534,6 +667,27 @@ def register(subparsers: Any) -> None:
     audit = ideas_subparsers.add_parser("audit", help="Read and verify the audit log")
     audit_subparsers = audit.add_subparsers(dest="audit_command", required=True)
 
+    audit_list = audit_subparsers.add_parser("list", help="List audit events with filters")
+    _add_common_options(audit_list)
+    _add_audit_filter_options(audit_list)
+    _add_pagination_options(audit_list, default_limit=50)
+    audit_list.set_defaults(handler=_handle_audit_list, subcommand="audit list")
+
+    audit_export = audit_subparsers.add_parser(
+        "export",
+        help="Export audit events as JSON or CSV",
+        description="Export local append-only audit events without rewriting the log.",
+    )
+    _add_common_options(audit_export, formats=EXPORT_FORMATS, default_format="json")
+    _add_audit_filter_options(audit_export)
+    _add_pagination_options(audit_export, default_limit=None)
+    audit_export.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Write a durable audit export artifact into this directory",
+    )
+    audit_export.set_defaults(handler=_handle_audit_export, subcommand="audit export")
+
     audit_tail = audit_subparsers.add_parser("tail", help="Show recent audit events")
     _add_common_options(audit_tail)
     audit_tail.add_argument("-n", "--count", type=int, default=20)
@@ -545,13 +699,108 @@ def register(subparsers: Any) -> None:
     audit_verify.set_defaults(handler=_handle_audit_verify, subcommand="audit verify")
 
 
-def _add_common_options(parser: ArgumentParser) -> None:
+def _add_common_options(
+    parser: ArgumentParser,
+    *,
+    formats: tuple[str, ...] = TEXT_JSON_FORMATS,
+    default_format: str = "text",
+) -> None:
     parser.add_argument(
         "--ideas-root",
         type=Path,
         help="Trade-idea storage root (default: GPT_TRADER_IDEAS_ROOT, then var/data/trade_ideas)",
     )
-    options.add_output_options(parser, include_quiet=False)
+    _add_output_options(parser, formats=formats, default_format=default_format)
+
+
+def _add_output_options(
+    parser: ArgumentParser,
+    *,
+    formats: tuple[str, ...] = TEXT_JSON_FORMATS,
+    default_format: str = "text",
+) -> None:
+    parser.add_argument(
+        "--format",
+        "--output-format",
+        dest="output_format",
+        choices=formats,
+        default=default_format,
+        help="Output format",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        help="Write output to file instead of stdout",
+    )
+
+
+def _add_window_options(parser: ArgumentParser) -> None:
+    parser.add_argument(
+        "--since",
+        "--from",
+        dest="since",
+        type=_datetime_value,
+        help="Include records at or after this ISO timestamp or YYYY-MM-DD date",
+    )
+    parser.add_argument(
+        "--until",
+        "--to",
+        dest="until",
+        type=_datetime_value,
+        help="Include records at or before this ISO timestamp or YYYY-MM-DD date",
+    )
+
+
+def _add_pagination_options(
+    parser: ArgumentParser,
+    *,
+    default_limit: int | None,
+) -> None:
+    parser.add_argument("--limit", type=_non_negative_int_value, default=default_limit)
+    parser.add_argument("--offset", type=_non_negative_int_value, default=0)
+
+
+def _add_audit_filter_options(parser: ArgumentParser) -> None:
+    parser.add_argument("--decision-id", help="Filter events by decision id")
+    parser.add_argument("--actor", dest="actor_id", help="Filter events by actor id")
+    parser.add_argument(
+        "--actor-type",
+        choices=[actor_type.value for actor_type in ActorType],
+        help="Filter events by actor type",
+    )
+    parser.add_argument(
+        "--action",
+        choices=[action.value for action in AuditAction],
+        help="Filter events by audit action",
+    )
+    parser.add_argument(
+        "--state",
+        choices=[state.value for state in TradeIdeaState],
+        help="Filter events by resulting workflow state",
+    )
+    _add_window_options(parser)
+
+
+def _add_closeout_filter_options(parser: ArgumentParser) -> None:
+    parser.add_argument("--decision-id", help="Filter closeouts by decision id")
+    parser.add_argument("--actor", dest="actor_id", help="Filter closeouts by actor id")
+    parser.add_argument(
+        "--actor-type",
+        choices=[actor_type.value for actor_type in ActorType],
+        help="Filter closeouts by actor type",
+    )
+    parser.add_argument(
+        "--resolution",
+        choices=[resolution.value for resolution in CloseoutResolution],
+        help="Filter closeouts by resolution",
+    )
+    parser.add_argument(
+        "--has-evidence",
+        choices=("true", "false"),
+        help="Filter closeouts by whether evidence strings are present",
+    )
+    _add_window_options(parser)
 
 
 def _add_input_options(parser: ArgumentParser) -> None:
@@ -622,10 +871,10 @@ def _datetime_value(value: str) -> datetime:
     try:
         parsed = datetime.fromisoformat(normalized)
     except ValueError as error:
-        raise argparse.ArgumentTypeError(f"invalid ISO-8601 timestamp: {value}") from error
+        raise argparse.ArgumentTypeError(f"invalid ISO datetime/date: {value}") from error
     if parsed.tzinfo is None or parsed.utcoffset() is None:
         return parsed.replace(tzinfo=UTC)
-    return parsed
+    return parsed.astimezone(UTC)
 
 
 def _bool_value(value: str) -> bool:
@@ -1022,6 +1271,127 @@ def _handle_propose_baseline(args: Namespace) -> CliResponse:
     return _success(command, args, payload, text, warnings=warnings)
 
 
+def _handle_snapshot_build(args: Namespace) -> CliResponse:
+    command = "ideas snapshot build"
+    try:
+        if getattr(args, "response_output_disallowed", None) is not None:
+            raise SnapshotBuildInputError(
+                "ideas snapshot build does not support response --output; use --out for the "
+                "MarketSnapshot JSON file",
+                field="output",
+            )
+        request = MarketSnapshotBuildRequest(
+            symbols=_snapshot_symbols(args.symbols),
+            granularity=_snapshot_granularity(args.granularity),
+            lookback=args.lookback,
+            as_of=_snapshot_as_of(args.as_of),
+        )
+        snapshot = asyncio.run(_build_coinbase_market_snapshot(args, request))
+        payload = market_snapshot_to_payload(snapshot)
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(
+            f"{json.dumps(payload, indent=2, sort_keys=True)}\n",
+            encoding="utf-8",
+        )
+    except SnapshotBuildInputError as error:
+        return _input_error(command, args, error)
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    summary = _snapshot_build_payload(snapshot, args.out)
+    text = _status_line(
+        command,
+        "OK",
+        f"{len(snapshot.series)} series -> {args.out}",
+    )
+    return _success(command, args, summary, text)
+
+
+async def _build_coinbase_market_snapshot(
+    args: Namespace,
+    request: MarketSnapshotBuildRequest,
+) -> MarketSnapshot:
+    from gpt_trader.backtesting.data.fetcher import CoinbaseHistoricalFetcher
+    from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+
+    client = CoinbaseClient(
+        base_url=args.coinbase_base_url,
+        auth=None,
+        api_mode="advanced",
+    )
+    try:
+        builder = MarketSnapshotBuilder(
+            CoinbaseHistoricalFetcher(client=client),
+            source_label=args.source_label,
+        )
+        return await builder.build(request)
+    finally:
+        try:
+            client.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def _snapshot_symbols(value: str) -> tuple[str, ...]:
+    symbols = tuple(symbol.strip().upper() for symbol in value.split(",") if symbol.strip())
+    if not symbols:
+        raise SnapshotBuildInputError("--symbols must include at least one symbol", field="symbols")
+    if len(set(symbols)) != len(symbols):
+        raise SnapshotBuildInputError("--symbols must not contain duplicates", field="symbols")
+    return symbols
+
+
+def _snapshot_granularity(value: str) -> str:
+    canonical = canonical_granularity(value)
+    if canonical is None:
+        raise SnapshotBuildInputError(
+            f"Unsupported snapshot granularity: {value}",
+            field="granularity",
+        )
+    return canonical
+
+
+def _snapshot_as_of(value: str | None) -> datetime:
+    if value is None:
+        return datetime.now(UTC)
+    normalized = f"{value[:-1]}+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as error:
+        raise SnapshotBuildInputError(
+            "--as-of must be an ISO datetime string",
+            field="as_of",
+        ) from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise SnapshotBuildInputError("--as-of must include a timezone", field="as_of")
+    return parsed
+
+
+def _snapshot_build_payload(snapshot: MarketSnapshot, output_path: Path) -> dict[str, Any]:
+    return {
+        "out": str(output_path),
+        "snapshot": {
+            "as_of": snapshot.as_of.isoformat(),
+            "source": snapshot.source,
+            "symbols": list(snapshot.symbols()),
+            "series": [
+                {
+                    "symbol": symbol_series.symbol,
+                    "granularity": symbol_series.granularity,
+                    "candle_count": len(symbol_series.candles),
+                    "first_ts": (
+                        symbol_series.candles[0].ts.isoformat() if symbol_series.candles else None
+                    ),
+                    "last_ts": (
+                        symbol_series.candles[-1].ts.isoformat() if symbol_series.candles else None
+                    ),
+                }
+                for symbol_series in snapshot.series
+            ],
+        },
+    }
+
+
 def _handle_resubmit(args: Namespace) -> CliResponse:
     command = "ideas resubmit"
     try:
@@ -1172,12 +1542,46 @@ def _handle_show(args: Namespace) -> CliResponse:
 
 def _handle_report(args: Namespace) -> CliResponse:
     command = "ideas report"
+    window_error = _window_error(command, args)
+    if window_error is not None:
+        return window_error
     try:
-        payload = build_trade_idea_track_record_report(_service(args))
+        payload = build_trade_idea_track_record_report(
+            _service(args),
+            since=args.since,
+            until=args.until,
+        )
     except Exception as error:
         return _mapped_error(command, args, error)
 
+    if _output_format(args) == "csv":
+        content = trade_idea_report_to_csv(payload)
+        _write_output_dir_artifact(
+            args,
+            stem="trade-idea-report",
+            artifact_id=payload["quality_report_id"],
+            extension="csv",
+            content=content,
+        )
+        return CliResponse.success_response(
+            command=command,
+            data=content,
+            was_noop=payload["proposal_volume"]["idea_count"] == 0,
+        )
+
+    artifact_path = _write_output_dir_artifact(
+        args,
+        stem="trade-idea-report",
+        artifact_id=payload["quality_report_id"],
+        extension="json",
+        content=_json_artifact(payload),
+    )
+    if artifact_path is not None:
+        payload = {**payload, "artifact_path": artifact_path}
+
     text = format_trade_idea_track_record_report(payload)
+    if artifact_path is not None:
+        text += f"\nartifact_path: {artifact_path}"
     idea_count = payload["proposal_volume"]["idea_count"]
     return _success(command, args, payload, text, was_noop=idea_count == 0)
 
@@ -1263,6 +1667,114 @@ def _handle_closeout_show(args: Namespace) -> CliResponse:
 
     text = _closeout_text(command, record.to_dict())
     return _success(command, args, payload, text)
+
+
+def _handle_closeout_list(args: Namespace) -> CliResponse:
+    command = "ideas closeout list"
+    filter_error = _closeout_filter_error(command, args)
+    if filter_error is not None:
+        return filter_error
+    try:
+        service = _service(args)
+        page = service.query_closeout_records(
+            decision_id=args.decision_id,
+            actor_id=args.actor_id,
+            actor_type=args.actor_type,
+            resolution=args.resolution,
+            has_evidence=_has_evidence_filter(args),
+            since=args.since,
+            until=args.until,
+            limit=args.limit,
+            offset=args.offset,
+        )
+        payload = build_closeout_list_payload(
+            page.items,
+            terminal_events_by_id=_terminal_events_by_id(service),
+            filters=_closeout_filters_payload(args),
+            total_count=page.total_count,
+            limit=page.limit,
+            offset=page.offset,
+        )
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    return _success(
+        command,
+        args,
+        payload,
+        _closeout_list_text(command, payload),
+        was_noop=not payload["closeouts"],
+    )
+
+
+def _handle_closeout_export(args: Namespace) -> CliResponse:
+    command = "ideas closeout export"
+    filter_error = _closeout_filter_error(command, args)
+    if filter_error is not None:
+        return filter_error
+    try:
+        service = _service(args)
+        page = service.query_closeout_records(
+            decision_id=args.decision_id,
+            actor_id=args.actor_id,
+            actor_type=args.actor_type,
+            resolution=args.resolution,
+            has_evidence=_has_evidence_filter(args),
+            since=args.since,
+            until=args.until,
+            limit=args.limit,
+            offset=args.offset,
+        )
+        terminal_events_by_id = _terminal_events_by_id(service)
+        if _output_format(args) == "csv":
+            content = closeout_records_to_csv(
+                page.items,
+                terminal_events_by_id=terminal_events_by_id,
+            )
+            _write_output_dir_artifact(
+                args,
+                stem="trade-idea-closeouts",
+                artifact_id=_csv_artifact_suffix(
+                    "closeout",
+                    _closeout_filters_payload(args),
+                    content,
+                ),
+                extension="csv",
+                content=content,
+            )
+            return CliResponse.success_response(
+                command=command,
+                data=content,
+                was_noop=not page.items,
+            )
+
+        payload = build_closeout_export_artifact(
+            page.items,
+            terminal_events_by_id=terminal_events_by_id,
+            filters=_closeout_filters_payload(args),
+            total_count=page.total_count,
+            limit=page.limit,
+            offset=page.offset,
+        )
+        artifact_path = _write_output_dir_artifact(
+            args,
+            stem="trade-idea-closeouts",
+            artifact_id=payload["closeout_export_id"],
+            extension="json",
+            content=_json_artifact(payload),
+        )
+        if artifact_path is not None:
+            payload = {**payload, "artifact_path": artifact_path}
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    return _success(
+        command,
+        args,
+        payload,
+        _status_line(command, "OK", f"{payload['row_count']} rows"),
+        was_noop=payload["row_count"] == 0,
+    )
 
 
 def _handle_approve(args: Namespace) -> CliResponse:
@@ -1480,6 +1992,108 @@ def _handle_budget_set(args: Namespace) -> CliResponse:
     return _success(command, args, payload, text)
 
 
+def _handle_audit_list(args: Namespace) -> CliResponse:
+    command = "ideas audit list"
+    filter_error = _audit_filter_error(command, args)
+    if filter_error is not None:
+        return filter_error
+    try:
+        service = _service(args)
+        page = service.list_audit_events(
+            decision_id=args.decision_id,
+            actor_id=args.actor_id,
+            actor_type=args.actor_type,
+            action=args.action,
+            state=args.state,
+            since=args.since,
+            until=args.until,
+            limit=args.limit,
+            offset=args.offset,
+        )
+        payload = build_audit_list_payload(
+            page.items,
+            filters=_audit_filters_payload(args),
+            total_count=page.total_count,
+            limit=page.limit,
+            offset=page.offset,
+        )
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    return _success(
+        command,
+        args,
+        payload,
+        _audit_list_text(command, payload),
+        was_noop=not payload["events"],
+    )
+
+
+def _handle_audit_export(args: Namespace) -> CliResponse:
+    command = "ideas audit export"
+    filter_error = _audit_filter_error(command, args)
+    if filter_error is not None:
+        return filter_error
+    try:
+        service = _service(args)
+        page = service.list_audit_events(
+            decision_id=args.decision_id,
+            actor_id=args.actor_id,
+            actor_type=args.actor_type,
+            action=args.action,
+            state=args.state,
+            since=args.since,
+            until=args.until,
+            limit=args.limit,
+            offset=args.offset,
+        )
+        if _output_format(args) == "csv":
+            content = audit_events_to_csv(page.items)
+            _write_output_dir_artifact(
+                args,
+                stem="trade-idea-audit",
+                artifact_id=_csv_artifact_suffix(
+                    "audit",
+                    _audit_filters_payload(args),
+                    content,
+                ),
+                extension="csv",
+                content=content,
+            )
+            return CliResponse.success_response(
+                command=command,
+                data=content,
+                was_noop=not page.items,
+            )
+
+        payload = build_audit_export_artifact(
+            page.items,
+            filters=_audit_filters_payload(args),
+            total_count=page.total_count,
+            limit=page.limit,
+            offset=page.offset,
+        )
+        artifact_path = _write_output_dir_artifact(
+            args,
+            stem="trade-idea-audit",
+            artifact_id=payload["audit_export_id"],
+            extension="json",
+            content=_json_artifact(payload),
+        )
+        if artifact_path is not None:
+            payload = {**payload, "artifact_path": artifact_path}
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    return _success(
+        command,
+        args,
+        payload,
+        _status_line(command, "OK", f"{payload['row_count']} rows"),
+        was_noop=payload["row_count"] == 0,
+    )
+
+
 def _handle_audit_tail(args: Namespace) -> CliResponse:
     command = "ideas audit tail"
     try:
@@ -1518,6 +2132,99 @@ def _budget_overrides(args: Namespace) -> dict[str, Any]:
             value = _bool_value(value)
         overrides[field_name] = value
     return overrides
+
+
+def _audit_filter_error(command: str, args: Namespace) -> CliResponse | None:
+    if args.decision_id:
+        decision_id_error = _decision_id_error(command, args, args.decision_id)
+        if decision_id_error is not None:
+            return decision_id_error
+    return _window_error(command, args)
+
+
+def _closeout_filter_error(command: str, args: Namespace) -> CliResponse | None:
+    if args.decision_id:
+        decision_id_error = _decision_id_error(command, args, args.decision_id)
+        if decision_id_error is not None:
+            return decision_id_error
+    return _window_error(command, args)
+
+
+def _window_error(command: str, args: Namespace) -> CliResponse | None:
+    since = getattr(args, "since", None)
+    until = getattr(args, "until", None)
+    if since is None or until is None or since <= until:
+        return None
+    return _failure(
+        command,
+        args,
+        CliErrorCode.INVALID_ARGUMENT,
+        "--since/--from must be before or equal to --until/--to",
+        details={"field": "date_window"},
+    )
+
+
+def _audit_filters_payload(args: Namespace) -> dict[str, Any]:
+    return {
+        "decision_id": args.decision_id,
+        "actor_id": args.actor_id,
+        "actor_type": args.actor_type,
+        "action": args.action,
+        "state": args.state,
+        "since": args.since.isoformat() if args.since is not None else None,
+        "until": args.until.isoformat() if args.until is not None else None,
+    }
+
+
+def _closeout_filters_payload(args: Namespace) -> dict[str, Any]:
+    return {
+        "decision_id": args.decision_id,
+        "actor_id": args.actor_id,
+        "actor_type": args.actor_type,
+        "resolution": args.resolution,
+        "has_evidence": _has_evidence_filter(args),
+        "since": args.since.isoformat() if args.since is not None else None,
+        "until": args.until.isoformat() if args.until is not None else None,
+    }
+
+
+def _has_evidence_filter(args: Namespace) -> bool | None:
+    value = getattr(args, "has_evidence", None)
+    if value is None:
+        return None
+    return _bool_value(value)
+
+
+def _terminal_events_by_id(service: TradeIdeaService) -> dict[str, Any]:
+    return {event.event_id: event for event in service.audit_log.read_events()}
+
+
+def _json_artifact(payload: Mapping[str, Any]) -> str:
+    return json.dumps(payload, indent=2, sort_keys=True, default=str) + "\n"
+
+
+def _write_output_dir_artifact(
+    args: Namespace,
+    *,
+    stem: str,
+    artifact_id: str,
+    extension: str,
+    content: str,
+) -> str | None:
+    output_dir = getattr(args, "output_dir", None)
+    if output_dir is None:
+        return None
+    output_dir.mkdir(parents=True, exist_ok=True)
+    path = output_dir / f"{stem}-{artifact_id}.{extension}"
+    path.write_text(content, encoding="utf-8")
+    return str(path)
+
+
+def _csv_artifact_suffix(prefix: str, filters: Mapping[str, Any], content: str) -> str:
+    encoded = json.dumps(filters, sort_keys=True, separators=(",", ":"), default=str)
+    filter_digest = hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:12]
+    content_digest = hashlib.sha256(content.encode("utf-8")).hexdigest()[:12]
+    return f"{prefix}-{filter_digest}-{content_digest}"
 
 
 def _closeout_profit_loss_error(command: str, args: Namespace) -> CliResponse | None:
@@ -1840,6 +2547,51 @@ def _paper_reconciliation_section(
             )
         )
     return lines
+
+
+def _audit_list_text(command: str, payload: dict[str, Any]) -> str:
+    pagination = payload["pagination"]
+    lines = [
+        _status_line(
+            command,
+            "OK",
+            f"{pagination['returned_count']} events, total={pagination['total_count']}",
+        )
+    ]
+    if payload["events"]:
+        lines.append(_events_text(payload["events"]))
+    else:
+        lines.append("No audit events found.")
+    return "\n".join(lines)
+
+
+def _closeout_list_text(command: str, payload: dict[str, Any]) -> str:
+    pagination = payload["pagination"]
+    lines = [
+        _status_line(
+            command,
+            "OK",
+            f"{pagination['returned_count']} closeouts, total={pagination['total_count']}",
+        )
+    ]
+    if not payload["closeouts"]:
+        lines.append("No closeout attribution records found.")
+        return "\n".join(lines)
+    lines.append("TIMESTAMP  DECISION_ID  ACTOR  RESOLUTION  REALIZED_AMOUNT  TERMINAL_STATE")
+    for record in payload["closeouts"]:
+        lines.append(
+            "{timestamp}  {decision_id}  {actor_type}/{actor_id}  {resolution}  "
+            "{realized_profit_loss_amount}  {terminal_state}".format(
+                timestamp=record["timestamp"],
+                decision_id=record["decision_id"],
+                actor_type=record["actor_type"],
+                actor_id=record["actor_id"],
+                resolution=record["resolution"],
+                realized_profit_loss_amount=record["realized_profit_loss_amount"] or "",
+                terminal_state=record["terminal_state"] or "",
+            )
+        )
+    return "\n".join(lines)
 
 
 def _budget_text(payload: dict[str, Any]) -> str:

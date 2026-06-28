@@ -30,13 +30,15 @@ current command and tests rather than duplicating the trade-ideas interface.
 
 The implementation follows the structure of `cli/commands/controls.py`: a
 `register(subparsers)` function, one `_handle_*` per subcommand returning
-`CliResponse`, with `options.add_output_options(parser)` on every subcommand.
+`CliResponse`, with standard text/json output options on every subcommand and
+CSV enabled only on report/export commands that document a tabular contract.
 
 ## Common options
 
 Every storage-backed workflow subcommand accepts:
 
-- `--format {text,json}` (via `options.add_output_options`)
+- `--format {text,json}` unless the command documents additional artifact
+  formats
 - `--ideas-root PATH` — override storage root (default: `GPT_TRADER_IDEAS_ROOT`
   env, then `var/data/trade_ideas/`)
 
@@ -57,12 +59,25 @@ Current behavior is discoverable with:
 uv run gpt-trader ideas --help
 ```
 
+Reporting/export commands add machine artifact formats where documented below:
+
+- `ideas report --format {text,json,csv}`
+- `ideas audit export --format {json,csv}`
+- `ideas closeout export --format {json,csv}`
+- `--output PATH` writes the command output through the standard CLI output
+  convention; `--output-dir DIR` writes a durable artifact named from the
+  deterministic artifact id while still returning the command response.
+
 ## Command tree
 
 ```
 gpt-trader ideas
 ├── propose          --file PATH | --stdin   [--actor-type {ai,human}] [--reason TEXT]
 ├── propose-baseline --snapshot PATH         [--actor ID] [--reason TEXT]
+├── snapshot
+│   └── build        --from-coinbase --symbols BTC-USD,ETH-USD
+│                    --granularity GRANULARITY --lookback N --out snapshot.json
+│                    [--as-of TIMESTAMP] [--source-label LABEL]
 ├── resubmit         --file PATH | --stdin   [--actor-type {ai,human}] [--reason TEXT]
 ├── list             [--state STATE] [--instrument SYMBOL] [--decision-id ID]
 │                    [--direction DIRECTION]
@@ -71,7 +86,8 @@ gpt-trader ideas
 │                    [--sort-by FIELD] [--descending]
 │                    [--limit N] [--offset N]
 ├── show             DECISION_ID [--events]
-├── report
+├── report           [--since ISO|YYYY-MM-DD] [--until ISO|YYYY-MM-DD]
+│                    [--output PATH] [--output-dir DIR] [--format text|json|csv]
 ├── replay
 │   └── baseline     --file PATH --symbol SYMBOL --granularity GRANULARITY
 │                    [--short-window N] [--long-window N]
@@ -86,6 +102,12 @@ gpt-trader ideas
 │   │                [--realized-profit-loss-percent DECIMAL]
 │   │                [--realized-profit-loss-unavailable-reason TEXT]
 │   │                [--evidence TEXT]... [--actor-type {human,system}]
+│   ├── list         [--decision-id ID] [--resolution RESOLUTION] [--actor ID]
+│   │                [--actor-type {ai,human,system,venue}]
+│   │                [--has-evidence true|false] [--since ISO|YYYY-MM-DD]
+│   │                [--until ISO|YYYY-MM-DD] [--limit N] [--offset N]
+│   ├── export       same filters as list [--format json|csv] [--output PATH]
+│   │                [--output-dir DIR]
 │   └── show         DECISION_ID
 ├── approve          DECISION_ID --reason TEXT
 ├── reject           DECISION_ID --reason TEXT
@@ -98,6 +120,13 @@ gpt-trader ideas
 │   ├── show
 │   └── set          --reason TEXT [one flag per RiskBudget field]
 └── audit
+    ├── list         [--decision-id ID] [--actor ID]
+    │                [--actor-type {ai,human,system,venue}]
+    │                [--action ACTION] [--state STATE]
+    │                [--since ISO|YYYY-MM-DD] [--until ISO|YYYY-MM-DD]
+    │                [--limit N] [--offset N]
+    ├── export       same filters as list [--format json|csv] [--output PATH]
+    │                [--output-dir DIR]
     ├── tail         [-n N] [--decision-id ID]
     └── verify
 ```
@@ -189,6 +218,63 @@ All candle timestamps must include a timezone, be strictly ascending within a
 series, and be strictly before `as_of`. The command rejects malformed fixtures
 as `INVALID_ARGUMENT`.
 
+### `ideas snapshot build`
+
+- Output: a local `MarketSnapshot` JSON file that can be passed directly to
+  `ideas propose-baseline --snapshot PATH`.
+- The live market fetch path is explicit: `--from-coinbase` is required. The
+  command builds from read-only public Coinbase market candles through the
+  existing historical candle abstractions; it never reads accounts, performs
+  product/account discovery, runs broker readiness checks, preflight, canary, or
+  order-affecting commands.
+- Required options:
+  - `--from-coinbase`
+  - `--symbols BTC-USD,ETH-USD` (comma-separated, unique Coinbase product ids)
+  - `--granularity GRANULARITY`
+  - `--lookback N` (number of completed candles to include per symbol)
+  - `--out PATH`
+- Optional options:
+  - `--as-of TIMESTAMP` (timezone required; defaults to current UTC time)
+  - `--source-label LABEL` (default `coinbase:market-candles`)
+  - `--coinbase-base-url URL` (default `https://api.coinbase.com`)
+- Point-in-time rules:
+  - Fetch start is aligned from the last closed candle boundary:
+    `[last_closed_boundary - granularity * lookback, as_of)`.
+  - Source candles must be strictly ascending by timestamp.
+  - Candle selection includes only fully closed bars: for each source candle,
+    `candle.ts + granularity <= as_of`. Candles that start before `as_of` but
+    are still open are skipped so current or future bars cannot leak into
+    proposer input.
+  - Each configured symbol must have at least one completed candle in the
+    window.
+- JSON `data` contains `out` plus snapshot metadata: `as_of`, `source`,
+  `symbols`, and per-series `candle_count`, `first_ts`, and `last_ts`.
+- Text starts with:
+
+  ```text
+  ✓ ideas snapshot build OK (2 series -> var/snapshots/coinbase.json)
+  ```
+
+Recommended Stage 1 workflow:
+
+```bash
+uv run gpt-trader ideas snapshot build \
+  --from-coinbase \
+  --symbols BTC-USD,ETH-USD \
+  --granularity ONE_HOUR \
+  --lookback 53 \
+  --out var/snapshots/coinbase-market-snapshot.json
+
+uv run gpt-trader ideas propose-baseline \
+  --snapshot var/snapshots/coinbase-market-snapshot.json \
+  --format json
+```
+
+For replay calibration, keep using `ideas replay baseline --file` with a local
+candle fixture. The snapshot build output is the one-shot point-in-time proposer
+input; replay consumes a longer historical candle series and constructs many
+point-in-time snapshots internally.
+
 ### `ideas resubmit`
 
 Same input handling as `propose`; calls `service.resubmit`. The record must
@@ -235,6 +321,16 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
   events, and closeout attribution log. It does not call broker, account,
   venue, preflight, canary, or live-trading surfaces.
 - Empty stores return success with zero counts and `was_noop=True`.
+- `--since/--until` (aliases `--from/--to`) filter the report by proposal
+  timestamp. Date-only values are interpreted as UTC midnight.
+- JSON output is a stable artifact payload with `schema_version`,
+  `quality_report_id`, `generated_at`, `filters`, `row_count`, `source`, and
+  the existing `proposal_volume`, `workflow`, `quality`, and `closeouts`
+  sections. `quality_report_id` is deterministic for the same data and window.
+- CSV output is a flat metric table with columns
+  `quality_report_id,schema_version,metric_path,value`.
+- `--output-dir DIR` writes `trade-idea-report-<quality_report_id>.json` or
+  `.csv` in addition to the normal command response.
 - JSON `data` contains:
   - `proposal_volume`: idea count, proposal event count, resubmission count,
     and monthly volume/approval/closeout buckets.
@@ -319,7 +415,7 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
 
   A replay with zero proposed ideas succeeds with `was_noop=True`.
 
-### `ideas closeout record` / `ideas closeout show`
+### `ideas closeout record` / `ideas closeout show` / `ideas closeout list` / `ideas closeout export`
 
 - `record` wraps `service.record_closeout_attribution`; `show` wraps
   `service.get_closeout_attribution`. Both use only local trade-idea storage.
@@ -348,6 +444,19 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
 - These commands never call broker, account, venue, preflight, canary, ticket
   payload-generation, or live-trading surfaces. Evidence strings are operator
   references only.
+- `list` and `export` read the append-only closeout attribution log without
+  mutating records. Filters: `--decision-id`, `--resolution`, `--actor`,
+  `--actor-type`, `--has-evidence`, `--since`, `--until`, `--limit`, and
+  `--offset`.
+- `list` returns a paginated JSON payload with `schema_version`, `filters`,
+  `pagination`, and `closeouts`. Rows join the stored closeout record with the
+  terminal audit event fields (`terminal_event_timestamp`, `terminal_action`,
+  `terminal_state`) only for reporting/evidence; stored records are not
+  rewritten.
+- `export --format json` returns the same row shape inside an artifact envelope
+  with `closeout_export_id`, `artifact_type`, `generated_at`, and `row_count`.
+  `export --format csv` returns one row per closeout attribution with joined
+  terminal-event columns.
 
 ### `ideas approve DECISION_ID --reason TEXT`
 
@@ -405,13 +514,64 @@ Thin wrappers over `service.reject` / `service.request_changes` /
   At least one field flag is required (`MISSING_ARGUMENT` otherwise).
   `PolicyViolationError` → `POLICY_VIOLATION`.
 
-### `ideas audit tail` / `ideas audit verify`
+### `ideas audit list` / `ideas audit export` / `ideas audit tail` / `ideas audit verify`
 
+- `list`: paginated filtered audit events from `service.audit_log.read_events`.
+  Filters: `--decision-id`, `--actor`, `--actor-type`, `--action`, `--state`,
+  `--since`, `--until`, `--limit`, and `--offset`.
+- `export --format json`: machine artifact envelope with `schema_version`,
+  `audit_export_id`, `artifact_type`, `generated_at`, `filters`, `pagination`,
+  `row_count`, and `rows`.
+- `export --format csv`: tabular audit events with event id, timestamp,
+  decision id, actor, action, state transition, reason, record hash, evidence,
+  venue, and external order id.
 - `tail`: last N events (default 20) from
   `service.audit_log.read_events(decision_id)`, newest last.
 - `verify`: full read of the audit log; `AuditIntegrityError` →
   `✗ ideas audit verify FAILED: <reason>` with `OPERATION_FAILED`. Success
   reports event count: `✓ ideas audit verify OK (142 events)`.
+
+### Automated evidence examples
+
+Weekly report artifact:
+
+```bash
+uv run gpt-trader ideas report \
+  --ideas-root var/data/trade_ideas \
+  --from 2026-06-01 \
+  --to 2026-06-07T23:59:59Z \
+  --format json \
+  --output-dir review_artifacts/trade_ideas
+```
+
+Monthly audit and closeout CSV exports:
+
+```bash
+uv run gpt-trader ideas audit export \
+  --ideas-root var/data/trade_ideas \
+  --from 2026-06-01 \
+  --to 2026-06-30T23:59:59Z \
+  --format csv \
+  --output review_artifacts/trade_ideas/audit-2026-06.csv
+
+uv run gpt-trader ideas closeout export \
+  --ideas-root var/data/trade_ideas \
+  --from 2026-06-01 \
+  --to 2026-06-30T23:59:59Z \
+  --format csv \
+  --output review_artifacts/trade_ideas/closeouts-2026-06.csv
+```
+
+Resolution-specific closeout review:
+
+```bash
+uv run gpt-trader ideas closeout list \
+  --ideas-root var/data/trade_ideas \
+  --resolution invalidation \
+  --has-evidence true \
+  --limit 100 \
+  --format json
+```
 
 ## Output standards
 
@@ -443,7 +603,8 @@ Required cases:
    compatibility.
 4. `show` unknown id → `IDEA_NOT_FOUND`. `show --events` includes history.
 5. `report` empty store, normal records, missing closeout coverage, JSON
-   output, and read-only behavior that does not create `risk_budget.jsonl`.
+   output, schema keys, deterministic report id, date filters, CSV output, and
+   read-only behavior that does not create `risk_budget.jsonl`.
 6. `replay baseline` text success, malformed fixture input, empty/no-idea
    replay success with `was_noop=True`, JSON output exposing `ReplayReport`
    aggregate fields, precision-preserving JSON-number candle parsing, custom
@@ -472,10 +633,13 @@ Required cases:
 16. JSON mode for at least propose/approve/list/report/replay baseline asserting the
     `CliResponse` envelope per CLAUDE.md patterns
     (`result.errors[0].code == CliErrorCode.POLICY_VIOLATION.value`).
-14. `propose-baseline` success from a local snapshot fixture, no-signal
+17. `propose-baseline` success from a local snapshot fixture, no-signal
     no-op behavior, duplicate decision handling, malformed snapshot input, and
     JSON output with decision ids, record hashes, states, and approval-preview
     warnings/violations.
+18. `audit list/export` and `closeout list/export` filters, pagination, JSON
+    artifact rows, CSV output, joined closeout terminal-event fields, and
+    empty/no-match no-op behavior.
 
 ## Acceptance criteria
 

@@ -208,6 +208,7 @@ class PaperFillReconciler:
         views = tuple(self._service.list_views())
         view_by_decision_id = {view.idea.decision_id: view for view in views}
         preview_filled_decision_ids: set[str] = set()
+        audited_fill_order_ids = _audited_fill_order_ids(views)
 
         matched: list[PaperFillReconciliationEntry] = []
         unmatched: list[PaperFillReconciliationEntry] = []
@@ -264,7 +265,7 @@ class PaperFillReconciler:
                 )
                 continue
 
-            if self._already_reconciled(view, event):
+            if self._already_reconciled(view, event, audited_fill_order_ids):
                 skipped.append(
                     PaperFillReconciliationEntry(
                         event=event,
@@ -349,6 +350,8 @@ class PaperFillReconciler:
             )
             if not apply:
                 preview_filled_decision_ids.add(decision_id)
+            if event.external_order_id:
+                audited_fill_order_ids.add(event.external_order_id)
 
         return PaperFillReconciliationReport(
             mode="apply" if apply else "dry_run",
@@ -389,15 +392,20 @@ class PaperFillReconciler:
             return None, None, "multiple approved ideas match symbol/side"
         return None, None, "no approved idea matched fill"
 
-    def _already_reconciled(self, view: TradeIdeaView, event: PaperFillEvent) -> bool:
+    def _already_reconciled(
+        self,
+        view: TradeIdeaView,
+        event: PaperFillEvent,
+        audited_fill_order_ids: AbstractSet[str],
+    ) -> bool:
         external_order_id = event.external_order_id
         if not external_order_id:
             return view.state is TradeIdeaState.FILLED
-        return any(
-            audit_event.action is AuditAction.FILLED
-            and audit_event.external_order_id == external_order_id
-            for audit_event in view.events
-        )
+        # An order id recorded against *any* filled idea means this fill has
+        # already been reconciled. Checking only the matched view would let a
+        # rerun over the full event store re-record a legacy (id-less) fill
+        # against a newer same-symbol/side idea and corrupt its audit trail.
+        return external_order_id in audited_fill_order_ids
 
 
 def _match_client_order_id(
@@ -415,6 +423,16 @@ def _match_client_order_id(
         if _client_order_id_contains_decision_id(client_order_id, decision_id)
     ]
     return matches[0] if len(matches) == 1 else None
+
+
+def _audited_fill_order_ids(views: Iterable[TradeIdeaView]) -> set[str]:
+    """Collect external order ids already recorded on any filled audit event."""
+    return {
+        audit_event.external_order_id
+        for view in views
+        for audit_event in view.events
+        if audit_event.action is AuditAction.FILLED and audit_event.external_order_id
+    }
 
 
 def _recordable_views(

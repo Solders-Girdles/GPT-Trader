@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -12,11 +13,13 @@ from gpt_trader.features.trade_ideas import (
     ConfidenceLabel,
     EntryZone,
     MaxLoss,
+    PaperFillEvent,
     ProductType,
     SizingRecommendation,
     TimeHorizon,
     TradeDirection,
     TradeIdea,
+    TradeIdeaService,
 )
 
 
@@ -61,3 +64,44 @@ def build_trade_idea(**overrides: Any) -> TradeIdea:
 @pytest.fixture
 def trade_idea() -> TradeIdea:
     return build_trade_idea()
+
+
+def reconciliation_service(root: Path) -> TradeIdeaService:
+    """Trade-idea service with a frozen clock for reconciliation tests."""
+    return TradeIdeaService(
+        root,
+        now_factory=lambda: datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
+    )
+
+
+def approved_idea(
+    service: TradeIdeaService,
+    *,
+    decision_id: str = "trade-20260612-001",
+) -> str:
+    """Propose and approve a default idea, returning its decision id."""
+    idea = build_trade_idea(decision_id=decision_id)
+    service.propose(idea, actor_id="idea-generator-v1")
+    service.approve(idea.decision_id, actor_id="rj", reason="Risk verified")
+    return idea.decision_id
+
+
+def paper_fill_event(
+    *,
+    decision_id: str | None = None,
+    client_order_id: str = "",
+    order_id: str = "MOCK_000001",
+    symbol: str = "BTC-USD",
+    side: str = "buy",
+) -> PaperFillEvent:
+    """Build a normalized filled paper/mock event for reconciliation tests."""
+    return PaperFillEvent(
+        order_id=order_id,
+        client_order_id=client_order_id,
+        symbol=symbol,
+        side=side,
+        quantity=Decimal("0.1"),
+        price=Decimal("60750"),
+        status="filled",
+        decision_id=decision_id,
+    )

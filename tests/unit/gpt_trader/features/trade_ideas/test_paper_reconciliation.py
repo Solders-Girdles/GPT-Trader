@@ -1,60 +1,26 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
+from tests.unit.gpt_trader.features.trade_ideas.conftest import (
+    approved_idea as _approved_idea,
+)
+from tests.unit.gpt_trader.features.trade_ideas.conftest import (
+    paper_fill_event as _fill_event,
+)
+from tests.unit.gpt_trader.features.trade_ideas.conftest import (
+    reconciliation_service as _service,
+)
 
 from gpt_trader.features.trade_ideas import (
     ActorType,
     AuditAction,
-    PaperFillEvent,
     PaperFillProfileError,
     PaperFillReconciler,
-    TradeIdeaService,
     TradeIdeaState,
     validate_paper_reconciliation_profile,
 )
-
-
-def _service(root: Path) -> TradeIdeaService:
-    return TradeIdeaService(
-        root,
-        now_factory=lambda: datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
-    )
-
-
-def _approved_idea(
-    service: TradeIdeaService,
-    *,
-    decision_id: str = "trade-20260612-001",
-) -> str:
-    idea = build_trade_idea(decision_id=decision_id)
-    service.propose(idea, actor_id="idea-generator-v1")
-    service.approve(idea.decision_id, actor_id="rj", reason="Risk verified")
-    return idea.decision_id
-
-
-def _fill_event(
-    *,
-    decision_id: str | None = None,
-    client_order_id: str = "",
-    order_id: str = "MOCK_000001",
-    symbol: str = "BTC-USD",
-    side: str = "buy",
-) -> PaperFillEvent:
-    return PaperFillEvent(
-        order_id=order_id,
-        client_order_id=client_order_id,
-        symbol=symbol,
-        side=side,
-        quantity=Decimal("0.1"),
-        price=Decimal("60750"),
-        status="filled",
-        decision_id=decision_id,
-    )
 
 
 def test_reconciler_records_matched_approved_fill_through_service(tmp_path: Path) -> None:
@@ -322,6 +288,31 @@ def test_reconciler_refreshes_symbol_side_candidates_after_applied_fill(
     ]
     assert service.get(first_decision_id).state is TradeIdeaState.FILLED
     assert service.get(second_decision_id).state is TradeIdeaState.FILLED
+
+
+def test_reconciler_rerun_skips_legacy_fill_already_audited_on_other_idea(
+    tmp_path: Path,
+) -> None:
+    service = _service(tmp_path / "ideas")
+    first_decision_id = _approved_idea(service, decision_id="trade-20260612-001")
+    legacy_fill = _fill_event(order_id="MOCK_LEGACY", client_order_id="")
+
+    first_report = PaperFillReconciler(service).reconcile_fills([legacy_fill], apply=True)
+    assert first_report.matched_count == 1
+    assert first_report.matched[0].decision_id == first_decision_id
+
+    # A newer same-symbol/side idea is approved, then reconciliation is rerun
+    # over the full event store (which still contains the legacy fill).
+    second_decision_id = _approved_idea(service, decision_id="trade-20260612-002")
+
+    rerun_report = PaperFillReconciler(service).reconcile_fills([legacy_fill], apply=True)
+
+    assert rerun_report.matched_count == 0
+    assert rerun_report.skipped_count == 1
+    assert rerun_report.skipped[0].reason == "fill already recorded on trade-idea audit trail"
+    # The legacy fill must not be re-recorded against the newer idea.
+    assert service.get(second_decision_id).state is TradeIdeaState.APPROVED
+    assert service.get(first_decision_id).state is TradeIdeaState.FILLED
 
 
 def test_reconciler_dry_run_previews_refreshed_symbol_side_candidates(

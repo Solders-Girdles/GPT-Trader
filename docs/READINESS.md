@@ -9,7 +9,7 @@ status: current
 This checklist defines the minimum evidence bar for a human-approved decision to
 run a live profile. It does not itself authorize live execution; live runs follow
 the gates in [Live Operations](production.md) and the
-[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md).
+[Direction](DIRECTION.md).
 Each pillar produces measurable evidence so the approval decision is objective,
 repeatable, and auditable.
 

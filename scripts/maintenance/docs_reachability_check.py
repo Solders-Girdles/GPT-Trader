@@ -18,7 +18,16 @@ DOCS_ENTRYPOINT = DOCS_ROOT / "README.md"
 
 LINK_PATTERN = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
 EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "tel:")
-ALLOWED_STATUSES = {"current", "draft", "deprecated", "superseded"}
+ALLOWED_STATUSES = {
+    "current",
+    "draft",
+    "deprecated",
+    "superseded",
+    # Decision-record lifecycle (docs/decisions/*.md); see docs/decisions/README.md.
+    "proposed",
+    "accepted",
+    "rejected",
+}
 ISO_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 DATE_KEYS = ("last-updated", "last-reviewed", "last-verified")
 METADATA_TEMPLATE = "---\n" "status: current\n" "---"

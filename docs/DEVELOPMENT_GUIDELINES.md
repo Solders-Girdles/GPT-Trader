@@ -245,6 +245,42 @@ as the source changes.
 - Add `--apply` to remove the worktrees and delete their local branches.
 - Only `codex/*` or `issue/*` branches with missing upstream remotes are eligible.
 
+## Cleanup Passes
+
+Cleanup work removes drift, clarifies the canonical path, or surfaces a behavior
+decision that must happen before more automation is added. It is not a feature
+backlog — track cleanup candidates as GitHub issues, not in a doc.
+
+- Keep each pass small enough to verify and commit independently. Start from a
+  clean working tree and end with `git status --short --branch` showing only the
+  branch line.
+- Prefer removing or rehoming stale surfaces before rewriting core behavior.
+- Treat broker/profile availability as implementation state, not product
+  approval. Consult [DIRECTION.md](DIRECTION.md) before adding or enabling
+  execution paths.
+- Do not preserve compatibility shims only because they exist: keep them
+  intentionally, deprecate them with a target in [DEPRECATIONS.md](DEPRECATIONS.md),
+  or remove them with tests.
+- Keep generated inventories current with `uv run agent-regenerate --verify` when
+  a pass moves, removes, or changes generated-artifact inputs.
+- A pass that uncovers an unsettled behavior question records it as a `proposed`
+  decision in [decisions/](decisions/README.md), not as a drive-by change.
+
+Prefer this verification bundle after passes that touch docs, scripts, config, or
+generated-artifact inputs:
+
+```bash
+git status --short --branch
+uv run ruff check .
+uv run python scripts/ci/check_legacy_patterns.py
+uv run python scripts/ci/check_deprecation_registry.py
+uv run python scripts/maintenance/docs_link_audit.py
+uv run python scripts/maintenance/docs_reachability_check.py
+uv run python scripts/maintenance/generate_decision_index.py --check
+uv run agent-regenerate --verify
+git diff --check
+```
+
 ## Submitting Changes
 
 1. Create a descriptive branch.

@@ -16,7 +16,7 @@ is not an approval to run unrestricted live automation. It describes the gates
 and operator steps required before using live profiles or broker adapters.
 
 Execution work should follow the
-[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md). Treat
+[Direction](DIRECTION.md). Treat
 the existing `canary` and `prod` profiles as legacy live-operation assets:
 useful for validation, but not proof that a product, account, or autonomy level
 is ready.

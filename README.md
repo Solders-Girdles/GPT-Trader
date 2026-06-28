@@ -11,7 +11,7 @@ A Coinbase-oriented trading system under active cleanup and migration planning.
 
 GPT-Trader is a Coinbase-oriented trading system featuring a Terminal User Interface, vertical slice architecture, and risk management. The name reflects how AI assistants collaborate in developing this codebase; current trading strategies use technical analysis and rule-based decisioning, not LLM inference.
 
-**Direction:** the long-term goal is an autonomous trading entity — a bot that observes markets, does its own research, and manages funds inside machine-enforced limits. The accepted path runs through staged autonomy: AI-produced trade-idea records with human approval first, then bounded autonomy per strategy envelope once the risk, audit, and kill-switch rails have a track record. Scope is Coinbase only (spot + CFM futures); INTX perpetuals code is frozen. See [Pre-Migration Decision Framework](docs/PRE_MIGRATION_DECISION_FRAMEWORK.md) for the accepted decision record.
+**Direction:** the long-term goal is an autonomous trading entity — a bot that observes markets, does its own research, and manages funds inside machine-enforced limits. The accepted path runs through staged autonomy: AI-produced trade-idea records with human approval first, then bounded autonomy per strategy envelope once the risk, audit, and kill-switch rails have a track record. Scope is Coinbase only (spot + CFM futures); INTX perpetuals code is frozen. See [Direction](docs/DIRECTION.md) for the accepted decision record.
 
 Treat existing live profiles and broker-specific paths as implementation assets that need explicit readiness, venue-capability, approval, and audit gates before expansion.
 
@@ -195,7 +195,7 @@ uv run agent-risk       # Query risk configuration
 | Document | Purpose |
 |----------|---------|
 | [Architecture](docs/ARCHITECTURE.md) | System design and vertical slices |
-| [Pre-Migration Decision Framework](docs/PRE_MIGRATION_DECISION_FRAMEWORK.md) | Autonomy, product, venue, approval, and audit gates |
+| [Direction](docs/DIRECTION.md) | Autonomy, product, venue, approval, and audit gates |
 | [Reliability](docs/RELIABILITY.md) | Guard stack, degradation, chaos testing |
 | [Monitoring](docs/MONITORING_PLAYBOOK.md) | Metrics, alerting, dashboards |
 | [Live Operations](docs/production.md) | Readiness-gated live operations and rollback |

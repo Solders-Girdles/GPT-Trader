@@ -44,7 +44,8 @@ Before removing any deprecated item:
 2. Check dynamic imports: Review `importlib` and entry points
 3. Update this registry with owner + removal date
 4. Update docs that reference the deprecated path
-5. Add migration notes to CHANGELOG.md
+5. Record the migration in the **Recently Removed** table below (git history and
+   GitHub releases carry the version-level narrative)
 
 ## Recently Removed
 

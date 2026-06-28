@@ -40,7 +40,7 @@ Note: `PYTHONWARNINGS` value must be `default` (not `1`) if set.
 
 GPT-Trader is a Coinbase-oriented trading system using vertical slice architecture with modern Dependency Injection via `ApplicationContainer`. Trading strategies currently use technical analysis and rule-based decisioning, not LLM inference.
 
-Do not treat existing live profiles or broker adapters as proof that a product should be automated. Before migration or new execution work, use `docs/PRE_MIGRATION_DECISION_FRAMEWORK.md`: start from the current approval-gated execution phase (`human_approved_execution` compatibility label), keep broker-neutral records canonical, route unresolved live-control choices through `decision-needed` packets, and verify venue/API/account capability before adding or enabling execution paths.
+Do not treat existing live profiles or broker adapters as proof that a product should be automated. Before migration or new execution work, use `docs/DIRECTION.md`: start from the current approval-gated execution phase (`human_approved_execution` compatibility label), keep broker-neutral records canonical, route unresolved live-control choices through `decision-needed` packets, and verify venue/API/account capability before adding or enabling execution paths.
 
 **Trading Modes:**
 - **Spot Trading** - Implemented Coinbase spot paths; require explicit profile and readiness gates

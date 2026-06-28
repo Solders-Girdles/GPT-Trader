@@ -1,7 +1,7 @@
 """Broker-neutral trade-idea records, workflow, and audit trail.
 
 First building block of the accepted staged-autonomy direction
-(docs/PRE_MIGRATION_DECISION_FRAMEWORK.md): AI proposes complete trade-idea
+(docs/DIRECTION.md): AI proposes complete trade-idea
 records, humans approve them, and every state change lands in an append-only
 audit log. No module in this slice may submit orders.
 """

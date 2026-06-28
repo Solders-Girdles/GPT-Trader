@@ -1,7 +1,7 @@
 # Legacy live profile - not a migration approval
 # Purpose: Existing production-style settings for live runs after readiness review.
 # Do not treat this profile as approval for unrestricted automation or AI-submitted
-# orders. New migration work must pass docs/PRE_MIGRATION_DECISION_FRAMEWORK.md.
+# orders. New migration work must pass docs/DIRECTION.md.
 
 profile_name: "prod"
 environment: "production"

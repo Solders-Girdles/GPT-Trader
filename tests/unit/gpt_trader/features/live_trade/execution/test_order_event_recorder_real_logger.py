@@ -56,7 +56,9 @@ def test_record_submission_attempt_uses_real_logger(
         )
 
     _assert_no_logging_failures(recorder_logger_spy)
-    record = next(r for r in handler.records if getattr(r, "event_type", None) == "order_submission")
+    record = next(
+        r for r in handler.records if getattr(r, "event_type", None) == "order_submission"
+    )
     assert record.client_order_id == "client-123"  # type: ignore[attr-defined]
     assert record.symbol == "BTC-USD"  # type: ignore[attr-defined]
     assert record.side == "BUY"  # type: ignore[attr-defined]

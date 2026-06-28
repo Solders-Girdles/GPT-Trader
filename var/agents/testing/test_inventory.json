@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6981,
-    "total_files": 829,
+    "total_tests": 6994,
+    "total_files": 831,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,12 +102,12 @@
     ]
   },
   "marker_counts": {
-    "unit": 6815,
+    "unit": 6827,
     "asyncio": 440,
-    "parametrize": 204,
+    "parametrize": 205,
     "endpoints": 83,
     "property": 82,
-    "integration": 80,
+    "integration": 81,
     "usefixtures": 17,
     "skipif": 9,
     "slow": 4,
@@ -803,6 +803,10 @@
     "test_dependency_graph.py": [
       "tests/unit/scripts/test_dependency_graph.py"
     ],
+    "test_docs_currency_scan.py": [
+      "tests/integration/scripts/test_docs_currency_scan.py",
+      "tests/unit/scripts/test_docs_currency_scan.py"
+    ],
     "test_docs_maintenance.py": [
       "tests/unit/scripts/test_docs_maintenance.py"
     ],
@@ -1050,6 +1054,16 @@
           "asyncio"
         ],
         "docstring": "Contract: Place order -> Get order -> Cancel order."
+      }
+    ],
+    "tests/integration/scripts/test_docs_currency_scan.py": [
+      {
+        "name": "test_scan_docs_on_real_repo_produces_report",
+        "line": 18,
+        "markers": [
+          "integration"
+        ],
+        "docstring": ""
       }
     ],
     "tests/integration/test_boot_container_perps_bot.py": [
@@ -63555,6 +63569,105 @@
       {
         "name": "test_main_resolves_package_init_relative_imports",
         "line": 81,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_docs_currency_scan.py": [
+      {
+        "name": "test_normalize_item_filters_glossary_noise",
+        "line": 9,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_path_marks_runtime_paths_uncertain",
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_env_var_accepts_makefile_variable",
+        "line": 23,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_command_accepts_python_module",
+        "line": 33,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_scan_docs_on_fixture_repo_produces_report",
+        "line": 43,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_module_or_path_marks_removed_items_stale",
+        "line": 74,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_short_cli_flags_are_extracted",
+        "line": 84,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_unknown_short_flag_is_uncertain_not_missing",
+        "line": 94,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_unknown_flag_is_uncertain_when_help_skipped",
+        "line": 100,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_command_handles_uv_run_python_module",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_module_source_fallback_resolves_flat_module",
+        "line": 116,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_render_report_collapses_newlines_in_notes",
+        "line": 126,
         "markers": [
           "unit"
         ],

@@ -278,3 +278,49 @@ async def test_runtime_engine_shutdown_timeout_escalates_failure() -> None:
     assert runtime.state == RuntimeEngineState.FAILED
     assert runtime.graceful_shutdown_failed is True
     assert runtime.health_check().healthy is False
+
+
+@pytest.mark.asyncio
+async def test_cancelled_start_cancels_timeout_wrapped_startup_hook() -> None:
+    # A startup hook bounded by ``timeout_seconds`` runs in its own task. If the
+    # caller is cancelled before the timeout fires, that task must be cancelled
+    # and drained, not left running after the runtime moves to FAILED.
+    runtime = RuntimeEngine(_context(), shutdown_timeout_seconds=5.0)
+    hook_started = asyncio.Event()
+    hook_cancelled = asyncio.Event()
+
+    async def slow_hook() -> None:
+        hook_started.set()
+        try:
+            await asyncio.sleep(60)
+        except asyncio.CancelledError:
+            hook_cancelled.set()
+            raise
+
+    plan = RuntimeLifecyclePlan(
+        startup_steps=(
+            RuntimeLifecycleStep(
+                "slow_hook",
+                RuntimeStepKind.STARTUP_HOOK,
+                slow_hook,
+                timeout_seconds=5.0,
+                register_task=False,
+            ),
+        ),
+        task_cleanup_timeout_seconds=5.0,
+    )
+
+    start_task = asyncio.create_task(runtime.start(plan))
+    try:
+        await asyncio.wait_for(hook_started.wait(), timeout=1.0)
+        start_task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await asyncio.wait_for(start_task, timeout=1.0)
+
+        await asyncio.wait_for(hook_cancelled.wait(), timeout=1.0)
+        assert runtime.state == RuntimeEngineState.FAILED
+        assert runtime.background_tasks == []
+    finally:
+        if not start_task.done():
+            start_task.cancel()
+            await asyncio.gather(start_task, return_exceptions=True)

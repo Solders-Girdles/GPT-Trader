@@ -489,7 +489,7 @@ class TradingBot:
 
         self._shutdown_broker_calls()
         self._preserve_flatten_failure_state = False
-        self._transition_state(TradingBotState.STOPPED, reason="flatten_and_stop_complete")
+        self._finalize_stop_state("flatten_and_stop_complete")
         messages.append("Bot stopped.")
         return messages
 

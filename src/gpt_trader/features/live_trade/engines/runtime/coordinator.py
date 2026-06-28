@@ -460,7 +460,18 @@ class RuntimeEngine(BaseEngine):
         task_name: str,
     ) -> Any:
         task = asyncio.ensure_future(awaitable)
-        done, pending = await asyncio.wait({task}, timeout=timeout)
+        try:
+            done, pending = await asyncio.wait({task}, timeout=timeout)
+        except asyncio.CancelledError:
+            # The caller (e.g. start()) was cancelled while this step was still
+            # running. ``asyncio.wait`` does not cancel the wrapped task, so
+            # cancel and track it; otherwise the hook outlives the runtime after
+            # it has moved to FAILED. Tracking lets drain/cleanup await it.
+            if not task.done():
+                self._track_task(f"{task_name}_cancelled", task)
+                task.cancel()
+                task.add_done_callback(self._consume_and_forget_task)
+            raise
         if pending:
             self._track_task(f"{task_name}_timeout", task)
             task.cancel()

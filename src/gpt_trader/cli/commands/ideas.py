@@ -20,6 +20,8 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, cast
 
+from gpt_trader.app.config import BotConfig
+from gpt_trader.app.runtime import resolve_runtime_paths
 from gpt_trader.cli import options
 from gpt_trader.cli.response import CliError, CliErrorCode, CliResponse
 from gpt_trader.core import Candle
@@ -37,6 +39,7 @@ from gpt_trader.features.trade_ideas import (
     MarketSnapshot,
     MarketSnapshotBuilder,
     MarketSnapshotBuildRequest,
+    PaperFillReconciler,
     PolicyViolationError,
     ReplayReport,
     ReplayRunnerConfig,
@@ -56,6 +59,7 @@ from gpt_trader.features.trade_ideas import (
     is_safe_decision_id,
     market_snapshot_to_payload,
     resolve_trade_idea_actor_id,
+    validate_paper_reconciliation_profile,
 )
 from gpt_trader.features.trade_ideas.artifacts import (
     audit_events_to_csv,
@@ -71,8 +75,10 @@ from gpt_trader.features.trade_ideas.report import (
     build_trade_idea_track_record_report,
     format_trade_idea_track_record_report,
 )
+from gpt_trader.persistence.event_store import EventStore
 
 VENUE_CHOICES = ("coinbase", "manual")
+PAPER_RECONCILIATION_PROFILE_CHOICES = tuple(sorted({*options.PROFILE_CHOICES, "mock"}))
 TEXT_JSON_FORMATS = ("text", "json")
 REPORT_FORMATS = ("text", "json", "csv")
 EXPORT_FORMATS = ("json", "csv")
@@ -578,6 +584,52 @@ def register(subparsers: Any) -> None:
     mark_filled.add_argument("--reason", default="Venue confirmed fill")
     mark_filled.set_defaults(handler=_handle_mark_filled, subcommand="mark-filled")
 
+    reconcile_paper_fills = ideas_subparsers.add_parser(
+        "reconcile-paper-fills",
+        help="Reconcile persisted paper/mock fill events to approved ideas",
+        description=(
+            "Read existing EventStore trade events and match paper/mock fills to approved "
+            "trade ideas. Defaults to dry-run; --apply appends audit events only through "
+            "TradeIdeaService. This command never contacts a broker or account."
+        ),
+    )
+    _add_common_options(reconcile_paper_fills)
+    _add_actor_options(
+        reconcile_paper_fills,
+        default_description="paper-fill-reconciler unless --actor is provided",
+    )
+    reconcile_paper_fills.add_argument(
+        "--profile",
+        required=True,
+        choices=PAPER_RECONCILIATION_PROFILE_CHOICES,
+        help="Runtime profile whose paper/mock event store should be reconciled",
+    )
+    reconcile_paper_fills.add_argument(
+        "--event-store-root",
+        type=Path,
+        help="Runtime EventStore root (default: bot runtime path for profile)",
+    )
+    reconcile_paper_fills.add_argument(
+        "--venue",
+        choices=VENUE_CHOICES,
+        default="manual",
+        help="Audit venue to record for matched fills",
+    )
+    reconcile_paper_fills.add_argument(
+        "--limit",
+        type=_positive_int_value,
+        help="Read only the most recent N trade events",
+    )
+    reconcile_paper_fills.add_argument(
+        "--apply",
+        action="store_true",
+        help="Append matched submission/fill audit events; omitted means dry-run",
+    )
+    reconcile_paper_fills.set_defaults(
+        handler=_handle_reconcile_paper_fills,
+        subcommand="reconcile-paper-fills",
+    )
+
     budget = ideas_subparsers.add_parser("budget", help="Inspect or update risk budget")
     budget_subparsers = budget.add_subparsers(dest="budget_command", required=True)
 
@@ -835,6 +887,23 @@ def _service(args: Namespace) -> TradeIdeaService:
 
 def _actor_id(args: Namespace) -> str:
     return resolve_trade_idea_actor_id(getattr(args, "actor", None))
+
+
+def _paper_reconciliation_actor_id(args: Namespace) -> str:
+    explicit_actor = getattr(args, "actor", None)
+    return resolve_trade_idea_actor_id(explicit_actor or "paper-fill-reconciler")
+
+
+def _paper_reconciliation_event_store_root(args: Namespace, profile: str) -> Path:
+    configured_root = getattr(args, "event_store_root", None)
+    if configured_root is not None:
+        return cast(Path, configured_root)
+    profile_root = "dev" if profile == "mock" else profile
+    runtime_paths = resolve_runtime_paths(
+        config=BotConfig.from_env(),
+        profile=profile_root,
+    )
+    return runtime_paths.event_store_root
 
 
 def _output_format(args: Namespace) -> str:
@@ -1842,6 +1911,44 @@ def _handle_mark_filled(args: Namespace) -> CliResponse:
     return _state_change_success(command, args, view)
 
 
+def _handle_reconcile_paper_fills(args: Namespace) -> CliResponse:
+    command = "ideas reconcile-paper-fills"
+    try:
+        profile = validate_paper_reconciliation_profile(args.profile)
+        event_store_root = _paper_reconciliation_event_store_root(args, profile)
+        event_store = EventStore(root=event_store_root)
+        try:
+            if args.limit is None:
+                store_events = cast(list[Mapping[str, Any]], event_store.list_events())
+            else:
+                store_events = cast(
+                    list[Mapping[str, Any]],
+                    event_store.get_recent_by_type("trade", args.limit),
+                )
+        finally:
+            event_store.close()
+
+        report = PaperFillReconciler(
+            _service(args),
+            actor_id=_paper_reconciliation_actor_id(args),
+            venue=args.venue,
+        ).reconcile_store_events(store_events, apply=args.apply)
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    payload = report.to_dict()
+    payload["profile"] = profile
+    payload["event_store_root"] = str(event_store_root)
+    payload["apply"] = bool(args.apply)
+    return _success(
+        command,
+        args,
+        payload,
+        _paper_reconciliation_text(command, payload),
+        was_noop=not args.apply or payload["recorded_count"] == 0,
+    )
+
+
 def _handle_budget_show(args: Namespace) -> CliResponse:
     command = "ideas budget show"
     try:
@@ -2400,6 +2507,46 @@ def _events_text(events: list[dict[str, Any]]) -> str:
             )
         )
     return "\n".join(lines)
+
+
+def _paper_reconciliation_text(command: str, payload: dict[str, Any]) -> str:
+    details = (
+        f"mode={payload['mode']}, matched={payload['matched_count']}, "
+        f"recorded={payload['recorded_count']}, "
+        f"unmatched={payload['unmatched_count']}, skipped={payload['skipped_count']}"
+    )
+    lines = [
+        _status_line(command, "OK", details),
+        f"profile: {payload['profile']}",
+        f"event_store_root: {payload['event_store_root']}",
+    ]
+    lines.extend(_paper_reconciliation_section("matched", payload["matched"]))
+    lines.extend(_paper_reconciliation_section("unmatched", payload["unmatched"]))
+    lines.extend(_paper_reconciliation_section("skipped", payload["skipped"]))
+    return "\n".join(lines)
+
+
+def _paper_reconciliation_section(
+    label: str,
+    entries: list[dict[str, Any]],
+) -> list[str]:
+    lines = [f"{label}:"]
+    if not entries:
+        lines.append("  none")
+        return lines
+    for entry in entries:
+        event = entry["event"]
+        decision_id = entry.get("decision_id") or "-"
+        lines.append(
+            "  {decision_id} {symbol} {side} order={order_id} reason={reason}".format(
+                decision_id=decision_id,
+                symbol=event.get("symbol") or "-",
+                side=event.get("side") or "-",
+                order_id=event.get("order_id") or event.get("client_order_id") or "-",
+                reason=entry["reason"],
+            )
+        )
+    return lines
 
 
 def _audit_list_text(command: str, payload: dict[str, Any]) -> str:

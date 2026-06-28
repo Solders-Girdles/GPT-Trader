@@ -50,6 +50,16 @@ from gpt_trader.features.trade_ideas.models import (
     TradeIdea,
     is_safe_decision_id,
 )
+from gpt_trader.features.trade_ideas.paper_reconciliation import (
+    PAPER_RECONCILIATION_PROFILES,
+    PaperFillEvent,
+    PaperFillProfileError,
+    PaperFillReconciler,
+    PaperFillReconciliationEntry,
+    PaperFillReconciliationReport,
+    paper_fill_events_from_store_events,
+    validate_paper_reconciliation_profile,
+)
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.proposer import Proposer
 from gpt_trader.features.trade_ideas.replay import (
@@ -140,6 +150,12 @@ __all__ = [
     "MarketSnapshotBuildRequest",
     "MaxLoss",
     "MaxLossSnapshot",
+    "PAPER_RECONCILIATION_PROFILES",
+    "PaperFillEvent",
+    "PaperFillProfileError",
+    "PaperFillReconciliationEntry",
+    "PaperFillReconciliationReport",
+    "PaperFillReconciler",
     "PreApprovalBrokerTicketError",
     "PolicyViolationError",
     "ProductType",
@@ -182,8 +198,10 @@ __all__ = [
     "is_safe_decision_id",
     "market_snapshot_to_payload",
     "new_event_id",
+    "paper_fill_events_from_store_events",
     "resolve_ideas_root",
     "resolve_trade_idea_actor_id",
     "score_trade_idea",
+    "validate_paper_reconciliation_profile",
     "validate_transition",
 ]

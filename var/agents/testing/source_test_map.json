@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 739,
+    "tests_scanned": 741,
     "source_modules": 380,
     "unresolved_modules": 3
   },
@@ -17,6 +17,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_paper_reconciliation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
@@ -315,6 +316,7 @@
       "tests/unit/gpt_trader/cli/test_commands_coinbase.py"
     ],
     "gpt_trader.cli.commands.ideas": [
+      "tests/unit/gpt_trader/cli/commands/test_ideas_paper_reconciliation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py"
     ],
     "gpt_trader.cli.commands.optimize": [
@@ -1325,6 +1327,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_max_loss_validation.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_paper_reconciliation.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
@@ -1339,6 +1342,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
@@ -1618,6 +1622,7 @@
       "tests/integration/test_crash_recovery.py",
       "tests/integration/test_persistence.py",
       "tests/unit/gpt_trader/app/test_application_container_resources.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_paper_reconciliation.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py",
       "tests/unit/gpt_trader/monitoring/test_memory_metrics.py",
       "tests/unit/gpt_trader/persistence/test_event_store.py",
@@ -2794,6 +2799,12 @@
       "gpt_trader",
       "gpt_trader.cli.response",
       "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_paper_reconciliation.py": [
+      "gpt_trader",
+      "gpt_trader.cli.commands.ideas",
+      "gpt_trader.features.trade_ideas",
+      "gpt_trader.persistence.event_store"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py": [
       "gpt_trader",
@@ -4071,6 +4082,9 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_models.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py": [
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_policy.py": [

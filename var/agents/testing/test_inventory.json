@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6898,
-    "total_files": 814,
+    "total_tests": 6920,
+    "total_files": 818,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,12 +102,12 @@
     ]
   },
   "marker_counts": {
-    "unit": 6733,
-    "asyncio": 420,
+    "unit": 6754,
+    "asyncio": 440,
     "parametrize": 201,
     "endpoints": 83,
     "property": 82,
-    "integration": 79,
+    "integration": 80,
     "usefixtures": 17,
     "skipif": 9,
     "slow": 4,
@@ -386,6 +386,9 @@
       "tests/unit/gpt_trader/features/live_trade/combiners/test_regime_combiner_edges.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_price_tick_store_edges.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_shutdown.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_startup.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos_ws_health.py",
@@ -1752,6 +1755,17 @@
         ],
         "docstring": "Test bot_id extraction for database indexing.",
         "class": "TestEventStoreSnapshots"
+      }
+    ],
+    "tests/integration/test_runtime_engine_lifecycle.py": [
+      {
+        "name": "test_trading_engine_runtime_start_shutdown_are_idempotent",
+        "line": 50,
+        "markers": [
+          "integration",
+          "asyncio"
+        ],
+        "docstring": ""
       }
     ],
     "tests/integration/test_validation_escalation_flow.py": [
@@ -7531,8 +7545,24 @@
         "docstring": ""
       },
       {
+        "name": "test_granularity_to_seconds_supports_four_hour",
+        "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_create_chunks_uses_four_hour_duration",
+        "line": 115,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_fetch_chunk_calls_client_get_candles_and_parses_timestamps",
-        "line": 110,
+        "line": 134,
         "markers": [
           "asyncio",
           "unit"
@@ -9743,7 +9773,7 @@
       },
       {
         "name": "test_snapshot_build_normalizes_granularity_alias_before_fetch",
-        "line": 142,
+        "line": 145,
         "markers": [
           "parametrize",
           "unit"
@@ -9752,7 +9782,7 @@
       },
       {
         "name": "test_snapshot_build_rejects_as_of_without_timezone",
-        "line": 166,
+        "line": 169,
         "markers": [
           "unit"
         ],
@@ -9760,7 +9790,7 @@
       },
       {
         "name": "test_snapshot_build_rejects_unsupported_granularity_before_fetch",
-        "line": 185,
+        "line": 188,
         "markers": [
           "unit"
         ],
@@ -9768,7 +9798,7 @@
       },
       {
         "name": "test_snapshot_build_does_not_accept_response_output_sink",
-        "line": 204,
+        "line": 207,
         "markers": [
           "unit"
         ],
@@ -9776,7 +9806,7 @@
       },
       {
         "name": "test_snapshot_build_rejects_duplicate_symbols",
-        "line": 225,
+        "line": 228,
         "markers": [
           "unit"
         ],
@@ -20574,6 +20604,147 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine.py": [
+      {
+        "name": "test_runtime_engine_runs_lifecycle_steps_in_order_and_cleans_tasks",
+        "line": 35,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_engine_start_and_shutdown_are_idempotent",
+        "line": 107,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_engine_startup_failure_runs_shutdown_and_cleans_tasks",
+        "line": 153,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_engine_stop_condition_prevents_startup",
+        "line": 201,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_engine_stop_condition_error_is_lifecycle_failure",
+        "line": 231,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_engine_shutdown_timeout_escalates_failure",
+        "line": 255,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_cancelled_start_cancels_timeout_wrapped_startup_hook",
+        "line": 284,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_shutdown.py": [
+      {
+        "name": "test_runtime_engine_concurrent_shutdown_awaits_in_flight_drain",
+        "line": 25,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_cleanup_tasks_does_not_cancel_the_calling_task",
+        "line": 82,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_engine_cancelled_shutdown_caller_preserves_in_flight_drain",
+        "line": 112,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_engine_shutdown_waits_for_initializing_startup",
+        "line": 173,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_engine_shutdown_hook_timeout_keeps_hook_owned_until_cleanup_finishes",
+        "line": 257,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_engine_task_cleanup_timeout_keeps_worker_owned_until_cleanup_finishes",
+        "line": 318,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_startup.py": [
+      {
+        "name": "test_runtime_engine_startup_timeout_keeps_hook_owned_until_cleanup_finishes",
+        "line": 24,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_runtime_engine_startup_cancellation_drains_registered_tasks",
+        "line": 90,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py": [
       {
         "name": "test_runtime_start_event_records_null_build_sha",
@@ -27586,7 +27757,7 @@
         "class": "TestTradingBotFlattenAndStop"
       },
       {
-        "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_uses_reduce_only_buy_for_short_positions",
+        "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_reports_error_when_engine_shutdown_fails",
         "line": 74,
         "markers": [
           "asyncio",
@@ -27596,8 +27767,18 @@
         "class": "TestTradingBotFlattenAndStop"
       },
       {
+        "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_uses_reduce_only_buy_for_short_positions",
+        "line": 121,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestTradingBotFlattenAndStop"
+      },
+      {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_uses_position_side_for_abs_quantity_shorts",
-        "line": 124,
+        "line": 171,
         "markers": [
           "asyncio",
           "unit"
@@ -27607,7 +27788,7 @@
       },
       {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_refuses_non_reduce_only_fallback",
-        "line": 174,
+        "line": 221,
         "markers": [
           "asyncio",
           "unit"
@@ -27617,7 +27798,7 @@
       },
       {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_preserves_unrelated_type_errors",
-        "line": 222,
+        "line": 269,
         "markers": [
           "asyncio",
           "unit"
@@ -27627,7 +27808,7 @@
       },
       {
         "name": "TestTradingBotFlattenAndStop::test_flatten_and_stop_partial_close_failure_keeps_alerting_active",
-        "line": 271,
+        "line": 318,
         "markers": [
           "asyncio",
           "unit"
@@ -27753,7 +27934,7 @@
     "tests/unit/gpt_trader/features/live_trade/test_bot_lifecycle.py": [
       {
         "name": "TestTradingBotRun::test_run_sets_running_flag",
-        "line": 41,
+        "line": 42,
         "markers": [
           "asyncio",
           "unit"
@@ -27763,7 +27944,7 @@
       },
       {
         "name": "TestTradingBotRun::test_run_single_cycle_calls_shutdown",
-        "line": 49,
+        "line": 50,
         "markers": [
           "asyncio",
           "unit"
@@ -27773,7 +27954,7 @@
       },
       {
         "name": "TestTradingBotRun::test_run_starts_background_tasks",
-        "line": 56,
+        "line": 57,
         "markers": [
           "asyncio",
           "unit"
@@ -27783,7 +27964,7 @@
       },
       {
         "name": "TestTradingBotRun::test_run_handles_cancellation",
-        "line": 63,
+        "line": 64,
         "markers": [
           "asyncio",
           "unit"
@@ -27792,8 +27973,18 @@
         "class": "TestTradingBotRun"
       },
       {
+        "name": "TestTradingBotRun::test_run_reports_error_when_engine_shutdown_fails",
+        "line": 83,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "The bot must not report a clean stop when the engine fails to shut down.",
+        "class": "TestTradingBotRun"
+      },
+      {
         "name": "TestTradingBotStop::test_stop_sets_running_false",
-        "line": 102,
+        "line": 114,
         "markers": [
           "asyncio",
           "unit"
@@ -27803,7 +27994,7 @@
       },
       {
         "name": "TestTradingBotStop::test_stop_calls_engine_shutdown",
-        "line": 109,
+        "line": 121,
         "markers": [
           "asyncio",
           "unit"
@@ -27813,7 +28004,7 @@
       },
       {
         "name": "TestTradingBotStop::test_shutdown_is_alias_for_stop",
-        "line": 116,
+        "line": 128,
         "markers": [
           "asyncio",
           "unit"
@@ -27822,8 +28013,18 @@
         "class": "TestTradingBotStop"
       },
       {
+        "name": "TestTradingBotStop::test_stop_reports_error_when_engine_shutdown_fails",
+        "line": 136,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": "A failed engine shutdown surfaces as bot ERROR, not a clean STOPPED.",
+        "class": "TestTradingBotStop"
+      },
+      {
         "name": "TestTradingBotStateManagement::test_initial_state",
-        "line": 127,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -27832,7 +28033,7 @@
       },
       {
         "name": "TestTradingBotStateManagement::test_running_state_during_execution",
-        "line": 140,
+        "line": 163,
         "markers": [
           "asyncio",
           "unit"
@@ -33882,7 +34083,7 @@
         "docstring": ""
       },
       {
-        "name": "test_builder_skips_candles_at_or_after_as_of_without_lookahead",
+        "name": "test_builder_supports_four_hour_granularity_alias",
         "line": 110,
         "markers": [
           "asyncio",
@@ -33891,8 +34092,17 @@
         "docstring": ""
       },
       {
+        "name": "test_builder_skips_candles_at_or_after_as_of_without_lookahead",
+        "line": 127,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_builder_fetches_full_completed_lookback_for_unaligned_as_of",
-        "line": 125,
+        "line": 142,
         "markers": [
           "asyncio",
           "unit"
@@ -33901,7 +34111,7 @@
       },
       {
         "name": "test_builder_rejects_non_ascending_source_candles",
-        "line": 144,
+        "line": 161,
         "markers": [
           "asyncio",
           "unit"
@@ -33910,7 +34120,7 @@
       },
       {
         "name": "test_builder_rejects_symbols_with_no_completed_candles",
-        "line": 154,
+        "line": 171,
         "markers": [
           "asyncio",
           "unit"
@@ -33919,7 +34129,7 @@
       },
       {
         "name": "test_build_request_rejects_unsupported_granularity",
-        "line": 163,
+        "line": 180,
         "markers": [
           "unit"
         ],
@@ -33927,7 +34137,7 @@
       },
       {
         "name": "test_market_snapshot_payload_serializes_existing_fixture_shape",
-        "line": 176,
+        "line": 196,
         "markers": [
           "asyncio",
           "unit"

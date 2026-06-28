@@ -835,7 +835,7 @@
       ],
       "code_references": [
         {
-          "line": 186,
+          "line": 229,
           "path": "src/gpt_trader/features/trade_ideas/service.py",
           "reader": "os.environ.get"
         }
@@ -1247,7 +1247,7 @@
       ],
       "code_references": [
         {
-          "line": 176,
+          "line": 219,
           "path": "src/gpt_trader/features/trade_ideas/service.py",
           "reader": "os.environ.get"
         }

@@ -17,7 +17,7 @@ from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, Generic, TypeVar, cast
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import (
@@ -68,6 +68,7 @@ EXPIRABLE_STATES = frozenset(
     }
 )
 _AUDIT_VENUES = frozenset({TicketVenue.COINBASE, TicketVenue.MANUAL})
+_QueryItem = TypeVar("_QueryItem")
 _CONFIDENCE_RANK = {
     ConfidenceLabel.LOW: 0,
     ConfidenceLabel.MEDIUM: 1,
@@ -100,6 +101,16 @@ class TradeIdeaView:
     state: TradeIdeaState
     events: tuple[AuditEvent, ...]
     closeout_attribution: CloseoutAttribution | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class TradeIdeaQueryPage(Generic[_QueryItem]):
+    """Stable read-only query page for audit and closeout reporting."""
+
+    items: tuple[_QueryItem, ...]
+    total_count: int
+    limit: int | None
+    offset: int
 
 
 class TradeIdeaListSortKey(str, Enum):
@@ -167,6 +178,38 @@ def _max_loss_snapshot_context(snapshot: MaxLossSnapshot) -> dict[str, object]:
         ),
         "assumptions": list(snapshot.assumptions),
     }
+
+
+def _timestamp_in_window(
+    timestamp: datetime,
+    *,
+    since: datetime | None,
+    until: datetime | None,
+) -> bool:
+    if since is not None and timestamp < since:
+        return False
+    if until is not None and timestamp > until:
+        return False
+    return True
+
+
+def _page_items(
+    items: tuple[_QueryItem, ...],
+    *,
+    limit: int | None,
+    offset: int,
+) -> TradeIdeaQueryPage[_QueryItem]:
+    normalized_offset = max(offset, 0)
+    if limit is None:
+        selected = items[normalized_offset:]
+    else:
+        selected = items[normalized_offset : normalized_offset + max(limit, 0)]
+    return TradeIdeaQueryPage(
+        items=tuple(selected),
+        total_count=len(items),
+        limit=limit,
+        offset=normalized_offset,
+    )
 
 
 def resolve_ideas_root(root: Path | None = None) -> Path:
@@ -598,6 +641,53 @@ class TradeIdeaService:
     def get_closeout_attribution(self, decision_id: str) -> CloseoutAttribution | None:
         return self.get(decision_id).closeout_attribution
 
+    def load_record_version(self, decision_id: str, record_hash: str) -> TradeIdea:
+        """Load the exact record version referenced by an audit event."""
+        try:
+            idea = self._store.load_version(decision_id, record_hash)
+        except KeyError as error:
+            missing_field = str(error.args[0]) if error.args else "unknown"
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' version '{record_hash}' is missing "
+                f"required field '{missing_field}'",
+                field="record_hash",
+                value=record_hash,
+                context={
+                    "decision_id": decision_id,
+                    "record_hash": record_hash,
+                    "missing_field": missing_field,
+                },
+            ) from error
+        except (InvalidOperation, TypeError, ValueError) as error:
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' version '{record_hash}' is invalid: {error}",
+                field="record_hash",
+                value=record_hash,
+            ) from error
+        if idea is None:
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' is missing audit record_hash "
+                f"'{record_hash}'",
+                field="record_hash",
+                value=record_hash,
+            )
+        if idea.decision_id != decision_id:
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' version '{record_hash}' contains "
+                f"decision_id '{idea.decision_id}'",
+                field="decision_id",
+                value=idea.decision_id,
+            )
+        actual_record_hash = idea.record_hash()
+        if actual_record_hash != record_hash:
+            raise AuditIntegrityError(
+                f"Stored trade idea '{decision_id}' version '{record_hash}' hashes to "
+                f"'{actual_record_hash}'",
+                field="record_hash",
+                value=actual_record_hash,
+            )
+        return idea
+
     # -- queries -----------------------------------------------------------
 
     def get(self, decision_id: str) -> TradeIdeaView:
@@ -642,6 +732,76 @@ class TradeIdeaService:
             limit=query.limit,
             has_more=start + len(page) < total_count,
         )
+
+    def list_audit_events(
+        self,
+        *,
+        decision_id: str | None = None,
+        actor_id: str | None = None,
+        actor_type: ActorType | str | None = None,
+        action: AuditAction | str | None = None,
+        state: TradeIdeaState | str | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> TradeIdeaQueryPage[AuditEvent]:
+        """Return a filtered, stable page of audit events without mutating storage."""
+        requested_actor_type = ActorType(actor_type) if actor_type is not None else None
+        requested_action = AuditAction(action) if action is not None else None
+        requested_state = TradeIdeaState(state) if state is not None else None
+        events = tuple(
+            event
+            for event in self._audit.read_events(decision_id)
+            if (actor_id is None or event.actor_id == actor_id)
+            and (requested_actor_type is None or event.actor_type is requested_actor_type)
+            and (requested_action is None or event.action is requested_action)
+            and (requested_state is None or event.after_state is requested_state)
+            and _timestamp_in_window(event.timestamp, since=since, until=until)
+        )
+        return _page_items(events, limit=limit, offset=offset)
+
+    def query_closeout_records(
+        self,
+        *,
+        decision_id: str | None = None,
+        actor_id: str | None = None,
+        actor_type: ActorType | str | None = None,
+        resolution: CloseoutResolution | str | None = None,
+        has_evidence: bool | None = None,
+        since: datetime | None = None,
+        until: datetime | None = None,
+        limit: int | None = None,
+        offset: int = 0,
+    ) -> TradeIdeaQueryPage[CloseoutAttribution]:
+        """Return a filtered, stable page of closeout attribution records."""
+        requested_actor_type = ActorType(actor_type).value if actor_type is not None else None
+        requested_resolution = CloseoutResolution(resolution) if resolution is not None else None
+        records: list[CloseoutAttribution] = []
+        if decision_id is not None:
+            try:
+                views = [self.get(decision_id)]
+            except UnknownTradeIdeaError:
+                views = []
+        else:
+            views = self.list_views()
+        for view in views:
+            record = view.closeout_attribution
+            if record is None:
+                continue
+            if (
+                (decision_id is None or record.decision_id == decision_id)
+                and (actor_id is None or record.actor_id == actor_id)
+                and (requested_actor_type is None or record.actor_type == requested_actor_type)
+                and (requested_resolution is None or record.resolution is requested_resolution)
+                and (has_evidence is None or bool(record.evidence) is has_evidence)
+                and _timestamp_in_window(record.timestamp, since=since, until=until)
+            ):
+                records.append(record)
+        ordered_records = tuple(
+            sorted(records, key=lambda record: (record.timestamp, record.decision_id))
+        )
+        return _page_items(ordered_records, limit=limit, offset=offset)
 
     def open_approved_count(self) -> int:
         approved_count = 0

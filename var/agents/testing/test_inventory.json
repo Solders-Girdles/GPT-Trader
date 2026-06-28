@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6920,
-    "total_files": 818,
+    "total_tests": 6941,
+    "total_files": 825,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6754,
+    "unit": 6775,
     "asyncio": 440,
-    "parametrize": 201,
+    "parametrize": 202,
     "endpoints": 83,
     "property": 82,
     "integration": 80,
@@ -205,8 +205,12 @@
       "tests/unit/gpt_trader/cli/commands/optimize/test_config_loader.py",
       "tests/unit/gpt_trader/cli/commands/optimize/test_formatters.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_approval_preview_integrity.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_audit_ordering.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_closeout_evidence_integrity.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_csv.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
@@ -216,6 +220,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
@@ -554,8 +559,10 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
@@ -9149,6 +9156,16 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_audit_ordering.py": [
+      {
+        "name": "test_audit_export_pages_non_monotonic_timestamps_in_append_order",
+        "line": 39,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_budget.py": [
       {
         "name": "test_budget_show_seeds_defaults_and_budget_set_bumps_version",
@@ -9228,6 +9245,92 @@
       {
         "name": "test_closeout_show_without_attribution_is_successful_noop",
         "line": 295,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_closeout_evidence_integrity.py": [
+      {
+        "name": "test_closeout_list_and_export_omit_orphaned_closeout_records",
+        "line": 103,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_csv.py": [
+      {
+        "name": "test_audit_list_filters_paginates_and_exports_csv",
+        "line": 19,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_csv_output_dir_names_include_content_digest",
+        "line": 105,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py": [
+      {
+        "name": "test_report_json_artifact_schema_date_window_and_output_dir",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_id_is_deterministic_for_seeded_fixture",
+        "line": 151,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_csv_output_contains_flat_metric_rows",
+        "line": 163,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_report_csv_preserves_negative_realized_profit_loss_metrics",
+        "line": 188,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_closeout_list_filters_joins_terminal_event_and_exports_csv",
+        "line": 223,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_and_closeout_no_match_results_are_successful_noops",
+        "line": 277,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_zero_limit_pages_do_not_repeat_current_offset",
+        "line": 374,
         "markers": [
           "unit"
         ],
@@ -9700,6 +9803,48 @@
       {
         "name": "test_report_is_read_only_and_does_not_seed_budget",
         "line": 312,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py": [
+      {
+        "name": "test_windowed_report_ignores_lifecycle_after_cutoff",
+        "line": 33,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_windowed_report_uses_cutoff_for_approval_readiness",
+        "line": 82,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_windowed_report_loads_record_version_for_last_in_window_event",
+        "line": 107,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_windowed_report_rejects_tampered_historical_record_hash",
+        "line": 143,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_windowed_report_rejects_historical_record_missing_required_field",
+        "line": 173,
         "markers": [
           "unit"
         ],
@@ -33831,6 +33976,24 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_query.py": [
+      {
+        "name": "test_audit_query_preserves_append_order_for_tied_timestamps",
+        "line": 20,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_query_pages_non_monotonic_timestamps_in_append_order",
+        "line": 46,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py": [
       {
         "name": "test_propose_batch_rolls_back_partial_record_when_save_fails",
@@ -33934,6 +34097,33 @@
       {
         "name": "test_persisted_closeout_log_rejects_negative_max_loss_values_with_line_context",
         "line": 353,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout_query.py": [
+      {
+        "name": "test_query_closeout_records_excludes_orphaned_log_records",
+        "line": 55,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_query_closeout_records_scoped_decision_ignores_unrelated_tampered_closeout",
+        "line": 78,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_query_closeout_records_rejects_tampered_current_attribution",
+        "line": 118,
         "markers": [
           "parametrize",
           "unit"

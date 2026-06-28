@@ -106,6 +106,30 @@ def test_granularity_to_seconds_unknown_defaults() -> None:
     assert fetcher._granularity_to_seconds("UNKNOWN") == 60
 
 
+def test_granularity_to_seconds_supports_four_hour() -> None:
+    fetcher = CoinbaseHistoricalFetcher(client=Mock())
+
+    assert fetcher._granularity_to_seconds("FOUR_HOUR") == 14400
+
+
+def test_create_chunks_uses_four_hour_duration() -> None:
+    fetcher = CoinbaseHistoricalFetcher(client=Mock())
+    start = datetime(2024, 1, 1, 0, 0, 0)
+    end = start + timedelta(hours=4 * 301)
+
+    chunks = fetcher._create_chunks(
+        start,
+        end,
+        candle_seconds=fetcher._granularity_to_seconds("FOUR_HOUR"),
+        max_candles=300,
+    )
+
+    assert chunks == [
+        (start, start + timedelta(hours=4 * 300)),
+        (start + timedelta(hours=4 * 300), end),
+    ]
+
+
 @pytest.mark.asyncio
 async def test_fetch_chunk_calls_client_get_candles_and_parses_timestamps() -> None:
     start = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)

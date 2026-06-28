@@ -161,13 +161,16 @@ Live trading uses a simplified engine pattern centered on `CoordinatorContext`.
 - `TradingEngine` (`src/gpt_trader/features/live_trade/engines/strategy.py`) - main trading loop and guard stack
 - `TradingEngine._process_symbol` + `Strategy.decide` (`src/gpt_trader/features/live_trade/engines/strategy.py`, `src/gpt_trader/features/live_trade/strategies/base.py`) - per-symbol decision path
 - Telemetry helpers (`src/gpt_trader/features/live_trade/engines/telemetry_health.py`, `telemetry_streaming.py`) - WS health and streaming
-- Runtime stub (`src/gpt_trader/features/live_trade/engines/runtime/coordinator.py`) - placeholder for future lifecycle splits
+- Runtime coordinator (`src/gpt_trader/features/live_trade/engines/runtime/coordinator.py`) - owns explicit lifecycle sequencing for startup, shutdown, task cleanup, health/heartbeat orchestration points, policy checkpoints, stop conditions, and error escalation
 
 **Lifecycle flow**
 
 1. `TradingBot` builds a `CoordinatorContext` and instantiates `TradingEngine`.
-2. `TradingEngine.start_background_tasks()` launches background tasks (health checks, streaming, status, maintenance).
-3. `TradingEngine.shutdown()` stops background tasks and health checks.
+2. `TradingEngine.start_background_tasks()` builds a `RuntimeLifecyclePlan` and delegates startup to `RuntimeEngine`.
+3. `RuntimeEngine` validates required context/dependencies, checks stop conditions, runs startup hooks, starts tracked background tasks, reaches the runtime guard/policy checkpoint, and starts health, heartbeat, status, maintenance, streaming, and watchdog orchestration points.
+4. `TradingEngine.shutdown()` delegates shutdown to `RuntimeEngine`, which runs bounded shutdown hooks, cancels tracked tasks, records graceful-shutdown failure diagnostics when cleanup times out, and only then lets `TradingEngine` move to a stopped or error state.
+
+`RuntimeEngine` is a lifecycle boundary only. Strategy decisions still flow through `TradingEngine._process_symbol()` and `Strategy.decide()`, and order behavior remains inside the existing guard stack (`_validate_and_place_order()` -> `OrderSubmitter` -> `BrokerExecutor`).
 
 Legacy orchestration facades were removed during the DI migration. Use `features/live_trade/` and `app/` paths.
 

@@ -8,7 +8,7 @@ import pytest
 
 import gpt_trader.features.live_trade.bot as bot_module
 from gpt_trader.features.live_trade.bot import TradingBot
-from gpt_trader.features.live_trade.lifecycle import TradingBotState
+from gpt_trader.features.live_trade.lifecycle import EngineState, TradingBotState
 from gpt_trader.monitoring.alert_types import AlertSeverity
 
 
@@ -68,6 +68,53 @@ class TestTradingBotFlattenAndStop:
         )
         engine.shutdown.assert_called_once()
         assert bot.state is TradingBotState.STOPPED
+        assert bot.running is False
+
+    @pytest.mark.asyncio
+    async def test_flatten_and_stop_reports_error_when_engine_shutdown_fails(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from decimal import Decimal
+        from types import SimpleNamespace
+        from unittest.mock import Mock
+
+        from gpt_trader.app.config import BotConfig
+
+        class _DirectBrokerCalls:
+            async def __call__(self, fn, *args, **kwargs):
+                return fn(*args, **kwargs)
+
+        config = BotConfig(symbols=["BTC-USD"], interval=1)
+        broker = Mock()
+        broker.list_positions.return_value = [
+            SimpleNamespace(symbol="BTC-USD", quantity=Decimal("1"))
+        ]
+        broker.place_order = Mock(return_value=None)
+
+        container = SimpleNamespace(
+            broker=broker,
+            risk_manager=Mock(),
+            event_store=Mock(),
+            orders_store=Mock(),
+            notification_service=Mock(),
+        )
+
+        engine = AsyncMock()
+        engine.shutdown = AsyncMock()
+        # All positions close cleanly, but the runtime fails its graceful
+        # shutdown -- the bot must not report a clean STOPPED.
+        engine.state = EngineState.ERROR
+        engine.last_error = "timed out waiting for runtime task(s)"
+        mock_engine = MagicMock(return_value=engine)
+        monkeypatch.setattr(bot_module, "TradingEngine", mock_engine)
+
+        bot = TradingBot(config=config, container=container)
+        bot._broker_calls = _DirectBrokerCalls()
+
+        await bot.flatten_and_stop()
+
+        engine.shutdown.assert_called_once()
+        assert bot.state is TradingBotState.ERROR
         assert bot.running is False
 
     @pytest.mark.asyncio

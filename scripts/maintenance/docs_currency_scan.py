@@ -1,0 +1,641 @@
+#!/usr/bin/env python3
+"""Extract and verify named references in docs/ against the live repository."""
+
+from __future__ import annotations
+
+import argparse
+import importlib
+import re
+import subprocess
+from collections import defaultdict
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Literal
+
+Status = Literal["ok", "missing", "stale", "uncertain"]
+
+PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
+    ("command", "uv run", re.compile(r"`(uv run [^`]+)`")),
+    ("command", "python -m", re.compile(r"`(python -m [^`]+)`")),
+    ("command", "python scripts", re.compile(r"`(python scripts/[^`]+)`")),
+    ("command", "make", re.compile(r"`(make [a-z][a-z0-9_-]*)`")),
+    (
+        "path",
+        "repo path",
+        re.compile(
+            r"`((?:src|config|tests|var|scripts|runtime_data|deploy|review_artifacts)/[^`\s)]+)`"
+        ),
+    ),
+    (
+        "path",
+        "bare path",
+        re.compile(
+            r"(?<![/\w])((?:src|config|tests|var|scripts|runtime_data|deploy)/[a-zA-Z0-9_./\-*]+)"
+        ),
+    ),
+    ("env_var", "assignment", re.compile(r"`([A-Z][A-Z0-9_]{2,})`")),
+    (
+        "env_var",
+        "assignment",
+        re.compile(r"\b([A-Z][A-Z0-9_]{2,})=(?:" + r"[0-9a-zA-Z._/-]+" + r")\b"),
+    ),
+    ("cli_flag", "flag", re.compile(r"`(--[a-z][a-z0-9-]+)`")),
+    ("cli_flag", "flag", re.compile(r"(?<![\w-])(--[a-z][a-z0-9-]{2,})(?=\s|$|[,\)])")),
+    ("module", "gpt_trader", re.compile(r"`(gpt_trader\.[a-zA-Z0-9_.]+)`")),
+    ("module", "gpt_trader", re.compile(r"\b(gpt_trader\.[a-zA-Z0-9_.]+)\b")),
+    ("script", "scripts/", re.compile(r"`(scripts/[a-zA-Z0-9_./\-]+\.py)`")),
+    ("script", "scripts/", re.compile(r"(scripts/[a-zA-Z0-9_./\-]+\.py)")),
+]
+
+SKIP_ENV = {
+    "HTTP",
+    "HTTPS",
+    "API",
+    "CLI",
+    "TUI",
+    "DI",
+    "CFM",
+    "INTX",
+    "USD",
+    "BTC",
+    "ETH",
+    "UTC",
+    "JSON",
+    "YAML",
+    "CSV",
+    "XLSX",
+    "PR",
+    "CI",
+    "CD",
+    "OK",
+    "MISSING",
+    "EOF",
+    "README",
+    "AGENTS",
+    "CONTRIBUTING",
+    "MOCK",
+    "DRY",
+    "RUN",
+    "MODE",
+    "MODES",
+    "TYPE",
+    "STATUS",
+    "NOTES",
+    "DATE",
+    "VAR",
+    "PATH",
+    "SRC",
+    "CONFIG",
+    "TESTS",
+    "VARNAME",
+    "SCRATCH",
+    "N",
+    "M",
+    "E2E",
+    "MVP",
+    "CFG",
+    "UPPER_SNAKE_CASE",
+    "KEBAB",
+    "CASE",
+    "SNAKE",
+    "DEFAULT",
+    "CSS",
+    "HTML",
+    "SQL",
+    "URL",
+    "UUID",
+    "OTEL",
+    "OTLP",
+}
+SKIP_FLAGS = {"--check", "--fix", "--help", "--version", "--verbose", "--quiet", "--strict"}
+THIRD_PARTY_FLAG_PARENTS = (
+    "pytest",
+    "pre-commit",
+    "gh",
+    "docker",
+    "pip-audit",
+    "bandit",
+    "black",
+    "ruff",
+    "mypy",
+)
+DEPRECATED_MARKERS = (
+    "orchestration",
+    "run_spot_profile",
+    "sweep_strategies",
+    "test_removed_aliases",
+)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+@dataclass
+class ExtractedItem:
+    source_doc: str
+    category: str
+    item: str
+    item_type: str
+
+
+@dataclass
+class VerificationResult:
+    status: Status
+    method: str
+    notes: str = ""
+
+
+@dataclass
+class ScanState:
+    repo_root: Path
+    pyproject_text: str = ""
+    makefile_text: str = ""
+    env_template_text: str = ""
+    cli_help: str = ""
+    local_ci_help: str = ""
+    agent_help: dict[str, str] = field(default_factory=dict)
+    make_targets: set[str] = field(default_factory=set)
+    make_vars: set[str] = field(default_factory=set)
+    project_scripts: set[str] = field(default_factory=set)
+    source_cache: dict[str, str] = field(default_factory=dict)
+
+
+def load_state(repo_root: Path, *, fetch_help: bool = True) -> ScanState:
+    state = ScanState(repo_root=repo_root)
+    pyproject = repo_root / "pyproject.toml"
+    makefile = repo_root / "Makefile"
+    env_template = repo_root / "config/environments/.env.template"
+    state.pyproject_text = pyproject.read_text() if pyproject.exists() else ""
+    state.makefile_text = makefile.read_text() if makefile.exists() else ""
+    state.env_template_text = env_template.read_text() if env_template.exists() else ""
+
+    in_scripts = False
+    for line in state.pyproject_text.splitlines():
+        if line.strip() == "[project.scripts]":
+            in_scripts = True
+            continue
+        if in_scripts:
+            if line.startswith("["):
+                break
+            match = re.match(r"^(\S+)\s*=", line)
+            if match:
+                state.project_scripts.add(match.group(1))
+
+    for line in state.makefile_text.splitlines():
+        target_match = re.match(r"^([a-z][a-z0-9_-]*):", line)
+        if target_match:
+            state.make_targets.add(target_match.group(1))
+        var_match = re.match(r"^([A-Z][A-Z0-9_]+)\?*=", line)
+        if var_match:
+            state.make_vars.add(var_match.group(1))
+
+    if not fetch_help:
+        return state
+
+    for cmd, attr in [("gpt-trader", "cli_help"), ("local-ci", "local_ci_help")]:
+        try:
+            result = subprocess.run(
+                ["uv", "run", cmd, "--help"],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=60,
+            )
+            setattr(state, attr, (result.stdout or "") + (result.stderr or ""))
+        except Exception as exc:
+            setattr(state, attr, f"HELP_UNAVAILABLE: {exc}")
+
+    for script in sorted(state.project_scripts):
+        if script.startswith("agent-"):
+            try:
+                result = subprocess.run(
+                    ["uv", "run", script, "--help"],
+                    cwd=repo_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                state.agent_help[script] = (result.stdout or "") + (result.stderr or "")
+            except Exception:
+                pass
+
+    return state
+
+
+def normalize_item(category: str, raw: str) -> str | None:
+    item = raw.strip().rstrip(".,;:)")
+    if not item:
+        return None
+    if category == "env_var":
+        if "=" in item:
+            item = item.split("=", 1)[0]
+        if item in SKIP_ENV or len(item) < 3:
+            return None
+        if not re.fullmatch(r"[A-Z][A-Z0-9_]+", item):
+            return None
+    if category == "cli_flag" and item in SKIP_FLAGS:
+        return None
+    if category in {"path", "script"}:
+        item = item.replace("//", "/")
+        if any(item.endswith(suffix) for suffix in (".md", ".png", ".jpg", ".svg")):
+            return None
+        if "..." in item:
+            return None
+    if category == "command" and ("..." in item or "<" in item):
+        return None
+    if category == "module":
+        item = item.rstrip(".")
+    return item
+
+
+def extract_from_doc(doc_path: Path, repo_root: Path) -> list[ExtractedItem]:
+    rel = str(doc_path.relative_to(repo_root))
+    text = doc_path.read_text(encoding="utf-8", errors="replace")
+    items: list[ExtractedItem] = []
+    seen: set[tuple[str, str, str]] = set()
+
+    for category, item_type, pattern in PATTERNS:
+        for match in pattern.finditer(text):
+            norm = normalize_item(category, match.group(1))
+            if not norm:
+                continue
+            key = (rel, category, norm)
+            if key in seen:
+                continue
+            seen.add(key)
+            items.append(
+                ExtractedItem(
+                    source_doc=rel,
+                    category=category,
+                    item=norm,
+                    item_type=item_type,
+                )
+            )
+    return items
+
+
+def _grep_repo(state: ScanState, needle: str, *, suffixes: tuple[str, ...] = (".py",)) -> list[str]:
+    hits: list[str] = []
+    for root_name in ("src", "config", "scripts", "tests"):
+        root = state.repo_root / root_name
+        if not root.exists():
+            continue
+        for path in root.rglob("*"):
+            if path.suffix not in suffixes:
+                continue
+            rel = str(path.relative_to(state.repo_root))
+            cached = state.source_cache.get(rel)
+            if cached is None:
+                try:
+                    cached = path.read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    cached = ""
+                state.source_cache[rel] = cached
+            if needle in cached:
+                hits.append(rel)
+    return hits
+
+
+def _is_runtime_or_placeholder_path(item: str) -> bool:
+    if item.startswith(("runtime_data/", "var/data/", "var/results/", "var/snapshots/")):
+        return True
+    if "{" in item or "}" in item or "<" in item or ">" in item:
+        return True
+    if item.endswith("_") or item.endswith("_.py"):
+        return True
+    if "*" in item or "…" in item:
+        return True
+    return False
+
+
+def verify_path(state: ScanState, item: str) -> VerificationResult:
+    if _is_runtime_or_placeholder_path(item):
+        return VerificationResult(
+            "uncertain",
+            "runtime/placeholder path",
+            "runtime or templated path; not expected on disk by default",
+        )
+    full = state.repo_root / item
+    if full.exists():
+        return VerificationResult("ok", f"test -e {item}", "exists on disk")
+    if "DEPRECATIONS" in item or any(marker in item for marker in DEPRECATED_MARKERS):
+        return VerificationResult("stale", f"test -e {item}", "references removed artifact")
+    return VerificationResult("missing", f"test -e {item}", "path not found")
+
+
+def _try_import(state: ScanState, dotted: str) -> VerificationResult:
+    try:
+        result = subprocess.run(
+            ["uv", "run", "python", "-c", f"import {dotted}; print('OK')"],
+            cwd=state.repo_root,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode == 0 and "OK" in result.stdout:
+            return VerificationResult("ok", f"import {dotted}", "import succeeded")
+        return VerificationResult(
+            "missing",
+            f"import {dotted}",
+            (result.stderr or result.stdout).strip()[:200],
+        )
+    except Exception as exc:
+        return VerificationResult("uncertain", f"import {dotted}", str(exc))
+
+
+def verify_module(state: ScanState, item: str, source_doc: str) -> VerificationResult:
+    if any(marker in item for marker in DEPRECATED_MARKERS):
+        return VerificationResult("stale", "deprecated module", "references removed module")
+    parts = item.split(".")
+    if parts[-1][0].islower() and len(parts) >= 3:
+        module_path = ".".join(parts[:-1])
+        attr_name = parts[-1]
+        try:
+            module = importlib.import_module(module_path)
+            if hasattr(module, attr_name):
+                return VerificationResult("ok", f"getattr {item}", "callable/attr exists")
+        except Exception:
+            pass
+        py_path = state.repo_root / "src" / "/".join(module_path.split(".")) / f"{parts[-2]}.py"
+        if py_path.exists() and attr_name in py_path.read_text(encoding="utf-8", errors="replace"):
+            return VerificationResult("uncertain", "source grep", f"function {attr_name} in source")
+    if parts[-1][0].isupper():
+        module_path = ".".join(parts[:-1])
+        class_name = parts[-1]
+        try:
+            module = importlib.import_module(module_path)
+            if hasattr(module, class_name):
+                return VerificationResult("ok", f"getattr {item}", "class exists")
+        except Exception:
+            pass
+        try:
+            result = subprocess.run(
+                [
+                    "uv",
+                    "run",
+                    "python",
+                    "-c",
+                    f"from {module_path} import {class_name}; print('OK')",
+                ],
+                cwd=state.repo_root,
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if result.returncode == 0:
+                return VerificationResult("ok", f"from-import {item}", "class import succeeded")
+        except Exception as exc:
+            return VerificationResult("uncertain", f"from-import {item}", str(exc))
+        py_path = state.repo_root / "src" / "/".join(parts[:-1]) / f"{parts[-2]}.py"
+        if py_path.exists():
+            return VerificationResult(
+                "uncertain", "source file", f"class {class_name} not importable"
+            )
+        return VerificationResult("missing", f"from-import {item}", "module/class not found")
+
+    result = _try_import(state, item)
+    if result.status != "missing":
+        return result
+    py_parts = item.split(".")
+    py_path = state.repo_root / "src" / "/".join(py_parts[:-1]) / f"{py_parts[-1]}.py"
+    init_path = state.repo_root / "src" / "/".join(py_parts) / "__init__.py"
+    if py_path.exists() or init_path.exists():
+        return VerificationResult("uncertain", f"import {item}", "source exists; import failed")
+    return result
+
+
+def verify_env_var(state: ScanState, item: str) -> VerificationResult:
+    if item in state.make_vars:
+        return VerificationResult("ok", "Makefile var", f"Makefile variable {item}")
+    in_template = bool(re.search(rf"^{re.escape(item)}=", state.env_template_text, re.M))
+    refs = _grep_repo(state, item)
+    if in_template and refs:
+        return VerificationResult("ok", "grep template+source", f"template + {len(refs)} refs")
+    if in_template:
+        return VerificationResult("ok", "grep template", "present in .env.template")
+    if refs:
+        return VerificationResult(
+            "uncertain",
+            "grep source only",
+            f"not in .env.template; refs: {', '.join(refs[:3])}",
+        )
+    return VerificationResult("missing", "grep template+source", "absent from template and source")
+
+
+def verify_cli_flag(state: ScanState, item: str, source_doc: str) -> VerificationResult:
+    helps = [("gpt-trader", state.cli_help), ("local-ci", state.local_ci_help)]
+    helps.extend((name, text) for name, text in state.agent_help.items())
+    found_in = [label for label, help_text in helps if item in help_text]
+    if found_in:
+        return VerificationResult("ok", "--help grep", f"found in: {', '.join(found_in)}")
+
+    if source_doc.endswith("testing.md") and item in {
+        "--collect-only",
+        "--cov",
+        "--pdb",
+        "--all-files",
+        "-n",
+        "-m",
+        "-k",
+        "-q",
+        "-v",
+        "-x",
+    }:
+        return VerificationResult("ok", "pytest flag", "pytest CLI flag documented in testing.md")
+
+    if "MONITORING_PLAYBOOK" in source_doc and item in {"--host", "--port", "--project-directory"}:
+        return VerificationResult("ok", "docker compose flag", "docker compose CLI flag")
+
+    if any(tool in source_doc or tool in item for tool in THIRD_PARTY_FLAG_PARENTS):
+        return VerificationResult("ok", "third-party tool flag", "external tool CLI flag")
+
+    script_hits = _grep_repo(state, item)
+    if script_hits:
+        return VerificationResult("uncertain", "scripts grep", f"in {script_hits[0]}")
+    if "gh pr" in source_doc or "project_review" in source_doc:
+        return VerificationResult("uncertain", "gh CLI flag", "GitHub CLI flag; not gpt-trader")
+    return VerificationResult("missing", "--help grep", "not in CLI help or source")
+
+
+def verify_command(state: ScanState, item: str) -> VerificationResult:
+    if item.startswith("make "):
+        target = item.split()[1]
+        if target in state.make_targets:
+            return VerificationResult("ok", "Makefile target", f"target '{target}' exists")
+        return VerificationResult(
+            "missing", "Makefile target", f"target '{target}' not in Makefile"
+        )
+
+    if item.startswith("python -m "):
+        module = item.split()[2]
+        main_py = state.repo_root / "src" / module.replace(".", "/") / "__main__.py"
+        init_py = state.repo_root / "src" / module.replace(".", "/") / "__init__.py"
+        if main_py.exists() or init_py.exists():
+            return VerificationResult("ok", "python -m module", module)
+        return _try_import(state, module)
+
+    if item.startswith("uv run "):
+        rest = item[len("uv run ") :].strip()
+        if rest.startswith("python "):
+            script = rest[len("python ") :].split()[0]
+            if (state.repo_root / script).exists():
+                return VerificationResult("ok", "script exists", script)
+            return VerificationResult("missing", "script exists", f"{script} not found")
+        entry = rest.split()[0]
+        if entry in state.project_scripts:
+            return VerificationResult("ok", "pyproject.scripts", entry)
+        if entry in ("pytest", "ruff", "black", "mypy", "pre-commit", "pip-audit", "bandit"):
+            return VerificationResult("ok", "dev tool", entry)
+        if (state.repo_root / entry).exists():
+            return VerificationResult("ok", "path exists", entry)
+        return VerificationResult(
+            "uncertain", "pyproject+path", f"entry '{entry}' not in project.scripts"
+        )
+
+    if item.startswith("python "):
+        parts = item.split()
+        if len(parts) >= 2 and (state.repo_root / parts[1]).exists():
+            return VerificationResult("ok", "script exists", parts[1])
+        return VerificationResult("missing", "script exists", item)
+
+    return VerificationResult("uncertain", "manual", f"unparsed command: {item}")
+
+
+def verify_item(state: ScanState, ext: ExtractedItem) -> VerificationResult:
+    if ext.category in {"path", "script"}:
+        return verify_path(state, ext.item)
+    if ext.category == "module":
+        return verify_module(state, ext.item, ext.source_doc)
+    if ext.category == "env_var":
+        return verify_env_var(state, ext.item)
+    if ext.category == "cli_flag":
+        return verify_cli_flag(state, ext.item, ext.source_doc)
+    if ext.category == "command":
+        return verify_command(state, ext.item)
+    return VerificationResult("uncertain", "unknown category", "")
+
+
+def scan_docs(
+    repo_root: Path, *, fetch_help: bool = True
+) -> tuple[list[Path], list[ExtractedItem], list[tuple[ExtractedItem, VerificationResult]]]:
+    doc_files = sorted((repo_root / "docs").rglob("*.md"))
+    state = load_state(repo_root, fetch_help=fetch_help)
+    extracted: list[ExtractedItem] = []
+    for doc in doc_files:
+        extracted.extend(extract_from_doc(doc, repo_root))
+    discrepancies: list[tuple[ExtractedItem, VerificationResult]] = []
+    for item in extracted:
+        result = verify_item(state, item)
+        if result.status != "ok":
+            discrepancies.append((item, result))
+    return doc_files, extracted, discrepancies
+
+
+def render_report(
+    *,
+    doc_files: list[Path],
+    extracted: list[ExtractedItem],
+    discrepancies: list[tuple[ExtractedItem, VerificationResult]],
+    repo_root: Path,
+) -> str:
+    ok_count = len(extracted) - len(discrepancies)
+    missing = [d for d in discrepancies if d[1].status == "missing"]
+    stale = [d for d in discrepancies if d[1].status == "stale"]
+    uncertain = [d for d in discrepancies if d[1].status == "uncertain"]
+    lines = [
+        "# Docs-to-Code Currency Scan Report",
+        f"Date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}",
+        f"Repo: {repo_root}",
+        f"Docs processed: {len(doc_files)}",
+        f"Items extracted: {len(extracted)}",
+        f"Items verified OK: {ok_count}",
+        f"Discrepancies: {len(discrepancies)} (missing={len(missing)}, stale={len(stale)}, uncertain={len(uncertain)})",
+        "",
+        "## Summary",
+        "",
+        f"- **Docs scanned**: {len(doc_files)} markdown files under `docs/`",
+        f"- **References extracted**: {len(extracted)} named items",
+        f"- **Verified OK**: {ok_count}",
+        f"- **Missing**: {len(missing)}",
+        f"- **Stale**: {len(stale)}",
+        f"- **Uncertain**: {len(uncertain)}",
+        "",
+    ]
+    if not discrepancies:
+        lines.append(
+            "**No discrepancies found.** All extracted named references verified successfully."
+        )
+        lines.append("")
+    else:
+        lines.extend(
+            [
+                "## Discrepancy Table",
+                "",
+                "| Source Doc | Category | Extracted Item | Type | Verification | Status | Notes |",
+                "|------------|----------|----------------|------|--------------|--------|-------|",
+            ]
+        )
+        for ext, result in sorted(
+            discrepancies, key=lambda row: (row[1].status, row[0].source_doc, row[0].item)
+        ):
+            notes = result.notes.replace("|", "\\|")[:120]
+            lines.append(
+                f"| {ext.source_doc} | {ext.category} | `{ext.item}` | {ext.item_type} | {result.method} | **{result.status}** | {notes} |"
+            )
+        lines.append("")
+
+    lines.extend(["## Per-Doc Extraction Counts", ""])
+    by_doc: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+    for entry in extracted:
+        by_doc[entry.source_doc][entry.category] += 1
+    lines.append("| Doc | commands | paths | env_vars | cli_flags | modules | scripts | total |")
+    lines.append("|-----|----------|-------|----------|-----------|---------|---------|-------|")
+    for doc in sorted(by_doc):
+        counts = by_doc[doc]
+        total = sum(counts.values())
+        lines.append(
+            f"| {doc} | {counts.get('command', 0)} | {counts.get('path', 0)} | {counts.get('env_var', 0)} | {counts.get('cli_flag', 0)} | {counts.get('module', 0)} | {counts.get('script', 0)} | {total} |"
+        )
+    return "\n".join(lines) + "\n"
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Scan docs/ references against repository state.")
+    parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
+    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--raw-extracts", type=Path)
+    parser.add_argument("--skip-help", action="store_true")
+    args = parser.parse_args(argv)
+
+    repo_root = args.repo_root.resolve()
+    doc_files, extracted, discrepancies = scan_docs(repo_root, fetch_help=not args.skip_help)
+    report = render_report(
+        doc_files=doc_files,
+        extracted=extracted,
+        discrepancies=discrepancies,
+        repo_root=repo_root,
+    )
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(report, encoding="utf-8")
+
+    if args.raw_extracts:
+        by_doc: dict[str, list[ExtractedItem]] = defaultdict(list)
+        for entry in extracted:
+            by_doc[entry.source_doc].append(entry)
+        chunks = [f"Total docs: {len(doc_files)}", f"Total extracted items: {len(extracted)}", ""]
+        for doc in sorted(by_doc):
+            chunks.append(f"=== {doc} ({len(by_doc[doc])} items) ===")
+            for entry in sorted(by_doc[doc], key=lambda row: (row.category, row.item)):
+                chunks.append(f"  [{entry.category}] {entry.item}")
+            chunks.append("")
+        args.raw_extracts.write_text("\n".join(chunks), encoding="utf-8")
+
+    print(f"Report written to {args.output}")
+    print(
+        f"Docs: {len(doc_files)}, Extracted: {len(extracted)}, "
+        f"Discrepancies: {len(discrepancies)}"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

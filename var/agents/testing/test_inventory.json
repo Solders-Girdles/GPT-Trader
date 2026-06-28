@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6964,
-    "total_files": 827,
+    "total_tests": 6980,
+    "total_files": 829,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6798,
+    "unit": 6814,
     "asyncio": 440,
-    "parametrize": 202,
+    "parametrize": 203,
     "endpoints": 83,
     "property": 82,
     "integration": 80,
@@ -211,6 +211,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout_evidence_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_csv.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_export_ticket.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_futures_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_manual_records.py",
@@ -551,6 +552,7 @@
       "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_broker_payloads.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
@@ -9333,6 +9335,64 @@
       {
         "name": "test_zero_limit_pages_do_not_repeat_current_offset",
         "line": 374,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_export_ticket.py": [
+      {
+        "name": "test_export_ticket_defaults_to_raw_json_for_approved_idea",
+        "line": 120,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_ticket_rejects_unapproved_idea_with_json_error",
+        "line": 149,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_ticket_error_does_not_write_to_out_artifact_path",
+        "line": 181,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_ticket_stdout_json_is_stable_except_evaluation_time",
+        "line": 215,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_ticket_writes_raw_json_to_out_path",
+        "line": 235,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_ticket_text_out_path_confirms_written_file",
+        "line": 256,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_ticket_out_path_write_failure_returns_operation_failed",
+        "line": 283,
         "markers": [
           "unit"
         ],
@@ -33134,6 +33194,81 @@
         "line": 147,
         "markers": [
           "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_broker_payloads.py": [
+      {
+        "name": "test_export_broker_ticket_payload_for_approved_idea",
+        "line": 51,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_broker_ticket_rejects_non_orderable_direction",
+        "line": 89,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_broker_ticket_payload_is_canonical_and_deterministic",
+        "line": 112,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_broker_ticket_payload_is_stable_only_for_fixed_export_time",
+        "line": 136,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_broker_ticket_rejects_unapproved_state",
+        "line": 181,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_broker_ticket_allows_terminal_state_after_approval",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_default_client_order_id_is_bounded_for_long_decision_id",
+        "line": 228,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_broker_ticket_refuses_approved_idea_stale_at_export_time",
+        "line": 251,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_export_broker_ticket_policy_violations_use_export_time",
+        "line": 283,
+        "markers": [
           "unit"
         ],
         "docstring": ""

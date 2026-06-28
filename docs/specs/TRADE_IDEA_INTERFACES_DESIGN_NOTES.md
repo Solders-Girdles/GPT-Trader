@@ -147,8 +147,10 @@ must not treat the TUI review screen as an open backlog item.
 ## Non-Goals (all workstreams)
 
 - No order submission, modification, or cancellation through any broker API.
-- No broker-ticket payload generation (derived artifacts come later, after
-  approval-lane experience).
+- No broker-specific order payload generation or execution adapter. Deterministic
+  broker-neutral ticket export is implemented in
+  [`TRADE_IDEA_CLI_SPEC.md`](TRADE_IDEA_CLI_SPEC.md) and remains a render-only
+  artifact.
 - No bounded-autonomy behavior; `ApprovalPolicy` defaults stand.
 - No INTX surfaces (frozen).
 - No MCP server (a future workstream; the CLI JSON mode is the agent surface

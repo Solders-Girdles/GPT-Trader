@@ -41,7 +41,7 @@ from gpt_trader.cli.commands import (  # noqa: E402
 
 # fmt: on
 from . import services as _cli_services  # noqa: E402, F401
-from .response import CliErrorCode, CliResponse, format_response  # noqa: E402
+from .response import CliErrorCode, CliResponse, RawCliOutput, format_response  # noqa: E402
 
 COMMAND_NAMES = {
     "run",
@@ -100,6 +100,9 @@ def _handle_result(
     Returns:
         Exit code
     """
+    if isinstance(result, RawCliOutput):
+        _write_raw_output(result.content, output_file)
+        return result.exit_code
     if isinstance(result, CliResponse):
         # New-style response - format according to output_format
         output = format_response(result, output_format)
@@ -160,9 +163,22 @@ def _write_output(content: str, output_file: Path | None) -> None:
         return  # Already handled by rich console
 
     if output_file:
-        output_file.write_text(content)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(content, encoding="utf-8")
     else:
         print(content)
+
+
+def _write_raw_output(content: str, output_file: Path | None) -> None:
+    """Write command-owned output without adding formatting or extra newlines."""
+    if not content:
+        return
+
+    if output_file:
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(content, encoding="utf-8")
+    else:
+        sys.stdout.write(content)
 
 
 def _get_command_name(args: argparse.Namespace) -> str:

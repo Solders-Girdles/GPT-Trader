@@ -23,10 +23,12 @@ from typing import Any, cast
 from gpt_trader.app.config import BotConfig
 from gpt_trader.app.runtime import resolve_runtime_paths
 from gpt_trader.cli import options
-from gpt_trader.cli.response import CliError, CliErrorCode, CliResponse
+from gpt_trader.cli.response import CliError, CliErrorCode, CliResponse, RawCliOutput
 from gpt_trader.core import Candle
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas import (
+    DEFAULT_TIME_IN_FORCE,
+    DEFAULT_VENUE_ORDER_TYPE,
     ActorType,
     AuditAction,
     AuditIntegrityError,
@@ -55,6 +57,7 @@ from gpt_trader.features.trade_ideas import (
     TradeIdeaState,
     UnknownTradeIdeaError,
     canonical_granularity,
+    canonical_ticket_json,
     create_trade_idea_service,
     is_safe_decision_id,
     market_snapshot_to_payload,
@@ -343,6 +346,58 @@ def register(subparsers: Any) -> None:
         help="Write a durable report artifact into this directory",
     )
     report.set_defaults(handler=_handle_report, subcommand="report")
+
+    export_ticket = ideas_subparsers.add_parser(
+        "export-ticket",
+        help="Export a deterministic broker-neutral ticket artifact",
+        description=(
+            "Render a deterministic broker-neutral ticket JSON artifact from an approved "
+            "or terminal-approved trade idea. This command reads only local trade-idea "
+            "records and never contacts a broker, account, preflight, or canary surface."
+        ),
+    )
+    export_ticket.add_argument(
+        "--ideas-root",
+        type=Path,
+        help="Trade-idea storage root (default: GPT_TRADER_IDEAS_ROOT, then var/data/trade_ideas)",
+    )
+    export_ticket.add_argument(
+        "--format",
+        "--output-format",
+        dest="output_format",
+        choices=options.OUTPUT_FORMAT_CHOICES,
+        default="json",
+        help="Output format: json for the ticket artifact (default), text for a summary",
+    )
+    export_ticket.add_argument(
+        "--out",
+        "--output",
+        "-o",
+        dest="ticket_output",
+        type=Path,
+        help="Write the ticket artifact to this path instead of stdout",
+    )
+    export_ticket.add_argument(
+        "--decision-id",
+        required=True,
+        help="Approved or terminal-approved trade idea decision identifier",
+    )
+    export_ticket.add_argument("--venue", required=True, choices=VENUE_CHOICES)
+    export_ticket.add_argument(
+        "--venue-order-type",
+        default=DEFAULT_VENUE_ORDER_TYPE,
+        help="Broker-neutral order type placeholder for the downstream operator",
+    )
+    export_ticket.add_argument(
+        "--time-in-force",
+        default=DEFAULT_TIME_IN_FORCE,
+        help="Broker-neutral time-in-force placeholder for the downstream operator",
+    )
+    export_ticket.add_argument(
+        "--client-order-id",
+        help="Optional broker-neutral client order id; defaults deterministically",
+    )
+    export_ticket.set_defaults(handler=_handle_export_ticket, subcommand="export-ticket")
 
     replay = ideas_subparsers.add_parser(
         "replay",
@@ -1586,6 +1641,42 @@ def _handle_report(args: Namespace) -> CliResponse:
     return _success(command, args, payload, text, was_noop=idea_count == 0)
 
 
+def _handle_export_ticket(args: Namespace) -> CliResponse | RawCliOutput:
+    command = "ideas export-ticket"
+    decision_id_error = _decision_id_error(command, args, args.decision_id)
+    if decision_id_error is not None:
+        return decision_id_error
+    try:
+        payload = _service(args).export_broker_ticket_payload(
+            args.decision_id,
+            venue=args.venue,
+            venue_order_type=args.venue_order_type,
+            time_in_force=args.time_in_force,
+            client_order_id=args.client_order_id,
+        )
+        ticket_json = canonical_ticket_json(payload)
+        ticket_output = getattr(args, "ticket_output", None)
+        if ticket_output is not None:
+            ticket_output.parent.mkdir(parents=True, exist_ok=True)
+            ticket_output.write_text(ticket_json, encoding="utf-8")
+            if _output_format(args) == "text":
+                return RawCliOutput(_ticket_export_text(payload, written_to=ticket_output) + "\n")
+            return RawCliOutput("")
+        if _output_format(args) == "text":
+            return RawCliOutput(_ticket_export_text(payload) + "\n")
+        return RawCliOutput(ticket_json)
+    except OSError as error:
+        return _failure(
+            command,
+            args,
+            CliErrorCode.OPERATION_FAILED,
+            f"Could not write ticket artifact: {error}",
+            details={"path": str(getattr(args, "ticket_output", ""))},
+        )
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+
 def _handle_replay_baseline(args: Namespace) -> CliResponse:
     command = "ideas replay baseline"
     try:
@@ -2654,4 +2745,26 @@ def _closeout_text(command: str, payload: dict[str, Any]) -> str:
     if evidence:
         lines.append("evidence:")
         lines.extend(f"- {item}" for item in evidence)
+    return "\n".join(lines)
+
+
+def _ticket_export_text(
+    payload: dict[str, Any],
+    *,
+    written_to: Path | None = None,
+) -> str:
+    details = (
+        f"{payload['decision_id']}, "
+        f"venue={payload['venue_request']['venue']}, "
+        f"ticket_hash={payload['ticket_hash']}"
+    )
+    lines = [_status_line("ideas export-ticket", "OK", details)]
+    if written_to is not None:
+        lines.append(f"written_to: {written_to}")
+    lines.extend(
+        [
+            f"record_hash: {payload['record_hash']}",
+            f"client_order_id: {payload['venue_request']['client_order_id']}",
+        ]
+    )
     return "\n".join(lines)

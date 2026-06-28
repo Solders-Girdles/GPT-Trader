@@ -72,6 +72,90 @@ class StructuredLogger:
         extracted_kwargs["exc_info"] = True
         self.logger.error(msg, *args, extra=extra_kwargs, **extracted_kwargs)
 
+    # ------------------------------------------------------------------
+    # Monitoring event helpers
+    #
+    # The monitoring logger returned by ``gpt_trader.monitoring.system.get_logger``
+    # is a ``StructuredLogger``. Order-event and metrics code emit semantic
+    # events through these helpers; they record structured INFO log records so
+    # the kwargs survive as record attributes for downstream log processors.
+    # ------------------------------------------------------------------
+    @staticmethod
+    def _coerce_level(level: Any) -> int:
+        """Resolve a logging level from an int, level name, or LogLevel enum."""
+        if isinstance(level, bool):
+            return logging.INFO
+        if isinstance(level, int):
+            return level
+        # ``LogLevel`` (gpt_trader.monitoring.system) exposes ``.value`` as the
+        # level name, e.g. "INFO"; bare strings such as "WARNING" also work.
+        name = getattr(level, "value", level)
+        if isinstance(name, str):
+            resolved = logging.getLevelName(name.upper())
+            if isinstance(resolved, int):
+                return resolved
+        return logging.INFO
+
+    def log_event(
+        self,
+        *,
+        event_type: str,
+        message: str,
+        level: Any = logging.INFO,
+        component: str | None = None,
+        **fields: Any,
+    ) -> None:
+        """Emit a structured monitoring event."""
+        context: dict[str, Any] = {"event_type": event_type}
+        if component is not None:
+            context["component"] = component
+        context.update(fields)
+        self.log(self._coerce_level(level), message, **context)
+
+    def log_order_submission(
+        self,
+        *,
+        client_order_id: str,
+        symbol: str,
+        side: str,
+        order_type: str,
+        quantity: float,
+        price: float | None,
+    ) -> None:
+        """Record an order submission attempt as a structured event."""
+        self.log_event(
+            event_type="order_submission",
+            message="Order submission attempt",
+            operation="order_submit",
+            client_order_id=client_order_id,
+            symbol=symbol,
+            side=side,
+            order_type=order_type,
+            quantity=quantity,
+            price=price,
+        )
+
+    def log_order_status_change(
+        self,
+        *,
+        order_id: str,
+        client_order_id: str,
+        from_status: str | None,
+        to_status: str,
+        reason: str | None = None,
+    ) -> None:
+        """Record an order status transition as a structured event."""
+        self.log_event(
+            event_type="order_status_change",
+            message="Order status change",
+            operation="order_status",
+            order_id=order_id,
+            client_order_id=client_order_id,
+            from_status=from_status,
+            to_status=to_status,
+            reason=reason,
+        )
+
 
 def get_logger(name: str, component: str | None = None, **kwargs: Any) -> StructuredLogger:
     return StructuredLogger(name, component=component)

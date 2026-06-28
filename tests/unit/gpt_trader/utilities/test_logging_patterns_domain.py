@@ -218,3 +218,119 @@ def test_log_system_health_defaults_to_structured_logger():
     record = handler.records[0]
     assert record.levelno == logging.INFO
     assert has_attr(record, "status", "healthy")
+
+
+class _Level:
+    """Stand-in for monitoring.system.LogLevel (``.value`` is the level name)."""
+
+    def __init__(self, value: str) -> None:
+        self.value = value
+
+
+def test_log_event_emits_structured_record_with_fields():
+    with captured_logger("monitoring") as (_, handler):
+        slog = lp.StructuredLogger("monitoring")
+        slog.log_event(
+            level=_Level("INFO"),
+            event_type="order_preview",
+            message="Order preview generated",
+            component="TradingEngine",
+            symbol="BTC-USD",
+            side="BUY",
+        )
+
+    record = handler.records[0]
+    assert record.levelno == logging.INFO
+    assert record.getMessage() == "Order preview generated"
+    assert has_attr(record, "event_type", "order_preview")
+    assert has_attr(record, "component", "TradingEngine")
+    assert has_attr(record, "symbol", "BTC-USD")
+    assert has_attr(record, "side", "BUY")
+
+
+def test_log_event_coerces_string_and_int_levels():
+    with captured_logger("monitoring") as (_, handler):
+        slog = lp.StructuredLogger("monitoring")
+        slog.log_event(level="WARNING", event_type="warn", message="warn")
+        slog.log_event(level=logging.ERROR, event_type="err", message="err")
+        slog.log_event(event_type="default", message="default")
+
+    assert handler.records[0].levelno == logging.WARNING
+    assert handler.records[1].levelno == logging.ERROR
+    assert handler.records[2].levelno == logging.INFO
+
+
+def test_log_order_submission_records_event():
+    with captured_logger("monitoring") as (_, handler):
+        slog = lp.StructuredLogger("monitoring")
+        slog.log_order_submission(
+            client_order_id="client-123",
+            symbol="BTC-USD",
+            side="BUY",
+            order_type="LIMIT",
+            quantity=1.5,
+            price=50000.0,
+        )
+
+    record = handler.records[0]
+    assert record.levelno == logging.INFO
+    assert has_attr(record, "event_type", "order_submission")
+    assert has_attr(record, "operation", "order_submit")
+    assert has_attr(record, "client_order_id", "client-123")
+    assert has_attr(record, "symbol", "BTC-USD")
+    assert has_attr(record, "side", "BUY")
+    assert has_attr(record, "order_type", "LIMIT")
+    assert has_attr(record, "quantity", 1.5)
+    assert has_attr(record, "price", 50000.0)
+
+
+def test_log_order_submission_accepts_none_price():
+    with captured_logger("monitoring") as (_, handler):
+        slog = lp.StructuredLogger("monitoring")
+        slog.log_order_submission(
+            client_order_id="client-123",
+            symbol="BTC-USD",
+            side="BUY",
+            order_type="MARKET",
+            quantity=1.0,
+            price=None,
+        )
+
+    record = handler.records[0]
+    assert has_attr(record, "price")
+    assert record.price is None  # type: ignore[attr-defined]
+
+
+def test_log_order_status_change_records_event():
+    with captured_logger("monitoring") as (_, handler):
+        slog = lp.StructuredLogger("monitoring")
+        slog.log_order_status_change(
+            order_id="order-123",
+            client_order_id="client-123",
+            from_status=None,
+            to_status="open",
+        )
+
+    record = handler.records[0]
+    assert record.levelno == logging.INFO
+    assert has_attr(record, "event_type", "order_status_change")
+    assert has_attr(record, "operation", "order_status")
+    assert has_attr(record, "order_id", "order-123")
+    assert has_attr(record, "client_order_id", "client-123")
+    assert has_attr(record, "to_status", "open")
+
+
+def test_log_order_status_change_includes_optional_reason():
+    with captured_logger("monitoring") as (_, handler):
+        slog = lp.StructuredLogger("monitoring")
+        slog.log_order_status_change(
+            order_id="",
+            client_order_id="",
+            from_status=None,
+            to_status="REJECTED",
+            reason="paused",
+        )
+
+    record = handler.records[0]
+    assert has_attr(record, "to_status", "REJECTED")
+    assert has_attr(record, "reason", "paused")

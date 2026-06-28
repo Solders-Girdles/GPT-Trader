@@ -8,6 +8,7 @@ append audit records for tickets executed elsewhere.
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import sys
 from argparse import ArgumentParser, Namespace
@@ -32,6 +33,8 @@ from gpt_trader.features.trade_ideas import (
     ConfidenceLabel,
     InvalidTransitionError,
     MarketSnapshot,
+    MarketSnapshotBuilder,
+    MarketSnapshotBuildRequest,
     PolicyViolationError,
     ReplayReport,
     ReplayRunnerConfig,
@@ -46,8 +49,10 @@ from gpt_trader.features.trade_ideas import (
     TradeIdeaService,
     TradeIdeaState,
     UnknownTradeIdeaError,
+    canonical_granularity,
     create_trade_idea_service,
     is_safe_decision_id,
+    market_snapshot_to_payload,
     resolve_trade_idea_actor_id,
 )
 from gpt_trader.features.trade_ideas.replay import _granularity_duration
@@ -88,6 +93,10 @@ class SnapshotInputError(InputPayloadError):
 
 class CandleInputError(InputPayloadError):
     """Raised when a replay candle fixture cannot be parsed."""
+
+
+class SnapshotBuildInputError(InputPayloadError):
+    """Raised when snapshot build CLI input cannot be parsed."""
 
 
 def register(subparsers: Any) -> None:
@@ -138,6 +147,85 @@ def register(subparsers: Any) -> None:
         help="Audit reason",
     )
     propose_baseline.set_defaults(handler=_handle_propose_baseline, subcommand="propose-baseline")
+
+    snapshot = ideas_subparsers.add_parser(
+        "snapshot",
+        help="Build read-only market snapshots for proposer runs",
+        description=(
+            "Build MarketSnapshot JSON files for proposer and replay workflows. "
+            "Snapshot build commands do not read accounts or submit orders."
+        ),
+    )
+    snapshot_subparsers = snapshot.add_subparsers(dest="snapshot_command", required=True)
+    snapshot_build = snapshot_subparsers.add_parser(
+        "build",
+        help="Fetch read-only Coinbase candles and write a MarketSnapshot JSON file",
+        description=(
+            "Fetch public Coinbase market candles, enforce point-in-time snapshot "
+            "bounds, and write a JSON file accepted by ideas propose-baseline. "
+            "This command requires --from-coinbase and never reads accounts or "
+            "places, modifies, or cancels orders."
+        ),
+    )
+    snapshot_build.add_argument(
+        "--format",
+        "--output-format",
+        dest="output_format",
+        type=str,
+        choices=options.OUTPUT_FORMAT_CHOICES,
+        default="text",
+        help="Output format: text for human-readable, json for machine-readable",
+    )
+    snapshot_build.add_argument(
+        "--output",
+        "-o",
+        dest="response_output_disallowed",
+        type=Path,
+        help=argparse.SUPPRESS,
+    )
+    snapshot_build.add_argument(
+        "--from-coinbase",
+        action="store_true",
+        required=True,
+        help="Explicitly fetch read-only public Coinbase market candles",
+    )
+    snapshot_build.add_argument(
+        "--symbols",
+        required=True,
+        help="Comma-separated Coinbase product ids, for example BTC-USD,ETH-USD",
+    )
+    snapshot_build.add_argument(
+        "--granularity",
+        required=True,
+        help="Candle granularity, for example ONE_HOUR, FOUR_HOUR, ONE_DAY, 1H, 4H, or 1D",
+    )
+    snapshot_build.add_argument(
+        "--lookback",
+        type=_positive_int_value,
+        required=True,
+        help="Number of completed candles to include per symbol",
+    )
+    snapshot_build.add_argument(
+        "--as-of",
+        help="Snapshot as-of timestamp with timezone; defaults to current UTC time",
+    )
+    snapshot_build.add_argument(
+        "--out",
+        type=Path,
+        required=True,
+        help="Output MarketSnapshot JSON path",
+    )
+    snapshot_build.add_argument(
+        "--source-label",
+        default="coinbase:market-candles",
+        help="Source label stamped into snapshot metadata",
+    )
+    snapshot_build.add_argument(
+        "--coinbase-base-url",
+        default="https://api.coinbase.com",
+        help="Coinbase API base URL for market-data reads",
+    )
+    snapshot_build.set_defaults(handler=_handle_snapshot_build, subcommand="snapshot build")
 
     resubmit = ideas_subparsers.add_parser(
         "resubmit", help="Submit a revised record after requested changes"
@@ -951,6 +1039,127 @@ def _handle_propose_baseline(args: Namespace) -> CliResponse:
     ]
     text = _baseline_text(command, proposed)
     return _success(command, args, payload, text, warnings=warnings)
+
+
+def _handle_snapshot_build(args: Namespace) -> CliResponse:
+    command = "ideas snapshot build"
+    try:
+        if getattr(args, "response_output_disallowed", None) is not None:
+            raise SnapshotBuildInputError(
+                "ideas snapshot build does not support response --output; use --out for the "
+                "MarketSnapshot JSON file",
+                field="output",
+            )
+        request = MarketSnapshotBuildRequest(
+            symbols=_snapshot_symbols(args.symbols),
+            granularity=_snapshot_granularity(args.granularity),
+            lookback=args.lookback,
+            as_of=_snapshot_as_of(args.as_of),
+        )
+        snapshot = asyncio.run(_build_coinbase_market_snapshot(args, request))
+        payload = market_snapshot_to_payload(snapshot)
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(
+            f"{json.dumps(payload, indent=2, sort_keys=True)}\n",
+            encoding="utf-8",
+        )
+    except SnapshotBuildInputError as error:
+        return _input_error(command, args, error)
+    except Exception as error:
+        return _mapped_error(command, args, error)
+
+    summary = _snapshot_build_payload(snapshot, args.out)
+    text = _status_line(
+        command,
+        "OK",
+        f"{len(snapshot.series)} series -> {args.out}",
+    )
+    return _success(command, args, summary, text)
+
+
+async def _build_coinbase_market_snapshot(
+    args: Namespace,
+    request: MarketSnapshotBuildRequest,
+) -> MarketSnapshot:
+    from gpt_trader.backtesting.data.fetcher import CoinbaseHistoricalFetcher
+    from gpt_trader.features.brokerages.coinbase.client import CoinbaseClient
+
+    client = CoinbaseClient(
+        base_url=args.coinbase_base_url,
+        auth=None,
+        api_mode="advanced",
+    )
+    try:
+        builder = MarketSnapshotBuilder(
+            CoinbaseHistoricalFetcher(client=client),
+            source_label=args.source_label,
+        )
+        return await builder.build(request)
+    finally:
+        try:
+            client.close()
+        except Exception:  # noqa: BLE001
+            pass
+
+
+def _snapshot_symbols(value: str) -> tuple[str, ...]:
+    symbols = tuple(symbol.strip().upper() for symbol in value.split(",") if symbol.strip())
+    if not symbols:
+        raise SnapshotBuildInputError("--symbols must include at least one symbol", field="symbols")
+    if len(set(symbols)) != len(symbols):
+        raise SnapshotBuildInputError("--symbols must not contain duplicates", field="symbols")
+    return symbols
+
+
+def _snapshot_granularity(value: str) -> str:
+    canonical = canonical_granularity(value)
+    if canonical is None:
+        raise SnapshotBuildInputError(
+            f"Unsupported snapshot granularity: {value}",
+            field="granularity",
+        )
+    return canonical
+
+
+def _snapshot_as_of(value: str | None) -> datetime:
+    if value is None:
+        return datetime.now(UTC)
+    normalized = f"{value[:-1]}+00:00" if value.endswith("Z") else value
+    try:
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError as error:
+        raise SnapshotBuildInputError(
+            "--as-of must be an ISO datetime string",
+            field="as_of",
+        ) from error
+    if parsed.tzinfo is None or parsed.utcoffset() is None:
+        raise SnapshotBuildInputError("--as-of must include a timezone", field="as_of")
+    return parsed
+
+
+def _snapshot_build_payload(snapshot: MarketSnapshot, output_path: Path) -> dict[str, Any]:
+    return {
+        "out": str(output_path),
+        "snapshot": {
+            "as_of": snapshot.as_of.isoformat(),
+            "source": snapshot.source,
+            "symbols": list(snapshot.symbols()),
+            "series": [
+                {
+                    "symbol": symbol_series.symbol,
+                    "granularity": symbol_series.granularity,
+                    "candle_count": len(symbol_series.candles),
+                    "first_ts": (
+                        symbol_series.candles[0].ts.isoformat() if symbol_series.candles else None
+                    ),
+                    "last_ts": (
+                        symbol_series.candles[-1].ts.isoformat() if symbol_series.candles else None
+                    ),
+                }
+                for symbol_series in snapshot.series
+            ],
+        },
+    }
 
 
 def _handle_resubmit(args: Namespace) -> CliResponse:

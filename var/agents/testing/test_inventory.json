@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6903,
-    "total_files": 816,
+    "total_tests": 6920,
+    "total_files": 818,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6737,
-    "asyncio": 432,
-    "parametrize": 200,
+    "unit": 6754,
+    "asyncio": 440,
+    "parametrize": 201,
     "endpoints": 83,
     "property": 82,
     "integration": 80,
@@ -219,6 +219,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py",
       "tests/unit/gpt_trader/cli/test_broker_connectivity.py",
       "tests/unit/gpt_trader/cli/test_cli_unit.py",
       "tests/unit/gpt_trader/cli/test_commands_account_treasury.py",
@@ -559,6 +560,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_service_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_snapshot_builder.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
     ],
@@ -7543,8 +7545,24 @@
         "docstring": ""
       },
       {
+        "name": "test_granularity_to_seconds_supports_four_hour",
+        "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_create_chunks_uses_four_hour_duration",
+        "line": 115,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_fetch_chunk_calls_client_get_candles_and_parses_timestamps",
-        "line": 110,
+        "line": 134,
         "markers": [
           "asyncio",
           "unit"
@@ -9738,6 +9756,57 @@
       {
         "name": "test_short_preview_and_approval_follow_naked_short_flag",
         "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py": [
+      {
+        "name": "test_snapshot_build_writes_json_accepted_by_propose_baseline",
+        "line": 96,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_snapshot_build_normalizes_granularity_alias_before_fetch",
+        "line": 145,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_snapshot_build_rejects_as_of_without_timezone",
+        "line": 169,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_snapshot_build_rejects_unsupported_granularity_before_fetch",
+        "line": 188,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_snapshot_build_does_not_accept_response_output_sink",
+        "line": 207,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_snapshot_build_rejects_duplicate_symbols",
+        "line": 228,
         "markers": [
           "unit"
         ],
@@ -33989,6 +34058,88 @@
         "name": "test_empty_series_has_no_last_close",
         "line": 71,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_snapshot_builder.py": [
+      {
+        "name": "test_builder_fetches_window_and_builds_auditable_snapshot_metadata",
+        "line": 74,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_builder_normalizes_granularity_alias_before_fetching",
+        "line": 95,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_builder_supports_four_hour_granularity_alias",
+        "line": 110,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_builder_skips_candles_at_or_after_as_of_without_lookahead",
+        "line": 127,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_builder_fetches_full_completed_lookback_for_unaligned_as_of",
+        "line": 142,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_builder_rejects_non_ascending_source_candles",
+        "line": 161,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_builder_rejects_symbols_with_no_completed_candles",
+        "line": 171,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_build_request_rejects_unsupported_granularity",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_market_snapshot_payload_serializes_existing_fixture_shape",
+        "line": 196,
+        "markers": [
+          "asyncio",
           "unit"
         ],
         "docstring": ""

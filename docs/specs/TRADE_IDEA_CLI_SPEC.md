@@ -63,6 +63,10 @@ uv run gpt-trader ideas --help
 gpt-trader ideas
 ├── propose          --file PATH | --stdin   [--actor-type {ai,human}] [--reason TEXT]
 ├── propose-baseline --snapshot PATH         [--actor ID] [--reason TEXT]
+├── snapshot
+│   └── build        --from-coinbase --symbols BTC-USD,ETH-USD
+│                    --granularity GRANULARITY --lookback N --out snapshot.json
+│                    [--as-of TIMESTAMP] [--source-label LABEL]
 ├── resubmit         --file PATH | --stdin   [--actor-type {ai,human}] [--reason TEXT]
 ├── list             [--state STATE] [--instrument SYMBOL] [--decision-id ID]
 │                    [--direction DIRECTION]
@@ -188,6 +192,63 @@ stable across languages and shells:
 All candle timestamps must include a timezone, be strictly ascending within a
 series, and be strictly before `as_of`. The command rejects malformed fixtures
 as `INVALID_ARGUMENT`.
+
+### `ideas snapshot build`
+
+- Output: a local `MarketSnapshot` JSON file that can be passed directly to
+  `ideas propose-baseline --snapshot PATH`.
+- The live market fetch path is explicit: `--from-coinbase` is required. The
+  command builds from read-only public Coinbase market candles through the
+  existing historical candle abstractions; it never reads accounts, performs
+  product/account discovery, runs broker readiness checks, preflight, canary, or
+  order-affecting commands.
+- Required options:
+  - `--from-coinbase`
+  - `--symbols BTC-USD,ETH-USD` (comma-separated, unique Coinbase product ids)
+  - `--granularity GRANULARITY`
+  - `--lookback N` (number of completed candles to include per symbol)
+  - `--out PATH`
+- Optional options:
+  - `--as-of TIMESTAMP` (timezone required; defaults to current UTC time)
+  - `--source-label LABEL` (default `coinbase:market-candles`)
+  - `--coinbase-base-url URL` (default `https://api.coinbase.com`)
+- Point-in-time rules:
+  - Fetch start is aligned from the last closed candle boundary:
+    `[last_closed_boundary - granularity * lookback, as_of)`.
+  - Source candles must be strictly ascending by timestamp.
+  - Candle selection includes only fully closed bars: for each source candle,
+    `candle.ts + granularity <= as_of`. Candles that start before `as_of` but
+    are still open are skipped so current or future bars cannot leak into
+    proposer input.
+  - Each configured symbol must have at least one completed candle in the
+    window.
+- JSON `data` contains `out` plus snapshot metadata: `as_of`, `source`,
+  `symbols`, and per-series `candle_count`, `first_ts`, and `last_ts`.
+- Text starts with:
+
+  ```text
+  ✓ ideas snapshot build OK (2 series -> var/snapshots/coinbase.json)
+  ```
+
+Recommended Stage 1 workflow:
+
+```bash
+uv run gpt-trader ideas snapshot build \
+  --from-coinbase \
+  --symbols BTC-USD,ETH-USD \
+  --granularity ONE_HOUR \
+  --lookback 53 \
+  --out var/snapshots/coinbase-market-snapshot.json
+
+uv run gpt-trader ideas propose-baseline \
+  --snapshot var/snapshots/coinbase-market-snapshot.json \
+  --format json
+```
+
+For replay calibration, keep using `ideas replay baseline --file` with a local
+candle fixture. The snapshot build output is the one-shot point-in-time proposer
+input; replay consumes a longer historical candle series and constructs many
+point-in-time snapshots internally.
 
 ### `ideas resubmit`
 

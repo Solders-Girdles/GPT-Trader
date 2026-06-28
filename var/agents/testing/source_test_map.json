@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 731,
+    "tests_scanned": 733,
     "source_modules": 377,
     "unresolved_modules": 3
   },
@@ -21,7 +21,8 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py"
+      "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py"
     ],
     "gpt_trader.agents": [
       "tests/unit/gpt_trader/agents/test_agents_import.py",
@@ -297,6 +298,7 @@
     "gpt_trader.cli.commands": [
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py",
       "tests/unit/gpt_trader/cli/test_commands_controls.py",
       "tests/unit/gpt_trader/cli/test_commands_preflight.py"
     ],
@@ -360,6 +362,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py",
       "tests/unit/gpt_trader/cli/test_commands_orders_history.py",
       "tests/unit/gpt_trader/cli/test_commands_report.py",
       "tests/unit/gpt_trader/cli/test_response_cli_response.py",
@@ -425,6 +428,7 @@
       "tests/unit/gpt_trader/backtesting/test_historical_data_manager_quality_edges.py",
       "tests/unit/gpt_trader/backtesting/test_simulation_basics.py",
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py",
       "tests/unit/gpt_trader/core/test_core_types.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
@@ -491,6 +495,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_snapshot_builder.py",
       "tests/unit/gpt_trader/tui/test_app_bootstrap_snapshot.py"
     ],
     "gpt_trader.core.account": [
@@ -1321,6 +1326,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
@@ -1338,6 +1344,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_service_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_snapshot_builder.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py",
       "tests/unit/gpt_trader/tui/test_ideas_review_screen.py",
@@ -2787,6 +2794,13 @@
       "gpt_trader.cli.response",
       "gpt_trader.features.trade_ideas"
     ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py": [
+      "gpt_trader",
+      "gpt_trader.cli.commands",
+      "gpt_trader.cli.response",
+      "gpt_trader.core",
+      "gpt_trader.features.trade_ideas"
+    ],
     "tests/unit/gpt_trader/cli/test_broker_connectivity.py": [
       "gpt_trader.cli.commands.broker_connectivity",
       "gpt_trader.features.brokerages.coinbase.errors"
@@ -4053,6 +4067,10 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_snapshot_builder.py": [
       "gpt_trader.core",
       "gpt_trader.features.trade_ideas"
     ],

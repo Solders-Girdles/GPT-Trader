@@ -154,6 +154,7 @@ class CoinbaseHistoricalFetcher:
             "THIRTY_MINUTE": 1800,
             "ONE_HOUR": 3600,
             "TWO_HOUR": 7200,
+            "FOUR_HOUR": 14400,
             "SIX_HOUR": 21600,
             "ONE_DAY": 86400,
         }

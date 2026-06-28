@@ -576,7 +576,7 @@
       ],
       "code_references": [
         {
-          "line": 216,
+          "line": 232,
           "path": "src/gpt_trader/cli/__init__.py",
           "reader": "_env_flag"
         },
@@ -835,7 +835,7 @@
       ],
       "code_references": [
         {
-          "line": 186,
+          "line": 233,
           "path": "src/gpt_trader/features/trade_ideas/service.py",
           "reader": "os.environ.get"
         }
@@ -906,7 +906,7 @@
       ],
       "code_references": [
         {
-          "line": 1094,
+          "line": 1249,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py",
           "reader": "os.getenv"
         }
@@ -1247,7 +1247,7 @@
       ],
       "code_references": [
         {
-          "line": 176,
+          "line": 223,
           "path": "src/gpt_trader/features/trade_ideas/service.py",
           "reader": "os.environ.get"
         }
@@ -2345,7 +2345,7 @@
       ],
       "code_references": [
         {
-          "line": 216,
+          "line": 232,
           "path": "src/gpt_trader/cli/__init__.py",
           "reader": "_env_flag"
         },

@@ -224,6 +224,14 @@ class CliResponse:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class RawCliOutput:
+    """Command output that must be written exactly as provided."""
+
+    content: str
+    exit_code: int = 0
+
+
 def format_response(response: CliResponse, output_format: str = "text") -> str:
     """Format a CLI response for output.
 

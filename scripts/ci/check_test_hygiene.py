@@ -41,6 +41,10 @@ ALLOWLIST_REASONS: dict[str, str] = {
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py": (
         "Order engine tests cover BUY/SELL/CLOSE signal paths and risk-manager enforcement; split pending."
     ),
+    "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py": (
+        "Paper-fill reconciliation matching/dedup coverage (legacy, decision/client id, "
+        "submitted-order, mock order-id reuse) is cohesive; split pending."
+    ),
 }
 ALLOWLIST: set[str] = set(ALLOWLIST_REASONS)
 PATCH_ALLOWLIST: set[str] = set()

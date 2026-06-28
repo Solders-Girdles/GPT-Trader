@@ -18,6 +18,13 @@ from gpt_trader.features.trade_ideas.baseline import (
     BaselineProposer,
     BaselineProposerConfig,
 )
+from gpt_trader.features.trade_ideas.broker_payloads import (
+    DEFAULT_TIME_IN_FORCE,
+    DEFAULT_VENUE_ORDER_TYPE,
+    TICKET_PAYLOAD_SCHEMA_VERSION,
+    BrokerTicketExportRequest,
+    canonical_ticket_json,
+)
 from gpt_trader.features.trade_ideas.budget import (
     DEFAULT_RISK_BUDGET,
     BudgetIntegrityError,
@@ -50,6 +57,16 @@ from gpt_trader.features.trade_ideas.models import (
     TradeIdea,
     is_safe_decision_id,
 )
+from gpt_trader.features.trade_ideas.paper_reconciliation import (
+    PAPER_RECONCILIATION_PROFILES,
+    PaperFillEvent,
+    PaperFillProfileError,
+    PaperFillReconciler,
+    PaperFillReconciliationEntry,
+    PaperFillReconciliationReport,
+    paper_fill_events_from_store_events,
+    validate_paper_reconciliation_profile,
+)
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.proposer import Proposer
 from gpt_trader.features.trade_ideas.replay import (
@@ -76,6 +93,7 @@ from gpt_trader.features.trade_ideas.service import (
     TradeIdeaListQuery,
     TradeIdeaListResult,
     TradeIdeaListSortKey,
+    TradeIdeaQueryPage,
     TradeIdeaService,
     TradeIdeaView,
     UnknownTradeIdeaError,
@@ -87,6 +105,14 @@ from gpt_trader.features.trade_ideas.snapshot import (
     MarketSnapshot,
     SnapshotIntegrityError,
     SymbolSeries,
+)
+from gpt_trader.features.trade_ideas.snapshot_builder import (
+    HistoricalCandleSource,
+    MarketSnapshotBuilder,
+    MarketSnapshotBuildRequest,
+    canonical_granularity,
+    granularity_duration,
+    market_snapshot_to_payload,
 )
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
 from gpt_trader.features.trade_ideas.workflow import (
@@ -102,9 +128,13 @@ __all__ = [
     "ACTOR_ENV_VAR",
     "DEFAULT_RISK_BUDGET",
     "DEFAULT_IDEAS_ROOT",
+    "DEFAULT_TIME_IN_FORCE",
+    "DEFAULT_VENUE_ORDER_TYPE",
     "DuplicateCloseoutAttributionError",
     "DuplicateTradeIdeaError",
+    "HistoricalCandleSource",
     "IDEAS_ROOT_ENV_VAR",
+    "TICKET_PAYLOAD_SCHEMA_VERSION",
     "TERMINAL_STATES",
     "ActorType",
     "ApprovalPolicy",
@@ -114,6 +144,7 @@ __all__ = [
     "AutonomyMode",
     "BaselineProposer",
     "BaselineProposerConfig",
+    "BrokerTicketExportRequest",
     "BrokerTicket",
     "BudgetIntegrityError",
     "BudgetLogEntry",
@@ -126,8 +157,16 @@ __all__ = [
     "EntryZone",
     "InvalidTransitionError",
     "MarketSnapshot",
+    "MarketSnapshotBuilder",
+    "MarketSnapshotBuildRequest",
     "MaxLoss",
     "MaxLossSnapshot",
+    "PAPER_RECONCILIATION_PROFILES",
+    "PaperFillEvent",
+    "PaperFillProfileError",
+    "PaperFillReconciliationEntry",
+    "PaperFillReconciliationReport",
+    "PaperFillReconciler",
     "PreApprovalBrokerTicketError",
     "PolicyViolationError",
     "ProductType",
@@ -152,6 +191,7 @@ __all__ = [
     "TradeIdeaListQuery",
     "TradeIdeaListResult",
     "TradeIdeaListSortKey",
+    "TradeIdeaQueryPage",
     "TradeIdeaReplayRunner",
     "TradeIdeaService",
     "TradeIdeaState",
@@ -159,15 +199,21 @@ __all__ = [
     "TradeIdeaView",
     "UnknownTradeIdeaError",
     "build_trade_idea_track_record_report",
+    "canonical_granularity",
+    "canonical_ticket_json",
     "create_trade_idea_service",
     "evaluate_eligibility",
     "extract_numeric_scoring_levels",
     "format_trade_idea_track_record_report",
+    "granularity_duration",
     "is_eligible",
     "is_safe_decision_id",
+    "market_snapshot_to_payload",
     "new_event_id",
+    "paper_fill_events_from_store_events",
     "resolve_ideas_root",
     "resolve_trade_idea_actor_id",
     "score_trade_idea",
+    "validate_paper_reconciliation_profile",
     "validate_transition",
 ]

@@ -265,7 +265,9 @@ class PaperFillReconciler:
                 )
                 continue
 
-            if self._already_reconciled(view, event, audited_fill_order_ids):
+            if self._already_reconciled(
+                view, event, audited_fill_order_ids, is_legacy=method == "symbol_side"
+            ):
                 skipped.append(
                     PaperFillReconciliationEntry(
                         event=event,
@@ -410,15 +412,27 @@ class PaperFillReconciler:
         view: TradeIdeaView,
         event: PaperFillEvent,
         audited_fill_order_ids: AbstractSet[str],
+        *,
+        is_legacy: bool,
     ) -> bool:
         external_order_id = event.external_order_id
         if not external_order_id:
             return view.state is TradeIdeaState.FILLED
-        # An order id recorded against *any* filled idea means this fill has
-        # already been reconciled. Checking only the matched view would let a
-        # rerun over the full event store re-record a legacy (id-less) fill
-        # against a newer same-symbol/side idea and corrupt its audit trail.
-        return external_order_id in audited_fill_order_ids
+        if is_legacy:
+            # Legacy id-less fills are matched only by symbol/side, which can
+            # resolve to a different idea on a rerun over the full event store.
+            # Dedupe against every filled audit event so such a fill is not
+            # re-recorded onto a newer same-symbol/side idea.
+            return external_order_id in audited_fill_order_ids
+        # Explicitly matched fills (decision/client id) belong to the matched
+        # idea, so dedupe only against its own audit trail. A reused mock
+        # order id (DeterministicBroker resets its counter per run) carrying a
+        # new decision/client id must not be skipped as already reconciled.
+        return any(
+            audit_event.action is AuditAction.FILLED
+            and audit_event.external_order_id == external_order_id
+            for audit_event in view.events
+        )
 
 
 def _match_client_order_id(

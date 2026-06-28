@@ -321,6 +321,26 @@ def test_reconciler_rerun_skips_legacy_fill_already_audited_on_other_idea(
     assert service.get(first_decision_id).state is TradeIdeaState.FILLED
 
 
+def test_reconciler_records_id_matched_fill_reusing_prior_order_id(tmp_path: Path) -> None:
+    service = _service(tmp_path / "ideas")
+    first = _approved_idea(service, decision_id="trade-20260612-001")
+    PaperFillReconciler(service).reconcile_fills(
+        [_fill_event(client_order_id=first, order_id="MOCK_000001")], apply=True
+    )
+
+    # DeterministicBroker resets its counter between runs, so a later fill for a
+    # different idea can reuse MOCK_000001 while carrying its own client id. The
+    # global order-id dedupe must not skip an explicitly id-matched fill.
+    second = _approved_idea(service, decision_id="trade-20260612-002")
+    report = PaperFillReconciler(service).reconcile_fills(
+        [_fill_event(client_order_id=second, order_id="MOCK_000001")], apply=True
+    )
+
+    assert report.matched_count == 1
+    assert report.matched[0].decision_id == second
+    assert service.get(second).state is TradeIdeaState.FILLED
+
+
 def test_submitted_idea_only_matches_legacy_fill_with_its_order_id(tmp_path: Path) -> None:
     service = _service(tmp_path / "ideas")
     decision_id = _submitted_idea(service, external_order_id="ORDER_A")

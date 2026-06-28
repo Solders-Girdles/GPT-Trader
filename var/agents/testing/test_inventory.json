@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6981,
-    "total_files": 829,
+    "total_tests": 6987,
+    "total_files": 830,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6815,
+    "unit": 6821,
     "asyncio": 440,
-    "parametrize": 204,
+    "parametrize": 205,
     "endpoints": 83,
     "property": 82,
     "integration": 80,
@@ -802,6 +802,9 @@
     ],
     "test_dependency_graph.py": [
       "tests/unit/scripts/test_dependency_graph.py"
+    ],
+    "test_docs_currency_scan.py": [
+      "tests/unit/scripts/test_docs_currency_scan.py"
     ],
     "test_docs_maintenance.py": [
       "tests/unit/scripts/test_docs_maintenance.py"
@@ -63556,6 +63559,57 @@
         "name": "test_main_resolves_package_init_relative_imports",
         "line": 81,
         "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_docs_currency_scan.py": [
+      {
+        "name": "test_normalize_item_filters_glossary_noise",
+        "line": 9,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_path_marks_runtime_paths_uncertain",
+        "line": 17,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_env_var_accepts_makefile_variable",
+        "line": 23,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_command_accepts_python_module",
+        "line": 33,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_scan_docs_on_real_repo_produces_report",
+        "line": 43,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_verify_module_or_path_marks_removed_items_stale",
+        "line": 68,
+        "markers": [
+          "parametrize",
           "unit"
         ],
         "docstring": ""

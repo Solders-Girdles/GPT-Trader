@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-01-24
 ---
 
 Use this folder for AI-focused navigation aids and generated inventories.

@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-05-05
 ---
 
 The **Terminal User Interface (TUI)** is the primary monitoring surface for GPT-Trader. Built with [Textual](https://textual.textualize.io/), it provides real-time visibility into the bot's state, account metrics, and trading activities directly from your terminal. Operator controls (start, stop, panic) act on whatever profile was launched and are subject to the same readiness and approval gates as any other live entrypoint — see [Live Operations](production.md).

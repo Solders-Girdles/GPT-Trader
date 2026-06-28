@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-01-24
 ---
 
 This page is intentionally thin. Feature flags and configuration drift quickly, so canonical references live in code and generated inventories.

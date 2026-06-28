@@ -1,6 +1,5 @@
 ---
 status: current
-last-updated: 2026-06-27
 scope: Operator and agent interfaces over the trade_ideas slice
 audience: Implementation agents (Codex) and reviewers
 ---

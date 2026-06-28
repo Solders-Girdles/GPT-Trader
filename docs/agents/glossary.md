@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-06-24
 ---
 
 This glossary lists abbreviations approved for use in the GPT-Trader codebase.

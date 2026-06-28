@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-05-06
 ---
 
 GPT-Trader layers risk controls across configuration, pre-trade validation,

@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-06-24
 ---
 
 This rubric defines what the bot must be able to do to "run successfully" as an

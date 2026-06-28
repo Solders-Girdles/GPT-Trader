@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-06-24
 scope: AI-assisted trade research and execution migration
 ---
 

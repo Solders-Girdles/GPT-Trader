@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-06-11
 ---
 
 This roadmap tracks cleanup work that prepares GPT-Trader for larger rebuilds.

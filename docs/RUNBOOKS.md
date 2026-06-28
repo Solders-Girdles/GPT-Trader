@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-06-24
 ---
 
 This document provides Standard Operating Procedures (SOPs) for responding to

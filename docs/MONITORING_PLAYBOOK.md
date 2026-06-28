@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-05-06
 ---
 
 This playbook covers GPT-Trader monitoring for readiness-gated live operations:

@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-06-24
 ---
 
 Durable product and engineering direction for GPT-Trader. Use this log for

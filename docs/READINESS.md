@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-01-24
 ---
 
 ## Purpose

@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-01-23
 ---
 
 This document describes the reliability layer that protects GPT-Trader during

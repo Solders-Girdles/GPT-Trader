@@ -21,7 +21,7 @@ EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "tel:")
 ALLOWED_STATUSES = {"current", "draft", "deprecated", "superseded"}
 ISO_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 DATE_KEYS = ("last-updated", "last-reviewed", "last-verified")
-METADATA_TEMPLATE = "---\n" "status: current\n" "last-updated: YYYY-MM-DD\n" "---"
+METADATA_TEMPLATE = "---\n" "status: current\n" "---"
 
 SECTION_FALLBACKS = (
     "Quick Links",
@@ -91,18 +91,20 @@ def has_required_metadata(path: Path) -> bool:
     start, end = bounds
     block_lines = [line.strip() for line in lines[start + 1 : end] if line.strip()]
     status_value: str | None = None
-    date_value: str | None = None
+    date_values: list[str] = []
 
     for line in block_lines:
         if line.startswith("status:"):
             status_value = line.split(":", maxsplit=1)[1].strip()
         for key in DATE_KEYS:
             if line.startswith(f"{key}:"):
-                date_value = line.split(":", maxsplit=1)[1].strip()
+                date_values.append(line.split(":", maxsplit=1)[1].strip())
 
     if status_value is None or status_value not in ALLOWED_STATUSES:
         return False
-    if date_value is None or not ISO_DATE_PATTERN.match(date_value):
+    # Date stamps are optional: git history is the source of truth for "when
+    # changed". Any date key that IS present must be a valid ISO date.
+    if any(not ISO_DATE_PATTERN.match(value) for value in date_values):
         return False
     return True
 
@@ -327,14 +329,14 @@ def main() -> int:
         date_keys = ", ".join(DATE_KEYS)
         allowed_statuses = ", ".join(sorted(ALLOWED_STATUSES))
         print(
-            "Docs missing or invalid metadata block (status + last-updated/last-reviewed/last-verified):"
+            "Docs missing or invalid metadata block (required: status; "
+            "optional: last-updated/last-reviewed/last-verified):"
         )
         for path in missing_metadata:
             print(f"- {path.relative_to(repo_root)}")
         print("\nMetadata requirements:")
-        print(f"- Allowed status values: {allowed_statuses}")
-        print(f"- Accepted date keys: {date_keys}")
-        print("- Date format: YYYY-MM-DD")
+        print(f"- Required: status (one of: {allowed_statuses})")
+        print(f"- Optional date keys (validated if present): {date_keys}; format YYYY-MM-DD")
         print("\nCopy/paste template:")
         print(METADATA_TEMPLATE)
         print(f"\nTotal missing metadata: {len(missing_metadata)}")

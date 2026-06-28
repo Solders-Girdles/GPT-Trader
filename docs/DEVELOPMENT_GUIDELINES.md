@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-05-06
 ---
 
 These guidelines cover contributions to the readiness-gated `gpt_trader` stack. Older

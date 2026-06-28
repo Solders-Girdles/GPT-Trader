@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-01-23
 ---
 
 This document tracks deprecated modules, shims, and their planned removal dates.

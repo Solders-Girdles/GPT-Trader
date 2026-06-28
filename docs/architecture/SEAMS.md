@@ -2,7 +2,6 @@
 
 ---
 status: draft
-last-updated: 2026-01-31
 ---
 
 This document identifies the **canonical seams** in GPT-Trader.

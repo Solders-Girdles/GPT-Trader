@@ -1,6 +1,5 @@
 ---
 status: current
-last-updated: 2026-06-25
 workstream: 2 (see TRADE_IDEA_INTERFACES_DESIGN_NOTES.md)
 depends-on: Workstream 0 (service factory, actor resolution); independent of the CLI workstream
 ---

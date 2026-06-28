@@ -2,7 +2,6 @@
 
 ---
 status: draft
-last-updated: 2026-06-24
 ---
 
 This document defines the recurring project-review pipeline for GPT-Trader. The

@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-06-24
 ---
 
 This document explains **how the naming-standards check works**, what it enforces, and

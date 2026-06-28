@@ -5,8 +5,6 @@ Usage::
     python scripts/agents/naming_inventory.py \
         --summary docs/agents/naming_inventory.md \
         --json var/agents/naming_inventory.json
-
-See `docs/agents/naming_inventory_tooling.md` for the design doc.
 """
 
 from __future__ import annotations

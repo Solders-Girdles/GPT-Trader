@@ -2,7 +2,6 @@
 
 ---
 status: current
-last-updated: 2026-02-06
 ---
 
 This page is intentionally thin. Metric names/labels and event schemas are generated from code to minimize drift.

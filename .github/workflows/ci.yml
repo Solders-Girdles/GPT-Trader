@@ -94,7 +94,8 @@ jobs:
             fi
           fi
 
-          if ! changed_files=$(git diff --name-only "$DIFF_BASE_SHA" "$HEAD_SHA"); then
+          # Disable rename detection so moved guarded inputs classify by source path too.
+          if ! changed_files=$(git diff --name-only --no-renames "$DIFF_BASE_SHA" "$HEAD_SHA"); then
             echo "::warning::Could not diff $DIFF_BASE_SHA..$HEAD_SHA; running all conditional checks."
             emit_all_true
             exit 0
@@ -127,6 +128,9 @@ jobs:
                 tui_snapshots=true
                 agent_artifacts=true
                 ;;
+              conftest.py|pytest.ini|tests/conftest.py|tests/unit/conftest.py|tests/unit/gpt_trader/conftest.py)
+                tui_snapshots=true
+                ;;
               src/gpt_trader/tui/*.tcss|src/gpt_trader/tui/styles/*|scripts/build_tui_css.py|scripts/ci/check_tui_css_up_to_date.py)
                 tui_css=true
                 tui_snapshots=true
@@ -137,7 +141,7 @@ jobs:
             esac
 
             case "$path" in
-              src/*|tests/*|scripts/agents/*|src/gpt_trader/agents/*|config/agents/*|config/environments/.env.template|pytest.ini|var/agents/*)
+              src/*|tests/*|scripts/*.py|scripts/**/*.py|scripts/agents/*|src/gpt_trader/agents/*|config/agents/*|config/environments/.env.template|pytest.ini|var/agents/*)
                 agent_artifacts=true
                 ;;
             esac

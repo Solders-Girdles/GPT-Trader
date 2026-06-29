@@ -335,15 +335,23 @@ pre-commit run --all-files
 
 ## CI Lanes
 
-The CI workflow (`.github/workflows/ci.yml`) runs checks in parallel lanes for faster feedback and isolated failures.
+The CI workflow (`.github/workflows/ci.yml`) runs checks in parallel lanes for
+faster feedback and isolated failures. The compact blocking/advisory contract
+lives in
+[`docs/DEVELOPMENT_GUIDELINES.md`](docs/DEVELOPMENT_GUIDELINES.md#continuous-integration);
+keep this section as a local command quick-reference, not a second source of
+truth for branch protection.
 
 ### Lane Overview
 
 | Lane | Job Name | Command | Purpose |
 |------|----------|---------|---------|
 | **Lint** | `lint` | `uv run ruff check . && uv run black --check .` | Code style |
+| **Docs Audit** | `docs-audit` | `uv run python scripts/maintenance/docs_link_audit.py && uv run python scripts/maintenance/docs_reachability_check.py` | Docs links and reachability |
 | **Type Check** | `typecheck` | `uv run mypy src` | Static typing |
+| **Agent Freshness** | `agent-freshness` | `uv run agent-regenerate --verify` | Generated agent inventories |
 | **TUI CSS** | `tui-css` | `python scripts/ci/check_tui_css_up_to_date.py` | Generated CSS in sync |
+| **Test Guardrails** | `test-guardrails` | `uv run python scripts/ci/check_test_hygiene.py` | Test hygiene and boundary checks |
 | **Unit (Core)** | `unit-tests` | `uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py` | Fast unit tests |
 | **TUI Snapshots** | `tui-snapshots` | `uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -v` | Visual regression |
 | **Property** | `property-tests` | `uv run pytest tests/property -v` | Property-based tests |

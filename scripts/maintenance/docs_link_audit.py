@@ -24,6 +24,7 @@ EXCLUDED_DIRS = {
     "data",
     "experiments",
     "logs",
+    "review_artifacts/tmp",
     "runtime_data",
     "var",
 }
@@ -44,7 +45,9 @@ def parse_args() -> argparse.Namespace:
 def iter_markdown_files(root: Path) -> list[Path]:
     markdown_files: list[Path] = []
     for path in root.rglob("*.md"):
-        if any(part in EXCLUDED_DIRS for part in path.parts):
+        rel_parts = path.relative_to(root).parts
+        rel_dirs = {"/".join(rel_parts[:index]) for index in range(1, len(rel_parts))}
+        if any(part in EXCLUDED_DIRS for part in rel_parts) or rel_dirs & EXCLUDED_DIRS:
             continue
         markdown_files.append(path)
     return markdown_files

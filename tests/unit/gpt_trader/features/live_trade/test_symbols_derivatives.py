@@ -136,6 +136,14 @@ class TestIntxPerpetualsEnabled:
         result = symbols.intx_perpetuals_enabled(Profile.PROD, config=config)
         assert result is True
 
+    def test_returns_false_when_derivatives_type_is_us_futures(self) -> None:
+        config = make_bot_config_extended(
+            derivatives_enabled=True,
+            coinbase_derivatives_type="us_futures",
+        )
+        result = symbols.intx_perpetuals_enabled(Profile.PROD, config=config)
+        assert result is False
+
     def test_returns_true_when_derivatives_type_is_perpetuals(self) -> None:
         config = make_bot_config_extended(
             derivatives_enabled=True,
@@ -144,7 +152,7 @@ class TestIntxPerpetualsEnabled:
         result = symbols.intx_perpetuals_enabled(Profile.PROD, config=config)
         assert result is True
 
-    def test_returns_true_by_default(self) -> None:
+    def test_returns_false_without_explicit_intx_type(self) -> None:
         config = make_bot_config_extended(derivatives_enabled=True)
         result = symbols.intx_perpetuals_enabled(Profile.PROD, config=config)
-        assert result is True
+        assert result is False

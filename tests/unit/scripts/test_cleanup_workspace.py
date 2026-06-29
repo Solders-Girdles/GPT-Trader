@@ -5,7 +5,6 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
-
 from scripts.maintenance import cleanup_workspace
 
 
@@ -101,3 +100,55 @@ def test_rotate_large_file_archives_stale(
     assert log_path.exists()
     assert log_path.stat().st_size == 0
     assert list(archive_dir.glob("runtime_*.log.gz"))
+
+
+def test_clean_root_logs_rotates_recent_large_audit_log(
+    cleanup_session: cleanup_workspace.CleanupSession,
+) -> None:
+    audit_path = cleanup_session.audit_path
+    audit_path.write_bytes(b"x" * 2048)
+
+    cleanup_workspace.clean_root_logs(
+        cleanup_session,
+        threshold_mb=0,
+        stale_minutes=60,
+    )
+
+    assert audit_path.exists()
+    assert audit_path.stat().st_size > 0
+    assert list((audit_path.parent / "archive").glob("cleanup_audit_*.log.gz"))
+
+
+def test_clean_pycache_directories_includes_scripts(
+    cleanup_session: cleanup_workspace.CleanupSession, tmp_path: Path
+) -> None:
+    scripts_pycache = tmp_path / "scripts" / "maintenance" / "__pycache__"
+    scripts_pycache.mkdir(parents=True)
+
+    cleanup_workspace.clean_pycache_directories(cleanup_session)
+
+    assert scripts_pycache.exists() is False
+
+
+def test_clean_build_artifacts_removes_egg_info(
+    cleanup_session: cleanup_workspace.CleanupSession, tmp_path: Path
+) -> None:
+    egg_info = tmp_path / "src" / "gpt_trader.egg-info"
+    egg_info.mkdir(parents=True)
+    (egg_info / "PKG-INFO").write_text("metadata")
+
+    cleanup_workspace.clean_build_artifacts(cleanup_session)
+
+    assert egg_info.exists() is False
+
+
+def test_clean_macos_artifacts_removes_ds_store(
+    cleanup_session: cleanup_workspace.CleanupSession, tmp_path: Path
+) -> None:
+    ds_store = tmp_path / "docs" / ".DS_Store"
+    ds_store.parent.mkdir(parents=True)
+    ds_store.write_bytes(b"metadata")
+
+    cleanup_workspace.clean_macos_artifacts(cleanup_session)
+
+    assert ds_store.exists() is False

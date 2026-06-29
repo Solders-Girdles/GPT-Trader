@@ -138,7 +138,7 @@ jobs:
               src/gpt_trader/tui/*|tests/unit/gpt_trader/tui/*)
                 tui_snapshots=true
                 ;;
-              src/gpt_trader/features/trade_ideas/*|tests/unit/gpt_trader/features/trade_ideas/conftest.py|src/gpt_trader/features/live_trade/telemetry/*)
+              src/gpt_trader/features/trade_ideas/*|tests/unit/gpt_trader/features/trade_ideas/conftest.py|src/gpt_trader/features/live_trade/telemetry/*|src/gpt_trader/monitoring/status_reporter.py)
                 tui_snapshots=true
                 ;;
             esac

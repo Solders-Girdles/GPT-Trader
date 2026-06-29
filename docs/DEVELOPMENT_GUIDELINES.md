@@ -103,6 +103,13 @@ bypass guards:
 - `GPT-Trader CI/CD Pipeline`: End-to-end build and deployment flow for staging/production releases; Docker publish is skipped on pull requests.
 - `Windows Portability`: Focused unit tests on windows-latest for persistence, monitoring, and scripts (see `windows-unit-tests` job in `.github/workflows/ci.yml`). Catches portability bugs for Windows development environment. Complements the default Ubuntu matrix. Added to address #955; currently runs on PRs (passes in recent merges) but not enforced as required check.
 
+The default PR workflow keeps required merge-safety check names stable for branch
+protection, but several context-specific lanes now self-skip when their inputs
+do not change. `TUI CSS Check` runs for TUI style/CSS generator inputs, `TUI
+Snapshot Tests` runs for TUI code/snapshot/dependency inputs, `Agent Artifacts
+Freshness` runs for agent artifact source or output inputs, and `Dependency
+Review` runs for dependency manifest changes.
+
 ### Local CI Command
 
 For a fail-fast entrypoint that matches the local PR-readiness command set, run:
@@ -147,7 +154,7 @@ checks were skipped and why.
 | Command | Intended use | Agent artifacts freshness | Readiness gate |
 | --- | --- | --- | --- |
 | `make ci-required` | Local PR-readiness validation surface | Blocking local step | Not run |
-| GitHub pull_request CI | GitHub PR validation in Actions | Non-blocking if stale on pull requests | Not run |
+| GitHub pull_request CI | GitHub PR validation in Actions | Path-conditional; non-blocking if stale when run | Not run |
 | `uv run local-ci` / strict/full | Local PR-readiness validation plus local/live readiness evidence | Blocking local step | Runs `scripts/ci/check_readiness_gate.py --profile canary --strict` |
 | `uv run local-ci --profile quick` | Fast development loop | Skipped with an explicit banner reason | Skipped with an explicit banner reason |
 

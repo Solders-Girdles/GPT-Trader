@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6994,
+    "total_tests": 7004,
     "total_files": 831,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6827,
+    "unit": 6837,
     "asyncio": 440,
     "parametrize": 205,
     "endpoints": 83,
@@ -3593,6 +3593,51 @@
         ],
         "docstring": "",
         "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_known_derivatives_types_are_valid",
+        "line": 174,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_derivatives_type_is_case_and_whitespace_tolerant",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_unknown_derivatives_type_is_invalid",
+        "line": 185,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_derivatives_enabled_requires_nonempty_derivatives_type",
+        "line": 193,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_derivatives_type_must_be_a_string",
+        "line": 198,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
       }
     ],
     "tests/unit/gpt_trader/app/config/test_validation_rules.py": [
@@ -30601,7 +30646,7 @@
         "class": "TestIntxPerpetualsEnabled"
       },
       {
-        "name": "TestIntxPerpetualsEnabled::test_returns_true_when_derivatives_type_is_perpetuals",
+        "name": "TestIntxPerpetualsEnabled::test_returns_false_when_derivatives_type_is_us_futures",
         "line": 139,
         "markers": [
           "unit"
@@ -30610,8 +30655,17 @@
         "class": "TestIntxPerpetualsEnabled"
       },
       {
-        "name": "TestIntxPerpetualsEnabled::test_returns_true_by_default",
+        "name": "TestIntxPerpetualsEnabled::test_returns_true_when_derivatives_type_is_perpetuals",
         "line": 147,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxPerpetualsEnabled"
+      },
+      {
+        "name": "TestIntxPerpetualsEnabled::test_returns_false_without_explicit_intx_type",
+        "line": 155,
         "markers": [
           "unit"
         ],
@@ -63369,7 +63423,7 @@
     "tests/unit/scripts/test_cleanup_workspace.py": [
       {
         "name": "test_clean_tool_caches_preserve_hypothesis",
-        "line": 25,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -63377,7 +63431,7 @@
       },
       {
         "name": "test_clean_coverage_artifacts_removes_files",
-        "line": 37,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -63385,7 +63439,7 @@
       },
       {
         "name": "test_clean_var_logs_prunes_archived_gz",
-        "line": 55,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -63393,7 +63447,39 @@
       },
       {
         "name": "test_rotate_large_file_archives_stale",
-        "line": 80,
+        "line": 79,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_root_logs_rotates_recent_large_audit_log",
+        "line": 105,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_pycache_directories_includes_scripts",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_build_artifacts_removes_egg_info",
+        "line": 133,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_macos_artifacts_removes_ds_store",
+        "line": 145,
         "markers": [
           "unit"
         ],

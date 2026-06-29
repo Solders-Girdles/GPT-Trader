@@ -73,7 +73,7 @@ def us_futures_enabled(profile: Profile, *, config: BotConfig) -> bool:
         return True
 
     # Check derivatives type
-    if config.coinbase_derivatives_type == "us_futures":
+    if config.coinbase_derivatives_type.strip().lower() == "us_futures":
         return True
 
     return False
@@ -90,11 +90,11 @@ def intx_perpetuals_enabled(profile: Profile, *, config: BotConfig) -> bool:
     if config.coinbase_intx_perpetuals_enabled:
         return True
 
-    # Check derivatives type (default to INTX)
-    if config.coinbase_derivatives_type in ("intx_perps", "perpetuals"):
+    # INTX is frozen; only an explicit INTX derivatives type enables this helper.
+    if config.coinbase_derivatives_type.strip().lower() in ("intx_perps", "perpetuals"):
         return True
 
-    return True
+    return False
 
 
 def normalize_symbol_list(

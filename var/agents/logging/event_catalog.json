@@ -136,6 +136,7 @@
       "order_recovery",
       "order_rejected",
       "order_route",
+      "order_status",
       "order_submit",
       "order_suppressed",
       "order_update_persist",
@@ -1493,6 +1494,26 @@
       ],
       "statuses": null
     },
+    "order_status": {
+      "common_fields": [
+        "client_order_id",
+        "event_type",
+        "from_status",
+        "message",
+        "order_id",
+        "reason",
+        "to_status"
+      ],
+      "components": null,
+      "levels": [
+        "INFO"
+      ],
+      "occurrence_count": 1,
+      "source_files": [
+        "utilities/logging_patterns.py"
+      ],
+      "statuses": null
+    },
     "order_submit": {
       "common_fields": [
         "attempt",
@@ -1500,7 +1521,9 @@
         "delay_seconds",
         "error_message",
         "error_type",
+        "event_type",
         "max_attempts",
+        "message",
         "order_id",
         "order_type",
         "price",
@@ -1509,7 +1532,8 @@
         "reason_detail",
         "reduce_only",
         "side",
-        "stage"
+        "stage",
+        "symbol"
       ],
       "components": null,
       "levels": [
@@ -1517,11 +1541,12 @@
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 13,
+      "occurrence_count": 14,
       "source_files": [
         "features/live_trade/engines/strategy.py",
         "features/live_trade/execution/order_event_recorder.py",
-        "features/live_trade/execution/order_submission.py"
+        "features/live_trade/execution/order_submission.py",
+        "utilities/logging_patterns.py"
       ],
       "statuses": null
     },
@@ -2537,14 +2562,14 @@
     "action": 10,
     "attempt": 4,
     "client_ip": 4,
-    "client_order_id": 20,
+    "client_order_id": 22,
     "consecutive_failures": 6,
     "details": 5,
     "environment": 12,
     "error": 66,
     "error_message": 93,
     "error_type": 91,
-    "event_type": 5,
+    "event_type": 7,
     "flatten_operation_id": 9,
     "granularity": 6,
     "guard_name": 9,
@@ -2552,26 +2577,26 @@
     "latency_seconds": 5,
     "max_attempts": 4,
     "mode": 4,
-    "order_id": 29,
+    "order_id": 30,
+    "order_type": 4,
     "outcome": 5,
     "path": 12,
-    "portfolio_id": 4,
-    "price": 4,
-    "quantity": 10,
-    "reason": 27,
+    "price": 5,
+    "quantity": 11,
+    "reason": 28,
     "secret_ref": 6,
     "service": 9,
-    "side": 26,
+    "side": 27,
     "stage": 174,
-    "symbol": 84
+    "symbol": 85
   },
   "level_distribution": {
     "CRITICAL": 2,
     "DEBUG": 50,
     "ERROR": 124,
-    "INFO": 93,
+    "INFO": 95,
     "WARNING": 105
   },
-  "total_event_types": 137,
+  "total_event_types": 138,
   "version": "1.0"
 }

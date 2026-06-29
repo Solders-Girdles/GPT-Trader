@@ -28,6 +28,7 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Classify changed paths
         id: classify
@@ -79,8 +80,22 @@ jobs:
             exit 0
           fi
 
-          if ! changed_files=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA"); then
-            echo "::warning::Could not diff $BASE_SHA..$HEAD_SHA; running all conditional checks."
+          DIFF_BASE_SHA="$BASE_SHA"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            if ! DIFF_BASE_SHA=$(git merge-base "$BASE_SHA" "$HEAD_SHA"); then
+              echo "::warning::Could not compute merge-base for $BASE_SHA and $HEAD_SHA; running all conditional checks."
+              emit_all_true
+              exit 0
+            fi
+            if [ -z "$DIFF_BASE_SHA" ]; then
+              echo "::warning::Merge-base for $BASE_SHA and $HEAD_SHA was empty; running all conditional checks."
+              emit_all_true
+              exit 0
+            fi
+          fi
+
+          if ! changed_files=$(git diff --name-only "$DIFF_BASE_SHA" "$HEAD_SHA"); then
+            echo "::warning::Could not diff $DIFF_BASE_SHA..$HEAD_SHA; running all conditional checks."
             emit_all_true
             exit 0
           fi
@@ -151,6 +166,8 @@ jobs:
     steps:
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Install uv
         # astral-sh/setup-uv@v7
@@ -198,6 +215,8 @@ jobs:
     steps:
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Install uv
         # astral-sh/setup-uv@v7
@@ -256,6 +275,8 @@ jobs:
     steps:
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Install uv
         # astral-sh/setup-uv@v7
@@ -282,6 +303,8 @@ jobs:
     steps:
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Install uv
         # astral-sh/setup-uv@v7
@@ -340,9 +363,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: changes
+    if: always()
     steps:
+      - name: Fail when change classifier did not succeed
+        if: needs.changes.result != 'success'
+        run: |
+          echo "::error::CI Change Classifier ended with result '${{ needs.changes.result }}'; failing closed."
+          exit 1
+
       - name: Skip freshness check
-        if: needs.changes.outputs.agent_artifacts != 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.agent_artifacts != 'true'
         run: |
           echo "Agent artifact inputs did not change; skipping advisory freshness verification."
           {
@@ -352,28 +382,30 @@ jobs:
 
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        if: needs.changes.outputs.agent_artifacts == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.agent_artifacts == 'true'
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        if: needs.changes.outputs.agent_artifacts == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.agent_artifacts == 'true'
         # astral-sh/setup-uv@v7
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
         with:
           enable-cache: true
 
       - name: Set up Python
-        if: needs.changes.outputs.agent_artifacts == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.agent_artifacts == 'true'
         # actions/setup-python@v5
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version-file: ".python-version"
 
       - name: Install dependencies
-        if: needs.changes.outputs.agent_artifacts == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.agent_artifacts == 'true'
         run: uv sync --all-extras --dev
 
       - name: Verify agent artifacts freshness
-        if: needs.changes.outputs.agent_artifacts == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.agent_artifacts == 'true'
         id: verify
         run: |
           set +e
@@ -410,7 +442,7 @@ jobs:
           exit $status
 
       - name: Add freshness summary
-        if: always() && needs.changes.outputs.agent_artifacts == 'true'
+        if: always() && needs.changes.result == 'success' && needs.changes.outputs.agent_artifacts == 'true'
         run: |
           EVENT_NAME="${{ github.event_name }}"
           echo "## Agent Artifacts Freshness" >> $GITHUB_STEP_SUMMARY
@@ -435,9 +467,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     needs: changes
+    if: always()
     steps:
+      - name: Fail when change classifier did not succeed
+        if: needs.changes.result != 'success'
+        run: |
+          echo "::error::CI Change Classifier ended with result '${{ needs.changes.result }}'; failing closed."
+          exit 1
+
       - name: Skip TUI CSS check
-        if: needs.changes.outputs.tui_css != 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css != 'true'
         run: |
           echo "TUI CSS inputs did not change; skipping CSS freshness verification."
           {
@@ -447,28 +486,30 @@ jobs:
 
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        if: needs.changes.outputs.tui_css == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css == 'true'
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        if: needs.changes.outputs.tui_css == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css == 'true'
         # astral-sh/setup-uv@v7
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
         with:
           enable-cache: true
 
       - name: Set up Python
-        if: needs.changes.outputs.tui_css == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css == 'true'
         # actions/setup-python@v5
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version-file: ".python-version"
 
       - name: Install dependencies
-        if: needs.changes.outputs.tui_css == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css == 'true'
         run: uv sync --all-extras --dev
 
       - name: Check TUI CSS is up to date
-        if: needs.changes.outputs.tui_css == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css == 'true'
         run: python scripts/ci/check_tui_css_up_to_date.py
 
   test-guardrails:
@@ -478,6 +519,8 @@ jobs:
     steps:
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Install uv
         # astral-sh/setup-uv@v7
@@ -522,6 +565,8 @@ jobs:
     steps:
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Install uv
         # astral-sh/setup-uv@v7
@@ -579,12 +624,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: changes
+    if: always()
     env:
       GPT_TRADER_STRICT_CONTAINER: "1"
       PYTHONWARNINGS: default
     steps:
+      - name: Fail when change classifier did not succeed
+        if: needs.changes.result != 'success'
+        run: |
+          echo "::error::CI Change Classifier ended with result '${{ needs.changes.result }}'; failing closed."
+          exit 1
+
       - name: Skip TUI snapshot tests
-        if: needs.changes.outputs.tui_snapshots != 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots != 'true'
         run: |
           echo "TUI snapshot inputs did not change; skipping snapshot tests."
           {
@@ -594,28 +646,30 @@ jobs:
 
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        if: needs.changes.outputs.tui_snapshots == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots == 'true'
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        if: needs.changes.outputs.tui_snapshots == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots == 'true'
         # astral-sh/setup-uv@v7
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
         with:
           enable-cache: true
 
       - name: Set up Python
-        if: needs.changes.outputs.tui_snapshots == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots == 'true'
         # actions/setup-python@v5
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version-file: ".python-version"
 
       - name: Install dependencies
-        if: needs.changes.outputs.tui_snapshots == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots == 'true'
         run: uv sync --all-extras --dev
 
       - name: Run TUI snapshot tests
-        if: needs.changes.outputs.tui_snapshots == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots == 'true'
         run: uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -v
 
   property-tests:
@@ -628,6 +682,8 @@ jobs:
     steps:
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Install uv
         # astral-sh/setup-uv@v7
@@ -657,6 +713,8 @@ jobs:
     steps:
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          persist-credentials: false
 
       - name: Install uv
         # astral-sh/setup-uv@v7
@@ -679,11 +737,17 @@ jobs:
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: always() && github.event_name == 'pull_request'
     needs: changes
     steps:
+      - name: Fail when change classifier did not succeed
+        if: needs.changes.result != 'success'
+        run: |
+          echo "::error::CI Change Classifier ended with result '${{ needs.changes.result }}'; failing closed."
+          exit 1
+
       - name: Skip dependency review
-        if: needs.changes.outputs.dependencies != 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.dependencies != 'true'
         run: |
           echo "Dependency manifests did not change; skipping dependency review."
           {
@@ -693,10 +757,12 @@ jobs:
 
       # actions/checkout@v7
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        if: needs.changes.outputs.dependencies == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.dependencies == 'true'
+        with:
+          persist-credentials: false
 
       - name: Review dependencies
-        if: needs.changes.outputs.dependencies == 'true'
+        if: needs.changes.result == 'success' && needs.changes.outputs.dependencies == 'true'
         # actions/dependency-review-action@v5.0.0
         uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294
         with:

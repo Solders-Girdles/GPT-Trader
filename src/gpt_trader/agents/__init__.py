@@ -12,4 +12,5 @@ Available commands:
     agent-naming     - Check naming standards
     agent-health     - Aggregate lint/types/tests/preflight/config checks
     agent-regenerate - Regenerate all context files
+    agent-pr-ready   - Reconcile PR mergeability against green CI
 """

@@ -49,6 +49,7 @@ agent-regenerate = "gpt_trader.agents.cli:regenerate"
 agent-artifacts = "gpt_trader.agents.cli:artifacts"
 agent-dedupe = "gpt_trader.agents.cli:dedupe"
 agent-dedupe-triage = "gpt_trader.agents.cli:dedupe_triage"
+agent-pr-ready = "gpt_trader.agents.cli:pr_ready"
 
 [build-system]
 requires = ["setuptools>=69", "wheel"]

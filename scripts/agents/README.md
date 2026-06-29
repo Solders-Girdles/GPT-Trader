@@ -56,6 +56,7 @@ uv run agent-regenerate --only testing
 uv run agent-artifacts validate
 uv run agent-artifacts package
 uv run agent-artifacts verify-package
+uv run agent-pr-ready --format markdown
 ```
 
 `agent-naming` dispatches to `scripts/agents/naming_inventory.py`; defaults are

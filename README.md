@@ -188,6 +188,7 @@ uv run agent-impact     # Analyze change impact
 uv run agent-map        # Generate dependency graph
 uv run agent-naming     # Check naming conventions
 uv run agent-risk       # Query risk configuration
+uv run agent-pr-ready   # Reconcile PR mergeability vs green CI
 ```
 
 ## Documentation

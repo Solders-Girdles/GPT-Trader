@@ -39,6 +39,15 @@ from gpt_trader.features.live_trade.engines.base import (
 from gpt_trader.features.live_trade.engines.equity_calculator import (
     EquityCalculator,
 )
+from gpt_trader.features.live_trade.engines.order_record_mapping import (
+    build_record_from_broker_order,
+    get_order_field,
+    merge_metadata,
+    normalize_persisted_status,
+    parse_decimal,
+    parse_decimal_optional,
+    parse_timestamp,
+)
 from gpt_trader.features.live_trade.engines.price_tick_store import (
     EVENT_PRICE_TICK,
     PriceTickStore,
@@ -107,7 +116,6 @@ from gpt_trader.persistence.orders_store import (
     OrderStatus as PersistedOrderStatus,
 )
 from gpt_trader.utilities.async_tools import BoundedToThread
-from gpt_trader.utilities.datetime_helpers import parse_iso_to_epoch
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="trading_engine")
@@ -2351,67 +2359,27 @@ class TradingEngine(BaseEngine):
             }
             self._append_event("api_error", api_payload)
 
+    # Pure broker-order -> OrderRecord mapping lives in
+    # engines/order_record_mapping.py; these are thin delegators that preserve
+    # the existing internal call sites.
     def _get_order_field(self, order: Any, *keys: str) -> Any:
-        if isinstance(order, dict):
-            for key in keys:
-                if key in order and order[key] is not None:
-                    return order[key]
-            return None
-        for key in keys:
-            if hasattr(order, key):
-                value = getattr(order, key)
-                if value is not None:
-                    return value
-        return None
+        return get_order_field(order, *keys)
 
     def _normalize_persisted_status(self, status: Any) -> PersistedOrderStatus:
-        value = status.value if hasattr(status, "value") else status
-        normalized = str(value).lower()
-        mapping = {
-            "pending": PersistedOrderStatus.PENDING,
-            "submitted": PersistedOrderStatus.OPEN,
-            "open": PersistedOrderStatus.OPEN,
-            "partially_filled": PersistedOrderStatus.PARTIALLY_FILLED,
-            "filled": PersistedOrderStatus.FILLED,
-            "cancelled": PersistedOrderStatus.CANCELLED,
-            "canceled": PersistedOrderStatus.CANCELLED,
-            "rejected": PersistedOrderStatus.REJECTED,
-            "expired": PersistedOrderStatus.EXPIRED,
-            "failed": PersistedOrderStatus.FAILED,
-        }
-        return mapping.get(normalized, PersistedOrderStatus.OPEN)
+        return normalize_persisted_status(status)
 
     def _parse_decimal(self, value: Any, default: Decimal) -> Decimal:
-        if value is None:
-            return default
-        if isinstance(value, Decimal):
-            return value
-        try:
-            return Decimal(str(value))
-        except (InvalidOperation, ValueError, TypeError):
-            return default
+        return parse_decimal(value, default)
 
     def _parse_decimal_optional(self, value: Any) -> Decimal | None:
-        if value is None:
-            return None
-        if isinstance(value, Decimal):
-            return value
-        try:
-            return Decimal(str(value))
-        except (InvalidOperation, ValueError, TypeError):
-            return None
+        return parse_decimal_optional(value)
 
     def _merge_metadata(
         self,
         base: dict[str, Any] | None,
         update: dict[str, Any] | None,
     ) -> dict[str, Any] | None:
-        if base is None and update is None:
-            return None
-        merged = dict(base or {})
-        if update:
-            merged.update(update)
-        return merged
+        return merge_metadata(base, update)
 
     def _build_record_from_broker_order(
         self,
@@ -2420,67 +2388,10 @@ class TradingEngine(BaseEngine):
         bot_id: str,
         now: datetime,
     ) -> OrderRecord | None:
-        order_id = self._get_order_field(order, "order_id", "id")
-        client_order_id = self._get_order_field(order, "client_order_id", "client_id") or order_id
-        if order_id is None or client_order_id is None:
-            return None
-        symbol = self._get_order_field(order, "product_id", "symbol") or ""
-        side_value = self._get_order_field(order, "side")
-        side = str(side_value).lower() if side_value is not None else "unknown"
-        order_type_value = self._get_order_field(order, "order_type", "type")
-        order_type = str(order_type_value).lower() if order_type_value is not None else "unknown"
-        quantity_value = self._get_order_field(order, "size", "quantity", "base_size")
-        quantity = self._parse_decimal(quantity_value, Decimal("0"))
-        price_value = self._get_order_field(order, "price")
-        price = self._parse_decimal_optional(price_value)
-        filled_value = self._get_order_field(order, "filled_size", "filled_quantity")
-        filled_quantity = self._parse_decimal(filled_value, Decimal("0"))
-        average_value = self._get_order_field(order, "average_filled_price", "avg_fill_price")
-        average_fill_price = self._parse_decimal_optional(average_value)
-        status_value = self._get_order_field(order, "status")
-        status = self._normalize_persisted_status(status_value)
-        created_value = self._get_order_field(
-            order, "created_time", "created_at", "submitted_at", "created"
-        )
-        created_ts = self._parse_timestamp(created_value)
-        created_at = datetime.fromtimestamp(created_ts, tz=timezone.utc)
-        tif_value = self._get_order_field(order, "tif", "time_in_force")
-        time_in_force = str(tif_value) if tif_value is not None else "GTC"
-        metadata = {
-            "source": "order_reconciliation",
-            "raw_status": str(status_value or ""),
-        }
-        return OrderRecord(
-            order_id=str(order_id),
-            client_order_id=str(client_order_id),
-            symbol=str(symbol),
-            side=side,
-            order_type=order_type,
-            quantity=quantity,
-            price=price,
-            status=status,
-            filled_quantity=filled_quantity,
-            average_fill_price=average_fill_price,
-            created_at=created_at,
-            updated_at=now,
-            bot_id=bot_id,
-            time_in_force=time_in_force,
-            metadata=metadata,
-        )
+        return build_record_from_broker_order(order, bot_id=bot_id, now=now)
 
     def _parse_timestamp(self, value: Any) -> float:
-        if value is None:
-            return time.time()
-        if isinstance(value, (int, float)):
-            return float(value)
-        if isinstance(value, datetime):
-            return value.timestamp()
-        if isinstance(value, str):
-            try:
-                return parse_iso_to_epoch(value)
-            except (ValueError, TypeError):
-                return time.time()
-        return time.time()
+        return parse_timestamp(value)
 
     def _record_unfilled_order_alerts(self, orders: list[Any]) -> None:
         risk_manager = self.context.risk_manager

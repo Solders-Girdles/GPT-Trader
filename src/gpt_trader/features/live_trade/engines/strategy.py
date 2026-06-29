@@ -19,7 +19,7 @@ import time
 from collections import deque
 from dataclasses import replace
 from datetime import datetime, timezone
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from importlib import metadata
 from typing import Any
 
@@ -47,6 +47,12 @@ from gpt_trader.features.live_trade.engines.order_record_mapping import (
     parse_decimal,
     parse_decimal_optional,
     parse_timestamp,
+)
+from gpt_trader.features.live_trade.engines.position_formatting import (
+    build_position_state,
+    positions_to_risk_format,
+    positions_to_status_format,
+    resolve_close_order,
 )
 from gpt_trader.features.live_trade.engines.price_tick_store import (
     EVENT_PRICE_TICK,
@@ -2099,43 +2105,17 @@ class TradingEngine(BaseEngine):
                 labels={"result": result},
             )
 
+    # Pure position-format transforms live in engines/position_formatting.py;
+    # these are thin delegators preserving existing call sites and tests.
     def _build_position_state(
         self, symbol: str, positions: dict[str, Position]
     ) -> dict[str, Any] | None:
-        """Build position state dict for strategy.decide()."""
-        if symbol not in positions:
-            return None
-        pos = positions[symbol]
-        return {
-            "quantity": pos.quantity,
-            "entry_price": pos.entry_price,
-            "side": pos.side,
-            # Add other fields if needed by strategy
-        }
+        return build_position_state(symbol, positions)
 
     def _resolve_close_order(
         self, position_state: dict[str, Any]
     ) -> tuple[OrderSide, Decimal] | None:
-        """Derive close side/quantity from strategy position state."""
-        raw_quantity = position_state.get("quantity", Decimal("0"))
-        try:
-            signed_quantity = Decimal(str(raw_quantity))
-        except (InvalidOperation, TypeError, ValueError):
-            return None
-
-        close_quantity = abs(signed_quantity)
-        if close_quantity <= 0:
-            return None
-
-        side_raw = str(position_state.get("side", "")).strip().lower()
-        if side_raw == "long":
-            return OrderSide.SELL, close_quantity
-        if side_raw == "short":
-            return OrderSide.BUY, close_quantity
-
-        # Legacy fallback: infer direction from quantity sign when side is missing.
-        inferred_side = OrderSide.BUY if signed_quantity < 0 else OrderSide.SELL
-        return inferred_side, close_quantity
+        return resolve_close_order(position_state)
 
     def _record_price_tick(self, symbol: str, price: Decimal) -> None:
         """Persist price tick to EventStore for crash recovery.
@@ -2148,30 +2128,12 @@ class TradingEngine(BaseEngine):
     def _positions_to_risk_format(
         self, positions: dict[str, Position]
     ) -> dict[str, dict[str, Any]]:
-        """Convert Position objects to dict format expected by risk manager."""
-        return {
-            symbol: {
-                "quantity": pos.quantity,
-                "mark": pos.mark_price,
-            }
-            for symbol, pos in positions.items()
-        }
+        return positions_to_risk_format(positions)
 
     def _positions_to_status_format(
         self, positions: dict[str, Position]
     ) -> dict[str, dict[str, Any]]:
-        """Convert Position objects to dict format for StatusReporter with complete TUI data."""
-        return {
-            symbol: {
-                "quantity": str(pos.quantity),
-                "mark_price": str(pos.mark_price),
-                "entry_price": str(pos.entry_price),
-                "unrealized_pnl": str(pos.unrealized_pnl),
-                "realized_pnl": str(pos.realized_pnl),
-                "side": pos.side,
-            }
-            for symbol, pos in positions.items()
-        }
+        return positions_to_status_format(positions)
 
     def _calculate_order_quantity(
         self,

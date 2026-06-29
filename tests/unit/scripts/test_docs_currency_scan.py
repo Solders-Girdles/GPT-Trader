@@ -40,6 +40,26 @@ def test_verify_command_accepts_python_module(tmp_path: Path) -> None:
     assert result.status == "ok"
 
 
+def test_verify_command_accepts_python_module_file(tmp_path: Path) -> None:
+    pkg = tmp_path / "src" / "gpt_trader"
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text("", encoding="utf-8")
+    (pkg / "tool.py").write_text("print('ok')\n", encoding="utf-8")
+    state = scan.ScanState(repo_root=tmp_path)
+    result = scan.verify_command(state, "python -m gpt_trader.tool")
+    assert result.status == "ok"
+
+
+def test_verify_command_rejects_python_package_without_main(tmp_path: Path) -> None:
+    # A package with only __init__.py is importable but NOT runnable via `python -m`.
+    pkg = tmp_path / "src" / "gpt_trader" / "pkgonly"
+    pkg.mkdir(parents=True)
+    (pkg / "__init__.py").write_text("", encoding="utf-8")
+    state = scan.ScanState(repo_root=tmp_path)
+    result = scan.verify_command(state, "python -m gpt_trader.pkgonly")
+    assert result.status == "missing"
+
+
 def test_scan_docs_on_fixture_repo_produces_report(tmp_path: Path) -> None:
     docs = tmp_path / "docs"
     docs.mkdir()

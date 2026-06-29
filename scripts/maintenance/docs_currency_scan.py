@@ -491,10 +491,19 @@ def verify_command(state: ScanState, item: str) -> VerificationResult:
 
     if item.startswith("python -m "):
         module = item.split()[2]
-        main_py = state.repo_root / "src" / module.replace(".", "/") / "__main__.py"
-        init_py = state.repo_root / "src" / module.replace(".", "/") / "__init__.py"
-        if main_py.exists() or init_py.exists():
+        module_rel = module.replace(".", "/")
+        # `python -m X` runs a module file (`X.py`) or a package's `__main__.py`.
+        # A package with only `__init__.py` is importable but NOT runnable via -m.
+        main_py = state.repo_root / "src" / module_rel / "__main__.py"
+        module_file = state.repo_root / "src" / f"{module_rel}.py"
+        if main_py.exists() or module_file.exists():
             return VerificationResult("ok", "python -m module", module)
+        if (state.repo_root / "src" / module_rel / "__init__.py").exists():
+            return VerificationResult(
+                "missing",
+                "python -m module",
+                f"{module} is a package without __main__.py (not runnable via -m)",
+            )
         return _try_import(state, module)
 
     if item.startswith("uv run "):

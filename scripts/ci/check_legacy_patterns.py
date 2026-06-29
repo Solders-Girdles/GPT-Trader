@@ -40,6 +40,8 @@ LEGACY_ENV_VARS = {
     "COINBASE_ENABLE_DERIVATIVES": {
         "allowed_files": {
             "docs/DEPRECATIONS.md",
+            # Decision packet that documents the deprecation (does not reintroduce it).
+            "docs/decisions/intx-default-derivatives-venue.md",
             "scripts/ci/check_legacy_patterns.py",
         },
         "allowed_prefixes": (),

@@ -11,7 +11,7 @@ production, and optional security scanning. The base compose file
 (`docker/docker-compose.yaml`) now focuses on the essentials: the trading bot
 and opt-in Prometheus/Grafana metrics via the `observability` profile. The
 production reverse proxy (Nginx) lives in the optional
-`docker-compose.infrastructure.yaml` override.
+`docker/docker-compose.infrastructure.yaml` override.
 
 ## Image Targets
 The Dockerfile defines several stages selectable via the `BUILD_TARGET` build argument:

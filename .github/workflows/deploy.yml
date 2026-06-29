@@ -37,10 +37,19 @@ jobs:
     steps:
       - name: Confirm release boundary
         env:
+          EVENT_NAME: ${{ github.event_name }}
           RELEASE_NOTE: ${{ github.event.inputs.release_note }}
         run: |
           set -euo pipefail
-          reference="${RELEASE_NOTE:-${GITHUB_REF_NAME:-unknown}}"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            reference="${RELEASE_NOTE:-}"
+            [ -n "${reference//[[:space:]]/}" ] || {
+              echo "release_note is required for manual release-image runs" >&2
+              exit 1
+            }
+          else
+            reference="${GITHUB_REF_NAME:-unknown}"
+          fi
           echo "Publishing and scanning a release image only."
           echo "Reference: ${reference}"
           echo "This workflow does not deploy staging or production."

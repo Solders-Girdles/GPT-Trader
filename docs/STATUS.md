@@ -23,7 +23,7 @@ the state per stage.
 | Stage | State |
 |-------|-------|
 | **0 — Rails** | **Complete** — all rubric evidence shipped and tested |
-| **1 — Human-approved loop** | **In progress** — workflow, review tooling, attribution, and paper-fill reconciliation exist; closing the loop end-to-end on real market data is the remaining work |
+| **1 — Human-approved loop** | **In progress (bridge remaining)** — reviewer tooling, attribution, real-data snapshot proposal (#1031), and paper-fill reconciliation (#1035) are operator-usable; the live strategy path is not yet routed through the approval workflow |
 | **2 — Bounded autonomy** | Not started |
 | **3 — Self-directed entity** | Not started |
 
@@ -39,23 +39,26 @@ the `gpt-trader ideas` CLI.
 
 ## Stage 1 — Human-approved loop (in progress)
 
-The shipped surfaces — reviewer tooling (CLI + TUI), outcome attribution,
-track-record report, and paper-fill reconciliation onto the audit trail — turn
-the rails into most of a loop. What closes it is a proposer fed by **real market
-data** routed from the existing TA/ensemble intelligence (not hand-authored
-fixtures, and not a second proposer brain — see
-[stabilize-before-closing-the-loop](decisions/stabilize-before-closing-the-loop.md)).
+The shipped surfaces turn the rails into most of a loop: reviewer tooling
+(CLI + TUI), outcome attribution, the track-record report, real-data
+`MarketSnapshot` proposal (`ideas snapshot build` → `ideas propose-baseline`,
+#1031 closed 2026-06-28), and paper-fill reconciliation onto the audit trail
+(`ideas reconcile-paper-fills`, #1035 closed 2026-06-28).
 
-Track the precise remaining items in the issue tracker rather than here; this
-paragraph is the shape, the queue is the truth.
+The one remaining gap is the **strategy-signal bridge**: the existing TA/ensemble
+intelligence still does not emit trade ideas through `TradeIdeaService` (#1033,
+open and next). Build it through the existing spine, not a second proposer brain —
+see
+[stabilize-before-closing-the-loop](decisions/stabilize-before-closing-the-loop.md).
+Track precise per-ticket status in the issue queue, not here.
 
 ## The structural fact
 
 The live TA bot (`features/live_trade/`) and the trade-idea workflow
-(`features/trade_ideas/`) historically shared **zero references in either
-direction**: the trading intelligence already built does not yet flow through the
-approval-gated rails. Bridging that seam — not adding new feature surface — is the
-central remaining piece of Stage 1.
+(`features/trade_ideas/`) still share **zero references in either direction**
+(verified 2026-06-28): the trading intelligence already built does not yet flow
+through the approval-gated rails. Bridging that seam (#1033) — not adding new
+feature surface — is the central remaining piece of Stage 1.
 
 ## How to keep this doc honest
 

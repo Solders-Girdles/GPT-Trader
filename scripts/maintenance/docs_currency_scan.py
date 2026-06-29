@@ -40,7 +40,7 @@ PATTERNS: list[tuple[str, str, re.Pattern[str]]] = [
         "assignment",
         re.compile(r"\b([A-Z][A-Z0-9_]{2,})=(?:" + r"[0-9a-zA-Z._/-]+" + r")\b"),
     ),
-    ("cli_flag", "flag", re.compile(r"`(--[a-z][a-z0-9-]+)`")),
+    ("cli_flag", "flag", re.compile(r"`(-(?:-[a-z][a-z0-9-]+|[a-z]))`")),
     ("cli_flag", "flag", re.compile(r"(?<![\w-])(--[a-z][a-z0-9-]{2,})(?=\s|$|[,\)])")),
     ("module", "gpt_trader", re.compile(r"`(gpt_trader\.[a-zA-Z0-9_.]+)`")),
     ("module", "gpt_trader", re.compile(r"\b(gpt_trader\.[a-zA-Z0-9_.]+)\b")),
@@ -355,9 +355,17 @@ def verify_module(state: ScanState, item: str, source_doc: str) -> VerificationR
                 return VerificationResult("ok", f"getattr {item}", "callable/attr exists")
         except Exception:
             pass
-        py_path = state.repo_root / "src" / "/".join(module_path.split(".")) / f"{parts[-2]}.py"
-        if py_path.exists() and attr_name in py_path.read_text(encoding="utf-8", errors="replace"):
-            return VerificationResult("uncertain", "source grep", f"function {attr_name} in source")
+        module_rel = Path(*module_path.split("."))
+        for py_path in (
+            state.repo_root / "src" / module_rel.with_suffix(".py"),
+            state.repo_root / "src" / module_rel / "__init__.py",
+        ):
+            if py_path.exists() and attr_name in py_path.read_text(
+                encoding="utf-8", errors="replace"
+            ):
+                return VerificationResult(
+                    "uncertain", "source grep", f"function {attr_name} in source"
+                )
     if parts[-1][0].isupper():
         module_path = ".".join(parts[:-1])
         class_name = parts[-1]
@@ -368,7 +376,7 @@ def verify_module(state: ScanState, item: str, source_doc: str) -> VerificationR
         except Exception:
             pass
         try:
-            result = subprocess.run(
+            proc = subprocess.run(
                 [
                     "uv",
                     "run",
@@ -381,12 +389,18 @@ def verify_module(state: ScanState, item: str, source_doc: str) -> VerificationR
                 text=True,
                 timeout=30,
             )
-            if result.returncode == 0:
+            if proc.returncode == 0:
                 return VerificationResult("ok", f"from-import {item}", "class import succeeded")
         except Exception as exc:
             return VerificationResult("uncertain", f"from-import {item}", str(exc))
-        py_path = state.repo_root / "src" / "/".join(parts[:-1]) / f"{parts[-2]}.py"
-        if py_path.exists():
+        module_rel = Path(*module_path.split("."))
+        if any(
+            py_path.exists()
+            for py_path in (
+                state.repo_root / "src" / module_rel.with_suffix(".py"),
+                state.repo_root / "src" / module_rel / "__init__.py",
+            )
+        ):
             return VerificationResult(
                 "uncertain", "source file", f"class {class_name} not importable"
             )
@@ -453,6 +467,16 @@ def verify_cli_flag(state: ScanState, item: str, source_doc: str) -> Verificatio
         return VerificationResult("uncertain", "scripts grep", f"in {script_hits[0]}")
     if "gh pr" in source_doc or "project_review" in source_doc:
         return VerificationResult("uncertain", "gh CLI flag", "GitHub CLI flag; not gpt-trader")
+    if re.fullmatch(r"-[a-z]", item):
+        return VerificationResult(
+            "uncertain", "short flag", "single-dash flag; likely pytest/third-party"
+        )
+    if not any(
+        help_text and not help_text.startswith("HELP_UNAVAILABLE") for _, help_text in helps
+    ):
+        return VerificationResult(
+            "uncertain", "--help unavailable", "CLI help was skipped or unavailable"
+        )
     return VerificationResult("missing", "--help grep", "not in CLI help or source")
 
 
@@ -475,6 +499,9 @@ def verify_command(state: ScanState, item: str) -> VerificationResult:
 
     if item.startswith("uv run "):
         rest = item[len("uv run ") :].strip()
+        if rest.startswith("python -m "):
+            module = rest.split()[2]
+            return verify_command(state, f"python -m {module}")
         if rest.startswith("python "):
             script = rest[len("python ") :].split()[0]
             if (state.repo_root / script).exists():
@@ -577,7 +604,7 @@ def render_report(
         for ext, result in sorted(
             discrepancies, key=lambda row: (row[1].status, row[0].source_doc, row[0].item)
         ):
-            notes = result.notes.replace("|", "\\|")[:120]
+            notes = " ".join(result.notes.split()).replace("|", "\\|")[:120]
             lines.append(
                 f"| {ext.source_doc} | {ext.category} | `{ext.item}` | {ext.item_type} | {result.method} | **{result.status}** | {notes} |"
             )
@@ -618,6 +645,7 @@ def main(argv: list[str] | None = None) -> int:
     args.output.write_text(report, encoding="utf-8")
 
     if args.raw_extracts:
+        args.raw_extracts.parent.mkdir(parents=True, exist_ok=True)
         by_doc: dict[str, list[ExtractedItem]] = defaultdict(list)
         for entry in extracted:
             by_doc[entry.source_doc].append(entry)

@@ -8,6 +8,7 @@ keeps thin ``_`` -prefixed delegators so existing call sites are unchanged.
 
 from __future__ import annotations
 
+import math
 import time
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
@@ -53,27 +54,33 @@ def normalize_persisted_status(status: Any) -> PersistedOrderStatus:
 
 
 def parse_decimal(value: Any, default: Decimal) -> Decimal:
-    """Coerce ``value`` to ``Decimal``, falling back to ``default`` on failure."""
+    """Coerce ``value`` to a finite ``Decimal``, falling back to ``default``.
+
+    Non-finite values (``NaN``/``Infinity``) are rejected — they must never be
+    persisted as an order quantity/price.
+    """
     if value is None:
         return default
     if isinstance(value, Decimal):
-        return value
+        return value if value.is_finite() else default
     try:
-        return Decimal(str(value))
+        result = Decimal(str(value))
     except (InvalidOperation, ValueError, TypeError):
         return default
+    return result if result.is_finite() else default
 
 
 def parse_decimal_optional(value: Any) -> Decimal | None:
-    """Coerce ``value`` to ``Decimal``, returning ``None`` on failure/absence."""
+    """Coerce ``value`` to a finite ``Decimal``, returning ``None`` otherwise."""
     if value is None:
         return None
     if isinstance(value, Decimal):
-        return value
+        return value if value.is_finite() else None
     try:
-        return Decimal(str(value))
+        result = Decimal(str(value))
     except (InvalidOperation, ValueError, TypeError):
         return None
+    return result if result.is_finite() else None
 
 
 def merge_metadata(
@@ -94,7 +101,7 @@ def parse_timestamp(value: Any) -> float:
     if value is None:
         return time.time()
     if isinstance(value, (int, float)):
-        return float(value)
+        return float(value) if math.isfinite(value) else time.time()
     if isinstance(value, datetime):
         return value.timestamp()
     if isinstance(value, str):

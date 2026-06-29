@@ -44,8 +44,10 @@ superseded-by:            # slug of the ADR that replaced this (set when superse
 ---
 ```
 
-Only `status` and `date` are required. Copy
-[`_template.md`](_template.md) to start a new record.
+A record needs a top-level `# <title>` heading plus the frontmatter; only
+`status` and `date` are required frontmatter keys. A file missing the title or
+`status` is rejected by the index generator (it does not silently disappear).
+Copy [`_template.md`](_template.md) to start one.
 
 ## How to use it
 

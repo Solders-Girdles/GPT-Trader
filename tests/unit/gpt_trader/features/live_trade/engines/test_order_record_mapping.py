@@ -89,6 +89,18 @@ class TestParseDecimal:
         assert parse_decimal_optional("bad") is None
         assert parse_decimal_optional("4") == Decimal("4")
 
+    def test_non_finite_returns_default(self) -> None:
+        # NaN/Infinity must never be persisted as an order quantity/price.
+        assert parse_decimal(Decimal("NaN"), Decimal("0")) == Decimal("0")
+        assert parse_decimal(Decimal("Infinity"), Decimal("0")) == Decimal("0")
+        assert parse_decimal("nan", Decimal("0")) == Decimal("0")
+        assert parse_decimal("inf", Decimal("0")) == Decimal("0")
+
+    def test_optional_non_finite_returns_none(self) -> None:
+        assert parse_decimal_optional(Decimal("NaN")) is None
+        assert parse_decimal_optional(Decimal("-Infinity")) is None
+        assert parse_decimal_optional("inf") is None
+
 
 class TestMergeMetadata:
     def test_both_none_returns_none(self) -> None:
@@ -117,6 +129,12 @@ class TestParseTimestamp:
     def test_none_and_invalid_fall_back_to_now(self) -> None:
         assert parse_timestamp(None) > 0
         assert parse_timestamp("definitely-not-a-date") > 0
+
+    def test_non_finite_falls_back_to_now(self) -> None:
+        # inf/nan would raise in datetime.fromtimestamp; fall back instead.
+        assert parse_timestamp(float("inf")) > 0
+        assert parse_timestamp(float("-inf")) > 0
+        assert parse_timestamp(float("nan")) > 0
 
 
 class TestBuildRecordFromBrokerOrder:

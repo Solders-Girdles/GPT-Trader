@@ -60,14 +60,24 @@ def _parse_title(lines: list[str]) -> str | None:
     return None
 
 
-def parse_decision(path: Path) -> DecisionRecord | None:
-    """Parse one decision file, or return None if it is not a usable record."""
+def parse_decision(path: Path) -> DecisionRecord:
+    """Parse one decision file; raise if a required title/status is missing.
+
+    A malformed record must fail the run rather than silently disappear from the
+    generated index.
+    """
     lines = path.read_text(encoding="utf-8").splitlines()
     fields = _parse_frontmatter(lines)
     title = _parse_title(lines)
     status = fields.get("status")
-    if title is None or status is None:
-        return None
+    missing: list[str] = []
+    if title is None:
+        missing.append("H1 title")
+    if status is None:
+        missing.append("status frontmatter")
+    if missing:
+        raise ValueError(f"{path}: missing required decision fields: {', '.join(missing)}")
+    assert title is not None and status is not None  # narrowed by the checks above
     return DecisionRecord(
         slug=path.name,
         title=title,
@@ -81,9 +91,7 @@ def collect_decisions(decisions_dir: Path) -> list[DecisionRecord]:
     for path in sorted(decisions_dir.glob("*.md")):
         if path.name in EXCLUDED_NAMES or path.name.startswith("_"):
             continue
-        record = parse_decision(path)
-        if record is not None:
-            records.append(record)
+        records.append(parse_decision(path))
     # Newest first; undated records sort last, then by title for stability.
     records.sort(key=lambda r: (r.date == "", r.date, r.title), reverse=False)
     records.sort(key=lambda r: r.date, reverse=True)

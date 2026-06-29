@@ -206,3 +206,13 @@ def test_generate_decision_index_check_detects_stale(tmp_path: Path) -> None:
     assert generate_decision_index.main(["--decisions-dir", str(tmp_path), "--check"]) == 1
     assert generate_decision_index.main(["--decisions-dir", str(tmp_path)]) == 0
     assert generate_decision_index.main(["--decisions-dir", str(tmp_path), "--check"]) == 0
+
+
+def test_collect_decisions_raises_on_malformed_record(tmp_path: Path) -> None:
+    # A non-excluded decision file missing the H1 title must fail the run rather
+    # than silently disappear from the generated index.
+    (tmp_path / "broken.md").write_text(
+        "---\nstatus: accepted\n---\n\nno title here\n", encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="missing required decision fields"):
+        generate_decision_index.collect_decisions(tmp_path)

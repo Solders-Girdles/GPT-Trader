@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 7046,
+    "total_tests": 7051,
     "total_files": 835,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6879,
+    "unit": 6884,
     "asyncio": 440,
     "parametrize": 207,
     "endpoints": 83,
@@ -33495,8 +33495,48 @@
         "docstring": ""
       },
       {
-        "name": "test_non_spot_context_is_rejected_before_proposal",
+        "name": "test_subcent_mark_with_default_precision_is_rejected",
         "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_subcent_mark_with_fine_precision_preserves_levels",
+        "line": 117,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_decision_id_is_stable_across_equivalent_marks_and_reasons",
+        "line": 131,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_naive_as_of_is_rejected",
+        "line": 145,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_decision_id_is_invariant_to_equivalent_utc_offsets",
+        "line": 153,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_non_spot_context_is_rejected_before_proposal",
+        "line": 169,
         "markers": [
           "unit"
         ],

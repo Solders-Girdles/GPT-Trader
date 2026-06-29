@@ -42,7 +42,7 @@ the `gpt-trader ideas` CLI.
 The shipped surfaces turn the rails into most of a loop: reviewer tooling
 (CLI + TUI), outcome attribution, the track-record report, real-data
 `MarketSnapshot` proposal (`ideas snapshot build` → `ideas propose-baseline`,
-#1031 closed 2026-06-28), paper-fill reconciliation onto the audit trail
+issue `#1031` closed 2026-06-28), paper-fill reconciliation onto the audit trail
 (`ideas reconcile-paper-fills`, #1035 closed 2026-06-28), and a default-off
 library adapter that maps supported strategy buy decisions into proposed trade
 ideas through `TradeIdeaService.propose()` only.

@@ -151,7 +151,13 @@ class StrategySignalToTradeIdeaAdapter:
         target = (mark + config.reward_multiple * (mark - stop_level)).quantize(
             config.price_precision
         )
-        reason = decision.reason.strip() or f"{context.strategy_name} emitted a buy signal"
+        self._validate_price_levels(
+            stop_level=stop_level,
+            entry_lower=entry_lower,
+            entry_upper=entry_upper,
+            target=target,
+        )
+        reason = _idea_reason(decision, context)
 
         return TradeIdea(
             decision_id=self._decision_id(decision, context, as_of),
@@ -204,7 +210,8 @@ class StrategySignalToTradeIdeaAdapter:
         action = _action_value(decision.action)
         return (
             (
-                f"{context.data_source}:{context.symbol}:mark={context.current_mark}:"
+                f"{context.data_source}:{context.symbol}:"
+                f"mark={_canonical_decimal(context.current_mark)}:"
                 f"as_of={as_of.isoformat()}"
             ),
             (
@@ -227,14 +234,44 @@ class StrategySignalToTradeIdeaAdapter:
                 (
                     self.proposer_id(context),
                     context.symbol,
-                    str(context.current_mark),
+                    _canonical_decimal(context.current_mark),
                     as_of.isoformat(),
                     action,
-                    decision.reason,
+                    _idea_reason(decision, context),
                 )
             ).encode()
         ).hexdigest()[:8]
         return f"trade-{as_of:%Y%m%d}-{strategy_slug}-{symbol_slug}-{digest}"
+
+    def _validate_price_levels(
+        self,
+        *,
+        stop_level: Decimal,
+        entry_lower: Decimal,
+        entry_upper: Decimal,
+        target: Decimal,
+    ) -> None:
+        """Reject ideas where ``price_precision`` is too coarse for the mark.
+
+        For sub-cent symbols the default ``price_precision`` quantizes stop/entry/
+        target to ``0.00`` (or collapses them together), which ``evaluate_eligibility``
+        cannot detect because the bounds are still non-``None``. Reject here so a
+        degenerate, zero-priced idea is never proposed; callers can pass a finer
+        ``price_precision`` for low-priced symbols.
+        """
+        if any(level <= 0 for level in (stop_level, entry_lower, entry_upper, target)):
+            raise ValidationError(
+                "price_precision is too coarse for current_mark; "
+                "quantization erased a price level",
+                field="price_precision",
+                value=str(self._config.price_precision),
+            )
+        if not stop_level < entry_lower < entry_upper < target:
+            raise ValidationError(
+                "price_precision is too coarse to keep stop/entry/target levels distinct",
+                field="price_precision",
+                value=str(self._config.price_precision),
+            )
 
     def _validate_context(self, context: StrategySignalContext) -> None:
         if not context.symbol.strip():
@@ -262,8 +299,20 @@ def _safe_slug(value: str) -> str:
 
 def _utc_aware(value: datetime) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
-        return value.replace(tzinfo=UTC)
-    return value
+        raise ValidationError("as_of must be timezone-aware", field="as_of")
+    return value.astimezone(UTC)
+
+
+def _idea_reason(decision: StrategyDecisionSignal, context: StrategySignalContext) -> str:
+    return decision.reason.strip() or f"{context.strategy_name} emitted a buy signal"
+
+
+def _canonical_decimal(value: Decimal) -> str:
+    """Render a decimal so equal values share one string (e.g. 60000 == 60000.00)."""
+    normalized = value.normalize()
+    # ``normalize`` can yield exponent form (6E+4); ``format(..., "f")`` keeps it plain
+    # while staying canonical, and preserves sub-cent precision (0.00001234).
+    return format(normalized, "f")
 
 
 def _action_value(action: Any) -> str:

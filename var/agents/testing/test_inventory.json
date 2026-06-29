@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 7004,
-    "total_files": 831,
+    "total_tests": 7017,
+    "total_files": 833,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6837,
+    "unit": 6850,
     "asyncio": 440,
     "parametrize": 205,
     "endpoints": 83,
@@ -423,6 +423,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_mark_staleness_and_risk_metrics_guard.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_real_logger.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_schema.py",
@@ -806,6 +807,9 @@
     "test_docs_currency_scan.py": [
       "tests/integration/scripts/test_docs_currency_scan.py",
       "tests/unit/scripts/test_docs_currency_scan.py"
+    ],
+    "test_docs_link_audit.py": [
+      "tests/unit/scripts/test_docs_link_audit.py"
     ],
     "test_docs_maintenance.py": [
       "tests/unit/scripts/test_docs_maintenance.py"
@@ -23467,6 +23471,40 @@
         ],
         "docstring": "Test that 'market' as display_price is handled.",
         "class": "TestRecordSuccess"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_real_logger.py": [
+      {
+        "name": "test_record_submission_attempt_uses_real_logger",
+        "line": 44,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_rejection_uses_real_logger",
+        "line": 68,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_trade_event_uses_real_logger",
+        "line": 90,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_record_preview_uses_real_logger",
+        "line": 113,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py": [
@@ -59321,6 +59359,62 @@
           "unit"
         ],
         "docstring": ""
+      },
+      {
+        "name": "test_log_event_emits_structured_record_with_fields",
+        "line": 230,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_event_preserves_explicit_component_over_default_component",
+        "line": 251,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_event_coerces_string_and_int_levels",
+        "line": 264,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_order_submission_records_event",
+        "line": 276,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_order_submission_accepts_none_price",
+        "line": 300,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_order_status_change_records_event",
+        "line": 317,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_order_status_change_includes_optional_reason",
+        "line": 336,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/utilities/test_parsing.py": [
@@ -63760,6 +63854,16 @@
         "docstring": ""
       }
     ],
+    "tests/unit/scripts/test_docs_link_audit.py": [
+      {
+        "name": "test_iter_markdown_files_ignores_review_artifacts_tmp",
+        "line": 6,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/scripts/test_docs_maintenance.py": [
       {
         "name": "test_iter_links_skips_external_strips_anchors_and_decodes",
@@ -63933,6 +64037,14 @@
       {
         "name": "test_structured_logging_fields_do_not_depend_on_operation_position",
         "line": 28,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_event_catalog_common_fields_are_not_truncated",
+        "line": 57,
         "markers": [
           "unit"
         ],

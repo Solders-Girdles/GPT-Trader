@@ -276,7 +276,7 @@ def generate_event_catalog(scan_results: dict[str, Any]) -> dict[str, Any]:
             "components": sorted(components) if components else None,
             "statuses": sorted(statuses) if statuses else None,
             "levels": sorted(levels),
-            "common_fields": sorted(all_fields)[:15],
+            "common_fields": sorted(all_fields),
             "source_files": sorted(files)[:5],  # Limit to 5 example files
         }
 

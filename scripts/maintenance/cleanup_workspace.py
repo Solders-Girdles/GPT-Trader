@@ -201,6 +201,7 @@ def rotate_large_file(
     threshold_mb: int,
     stale_minutes: int,
     category: str,
+    require_stale: bool = True,
 ) -> None:
     if not path.exists():
         return
@@ -210,19 +211,20 @@ def rotate_large_file(
     if size_mb < threshold_mb:
         return
 
-    stale_cutoff = utcnow() - timedelta(minutes=stale_minutes)
-    if datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc) > stale_cutoff:
-        session.record_action(
-            "rotate-skip",
-            path,
-            "active",
-            details={
-                "category": category,
-                "size_mb": round(size_mb, 2),
-                "reason": "recently_modified",
-            },
-        )
-        return
+    if require_stale:
+        stale_cutoff = utcnow() - timedelta(minutes=stale_minutes)
+        if datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc) > stale_cutoff:
+            session.record_action(
+                "rotate-skip",
+                path,
+                "active",
+                details={
+                    "category": category,
+                    "size_mb": round(size_mb, 2),
+                    "reason": "recently_modified",
+                },
+            )
+            return
 
     archive_dir.mkdir(parents=True, exist_ok=True)
     suffix = "".join(path.suffixes)
@@ -257,6 +259,24 @@ def rotate_large_file(
         session.record_error("rotate", path, exc)
 
 
+def clean_root_logs(
+    session: CleanupSession,
+    *,
+    threshold_mb: int,
+    stale_minutes: int,
+) -> None:
+    """Rotate the cleanup audit log itself when it grows too large."""
+    rotate_large_file(
+        session,
+        session.audit_path,
+        session.audit_path.parent / "archive",
+        threshold_mb=threshold_mb,
+        stale_minutes=stale_minutes,
+        category="cleanup_audit_log",
+        require_stale=False,
+    )
+
+
 def parse_rotation(file_path: Path) -> tuple[str, int] | None:
     parts = file_path.name.split(".")
     if len(parts) < 3:
@@ -285,19 +305,30 @@ def clean_tool_caches(session: CleanupSession, *, preserve_hypothesis: bool = Fa
 
 
 def clean_pycache_directories(session: CleanupSession) -> None:
-    """Remove __pycache__ directories from source and test trees."""
+    """Remove __pycache__ directories from maintained Python trees."""
     # Remove root-level __pycache__
     root_pycache = REPO_ROOT / "__pycache__"
     if root_pycache.exists():
         remove_path(session, root_pycache, category="python_cache", reason="bytecode_cache")
 
-    # Remove __pycache__ from source and test trees
-    search_roots = [REPO_ROOT / "src", REPO_ROOT / "tests"]
+    search_roots = [REPO_ROOT / "src", REPO_ROOT / "tests", REPO_ROOT / "scripts"]
     for root in search_roots:
         if not root.exists():
             continue
         for pycache in root.rglob("__pycache__"):
             remove_path(session, pycache, category="python_cache", reason="bytecode_cache")
+
+
+def clean_build_artifacts(session: CleanupSession) -> None:
+    targets = [
+        "build",
+        "dist",
+        "src/gpt_trader.egg-info",
+    ]
+    for rel in targets:
+        remove_path(
+            session, REPO_ROOT / rel, category="build_artifact", reason="regenerated_by_build"
+        )
 
 
 def clean_coverage_artifacts(session: CleanupSession) -> None:
@@ -312,6 +343,33 @@ def clean_coverage_artifacts(session: CleanupSession) -> None:
         remove_path(
             session, REPO_ROOT / rel, category="coverage_artifact", reason="regenerated_by_tests"
         )
+
+
+def clean_macos_artifacts(session: CleanupSession) -> None:
+    remove_path(
+        session,
+        REPO_ROOT / ".DS_Store",
+        category="macos_artifact",
+        reason="finder_metadata",
+    )
+    search_roots = [
+        REPO_ROOT / ".claude",
+        REPO_ROOT / ".github",
+        REPO_ROOT / "config",
+        REPO_ROOT / "deploy",
+        REPO_ROOT / "docs",
+        REPO_ROOT / "review_artifacts",
+        REPO_ROOT / "runtime_data",
+        REPO_ROOT / "scripts",
+        REPO_ROOT / "src",
+        REPO_ROOT / "tests",
+        REPO_ROOT / "var",
+    ]
+    for root in search_roots:
+        if not root.exists():
+            continue
+        for ds_store in root.rglob(".DS_Store"):
+            remove_path(session, ds_store, category="macos_artifact", reason="finder_metadata")
 
 
 def clean_var_logs(
@@ -414,9 +472,16 @@ def main() -> None:
     args = parse_args()
     session = CleanupSession(apply=args.apply, quiet=args.quiet)
 
+    clean_root_logs(
+        session,
+        threshold_mb=args.log_threshold_mb,
+        stale_minutes=args.stale_minutes,
+    )
     clean_tool_caches(session, preserve_hypothesis=args.preserve_hypothesis)
     clean_pycache_directories(session)
+    clean_build_artifacts(session)
     clean_coverage_artifacts(session)
+    clean_macos_artifacts(session)
     clean_var_logs(
         session,
         keep_rotations=args.keep_rotations,

@@ -166,3 +166,38 @@ class TestValidateConfigCFMConsistency:
         errors = validate_config(BotConfig(cfm_enabled=True, trading_modes=["spot", "cfm"]))
 
         assert errors == []
+
+
+class TestValidateConfigCoinbaseDerivativesType:
+    """Tests for Coinbase derivatives venue type validation."""
+
+    def test_known_derivatives_types_are_valid(self) -> None:
+        for derivatives_type in ("intx_perps", "perpetuals", "us_futures"):
+            errors = validate_config(BotConfig(coinbase_derivatives_type=derivatives_type))
+
+            assert errors == []
+
+    def test_derivatives_type_is_case_and_whitespace_tolerant(self) -> None:
+        errors = validate_config(BotConfig(coinbase_derivatives_type=" US_FUTURES "))
+
+        assert errors == []
+
+    def test_unknown_derivatives_type_is_invalid(self) -> None:
+        errors = validate_config(BotConfig(coinbase_derivatives_type="options"))
+
+        assert (
+            "coinbase_derivatives_type must be one of: intx_perps, perpetuals, us_futures; "
+            "got 'options'"
+        ) in errors
+
+    def test_derivatives_enabled_requires_nonempty_derivatives_type(self) -> None:
+        errors = validate_config(BotConfig(derivatives_enabled=True, coinbase_derivatives_type=""))
+
+        assert "coinbase_derivatives_type must be set when derivatives_enabled is true" in errors
+
+    def test_derivatives_type_must_be_a_string(self) -> None:
+        errors = validate_config(BotConfig(coinbase_derivatives_type=None))  # type: ignore[arg-type]
+
+        assert (
+            "coinbase_derivatives_type must be one of: intx_perps, perpetuals, us_futures" in errors
+        )

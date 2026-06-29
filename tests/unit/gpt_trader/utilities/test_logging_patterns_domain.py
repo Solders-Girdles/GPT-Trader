@@ -248,6 +248,19 @@ def test_log_event_emits_structured_record_with_fields():
     assert has_attr(record, "side", "BUY")
 
 
+def test_log_event_preserves_explicit_component_over_default_component():
+    with captured_logger("monitoring") as (_, handler):
+        slog = lp.StructuredLogger("monitoring", component="default-component")
+        slog.log_event(
+            event_type="order_preview",
+            message="Order preview generated",
+            component="TradingEngine",
+        )
+
+    record = handler.records[0]
+    assert has_attr(record, "component", "TradingEngine")
+
+
 def test_log_event_coerces_string_and_int_levels():
     with captured_logger("monitoring") as (_, handler):
         slog = lp.StructuredLogger("monitoring")

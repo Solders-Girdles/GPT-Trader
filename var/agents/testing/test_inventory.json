@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 7015,
+    "total_tests": 7017,
     "total_files": 833,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6848,
+    "unit": 6850,
     "asyncio": 440,
     "parametrize": 205,
     "endpoints": 83,
@@ -59369,7 +59369,7 @@
         "docstring": ""
       },
       {
-        "name": "test_log_event_coerces_string_and_int_levels",
+        "name": "test_log_event_preserves_explicit_component_over_default_component",
         "line": 251,
         "markers": [
           "unit"
@@ -59377,8 +59377,16 @@
         "docstring": ""
       },
       {
+        "name": "test_log_event_coerces_string_and_int_levels",
+        "line": 264,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_log_order_submission_records_event",
-        "line": 263,
+        "line": 276,
         "markers": [
           "unit"
         ],
@@ -59386,7 +59394,7 @@
       },
       {
         "name": "test_log_order_submission_accepts_none_price",
-        "line": 287,
+        "line": 300,
         "markers": [
           "unit"
         ],
@@ -59394,7 +59402,7 @@
       },
       {
         "name": "test_log_order_status_change_records_event",
-        "line": 304,
+        "line": 317,
         "markers": [
           "unit"
         ],
@@ -59402,7 +59410,7 @@
       },
       {
         "name": "test_log_order_status_change_includes_optional_reason",
-        "line": 323,
+        "line": 336,
         "markers": [
           "unit"
         ],
@@ -64029,6 +64037,14 @@
       {
         "name": "test_structured_logging_fields_do_not_depend_on_operation_position",
         "line": 28,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_event_catalog_common_fields_are_not_truncated",
+        "line": 57,
         "markers": [
           "unit"
         ],

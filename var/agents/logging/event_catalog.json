@@ -1530,7 +1530,10 @@
         "quantity",
         "reason",
         "reason_detail",
-        "reduce_only"
+        "reduce_only",
+        "side",
+        "stage",
+        "symbol"
       ],
       "components": null,
       "levels": [

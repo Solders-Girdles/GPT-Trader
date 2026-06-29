@@ -38,7 +38,7 @@ class StructuredLogger:
             else:
                 extra_kwargs[key] = value
 
-        if self.component:
+        if self.component and "component" not in extra_kwargs:
             extra_kwargs["component"] = self.component
 
         return extracted_kwargs, extra_kwargs

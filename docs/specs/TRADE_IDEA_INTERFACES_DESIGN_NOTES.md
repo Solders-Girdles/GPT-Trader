@@ -23,6 +23,7 @@ already exists and is complete at the domain level:
 | `features/trade_ideas/audit.py` | Append-only `TradeIdeaAuditLog` (JSONL), `AuditEvent` |
 | `features/trade_ideas/store.py` | `TradeIdeaStore` — versioned records under record hash |
 | `features/trade_ideas/baseline.py`, `replay.py` | Baseline proposer and replay scoring |
+| `features/strategy_tools/trade_idea_adapter.py` | Default-off strategy decision → `TradeIdeaService.propose()` bridge |
 
 **Current interface state:** the CLI and TUI review surfaces now exist.
 `gpt-trader ideas` constructs `TradeIdeaService` through the trade-ideas factory
@@ -43,6 +44,14 @@ CLI, TUI, or MCP servers must stay thin adapters over these methods."*
 
 These notes preserve the interface decisions that shaped the implemented CLI and
 TUI surfaces. They are not a request to re-promote the TUI review workstream.
+
+The Stage 1 strategy-signal bridge starts as a library adapter, not runtime
+engine wiring. `StrategySignalToTradeIdeaAdapter` accepts an existing strategy
+decision shape plus explicit point-in-time context, maps supported buy signals
+to complete broker-neutral `TradeIdea` records, and submits them through
+`TradeIdeaService.propose()` only when explicitly enabled. Disabled, hold, sell,
+or close decisions produce no idea. It does not approve, preview, submit, modify,
+cancel, or reconcile orders, and it does not call broker/account APIs.
 
 ## Design Principles
 
@@ -69,6 +78,10 @@ TUI surfaces. They are not a request to re-promote the TUI review workstream.
 6. **Append-only mindset.** Interfaces never edit records in place. A change
    request produces a `needs_changes` event; the revised record is a new
    version saved via `resubmit`.
+7. **Default-off strategy bridges.** Strategy-signal bridges live outside the
+   broker-neutral `trade_ideas` core, require explicit enablement, and may only
+   call `TradeIdeaService.propose()` until a later decision/runbook scopes
+   runtime wiring.
 
 ## Shared Decisions (Workstream 0 — implemented)
 

@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 7040,
-    "total_files": 834,
+    "total_tests": 7046,
+    "total_files": 835,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6873,
+    "unit": 6879,
     "asyncio": 440,
-    "parametrize": 206,
+    "parametrize": 207,
     "endpoints": 83,
     "property": 82,
     "integration": 81,
@@ -553,6 +553,7 @@
       "tests/unit/gpt_trader/features/strategy_tools/test_risk_guards_edges.py",
       "tests/unit/gpt_trader/features/strategy_tools/test_strategy_enhancements_edges.py",
       "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py",
+      "tests/unit/gpt_trader/features/strategy_tools/test_trade_idea_adapter.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_broker_payloads.py",
@@ -33449,6 +33450,57 @@
         ],
         "docstring": "Verify create_standard_risk_guards is callable.",
         "class": "TestFactoryFunctions"
+      }
+    ],
+    "tests/unit/gpt_trader/features/strategy_tools/test_trade_idea_adapter.py": [
+      {
+        "name": "test_accepts_shipped_baseline_strategy_decision_shape",
+        "line": 57,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_default_off_adapter_does_not_map_or_propose",
+        "line": 61,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_buy_decision_maps_to_eligible_broker_neutral_trade_idea",
+        "line": 70,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_propose_decision_enters_workflow_as_ai_proposed_only",
+        "line": 86,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_non_buy_decisions_are_not_mapped",
+        "line": 99,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_non_spot_context_is_rejected_before_proposal",
+        "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_audit.py": [

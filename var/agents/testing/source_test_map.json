@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 745,
+    "tests_scanned": 746,
     "source_modules": 381,
     "unresolved_modules": 3
   },
@@ -524,6 +524,7 @@
       "tests/unit/gpt_trader/errors/test_handler.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_build.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
+      "tests/unit/gpt_trader/features/strategy_tools/test_trade_idea_adapter.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_broker_payloads.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
       "tests/unit/gpt_trader/validation/test_base_validator.py",
@@ -1217,7 +1218,8 @@
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_signals.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_perps_baseline_strategies.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/test_stateful_perps_baseline_edges.py",
-      "tests/unit/gpt_trader/features/optimize/runner/test_batch_runner.py"
+      "tests/unit/gpt_trader/features/optimize/runner/test_batch_runner.py",
+      "tests/unit/gpt_trader/features/strategy_tools/test_trade_idea_adapter.py"
     ],
     "gpt_trader.features.live_trade.strategies.regime_switcher": [
       "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py"
@@ -1316,7 +1318,8 @@
       "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics_trade_record.py"
     ],
     "gpt_trader.features.strategy_tools": [
-      "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py"
+      "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py",
+      "tests/unit/gpt_trader/features/strategy_tools/test_trade_idea_adapter.py"
     ],
     "gpt_trader.features.strategy_tools.enhancements": [
       "tests/unit/gpt_trader/features/strategy_tools/test_strategy_enhancements_edges.py"
@@ -1349,6 +1352,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py",
+      "tests/unit/gpt_trader/features/strategy_tools/test_trade_idea_adapter.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_broker_payloads.py",
@@ -4095,6 +4099,12 @@
     ],
     "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py": [
       "gpt_trader.features.strategy_tools"
+    ],
+    "tests/unit/gpt_trader/features/strategy_tools/test_trade_idea_adapter.py": [
+      "gpt_trader.errors",
+      "gpt_trader.features.live_trade.strategies.perps_baseline.strategy",
+      "gpt_trader.features.strategy_tools",
+      "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_audit.py": [
       "gpt_trader.features.trade_ideas"

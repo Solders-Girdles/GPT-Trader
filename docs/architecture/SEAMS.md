@@ -30,6 +30,11 @@ The strategy seam is where market state becomes a **decision** (buy/sell/hold, s
 ### Notes
 - Prefer **returning domain-level actions** (from `gpt_trader.core`) over invoking broker APIs directly.
 - Avoid having strategies import concrete broker/persistence implementations.
+- The approval-path bridge for Stage 1 is
+  `src/gpt_trader/features/strategy_tools/trade_idea_adapter.py`: it maps
+  supported strategy decisions into proposed trade ideas through
+  `TradeIdeaService.propose()` only. It is default-off and does not wire the
+  live engine cycle or submit orders.
 
 ## 2) Execution seam
 

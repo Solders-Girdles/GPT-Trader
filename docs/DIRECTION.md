@@ -1,8 +1,8 @@
-# Direction — Where GPT-Trader Is Going
-
 ---
 status: current
 ---
+
+# Direction — Where GPT-Trader Is Going
 
 The single home for **destination and gates**: what the system is becoming, the
 ladder to get there, and what must be true before each rung. For *where we are

@@ -103,14 +103,30 @@ bypass guards:
 
 ## Continuous Integration
 
-- `Python CI`: Default PR gate; runs selective tests on pull requests and full coverage on direct pushes.
-- `Targeted Suites`: Matrix guarding Coinbase, perps, and live-trade regressions when relevant paths change.
-- `Perps Validation`: Focused derivatives/perps health check; formerly the “phase6” workflow.
-- `Nightly Validation`: Coinbase websocket and harness smoke tests on a nightly cadence.
-- `Nightly Full Suite`: Scheduled full pytest run (slow markers included); manually triggerable for debugging.
-- `Security Audit`: Weekly pip-audit export to catch dependency vulnerabilities.
-- `GPT-Trader CI/CD Pipeline`: End-to-end build and deployment flow for staging/production releases; Docker publish is skipped on pull requests.
-- `Windows Portability`: Focused unit tests on windows-latest for persistence, monitoring, and scripts (see `windows-unit-tests` job in `.github/workflows/ci.yml`). Catches portability bugs for Windows development environment. Complements the default Ubuntu matrix. Added to address #955; currently runs on PRs (passes in recent merges) but not enforced as required check.
+This section is the compact contributor-facing CI contract. The executable
+source of truth remains `.github/workflows/*.yml` plus GitHub branch protection.
+Current `main` branch protection requires only the named `CI` contexts listed in
+the first row below, with strict up-to-date checks and conversation resolution
+enabled. Selected context-specific lanes self-skip by changed path while keeping
+those check names stable.
+
+| Check / workflow job | Tier | Trigger | Blocking status | Why it exists |
+| --- | --- | --- | --- | --- |
+| `CI` / `Lint & Format`, `Docs Link Audit`, `Type Check`, `TUI CSS Check`, `Test Guardrails`, `Unit Tests (Core)`, `TUI Snapshot Tests`, `Property Tests`, `Contract Tests` | Required merge safety | `pull_request`, `merge_group`, push to `main`/`develop`, manual | Required by `main` branch protection | Fast repo integrity, docs reachability, type checks, generated TUI CSS, and core test coverage |
+| `CI` / `Agent Health` | Advisory PR health | Same as `CI` | Not branch-protection required | Publishes an agent-health report without defining merge eligibility |
+| `CI` / `Agent Artifacts Freshness` | Generated artifact advisory on PR; blocking outside PR | Same as `CI` | Not branch-protection required; exits successfully with a warning on `pull_request`, fails on non-PR events when stale | Shows when `var/agents/**` needs regeneration without stalling ordinary PRs |
+| `CI` / `Windows Unit Tests (Portability)` and `Dependency Review` | Event/compatibility advisory | Windows follows `CI`; dependency review is `pull_request` only | Not branch-protection required | Covers Windows-sensitive units and high-severity dependency changes |
+| `CodeQL` / `Analyze Python` | Scheduled/security advisory | Push/PR to `main`/`develop`; weekly Monday 06:00 UTC | Not branch-protection required | GitHub code scanning |
+| `Agent Artifacts Refresh` / `Refresh, validate, and publish package`, `Verify uploaded package`; `UV Lock Upgrade` / `Upgrade uv.lock` | Scheduled/advisory maintenance | Scheduled and manual | Not branch-protection required; may publish a branch or PR | Keeps generated agent artifacts and dependency lock maintenance visible |
+| `Release Image` / `Build, Publish, and Scan Docker Image` | Release image publication/readiness | Version-tag push (`v*`) or manual run with a `release_note` reference | Outside the PR merge gate; publishes and scans images only | Builds, publishes, and scans Docker images; does not deploy staging/production, rollback, run canary/prod preflight, call broker/API commands, move money, or submit orders |
+| `Integration Tests (Manual)` / `Coinbase Integration` | Manual readiness | Manual | Outside the PR merge gate; requires environment/secrets and project approval boundaries | Manual Coinbase checks only; does not grant live trading, canary, or order authority |
+
+The default PR workflow keeps required merge-safety check names stable for branch
+protection, but several context-specific lanes now self-skip when their inputs
+do not change. `TUI CSS Check` runs for TUI style/CSS generator inputs, `TUI
+Snapshot Tests` runs for TUI code/snapshot/dependency inputs, `Agent Artifacts
+Freshness` runs for agent artifact source or output inputs, and `Dependency
+Review` runs for dependency manifest changes.
 
 ### Local CI Command
 
@@ -156,7 +172,7 @@ checks were skipped and why.
 | Command | Intended use | Agent artifacts freshness | Readiness gate |
 | --- | --- | --- | --- |
 | `make ci-required` | Local PR-readiness validation surface | Blocking local step | Not run |
-| GitHub pull_request CI | GitHub PR validation in Actions | Non-blocking if stale on pull requests | Not run |
+| GitHub `pull_request` CI | GitHub PR validation in Actions | Path-conditional; non-blocking if stale when run | Not run |
 | `uv run local-ci` / strict/full | Local PR-readiness validation plus local/live readiness evidence | Blocking local step | Runs `scripts/ci/check_readiness_gate.py --profile canary --strict` |
 | `uv run local-ci --profile quick` | Fast development loop | Skipped with an explicit banner reason | Skipped with an explicit banner reason |
 
@@ -206,9 +222,12 @@ Local CI (`make ci-required` / `uv run local-ci`) can report failures before the
 
 ### Agent Artifacts Freshness
 
-The required **Agent Artifacts Freshness** check verifies generated inventories
-under `var/agents/**` are up to date with their sources. If it fails, regenerate
-the artifacts and commit the results.
+The **Agent Artifacts Freshness** check verifies generated inventories under
+`var/agents/**` are up to date with their sources. It is blocking for
+`make ci-required`, strict/full `uv run local-ci`, and non-PR GitHub CI events.
+On GitHub pull requests it reports stale artifacts as a non-blocking warning so
+ordinary PRs are not stalled by the scheduled refresh lane. If a blocking local
+check fails, regenerate the artifacts and commit the results.
 
 ```bash
 make agent-regenerate        # or: uv run agent-regenerate

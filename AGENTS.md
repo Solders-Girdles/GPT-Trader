@@ -104,7 +104,7 @@ gh pr create --fill
 gh pr merge --auto --squash --delete-branch
 ```
 
-If you touch `var/agents/**` or any agent-artifact inputs (notably `scripts/agents/**` or `config/environments/.env.template`), run `uv run agent-regenerate` and commit the updated artifacts (CI fails when they’re stale). To check quickly: `uv run agent-regenerate --verify`.
+If you touch `var/agents/**` or any agent-artifact inputs (notably `scripts/agents/**` or `config/environments/.env.template`), run `uv run agent-regenerate` and commit the updated artifacts. Local `make ci-required` and non-PR CI fail when they are stale; GitHub pull request CI reports stale artifacts as non-blocking. To check quickly: `uv run agent-regenerate --verify`.
 
 ### Quality Checks
 

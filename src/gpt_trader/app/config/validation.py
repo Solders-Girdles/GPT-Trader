@@ -16,6 +16,8 @@ from pydantic import BaseModel, Field, ValidationError
 if TYPE_CHECKING:
     from gpt_trader.app.config.bot_config import BotConfig
 
+ALLOWED_COINBASE_DERIVATIVES_TYPES = frozenset({"intx_perps", "perpetuals", "us_futures"})
+
 
 class ConfigValidationError(Exception):
     """Raised when configuration values fail validation."""
@@ -97,6 +99,24 @@ def validate_config(config: BotConfig) -> list[str]:
     # Validate Symbols
     if not config.symbols:
         errors.append("symbols list cannot be empty")
+
+    raw_derivatives_type = config.coinbase_derivatives_type
+    if not isinstance(raw_derivatives_type, str):
+        errors.append(
+            "coinbase_derivatives_type must be one of: "
+            f"{', '.join(sorted(ALLOWED_COINBASE_DERIVATIVES_TYPES))}"
+        )
+        derivatives_type = ""
+    else:
+        derivatives_type = raw_derivatives_type.strip().lower()
+        if derivatives_type and derivatives_type not in ALLOWED_COINBASE_DERIVATIVES_TYPES:
+            errors.append(
+                f"coinbase_derivatives_type must be one of: "
+                f"{', '.join(sorted(ALLOWED_COINBASE_DERIVATIVES_TYPES))}; "
+                f"got {raw_derivatives_type!r}"
+            )
+    if config.derivatives_enabled and not derivatives_type:
+        errors.append("coinbase_derivatives_type must be set when derivatives_enabled is true")
 
     raw_trading_modes = config.trading_modes
     if not isinstance(raw_trading_modes, list):

@@ -99,7 +99,7 @@
       ],
       "locations": [
         {
-          "line": 1650,
+          "line": 1664,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],
@@ -305,7 +305,7 @@
       ],
       "locations": [
         {
-          "line": 2088,
+          "line": 2102,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],

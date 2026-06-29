@@ -41,6 +41,7 @@ work/
 *.swo
 backups/
 tmp_ws_root/
+work/
 results/
 _tmp_status.txt
 
@@ -120,6 +121,7 @@ pip-audit-report.json
 .hypothesis/
 # var/ directory - ignore all except agents/
 var/*
+!var/README.md
 !var/agents/
 .mypy_cache/
 .pytest_cache/

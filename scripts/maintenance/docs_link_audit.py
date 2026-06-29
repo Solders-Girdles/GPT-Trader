@@ -24,6 +24,7 @@ EXCLUDED_DIRS = {
     "data",
     "experiments",
     "logs",
+    "review_artifacts/tmp",
     "runtime_data",
     "var",
     "work",  # ephemeral per-task artifacts; see docs/INFORMATION_ARCHITECTURE.md
@@ -58,7 +59,12 @@ def should_exclude_markdown_file(path: Path, *, root: Path) -> bool:
     except ValueError:
         relative_path = path
 
+    relative_dirs = {
+        "/".join(relative_path.parts[:index]) for index in range(1, len(relative_path.parts))
+    }
     if any(part in EXCLUDED_DIRS for part in relative_path.parts):
+        return True
+    if relative_dirs & EXCLUDED_DIRS:
         return True
 
     return any(

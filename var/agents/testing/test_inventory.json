@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 6994,
-    "total_files": 831,
+    "total_tests": 7028,
+    "total_files": 833,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6827,
+    "unit": 6861,
     "asyncio": 440,
-    "parametrize": 205,
+    "parametrize": 206,
     "endpoints": 83,
     "property": 82,
     "integration": 81,
@@ -392,6 +392,8 @@
       "tests/unit/gpt_trader/features/live_trade/combiners/test_regime_combiner_adx.py",
       "tests/unit/gpt_trader/features/live_trade/combiners/test_regime_combiner_edges.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_order_record_mapping.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_position_formatting.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_price_tick_store_edges.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_engine_shutdown.py",
@@ -650,12 +652,10 @@
       "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py",
       "tests/unit/gpt_trader/monitoring/test_ticker_freshness_provider_resolution.py",
+      "tests/unit/gpt_trader/monitoring/test_tracing.py",
+      "tests/unit/gpt_trader/monitoring/test_tracing_edges.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py",
       "tests/unit/gpt_trader/monitoring/two_person_rule/test_models_edges.py"
-    ],
-    "observability": [
-      "tests/unit/gpt_trader/observability/test_tracing.py",
-      "tests/unit/gpt_trader/observability/test_tracing_edges.py"
     ],
     "persistence": [
       "tests/unit/gpt_trader/persistence/test_database_engine.py",
@@ -807,6 +807,9 @@
       "tests/integration/scripts/test_docs_currency_scan.py",
       "tests/unit/scripts/test_docs_currency_scan.py"
     ],
+    "test_docs_link_audit.py": [
+      "tests/unit/scripts/test_docs_link_audit.py"
+    ],
     "test_docs_maintenance.py": [
       "tests/unit/scripts/test_docs_maintenance.py"
     ],
@@ -947,7 +950,6 @@
       "tests/unit/gpt_trader/tui/widgets/test_account_widget.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox.py",
       "tests/unit/gpt_trader/tui/widgets/test_alert_inbox_actions.py",
-      "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py",
       "tests/unit/gpt_trader/tui/widgets/test_config_modal.py",
       "tests/unit/gpt_trader/tui/widgets/test_dashboard.py",
       "tests/unit/gpt_trader/tui/widgets/test_execution_issues_modal.py",
@@ -3593,6 +3595,51 @@
         ],
         "docstring": "",
         "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_known_derivatives_types_are_valid",
+        "line": 174,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_derivatives_type_is_case_and_whitespace_tolerant",
+        "line": 180,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_unknown_derivatives_type_is_invalid",
+        "line": 185,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_derivatives_enabled_requires_nonempty_derivatives_type",
+        "line": 193,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_derivatives_type_must_be_a_string",
+        "line": 198,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
       }
     ],
     "tests/unit/gpt_trader/app/config/test_validation_rules.py": [
@@ -20807,6 +20854,326 @@
         "docstring": ""
       }
     ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_order_record_mapping.py": [
+      {
+        "name": "TestGetOrderField::test_returns_first_present_key_from_dict",
+        "line": 34,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestGetOrderField"
+      },
+      {
+        "name": "TestGetOrderField::test_skips_none_values",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestGetOrderField"
+      },
+      {
+        "name": "TestGetOrderField::test_reads_object_attributes",
+        "line": 40,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestGetOrderField"
+      },
+      {
+        "name": "TestGetOrderField::test_missing_returns_none",
+        "line": 43,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestGetOrderField"
+      },
+      {
+        "name": "TestNormalizePersistedStatus::test_known_statuses",
+        "line": 63,
+        "markers": [
+          "parametrize",
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestNormalizePersistedStatus"
+      },
+      {
+        "name": "TestNormalizePersistedStatus::test_unwraps_enum_like_value",
+        "line": 66,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestNormalizePersistedStatus"
+      },
+      {
+        "name": "TestNormalizePersistedStatus::test_unknown_defaults_to_open",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestNormalizePersistedStatus"
+      },
+      {
+        "name": "TestParseDecimal::test_valid_value",
+        "line": 74,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseDecimal"
+      },
+      {
+        "name": "TestParseDecimal::test_none_returns_default",
+        "line": 77,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseDecimal"
+      },
+      {
+        "name": "TestParseDecimal::test_invalid_returns_default",
+        "line": 80,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseDecimal"
+      },
+      {
+        "name": "TestParseDecimal::test_decimal_passthrough",
+        "line": 83,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseDecimal"
+      },
+      {
+        "name": "TestParseDecimal::test_optional_none_and_invalid_return_none",
+        "line": 87,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseDecimal"
+      },
+      {
+        "name": "TestParseDecimal::test_non_finite_returns_default",
+        "line": 92,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseDecimal"
+      },
+      {
+        "name": "TestParseDecimal::test_optional_non_finite_returns_none",
+        "line": 99,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseDecimal"
+      },
+      {
+        "name": "TestMergeMetadata::test_both_none_returns_none",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestMergeMetadata"
+      },
+      {
+        "name": "TestMergeMetadata::test_base_only",
+        "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestMergeMetadata"
+      },
+      {
+        "name": "TestMergeMetadata::test_update_wins",
+        "line": 112,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestMergeMetadata"
+      },
+      {
+        "name": "TestParseTimestamp::test_numeric",
+        "line": 117,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseTimestamp"
+      },
+      {
+        "name": "TestParseTimestamp::test_datetime",
+        "line": 120,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseTimestamp"
+      },
+      {
+        "name": "TestParseTimestamp::test_iso_string",
+        "line": 124,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseTimestamp"
+      },
+      {
+        "name": "TestParseTimestamp::test_none_and_invalid_fall_back_to_now",
+        "line": 129,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseTimestamp"
+      },
+      {
+        "name": "TestParseTimestamp::test_non_finite_falls_back_to_now",
+        "line": 133,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestParseTimestamp"
+      },
+      {
+        "name": "TestBuildRecordFromBrokerOrder::test_builds_full_record",
+        "line": 141,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBuildRecordFromBrokerOrder"
+      },
+      {
+        "name": "TestBuildRecordFromBrokerOrder::test_client_order_id_falls_back_to_order_id",
+        "line": 175,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBuildRecordFromBrokerOrder"
+      },
+      {
+        "name": "TestBuildRecordFromBrokerOrder::test_missing_order_id_returns_none",
+        "line": 184,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBuildRecordFromBrokerOrder"
+      }
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_position_formatting.py": [
+      {
+        "name": "TestBuildPositionState::test_present_symbol",
+        "line": 44,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBuildPositionState"
+      },
+      {
+        "name": "TestBuildPositionState::test_missing_symbol_returns_none",
+        "line": 52,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestBuildPositionState"
+      },
+      {
+        "name": "TestResolveCloseOrder::test_long_closes_with_sell",
+        "line": 57,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestResolveCloseOrder"
+      },
+      {
+        "name": "TestResolveCloseOrder::test_short_closes_with_buy",
+        "line": 63,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestResolveCloseOrder"
+      },
+      {
+        "name": "TestResolveCloseOrder::test_infers_sell_from_positive_quantity_when_side_missing",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestResolveCloseOrder"
+      },
+      {
+        "name": "TestResolveCloseOrder::test_infers_buy_from_negative_quantity_when_side_missing",
+        "line": 75,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestResolveCloseOrder"
+      },
+      {
+        "name": "TestResolveCloseOrder::test_zero_quantity_returns_none",
+        "line": 81,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestResolveCloseOrder"
+      },
+      {
+        "name": "TestResolveCloseOrder::test_invalid_quantity_returns_none",
+        "line": 84,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestResolveCloseOrder"
+      },
+      {
+        "name": "TestPositionsToFormats::test_risk_format",
+        "line": 89,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionsToFormats"
+      },
+      {
+        "name": "TestPositionsToFormats::test_status_format_stringifies_all_fields",
+        "line": 95,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestPositionsToFormats"
+      }
+    ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_price_tick_store_edges.py": [
       {
         "name": "test_rehydrate_without_event_store_returns_zero",
@@ -30601,7 +30968,7 @@
         "class": "TestIntxPerpetualsEnabled"
       },
       {
-        "name": "TestIntxPerpetualsEnabled::test_returns_true_when_derivatives_type_is_perpetuals",
+        "name": "TestIntxPerpetualsEnabled::test_returns_false_when_derivatives_type_is_us_futures",
         "line": 139,
         "markers": [
           "unit"
@@ -30610,8 +30977,17 @@
         "class": "TestIntxPerpetualsEnabled"
       },
       {
-        "name": "TestIntxPerpetualsEnabled::test_returns_true_by_default",
+        "name": "TestIntxPerpetualsEnabled::test_returns_true_when_derivatives_type_is_perpetuals",
         "line": 147,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestIntxPerpetualsEnabled"
+      },
+      {
+        "name": "TestIntxPerpetualsEnabled::test_returns_false_without_explicit_intx_type",
+        "line": 155,
         "markers": [
           "unit"
         ],
@@ -40492,99 +40868,7 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py": [
-      {
-        "name": "test_create_request_sets_pending_and_uses_window",
-        "line": 23,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_approve_request_rejects_same_user_and_allows_different_user",
-        "line": 34,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_mark_applied_only_succeeds_from_approved",
-        "line": 52,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_pending_requests_marks_expired",
-        "line": 69,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_requires_approval_filters_critical_fields",
-        "line": 87,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_log_config_delta_emits_metric_payload",
-        "line": 100,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/monitoring/two_person_rule/test_models_edges.py": [
-      {
-        "name": "test_config_change_stringify_serializable_and_fallback",
-        "line": 21,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_approval_request_is_expired_only_when_pending",
-        "line": 26,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_approval_request_mark_expired_respects_status",
-        "line": 64,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_approval_request_requires_approval_only_when_pending",
-        "line": 106,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_approval_request_to_dict_includes_fields_and_nones",
-        "line": 131,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/observability/test_tracing.py": [
+    "tests/unit/gpt_trader/monitoring/test_tracing.py": [
       {
         "name": "TestInitTracing::test_disabled_tracing_returns_false",
         "line": 29,
@@ -40738,7 +41022,7 @@
         "class": "TestIsTracingEnabled"
       }
     ],
-    "tests/unit/gpt_trader/observability/test_tracing_edges.py": [
+    "tests/unit/gpt_trader/monitoring/test_tracing_edges.py": [
       {
         "name": "test_trace_span_stringifies_context_and_merges_attributes",
         "line": 33,
@@ -40766,6 +41050,98 @@
       {
         "name": "test_trace_span_yields_none_when_disabled",
         "line": 79,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/two_person_rule/test_manager_edges.py": [
+      {
+        "name": "test_create_request_sets_pending_and_uses_window",
+        "line": 23,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approve_request_rejects_same_user_and_allows_different_user",
+        "line": 34,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_mark_applied_only_succeeds_from_approved",
+        "line": 52,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_get_pending_requests_marks_expired",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_requires_approval_filters_critical_fields",
+        "line": 87,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_log_config_delta_emits_metric_payload",
+        "line": 100,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/gpt_trader/monitoring/two_person_rule/test_models_edges.py": [
+      {
+        "name": "test_config_change_stringify_serializable_and_fallback",
+        "line": 21,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approval_request_is_expired_only_when_pending",
+        "line": 26,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approval_request_mark_expired_respects_status",
+        "line": 64,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approval_request_requires_approval_only_when_pending",
+        "line": 106,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_approval_request_to_dict_includes_fields_and_nones",
+        "line": 131,
         "markers": [
           "unit"
         ],
@@ -49249,35 +49625,8 @@
     ],
     "tests/unit/gpt_trader/tui/services/test_focus_manager.py": [
       {
-        "name": "TestTilePosition::test_tile_position_creation",
-        "line": 42,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating a TilePosition.",
-        "class": "TestTilePosition"
-      },
-      {
-        "name": "TestTilePosition::test_tile_position_equality",
-        "line": 49,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test TilePosition equality.",
-        "class": "TestTilePosition"
-      },
-      {
-        "name": "TestTilePosition::test_tile_position_inequality",
-        "line": 55,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test TilePosition inequality.",
-        "class": "TestTilePosition"
-      },
-      {
         "name": "TestFocusManager::test_initialization",
-        "line": 65,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -49286,7 +49635,7 @@
       },
       {
         "name": "TestFocusManager::test_current_tile_id_property",
-        "line": 71,
+        "line": 47,
         "markers": [
           "unit"
         ],
@@ -49295,7 +49644,7 @@
       },
       {
         "name": "TestFocusManager::test_current_actions_property",
-        "line": 77,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -49304,7 +49653,7 @@
       },
       {
         "name": "TestFocusManager::test_move_down",
-        "line": 84,
+        "line": 60,
         "markers": [
           "unit"
         ],
@@ -49313,7 +49662,7 @@
       },
       {
         "name": "TestFocusManager::test_move_up_from_start",
-        "line": 91,
+        "line": 67,
         "markers": [
           "unit"
         ],
@@ -49322,7 +49671,7 @@
       },
       {
         "name": "TestFocusManager::test_move_up_after_down",
-        "line": 97,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -49331,7 +49680,7 @@
       },
       {
         "name": "TestFocusManager::test_move_right",
-        "line": 107,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -49340,7 +49689,7 @@
       },
       {
         "name": "TestFocusManager::test_move_left_from_start",
-        "line": 114,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -49349,7 +49698,7 @@
       },
       {
         "name": "TestFocusManager::test_move_returns_tile_id_on_change",
-        "line": 120,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -49358,7 +49707,7 @@
       },
       {
         "name": "TestFocusManager::test_invalid_direction",
-        "line": 127,
+        "line": 103,
         "markers": [
           "unit"
         ],
@@ -49367,7 +49716,7 @@
       },
       {
         "name": "TestFocusManager::test_enable_disable",
-        "line": 132,
+        "line": 108,
         "markers": [
           "unit"
         ],
@@ -49376,7 +49725,7 @@
       },
       {
         "name": "TestFocusManager::test_move_next_cycles_through_tiles",
-        "line": 148,
+        "line": 124,
         "markers": [
           "unit"
         ],
@@ -49385,7 +49734,7 @@
       },
       {
         "name": "TestFocusManager::test_move_previous",
-        "line": 159,
+        "line": 135,
         "markers": [
           "unit"
         ],
@@ -49394,7 +49743,7 @@
       },
       {
         "name": "TestFocusManager::test_focus_tile",
-        "line": 168,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -49403,7 +49752,7 @@
       },
       {
         "name": "TestFocusManager::test_focus_tile_invalid",
-        "line": 174,
+        "line": 150,
         "markers": [
           "unit"
         ],
@@ -49412,7 +49761,7 @@
       },
       {
         "name": "TestFocusManager::test_grid_structure",
-        "line": 179,
+        "line": 155,
         "markers": [
           "unit"
         ],
@@ -49421,7 +49770,7 @@
       },
       {
         "name": "TestFocusManager::test_tile_order",
-        "line": 188,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -49430,7 +49779,7 @@
       },
       {
         "name": "TestFocusManager::test_tile_actions_defined",
-        "line": 200,
+        "line": 176,
         "markers": [
           "unit"
         ],
@@ -49439,7 +49788,7 @@
       },
       {
         "name": "TestTileFocusChanged::test_event_creation",
-        "line": 211,
+        "line": 187,
         "markers": [
           "unit"
         ],
@@ -49448,7 +49797,7 @@
       },
       {
         "name": "TestTileFocusChanged::test_event_with_multiple_actions",
-        "line": 217,
+        "line": 193,
         "markers": [
           "unit"
         ],
@@ -51500,7 +51849,7 @@
     "tests/unit/gpt_trader/tui/test_events_bot_and_ui.py": [
       {
         "name": "TestBotLifecycleEvents::test_bot_start_requested_creation",
-        "line": 29,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -51508,17 +51857,8 @@
         "class": "TestBotLifecycleEvents"
       },
       {
-        "name": "TestBotLifecycleEvents::test_bot_stop_requested_creation",
-        "line": 34,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test BotStopRequested event creation.",
-        "class": "TestBotLifecycleEvents"
-      },
-      {
         "name": "TestBotLifecycleEvents::test_bot_state_changed_creation",
-        "line": 39,
+        "line": 29,
         "markers": [
           "unit"
         ],
@@ -51527,7 +51867,7 @@
       },
       {
         "name": "TestBotLifecycleEvents::test_bot_state_changed_default_uptime",
-        "line": 46,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -51535,17 +51875,8 @@
         "class": "TestBotLifecycleEvents"
       },
       {
-        "name": "TestBotLifecycleEvents::test_bot_mode_change_requested_creation",
-        "line": 52,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test BotModeChangeRequested event creation.",
-        "class": "TestBotLifecycleEvents"
-      },
-      {
         "name": "TestBotLifecycleEvents::test_bot_mode_changed_creation",
-        "line": 58,
+        "line": 42,
         "markers": [
           "unit"
         ],
@@ -51553,35 +51884,8 @@
         "class": "TestBotLifecycleEvents"
       },
       {
-        "name": "TestUICoordinationEvents::test_ui_refresh_requested_creation",
-        "line": 69,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test UIRefreshRequested event creation.",
-        "class": "TestUICoordinationEvents"
-      },
-      {
-        "name": "TestUICoordinationEvents::test_heartbeat_tick_creation",
-        "line": 74,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test HeartbeatTick event creation.",
-        "class": "TestUICoordinationEvents"
-      },
-      {
-        "name": "TestUICoordinationEvents::test_heartbeat_tick_default_pulse",
-        "line": 80,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test HeartbeatTick with default pulse value.",
-        "class": "TestUICoordinationEvents"
-      },
-      {
         "name": "TestUICoordinationEvents::test_responsive_state_changed_creation",
-        "line": 85,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -51590,7 +51894,7 @@
       },
       {
         "name": "TestConfigurationEvents::test_config_reload_requested_creation",
-        "line": 96,
+        "line": 64,
         "markers": [
           "unit"
         ],
@@ -51599,7 +51903,7 @@
       },
       {
         "name": "TestConfigurationEvents::test_config_changed_creation",
-        "line": 101,
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -51607,17 +51911,8 @@
         "class": "TestConfigurationEvents"
       },
       {
-        "name": "TestThemeEvents::test_theme_change_requested_creation",
-        "line": 112,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test ThemeChangeRequested event creation.",
-        "class": "TestThemeEvents"
-      },
-      {
         "name": "TestThemeEvents::test_theme_changed_creation",
-        "line": 118,
+        "line": 80,
         "markers": [
           "unit"
         ],
@@ -51628,7 +51923,7 @@
     "tests/unit/gpt_trader/tui/test_events_documentation.py": [
       {
         "name": "TestEventDocumentation::test_all_events_have_docstrings",
-        "line": 34,
+        "line": 27,
         "markers": [
           "unit"
         ],
@@ -51637,7 +51932,7 @@
       },
       {
         "name": "TestEventDocumentation::test_dataclass_events_have_field_docs",
-        "line": 65,
+        "line": 51,
         "markers": [
           "unit"
         ],
@@ -51731,7 +52026,7 @@
     "tests/unit/gpt_trader/tui/test_events_trade_and_notifications.py": [
       {
         "name": "TestTradeMatchingEvents::test_trade_matcher_reset_requested_creation",
-        "line": 19,
+        "line": 17,
         "markers": [
           "unit"
         ],
@@ -51740,7 +52035,7 @@
       },
       {
         "name": "TestTradeMatchingEvents::test_trade_matcher_state_request_creation",
-        "line": 24,
+        "line": 22,
         "markers": [
           "unit"
         ],
@@ -51748,17 +52043,8 @@
         "class": "TestTradeMatchingEvents"
       },
       {
-        "name": "TestTradeMatchingEvents::test_trade_matcher_state_response_creation",
-        "line": 30,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test TradeMatcherStateResponse event creation.",
-        "class": "TestTradeMatchingEvents"
-      },
-      {
         "name": "TestErrorNotificationEvents::test_error_occurred_creation",
-        "line": 42,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -51767,29 +52053,11 @@
       },
       {
         "name": "TestErrorNotificationEvents::test_error_occurred_defaults",
-        "line": 54,
+        "line": 44,
         "markers": [
           "unit"
         ],
         "docstring": "Test ErrorOccurred with default values.",
-        "class": "TestErrorNotificationEvents"
-      },
-      {
-        "name": "TestErrorNotificationEvents::test_notification_requested_creation",
-        "line": 61,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test NotificationRequested event creation.",
-        "class": "TestErrorNotificationEvents"
-      },
-      {
-        "name": "TestErrorNotificationEvents::test_notification_requested_defaults",
-        "line": 72,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test NotificationRequested with defaults.",
         "class": "TestErrorNotificationEvents"
       }
     ],
@@ -55450,89 +55718,6 @@
         ],
         "docstring": "Test that _set_active_filter toggles button active classes.",
         "class": "TestAlertInboxFilterActions"
-      }
-    ],
-    "tests/unit/gpt_trader/tui/widgets/test_cfm_balance.py": [
-      {
-        "name": "TestCFMBalanceWidgetBasic::test_initial_state_no_cfm",
-        "line": 14,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test widget starts with has_cfm=False.",
-        "class": "TestCFMBalanceWidgetBasic"
-      },
-      {
-        "name": "TestCFMBalanceWidgetBasic::test_update_balance_with_none",
-        "line": 19,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that None balance sets has_cfm to False.",
-        "class": "TestCFMBalanceWidgetBasic"
-      },
-      {
-        "name": "TestCFMBalanceWidgetBasic::test_update_balance_with_valid_data",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that valid CFMBalance updates the widget correctly.",
-        "class": "TestCFMBalanceWidgetBasic"
-      },
-      {
-        "name": "TestCFMBalanceWidgetColorCoding::test_margin_utilization_color_coding_low",
-        "line": 53,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test margin utilization shows green for low usage.",
-        "class": "TestCFMBalanceWidgetColorCoding"
-      },
-      {
-        "name": "TestCFMBalanceWidgetColorCoding::test_margin_utilization_color_coding_high",
-        "line": 74,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test margin utilization shows red for high usage.",
-        "class": "TestCFMBalanceWidgetColorCoding"
-      },
-      {
-        "name": "TestCFMBalanceWidgetColorCoding::test_pnl_positive_color_coding",
-        "line": 95,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test positive P&L shows green with + prefix.",
-        "class": "TestCFMBalanceWidgetColorCoding"
-      },
-      {
-        "name": "TestCFMBalanceWidgetColorCoding::test_pnl_negative_color_coding",
-        "line": 117,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test negative P&L shows red.",
-        "class": "TestCFMBalanceWidgetColorCoding"
-      },
-      {
-        "name": "TestCFMBalanceWidgetColorCoding::test_liquidation_buffer_critical",
-        "line": 138,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test liquidation buffer shows red bold for critical level.",
-        "class": "TestCFMBalanceWidgetColorCoding"
-      },
-      {
-        "name": "TestCFMBalanceWidgetUnavailable::test_show_unavailable",
-        "line": 161,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test show_unavailable method sets has_cfm to False.",
-        "class": "TestCFMBalanceWidgetUnavailable"
       }
     ],
     "tests/unit/gpt_trader/tui/widgets/test_config_modal.py": [
@@ -63369,7 +63554,7 @@
     "tests/unit/scripts/test_cleanup_workspace.py": [
       {
         "name": "test_clean_tool_caches_preserve_hypothesis",
-        "line": 25,
+        "line": 24,
         "markers": [
           "unit"
         ],
@@ -63377,7 +63562,7 @@
       },
       {
         "name": "test_clean_coverage_artifacts_removes_files",
-        "line": 37,
+        "line": 36,
         "markers": [
           "unit"
         ],
@@ -63385,7 +63570,7 @@
       },
       {
         "name": "test_clean_var_logs_prunes_archived_gz",
-        "line": 55,
+        "line": 54,
         "markers": [
           "unit"
         ],
@@ -63393,7 +63578,39 @@
       },
       {
         "name": "test_rotate_large_file_archives_stale",
-        "line": 80,
+        "line": 79,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_root_logs_rotates_recent_large_audit_log",
+        "line": 105,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_pycache_directories_includes_scripts",
+        "line": 122,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_build_artifacts_removes_egg_info",
+        "line": 133,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_macos_artifacts_removes_ds_store",
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -63609,7 +63826,7 @@
         "docstring": ""
       },
       {
-        "name": "test_scan_docs_on_fixture_repo_produces_report",
+        "name": "test_verify_command_accepts_python_module_file",
         "line": 43,
         "markers": [
           "unit"
@@ -63617,8 +63834,24 @@
         "docstring": ""
       },
       {
+        "name": "test_verify_command_rejects_python_package_without_main",
+        "line": 53,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_scan_docs_on_fixture_repo_produces_report",
+        "line": 63,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
         "name": "test_verify_module_or_path_marks_removed_items_stale",
-        "line": 74,
+        "line": 94,
         "markers": [
           "parametrize",
           "unit"
@@ -63627,7 +63860,7 @@
       },
       {
         "name": "test_short_cli_flags_are_extracted",
-        "line": 84,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -63635,7 +63868,7 @@
       },
       {
         "name": "test_unknown_short_flag_is_uncertain_not_missing",
-        "line": 94,
+        "line": 114,
         "markers": [
           "unit"
         ],
@@ -63643,7 +63876,7 @@
       },
       {
         "name": "test_unknown_flag_is_uncertain_when_help_skipped",
-        "line": 100,
+        "line": 120,
         "markers": [
           "unit"
         ],
@@ -63651,7 +63884,7 @@
       },
       {
         "name": "test_verify_command_handles_uv_run_python_module",
-        "line": 106,
+        "line": 126,
         "markers": [
           "unit"
         ],
@@ -63659,7 +63892,7 @@
       },
       {
         "name": "test_verify_module_source_fallback_resolves_flat_module",
-        "line": 116,
+        "line": 136,
         "markers": [
           "unit"
         ],
@@ -63667,7 +63900,17 @@
       },
       {
         "name": "test_render_report_collapses_newlines_in_notes",
-        "line": 126,
+        "line": 146,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_docs_link_audit.py": [
+      {
+        "name": "test_iter_markdown_files_ignores_review_artifacts_tmp",
+        "line": 6,
         "markers": [
           "unit"
         ],
@@ -63677,7 +63920,7 @@
     "tests/unit/scripts/test_docs_maintenance.py": [
       {
         "name": "test_iter_links_skips_external_strips_anchors_and_decodes",
-        "line": 13,
+        "line": 17,
         "markers": [
           "parametrize",
           "unit"
@@ -63686,7 +63929,7 @@
       },
       {
         "name": "test_iter_repo_path_references_filters_invalid_patterns",
-        "line": 31,
+        "line": 35,
         "markers": [
           "unit"
         ],
@@ -63694,7 +63937,15 @@
       },
       {
         "name": "test_docs_link_audit_skips_repo_path_checks_for_proposed_specs",
-        "line": 46,
+        "line": 50,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_docs_link_audit_skips_review_artifact_tmp_markdown",
+        "line": 69,
         "markers": [
           "unit"
         ],
@@ -63702,7 +63953,7 @@
       },
       {
         "name": "test_suggest_sections_for_representative_paths",
-        "line": 74,
+        "line": 89,
         "markers": [
           "parametrize",
           "unit"
@@ -63711,9 +63962,57 @@
       },
       {
         "name": "test_has_required_metadata",
-        "line": 112,
+        "line": 131,
         "markers": [
           "parametrize",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_collect_decisions_orders_newest_first_and_skips_non_records",
+        "line": 145,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_render_index_table_links_each_record",
+        "line": 163,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_splice_index_replaces_only_between_markers",
+        "line": 174,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_splice_index_requires_markers",
+        "line": 191,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_generate_decision_index_check_detects_stale",
+        "line": 196,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_collect_decisions_raises_on_malformed_record",
+        "line": 211,
+        "markers": [
           "unit"
         ],
         "docstring": ""

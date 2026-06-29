@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 743,
+    "tests_scanned": 744,
     "source_modules": 380,
     "unresolved_modules": 3
   },
@@ -475,6 +475,7 @@
       "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor_retry_flows.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_real_logger.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_core.py",
@@ -960,6 +961,7 @@
     "gpt_trader.features.live_trade.execution.order_event_recorder": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py",
+      "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_real_logger.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_rejection.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_submission.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability_metrics.py"
@@ -3554,6 +3556,10 @@
       "gpt_trader.features.live_trade.execution.order_event_recorder"
     ],
     "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_preview.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.live_trade.execution.order_event_recorder"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/execution/test_order_event_recorder_real_logger.py": [
       "gpt_trader.core",
       "gpt_trader.features.live_trade.execution.order_event_recorder"
     ],

@@ -98,8 +98,8 @@ This section is the compact contributor-facing CI contract. The executable
 source of truth remains `.github/workflows/*.yml` plus GitHub branch protection.
 Current `main` branch protection requires only the named `CI` contexts listed in
 the first row below, with strict up-to-date checks and conversation resolution
-enabled. There is no current path-filtered workflow; if a path-conditional lane
-is added later, add it to this table.
+enabled. Selected context-specific lanes self-skip by changed path while keeping
+those check names stable.
 
 | Check / workflow job | Tier | Trigger | Blocking status | Why it exists |
 | --- | --- | --- | --- | --- |
@@ -111,6 +111,13 @@ is added later, add it to this table.
 | `Agent Artifacts Refresh` / `Refresh, validate, and publish package`, `Verify uploaded package`; `UV Lock Upgrade` / `Upgrade uv.lock` | Scheduled/advisory maintenance | Scheduled and manual | Not branch-protection required; may publish a branch or PR | Keeps generated agent artifacts and dependency lock maintenance visible |
 | `Release Image` / `Build, Publish, and Scan Docker Image` | Release image publication/readiness | Version-tag push (`v*`) or manual run with a `release_note` reference | Outside the PR merge gate; publishes and scans images only | Builds, publishes, and scans Docker images; does not deploy staging/production, rollback, run canary/prod preflight, call broker/API commands, move money, or submit orders |
 | `Integration Tests (Manual)` / `Coinbase Integration` | Manual readiness | Manual | Outside the PR merge gate; requires environment/secrets and project approval boundaries | Manual Coinbase checks only; does not grant live trading, canary, or order authority |
+
+The default PR workflow keeps required merge-safety check names stable for branch
+protection, but several context-specific lanes now self-skip when their inputs
+do not change. `TUI CSS Check` runs for TUI style/CSS generator inputs, `TUI
+Snapshot Tests` runs for TUI code/snapshot/dependency inputs, `Agent Artifacts
+Freshness` runs for agent artifact source or output inputs, and `Dependency
+Review` runs for dependency manifest changes.
 
 ### Local CI Command
 
@@ -156,7 +163,7 @@ checks were skipped and why.
 | Command | Intended use | Agent artifacts freshness | Readiness gate |
 | --- | --- | --- | --- |
 | `make ci-required` | Local PR-readiness validation surface | Blocking local step | Not run |
-| GitHub `pull_request` CI | GitHub PR validation in Actions | Non-blocking if stale on pull requests | Not run |
+| GitHub `pull_request` CI | GitHub PR validation in Actions | Path-conditional; non-blocking if stale when run | Not run |
 | `uv run local-ci` / strict/full | Local PR-readiness validation plus local/live readiness evidence | Blocking local step | Runs `scripts/ci/check_readiness_gate.py --profile canary --strict` |
 | `uv run local-ci --profile quick` | Fast development loop | Skipped with an explicit banner reason | Skipped with an explicit banner reason |
 

@@ -1,7 +1,7 @@
 """Trade-idea workflow state machine.
 
 States and transitions follow the approval workflow in
-docs/PRE_MIGRATION_DECISION_FRAMEWORK.md. Execution may proceed only from
+docs/DIRECTION.md. Execution may proceed only from
 ``APPROVED``, and approval is always a human event in
 ``human_approved_execution`` mode.
 """

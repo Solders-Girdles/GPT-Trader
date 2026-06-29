@@ -6,7 +6,6 @@ from textual.widgets import Label, Static
 
 # Standardized animation intervals for visual consistency
 SPINNER_INTERVAL = 0.15  # Regular spinner animation (6-7 fps)
-PULSE_INTERVAL = 0.25  # Slower pulse animation for skeleton loaders
 
 
 class LoadingSpinner(Static):
@@ -88,45 +87,3 @@ class LoadingSpinner(Static):
                     pass
         except Exception:
             pass
-
-
-class SkeletonLoader(Static):
-    """Skeleton loading placeholder for content areas.
-
-    Shows a pulsing placeholder that indicates where content will appear.
-    """
-
-    PULSE_FRAMES = ["░", "▒", "▓", "█", "▓", "▒"]
-
-    def __init__(self, lines: int = 3, width: int = 20) -> None:
-        super().__init__()
-        self.lines = lines
-        self.width = width
-        self.frame_index = 0
-
-    def compose(self) -> ComposeResult:
-        for i in range(self.lines):
-            # Vary line widths for realistic look
-            line_width = int(self.width * (0.6 + 0.4 * ((i + 1) % 3) / 2))
-            yield Label("─" * line_width, id=f"skeleton-line-{i}", classes="skeleton-line")
-
-    def on_mount(self) -> None:
-        """Start skeleton animation."""
-        self._timer = self.set_interval(PULSE_INTERVAL, self._update_pulse)
-
-    def on_unmount(self) -> None:
-        """Stop skeleton animation."""
-        if hasattr(self, "_timer") and self._timer:
-            self._timer.stop()
-
-    def _update_pulse(self) -> None:
-        """Update skeleton pulse effect."""
-        char = self.PULSE_FRAMES[self.frame_index]
-        for i in range(self.lines):
-            try:
-                line_width = int(self.width * (0.6 + 0.4 * ((i + 1) % 3) / 2))
-                line = self.query_one(f"#skeleton-line-{i}", Label)
-                line.update(f"[dim]{char * line_width}[/dim]")
-            except Exception:
-                pass
-        self.frame_index = (self.frame_index + 1) % len(self.PULSE_FRAMES)

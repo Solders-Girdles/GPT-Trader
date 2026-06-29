@@ -244,7 +244,7 @@ Tip: avoid real delays in tests by passing a no-op `sleep_func` to `ChaosBroker`
 
 This checklist produces evidence for the gates in
 [Live Operations](production.md#live-gate-sequence) and the
-[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md). It does
+[Direction](DIRECTION.md). It does
 not by itself authorize a live profile run.
 
 1. Run preflight against the relevant profiles:

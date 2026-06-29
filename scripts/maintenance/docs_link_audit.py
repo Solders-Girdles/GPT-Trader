@@ -27,7 +27,9 @@ EXCLUDED_DIRS = {
     "review_artifacts/tmp",
     "runtime_data",
     "var",
+    "work",  # ephemeral per-task artifacts; see docs/INFORMATION_ARCHITECTURE.md
 }
+EXCLUDED_PATH_PREFIXES = (Path("review_artifacts/tmp"),)
 EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "tel:")
 
 
@@ -45,12 +47,30 @@ def parse_args() -> argparse.Namespace:
 def iter_markdown_files(root: Path) -> list[Path]:
     markdown_files: list[Path] = []
     for path in root.rglob("*.md"):
-        rel_parts = path.relative_to(root).parts
-        rel_dirs = {"/".join(rel_parts[:index]) for index in range(1, len(rel_parts))}
-        if any(part in EXCLUDED_DIRS for part in rel_parts) or rel_dirs & EXCLUDED_DIRS:
+        if should_exclude_markdown_file(path, root=root):
             continue
         markdown_files.append(path)
     return markdown_files
+
+
+def should_exclude_markdown_file(path: Path, *, root: Path) -> bool:
+    try:
+        relative_path = path.relative_to(root)
+    except ValueError:
+        relative_path = path
+
+    relative_dirs = {
+        "/".join(relative_path.parts[:index]) for index in range(1, len(relative_path.parts))
+    }
+    if any(part in EXCLUDED_DIRS for part in relative_path.parts):
+        return True
+    if relative_dirs & EXCLUDED_DIRS:
+        return True
+
+    return any(
+        relative_path == prefix or prefix in relative_path.parents
+        for prefix in EXCLUDED_PATH_PREFIXES
+    )
 
 
 def iter_links(content: str) -> list[str]:
@@ -101,14 +121,15 @@ def should_check_repo_paths(source: Path, *, root: Path) -> bool:
         return False
 
     excluded_files = {
-        docs_root / "CHANGELOG.md",
         docs_root / "DEPRECATIONS.md",
     }
     if source in excluded_files:
         return False
 
+    # Decisions and specs may cite planned (not-yet-existing) paths in their
+    # options/options-detail, so they are exempt from repo-path existence checks.
     excluded_dirs = {
-        docs_root / "adr",
+        docs_root / "decisions",
         docs_root / "specs",
     }
     for excluded_dir in excluded_dirs:

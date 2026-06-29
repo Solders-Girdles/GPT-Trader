@@ -74,8 +74,7 @@ It exists to make changes safer and to help agents route work to the right place
 
 ### Observability / monitoring
 - **Dirs:**
-  - `src/gpt_trader/observability/`
-  - `src/gpt_trader/monitoring/`
+  - `src/gpt_trader/monitoring/` (metrics, health, alerts, tracing)
   - `src/gpt_trader/logging/`
 - **What lives here:** metrics, traces, logging, health
 - **When you touch this:** run unit tests + ensure generated catalogs are current

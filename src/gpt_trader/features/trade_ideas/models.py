@@ -1,7 +1,7 @@
 """Broker-neutral trade-idea records.
 
 Implements the record contract from the accepted Pre-Migration Decision
-Framework (docs/PRE_MIGRATION_DECISION_FRAMEWORK.md): every AI-generated idea
+Framework (docs/DIRECTION.md): every AI-generated idea
 carries its thesis, entry zone, invalidation, max loss, sizing, horizon, and
 confidence before any human review. Broker payloads are derived artifacts
 created after approval; nothing in this module is venue-specific beyond the

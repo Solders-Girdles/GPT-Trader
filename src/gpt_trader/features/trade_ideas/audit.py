@@ -1,6 +1,6 @@
 """Append-only JSONL audit log for trade-idea workflow events.
 
-Implements the audit contract from docs/PRE_MIGRATION_DECISION_FRAMEWORK.md:
+Implements the audit contract from docs/DIRECTION.md:
 every state change is a new event pinned to a hash of the record version it
 acted on. Events are never rewritten or deleted; the current workflow state of
 an idea is always derived from its latest event.

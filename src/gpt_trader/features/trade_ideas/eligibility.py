@@ -1,7 +1,7 @@
 """Strategy-eligibility gate for trade ideas.
 
 Encodes the automatic rejection conditions from the accepted framework
-(docs/PRE_MIGRATION_DECISION_FRAMEWORK.md, Decision 2): ideas without an
+(docs/DIRECTION.md, Decision 2): ideas without an
 invalidation level, max-loss estimate, reproducible data source, defined
 entry, exit rule, or expiry must never reach a reviewer as actionable.
 """

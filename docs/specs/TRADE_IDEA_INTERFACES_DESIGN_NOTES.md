@@ -8,7 +8,7 @@ audience: Implementation agents (Codex) and reviewers
 
 ## Context
 
-The accepted direction (docs/PRE_MIGRATION_DECISION_FRAMEWORK.md) is staged
+The accepted direction (docs/DIRECTION.md) is staged
 autonomy: AI drafts complete trade-idea records, a human approves them, and
 every state change lands in an append-only audit log. The core slice for this
 already exists and is complete at the domain level:

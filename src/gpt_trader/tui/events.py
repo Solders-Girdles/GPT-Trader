@@ -51,18 +51,6 @@ class BotStartRequested(Message):
     """
 
 
-class BotStopRequested(Message):
-    """
-    Request to stop the trading bot.
-
-    Posted by: UI controls, action handlers, panic handler
-    Handled by: BotLifecycleManager
-
-    This event is a request that may be denied (e.g., if bot is already stopped).
-    Listeners should watch for BotStateChanged to confirm actual state change.
-    """
-
-
 @dataclass
 class BotStateChanged(Message):
     """
@@ -78,21 +66,6 @@ class BotStateChanged(Message):
 
     running: bool
     uptime: float = 0.0
-
-
-@dataclass
-class BotModeChangeRequested(Message):
-    """
-    Request to switch bot mode (demo, paper, read_only, live).
-
-    Posted by: ModeSelector widget
-    Handled by: BotLifecycleManager
-
-    Attributes:
-        target_mode: Mode to switch to ("demo", "paper", "read_only", "live")
-    """
-
-    target_mode: str
 
 
 @dataclass
@@ -208,33 +181,6 @@ class StateDeltaUpdateApplied(Message):
 # ==============================================================================
 
 
-class UIRefreshRequested(Message):
-    """
-    Request immediate UI refresh.
-
-    Posted by: Action handlers, reconnect operations
-    Handled by: UICoordinator, MainScreen
-
-    This triggers an out-of-band UI update, bypassing the normal update loop.
-    Useful for user-initiated reconnections or manual refresh.
-    """
-
-
-@dataclass
-class HeartbeatTick(Message):
-    """
-    Periodic heartbeat tick for animations.
-
-    Posted by: UICoordinator heartbeat loop (every 1 second)
-    Handled by: BotStatusWidget for pulse animation
-
-    Attributes:
-        pulse_value: Sine wave value 0.0-1.0 for smooth animation
-    """
-
-    pulse_value: float = 0.0
-
-
 @dataclass
 class ResponsiveStateChanged(Message):
     """
@@ -345,23 +291,6 @@ class TradeMatcherStateRequest(Message):
     request_id: str
 
 
-@dataclass
-class TradeMatcherStateResponse(Message):
-    """
-    Response with current trade matcher state.
-
-    Posted by: TradesWidget in response to TradeMatcherStateRequest
-    Handled by: Component that requested state
-
-    Attributes:
-        request_id: ID from the request
-        state: Dictionary containing trade matcher state
-    """
-
-    request_id: str
-    state: dict[str, Any]
-
-
 # ==============================================================================
 # Error and Notification Events
 # ==============================================================================
@@ -386,27 +315,6 @@ class ErrorOccurred(Message):
     severity: str = "error"
     context: str = ""
     exception: Exception | None = None
-
-
-@dataclass
-class NotificationRequested(Message):
-    """
-    Request to show a notification to the user.
-
-    Posted by: Services, managers, widgets
-    Handled by: TraderApp (uses app.notify())
-
-    Attributes:
-        message: Notification message
-        title: Optional title
-        severity: "information", "warning", or "error"
-        timeout: Timeout in seconds (None for no timeout)
-    """
-
-    message: str
-    title: str = ""
-    severity: str = "information"
-    timeout: int | None = None
 
 
 # ==============================================================================
@@ -441,21 +349,6 @@ class ConfigChanged(Message):
 # ==============================================================================
 # Theme Events
 # ==============================================================================
-
-
-@dataclass
-class ThemeChangeRequested(Message):
-    """
-    Request to change theme.
-
-    Posted by: Theme toggle action, settings
-    Handled by: ThemeService
-
-    Attributes:
-        theme_mode: "light" or "dark"
-    """
-
-    theme_mode: str
 
 
 @dataclass

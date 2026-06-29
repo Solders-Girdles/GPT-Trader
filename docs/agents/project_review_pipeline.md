@@ -66,7 +66,7 @@ run. Rotate lanes across runs instead of scanning everything every hour.
 | Local CI | `uv run local-ci --profile quick`; failing command output | A repeated failure points to repo code, tests, or docs rather than transient environment drift |
 | Open queue | `gh issue list --state open --limit 50`; `gh pr list --state open --limit 30`; check whether the active branch has a PR | An issue or PR is stale, blocked, duplicated, or missing an agent-ready contract, or a repeated local review branch has no PR/issue/explicit parked blocker |
 | Test hygiene | `uv run agent-dedupe --stats`; `uv run python scripts/ci/check_dedupe_manifest.py --strict` | The stats expose an actionable pending cluster, stale triage, or manifest drift |
-| Architecture contracts | Read one named contract doc such as `docs/DI_POLICY.md`, `docs/ARCHITECTURE.md`, or `docs/PRE_MIGRATION_DECISION_FRAMEWORK.md`; compare with a narrow code path | A concrete docs/code mismatch or boundary violation has a safe verification command |
+| Architecture contracts | Read one named contract doc such as `docs/DI_POLICY.md`, `docs/ARCHITECTURE.md`, or `docs/DIRECTION.md`; compare with a narrow code path | A concrete docs/code mismatch or boundary violation has a safe verification command |
 | Agent ergonomics | Inspect one agent-facing doc, generated map, workflow script, or recent scout memory | A missing or stale instruction causes repeat agent confusion, repeated no-promotion churn, or an ambiguous finish/park decision that can be fixed in one PR |
 
 Good scout signals include stale generated artifacts, a repeated quick local-CI
@@ -142,7 +142,7 @@ Allowed categories are `bug`, `ci`, `docs`, `architecture`, `tests`,
 
 If `scope.touches_trading_execution` is true, the finding must either be
 docs/test-only and clearly execution-free, or `routing.decision_needed` must be
-true. Use `docs/PRE_MIGRATION_DECISION_FRAMEWORK.md` for anything that touches
+true. Use `docs/DIRECTION.md` for anything that touches
 execution automation, broker adapters, venue support, account capability, or
 AI-assisted execution, and include enough context for a decision agent to
 recommend the next policy and implementation route.

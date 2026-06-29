@@ -55,7 +55,7 @@ from gpt_trader.features.brokerages.coinbase.client.response_cache import Respon
 from gpt_trader.features.brokerages.coinbase.errors import InvalidRequestError, map_http_error
 from gpt_trader.logging.correlation import get_correlation_id
 from gpt_trader.monitoring.metrics_collector import record_counter, record_gauge, record_histogram
-from gpt_trader.observability.tracing import trace_span
+from gpt_trader.monitoring.tracing import trace_span
 from gpt_trader.utilities.logging_patterns import get_logger
 
 # Maximum delay for retry backoff to prevent excessive waits

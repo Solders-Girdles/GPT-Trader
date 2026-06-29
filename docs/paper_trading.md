@@ -107,7 +107,7 @@ broker.set_mark("BTC-PERP", Decimal("50000"))
 Paper trading produces evidence that feeds the readiness checklist; it does not
 itself authorize live execution. Live profiles only run after the gates in
 [Live Operations](production.md) and the
-[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md) have been
+[Direction](DIRECTION.md) have been
 satisfied with explicit human approval.
 
 ### What paper runs should produce

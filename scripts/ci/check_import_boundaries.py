@@ -66,14 +66,6 @@ RULES: tuple[ImportRule, ...] = (
         forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
     ),
     ImportRule(
-        name="observability_no_entrypoint_imports",
-        description=(
-            "Observability infrastructure must not import entrypoint layers or the DI container."
-        ),
-        source_root=REPO_ROOT / "src" / "gpt_trader" / "observability",
-        forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
-    ),
-    ImportRule(
         name="persistence_no_entrypoint_imports",
         description=(
             "Persistence infrastructure must not import entrypoint layers or the DI container."

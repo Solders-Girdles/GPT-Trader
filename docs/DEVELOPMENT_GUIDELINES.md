@@ -22,8 +22,17 @@ need to review historical practices.
 - **Configuration-first**: Extend `BotConfig` when new runtime options are
   required; expose overrides through the CLI when appropriate.
 - **Modular refactoring**: Extract large modules (>500 lines) into focused
-  subpackages with clear separation of concerns. See `features/live_trade/execution/`,
-  `src/gpt_trader/monitoring/guards/`, and `features/live_trade/risk/` as examples of successful refactorings.
+  subpackages or module-local collaborators with clear separation of concerns.
+  See `features/live_trade/execution/`, `src/gpt_trader/monitoring/guards/`,
+  `features/live_trade/risk/`, and the `features/live_trade/engines/`
+  collaborators (telemetry, equity, order-record mapping) as examples. Decompose
+  one reviewable seam at a time:
+  - Keep the public class/import stable as a **facade**; move logic behind
+    private collaborators (free functions or classes) that it delegates to.
+  - Extract the **lowest-risk seam first** — pure, IO-free helpers before
+    stateful or async ones.
+  - The acceptance signal is **behavior tests for the moved responsibility**,
+    not line counts (line counts are supporting evidence only).
 
 ## Slice Scaffolding
 
@@ -263,6 +272,42 @@ as the source changes.
 - Preview stale Codex worktrees under `/tmp/gpt-*` with `python scripts/maintenance/cleanup_worktrees.py`.
 - Add `--apply` to remove the worktrees and delete their local branches.
 - Only `codex/*` or `issue/*` branches with missing upstream remotes are eligible.
+
+## Cleanup Passes
+
+Cleanup work removes drift, clarifies the canonical path, or surfaces a behavior
+decision that must happen before more automation is added. It is not a feature
+backlog — track cleanup candidates as GitHub issues, not in a doc.
+
+- Keep each pass small enough to verify and commit independently. Start from a
+  clean working tree and end with `git status --short --branch` showing only the
+  branch line.
+- Prefer removing or rehoming stale surfaces before rewriting core behavior.
+- Treat broker/profile availability as implementation state, not product
+  approval. Consult [DIRECTION.md](DIRECTION.md) before adding or enabling
+  execution paths.
+- Do not preserve compatibility shims only because they exist: keep them
+  intentionally, deprecate them with a target in [DEPRECATIONS.md](DEPRECATIONS.md),
+  or remove them with tests.
+- Keep generated inventories current with `uv run agent-regenerate --verify` when
+  a pass moves, removes, or changes generated-artifact inputs.
+- A pass that uncovers an unsettled behavior question records it as a `proposed`
+  decision in [decisions/](decisions/README.md), not as a drive-by change.
+
+Prefer this verification bundle after passes that touch docs, scripts, config, or
+generated-artifact inputs:
+
+```bash
+git status --short --branch
+uv run ruff check .
+uv run python scripts/ci/check_legacy_patterns.py
+uv run python scripts/ci/check_deprecation_registry.py
+uv run python scripts/maintenance/docs_link_audit.py
+uv run python scripts/maintenance/docs_reachability_check.py
+uv run python scripts/maintenance/generate_decision_index.py --check
+uv run agent-regenerate --verify
+git diff --check
+```
 
 ## Submitting Changes
 

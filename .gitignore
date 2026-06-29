@@ -32,6 +32,9 @@ logs/
 runtime_data/
 experiments/
 
+# Ephemeral per-task planning/audit artifacts (see docs/INFORMATION_ARCHITECTURE.md)
+work/
+
 # Local dev artifacts
 *.tmp
 *.swp

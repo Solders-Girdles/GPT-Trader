@@ -44,7 +44,6 @@ CSS_MODULE_ORDER = [
     "widgets/modals.tcss",
     "widgets/execution.tcss",
     "widgets/error_indicator.tcss",
-    "widgets/cfm_balance.tcss",
     "widgets/system.tcss",
     "widgets/risk.tcss",
     "widgets/strategy.tcss",

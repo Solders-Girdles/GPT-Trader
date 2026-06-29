@@ -5,11 +5,11 @@ requires the `observability` optional dependency group.
 
 Usage:
     # Initialize at startup
-    from gpt_trader.observability import init_tracing
+    from gpt_trader.monitoring.tracing import init_tracing
     init_tracing(service_name="gpt-trader", endpoint="http://localhost:4317", enabled=True)
 
     # Create spans
-    from gpt_trader.observability import trace_span
+    from gpt_trader.monitoring.tracing import trace_span
     with trace_span("cycle", {"cycle": 42, "symbol": "BTC-USD"}):
         # ... do work ...
 

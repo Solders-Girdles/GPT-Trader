@@ -6,7 +6,7 @@ workflow as everything else. They are never silently removed — each version is
 appended to its own log with the actor and rationale that produced it.
 
 Seeded defaults reflect the owner's accepted risk philosophy
-(docs/OPERATING_RUBRIC.md): principal is fully at risk, so per-idea and daily
+(docs/DIRECTION.md): principal is fully at risk, so per-idea and daily
 caps are aggressive; realized gains are not principal, so a gain-retention
 floor defends a share of peak gains once the account is above its
 high-water mark.

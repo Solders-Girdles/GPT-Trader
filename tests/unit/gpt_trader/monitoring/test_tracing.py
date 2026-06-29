@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-import gpt_trader.observability.tracing as tracing_module
-from gpt_trader.observability.tracing import (
+import gpt_trader.monitoring.tracing as tracing_module
+from gpt_trader.monitoring.tracing import (
     _OTEL_AVAILABLE,
     get_tracer,
     init_tracing,

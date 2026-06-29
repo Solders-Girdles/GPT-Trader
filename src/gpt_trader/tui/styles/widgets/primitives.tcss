@@ -13,27 +13,4 @@ ProgressBarWidget {
     color: $text-muted;
 }
 
-/* Status Badge Widget */
-StatusBadgeWidget {
-    width: auto;
-    height: 1;
-    padding: 0 1;
-    background: $bg-elevated;
-    color: $text-primary;
-    text-style: bold;
-}
-
-.badge-live {
-    color: $success;
-    border-left: thick $success;
-}
-
-.badge-stopped {
-    color: $error;
-    border-left: thick $error;
-}
-
-.badge-syncing {
-    color: $warning;
-    border-left: thick $warning;
-}
+/* Progress / sparkline primitives only; status badges removed (unused widget). */

@@ -34,7 +34,7 @@ from gpt_trader.features.live_trade.guard_errors import (
     record_guard_failure,
     record_guard_success,
 )
-from gpt_trader.observability.tracing import trace_span
+from gpt_trader.monitoring.tracing import trace_span
 from gpt_trader.utilities.logging_patterns import get_logger
 from gpt_trader.utilities.quantities import quantity_from
 

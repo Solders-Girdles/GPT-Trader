@@ -3,7 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from scripts.maintenance import docs_link_audit, docs_reachability_check
+from scripts.maintenance import (
+    docs_link_audit,
+    docs_reachability_check,
+    generate_decision_index,
+)
 
 
 @pytest.mark.parametrize(
@@ -62,6 +66,17 @@ def test_docs_link_audit_skips_repo_path_checks_for_proposed_specs() -> None:
     )
 
 
+def test_docs_link_audit_skips_review_artifact_tmp_markdown(tmp_path: Path) -> None:
+    kept = tmp_path / "review_artifacts" / "durable.md"
+    kept.parent.mkdir(parents=True)
+    kept.write_text("# Durable\n", encoding="utf-8")
+    skipped = tmp_path / "review_artifacts" / "tmp" / "draft.md"
+    skipped.parent.mkdir(parents=True)
+    skipped.write_text("[Broken](missing.md)\n", encoding="utf-8")
+
+    assert docs_link_audit.iter_markdown_files(tmp_path) == [kept]
+
+
 @pytest.mark.parametrize(
     ("path", "expected"),
     [
@@ -94,6 +109,10 @@ def test_suggest_sections_for_representative_paths(path: Path, expected: list[st
         # status alone is sufficient (date keys are optional)
         ("---\nstatus: current\n---", True),
         ("---\nstatus: current\nlast-updated: 2026-06-27\n---", True),
+        # decision-record lifecycle statuses are accepted
+        ("---\nstatus: proposed\n---", True),
+        ("---\nstatus: accepted\n---", True),
+        ("---\nstatus: rejected\n---", True),
         # status must be present and recognized
         ("---\nlast-updated: 2026-06-27\n---", False),
         ("---\nstatus: bogus\n---", False),
@@ -113,3 +132,87 @@ def test_has_required_metadata(tmp_path: Path, block: str, expected: bool) -> No
     doc = tmp_path / "doc.md"
     doc.write_text(f"# Title\n\n{block}\n\nbody\n", encoding="utf-8")
     assert docs_reachability_check.has_required_metadata(doc) is expected
+
+
+def _write_decision(directory: Path, slug: str, *, title: str, status: str, date: str) -> None:
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / slug).write_text(
+        f"# {title}\n\n---\nstatus: {status}\ndate: {date}\n---\n\nbody\n",
+        encoding="utf-8",
+    )
+
+
+def test_collect_decisions_orders_newest_first_and_skips_non_records(tmp_path: Path) -> None:
+    _write_decision(tmp_path, "older.md", title="Older", status="accepted", date="2026-01-01")
+    _write_decision(tmp_path, "newer.md", title="Newer", status="proposed", date="2026-06-28")
+    # README and underscore-prefixed template are not decision records.
+    (tmp_path / "README.md").write_text(
+        "# Decisions\n\n---\nstatus: current\n---\n", encoding="utf-8"
+    )
+    _write_decision(
+        tmp_path, "_template.md", title="Template", status="proposed", date="2026-06-28"
+    )
+
+    records = generate_decision_index.collect_decisions(tmp_path)
+
+    assert [r.slug for r in records] == ["newer.md", "older.md"]
+    assert records[0].title == "Newer"
+    assert records[0].status == "proposed"
+
+
+def test_render_index_table_links_each_record(tmp_path: Path) -> None:
+    _write_decision(
+        tmp_path, "venue.md", title="Venue choice", status="proposed", date="2026-06-28"
+    )
+    records = generate_decision_index.collect_decisions(tmp_path)
+
+    table = generate_decision_index.render_index_table(records)
+
+    assert "| 2026-06-28 | [Venue choice](venue.md) | proposed |" in table
+
+
+def test_splice_index_replaces_only_between_markers() -> None:
+    readme = (
+        "intro\n"
+        f"{generate_decision_index.BEGIN_MARKER}\n"
+        "OLD TABLE\n"
+        f"{generate_decision_index.END_MARKER}\n"
+        "outro\n"
+    )
+
+    spliced = generate_decision_index.splice_index(readme, "NEW TABLE")
+
+    assert "OLD TABLE" not in spliced
+    assert "NEW TABLE" in spliced
+    assert spliced.startswith("intro\n")
+    assert spliced.endswith("outro\n")
+
+
+def test_splice_index_requires_markers() -> None:
+    with pytest.raises(ValueError):
+        generate_decision_index.splice_index("no markers here", "TABLE")
+
+
+def test_generate_decision_index_check_detects_stale(tmp_path: Path) -> None:
+    _write_decision(tmp_path, "alpha.md", title="Alpha", status="accepted", date="2026-02-02")
+    (tmp_path / "README.md").write_text(
+        "# Decisions\n\n---\nstatus: current\n---\n\n"
+        f"{generate_decision_index.BEGIN_MARKER}\n"
+        "| Date | Decision | Status |\n|------|----------|--------|\n"
+        f"{generate_decision_index.END_MARKER}\n",
+        encoding="utf-8",
+    )
+
+    assert generate_decision_index.main(["--decisions-dir", str(tmp_path), "--check"]) == 1
+    assert generate_decision_index.main(["--decisions-dir", str(tmp_path)]) == 0
+    assert generate_decision_index.main(["--decisions-dir", str(tmp_path), "--check"]) == 0
+
+
+def test_collect_decisions_raises_on_malformed_record(tmp_path: Path) -> None:
+    # A non-excluded decision file missing the H1 title must fail the run rather
+    # than silently disappear from the generated index.
+    (tmp_path / "broken.md").write_text(
+        "---\nstatus: accepted\n---\n\nno title here\n", encoding="utf-8"
+    )
+    with pytest.raises(ValueError, match="missing required decision fields"):
+        generate_decision_index.collect_decisions(tmp_path)

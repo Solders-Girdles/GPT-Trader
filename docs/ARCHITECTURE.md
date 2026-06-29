@@ -20,7 +20,7 @@ status: current
 
 GPT-Trader is a Coinbase Advanced Trade oriented trading system with implemented **spot**, **CFM futures**, and gated **INTX perpetuals** paths. Treat these as implementation capabilities, not as blanket approval for live automation.
 
-For broader migration, the canonical planning gate is [Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md). New AI-assisted execution work should start from the current approval-gated execution phase (`human_approved_execution` compatibility label), broker-neutral trade records, explicit risk budgets, `decision-needed` packets for unresolved live-control choices, and verified venue/API/account capability.
+For broader migration, the canonical planning gate is [Direction](DIRECTION.md). New AI-assisted execution work should start from the current approval-gated execution phase (`human_approved_execution` compatibility label), broker-neutral trade records, explicit risk budgets, `decision-needed` packets for unresolved live-control choices, and verified venue/API/account capability.
 
 > 📘 **Trust reminder:** Confirm key details against current source + generated inventories (`var/agents/**`) before acting on them.
 
@@ -522,7 +522,7 @@ Use that module before adding new filesystem defaults.
 This section describes which surfaces are implemented in the codebase.
 Implemented does not mean approved to run live — live execution still follows
 the gates in [Live Operations](production.md) and the
-[Pre-Migration Decision Framework](PRE_MIGRATION_DECISION_FRAMEWORK.md).
+[Direction](DIRECTION.md).
 
 ### ✅ Implemented Surfaces
 - Coinbase spot adapters via Advanced Trade (REST/WebSocket); dev profile defaults to the deterministic broker stub and can be pointed at live APIs with `SPOT_FORCE_LIVE=1`

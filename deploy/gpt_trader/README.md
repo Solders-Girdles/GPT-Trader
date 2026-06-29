@@ -3,7 +3,7 @@
 This directory hosts the Docker assets for the gpt_trader trading system. These
 assets are not an approval to run live automation or deploy production; live
 operations remain subject to the readiness gates in `docs/production.md` and
-the decision boundary in `docs/PRE_MIGRATION_DECISION_FRAMEWORK.md`. The
+the decision boundary in `docs/DIRECTION.md`. The
 GitHub release-image workflow only publishes and scans images for version tags
 or explicit manual runs. The multi-stage Dockerfile builds uv-managed
 dependencies and exposes separate targets for development, testing,

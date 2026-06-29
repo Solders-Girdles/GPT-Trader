@@ -9,27 +9,10 @@ The matching logic is now separated from state management:
 - Pure functions: Perform the actual matching calculations
 """
 
-from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
 from gpt_trader.tui.state_management import TradeMatcherState
 from gpt_trader.tui.types import Trade
-
-
-@dataclass
-class TradeMatch:
-    """Represents a matched BUY/SELL trade pair with calculated P&L."""
-
-    entry_trade_id: str
-    exit_trade_id: str
-    symbol: str
-    entry_price: Decimal
-    exit_price: Decimal
-    quantity: Decimal
-    entry_fee: Decimal
-    exit_fee: Decimal
-    realized_pnl: Decimal
-    side: str  # "LONG" or "SHORT"
 
 
 class TradeMatcher:

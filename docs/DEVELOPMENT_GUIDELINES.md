@@ -100,7 +100,9 @@ bypass guards:
 - `Nightly Validation`: Coinbase websocket and harness smoke tests on a nightly cadence.
 - `Nightly Full Suite`: Scheduled full pytest run (slow markers included); manually triggerable for debugging.
 - `Security Audit`: Weekly pip-audit export to catch dependency vulnerabilities.
-- `GPT-Trader CI/CD Pipeline`: End-to-end build and deployment flow for staging/production releases; Docker publish is skipped on pull requests.
+- `Release Image`: Version-tag or manual Docker image publication with Trivy
+  scanning; normal branch pushes do not publish images or deploy
+  staging/production.
 - `Windows Portability`: Focused unit tests on windows-latest for persistence, monitoring, and scripts (see `windows-unit-tests` job in `.github/workflows/ci.yml`). Catches portability bugs for Windows development environment. Complements the default Ubuntu matrix. Added to address #955; currently runs on PRs (passes in recent merges) but not enforced as required check.
 
 ### Local CI Command

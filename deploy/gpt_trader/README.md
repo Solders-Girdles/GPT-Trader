@@ -1,11 +1,17 @@
 # gpt_trader Docker Deployment
 
-This directory hosts the active Docker assets for the gpt_trader trading system. The
-multi-stage Dockerfile builds uv-managed dependencies and exposes
-separate targets for development, testing, production, and optional security scanning. The base
-compose file (`docker/docker-compose.yaml`) now focuses on the essentials: the trading bot and
-opt-in Prometheus/Grafana metrics via the `observability` profile. The production reverse proxy
-(Nginx) lives in the optional `docker-compose.infrastructure.yaml` override.
+This directory hosts the Docker assets for the gpt_trader trading system. These
+assets are not an approval to run live automation or deploy production; live
+operations remain subject to the readiness gates in `docs/production.md` and
+the decision boundary in `docs/PRE_MIGRATION_DECISION_FRAMEWORK.md`. The
+GitHub release-image workflow only publishes and scans images for version tags
+or explicit manual runs. The multi-stage Dockerfile builds uv-managed
+dependencies and exposes separate targets for development, testing,
+production, and optional security scanning. The base compose file
+(`docker/docker-compose.yaml`) now focuses on the essentials: the trading bot
+and opt-in Prometheus/Grafana metrics via the `observability` profile. The
+production reverse proxy (Nginx) lives in the optional
+`docker-compose.infrastructure.yaml` override.
 
 ## Image Targets
 The Dockerfile defines several stages selectable via the `BUILD_TARGET` build argument:

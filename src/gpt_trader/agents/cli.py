@@ -208,6 +208,26 @@ def dedupe() -> int:
     return _run_script("generate_dedupe_candidates.py")
 
 
+def pr_ready() -> int:
+    """Reconcile a PR's real mergeability against green CI (transparency, not a gate).
+
+    Entry point: agent-pr-ready
+
+    Surfaces what "checks are green" hides: required-check state, mergeStateStatus,
+    unresolved review threads (with severity), and an artifact-freshness advisory.
+    Always exits 0 by default; pass --exit-on-not-ready for an opt-in advisory gate.
+
+    Examples:
+        uv run agent-pr-ready                      # auto-detect PR for current branch
+        uv run agent-pr-ready --pr 1056
+        uv run agent-pr-ready --format markdown    # receipt for the PR body
+        uv run agent-pr-ready --format json
+        uv run agent-pr-ready --no-github          # local artifact advisory only
+        uv run agent-pr-ready --exit-on-not-ready  # opt-in advisory gate
+    """
+    return _run_script("pr_readiness.py")
+
+
 def dedupe_triage() -> int:
     """Triage dedupe clusters (accept/reject/defer).
 

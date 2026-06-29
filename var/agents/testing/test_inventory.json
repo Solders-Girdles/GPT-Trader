@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 7051,
-    "total_files": 835,
+    "total_tests": 7086,
+    "total_files": 837,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6884,
+    "unit": 6919,
     "asyncio": 440,
     "parametrize": 207,
     "endpoints": 83,
@@ -838,6 +838,12 @@
     ],
     "test_mypy_tui_ratchet.py": [
       "tests/unit/scripts/test_mypy_tui_ratchet.py"
+    ],
+    "test_pr_readiness.py": [
+      "tests/unit/scripts/test_pr_readiness.py"
+    ],
+    "test_pr_readiness_io.py": [
+      "tests/unit/scripts/test_pr_readiness_io.py"
     ],
     "test_project_review_issue_promoter.py": [
       "tests/unit/scripts/test_project_review_issue_promoter.py"
@@ -64531,6 +64537,290 @@
       {
         "name": "test_tui_mypy_ratchet_disables_ignore_errors_for_included_modules",
         "line": 34,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_pr_readiness.py": [
+      {
+        "name": "test_artifact_advisory_triggers_for_source_and_tests",
+        "line": 39,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_artifact_advisory_skips_unrelated_changes",
+        "line": 49,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_parse_severity_recognizes_bot_tokens",
+        "line": 58,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_parse_severity_returns_none_without_token",
+        "line": 65,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_parse_branch_protection_extracts_flags",
+        "line": 72,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_parse_branch_protection_handles_missing_payload",
+        "line": 89,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_parse_pr_state_maps_checks_and_threads",
+        "line": 98,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_green_checks_but_unresolved_threads_is_not_ready",
+        "line": 135,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "All required checks SUCCESS, but enforced conversation resolution + open\nthreads must still report NOT READY (the PR #1056 situation)."
+      },
+      {
+        "name": "test_unresolved_threads_without_enforcement_is_warning_not_blocker",
+        "line": 159,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_failing_required_check_is_blocker",
+        "line": 175,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_missing_required_check_is_blocker",
+        "line": 194,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_skipped_and_neutral_required_checks_are_passing",
+        "line": 210,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_blocked_state_without_specific_finding_is_not_ready",
+        "line": 228,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_draft_state_is_not_ready",
+        "line": 244,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_unknown_merge_state_is_not_ready",
+        "line": 260,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_clean_pr_with_no_open_threads_is_ready",
+        "line": 276,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_behind_base_is_blocker",
+        "line": 292,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_required_review_missing_is_blocker",
+        "line": 308,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_format_json_is_machine_readable",
+        "line": 327,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_format_markdown_includes_verdict_and_findings",
+        "line": 344,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_module_exposes_main",
+        "line": 360,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
+    "tests/unit/scripts/test_pr_readiness_io.py": [
+      {
+        "name": "test_run_converts_missing_executable_to_failed_process",
+        "line": 10,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_changed_paths_retries_origin_base_when_local_base_is_missing",
+        "line": 22,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_detect_pr_number_returns_none_only_for_no_pr",
+        "line": 39,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_detect_pr_number_reraises_api_failures",
+        "line": 48,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fetch_review_threads_paginates",
+        "line": 62,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fetch_review_threads_rejects_malformed_repo",
+        "line": 101,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fetch_branch_protection_encodes_branch_segments",
+        "line": 110,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fetch_branch_protection_returns_none_for_missing_protection",
+        "line": 125,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fetch_branch_protection_reraises_api_failures",
+        "line": 134,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_fetch_pr_changed_paths_uses_requested_pr_diff",
+        "line": 148,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_uses_pr_base_for_advisory_and_branch_protection",
+        "line": 161,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_pr_mode_uses_pr_diff_for_artifact_advisory",
+        "line": 197,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_exit_on_not_ready_fails_when_github_unavailable",
+        "line": 218,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_main_json_format_survives_github_unavailable",
+        "line": 227,
         "markers": [
           "unit"
         ],

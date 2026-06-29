@@ -22,8 +22,17 @@ need to review historical practices.
 - **Configuration-first**: Extend `BotConfig` when new runtime options are
   required; expose overrides through the CLI when appropriate.
 - **Modular refactoring**: Extract large modules (>500 lines) into focused
-  subpackages with clear separation of concerns. See `features/live_trade/execution/`,
-  `src/gpt_trader/monitoring/guards/`, and `features/live_trade/risk/` as examples of successful refactorings.
+  subpackages or module-local collaborators with clear separation of concerns.
+  See `features/live_trade/execution/`, `src/gpt_trader/monitoring/guards/`,
+  `features/live_trade/risk/`, and the `features/live_trade/engines/`
+  collaborators (telemetry, equity, order-record mapping) as examples. Decompose
+  one reviewable seam at a time:
+  - Keep the public class/import stable as a **facade**; move logic behind
+    private collaborators (free functions or classes) that it delegates to.
+  - Extract the **lowest-risk seam first** — pure, IO-free helpers before
+    stateful or async ones.
+  - The acceptance signal is **behavior tests for the moved responsibility**,
+    not line counts (line counts are supporting evidence only).
 
 ## Slice Scaffolding
 

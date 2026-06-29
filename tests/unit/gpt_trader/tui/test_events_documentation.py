@@ -4,27 +4,20 @@ from __future__ import annotations
 
 from gpt_trader.tui.events import (
     BotModeChanged,
-    BotModeChangeRequested,
     BotStartRequested,
     BotStateChanged,
-    BotStopRequested,
     ConfigChanged,
     ConfigReloadRequested,
     ErrorOccurred,
     FieldValidationError,
-    HeartbeatTick,
-    NotificationRequested,
     ResponsiveStateChanged,
     StateDeltaUpdateApplied,
     StateUpdateReceived,
     StateValidationFailed,
     StateValidationPassed,
     ThemeChanged,
-    ThemeChangeRequested,
     TradeMatcherResetRequested,
     TradeMatcherStateRequest,
-    TradeMatcherStateResponse,
-    UIRefreshRequested,
 )
 
 
@@ -35,26 +28,19 @@ class TestEventDocumentation:
         """Verify all event classes have docstrings."""
         event_classes = [
             BotStartRequested,
-            BotStopRequested,
             BotStateChanged,
-            BotModeChangeRequested,
             BotModeChanged,
             StateUpdateReceived,
             FieldValidationError,
             StateValidationFailed,
             StateValidationPassed,
             StateDeltaUpdateApplied,
-            UIRefreshRequested,
-            HeartbeatTick,
             ResponsiveStateChanged,
             TradeMatcherResetRequested,
             TradeMatcherStateRequest,
-            TradeMatcherStateResponse,
             ErrorOccurred,
-            NotificationRequested,
             ConfigReloadRequested,
             ConfigChanged,
-            ThemeChangeRequested,
             ThemeChanged,
         ]
 
@@ -66,8 +52,6 @@ class TestEventDocumentation:
         """Verify dataclass events document their fields."""
         assert "running" in BotStateChanged.__doc__
         assert "uptime" in BotStateChanged.__doc__
-
-        assert "target_mode" in BotModeChangeRequested.__doc__
 
         assert "errors" in StateValidationFailed.__doc__
         assert "component" in StateValidationFailed.__doc__

@@ -7,7 +7,6 @@ import pytest
 from gpt_trader.tui.services.focus_manager import (
     FocusManager,
     TileFocusChanged,
-    TilePosition,
 )
 
 
@@ -34,29 +33,6 @@ def mock_app():
 def focus_manager(mock_app):
     """Create a FocusManager with mock app."""
     return FocusManager(mock_app)
-
-
-class TestTilePosition:
-    """Test suite for TilePosition dataclass."""
-
-    def test_tile_position_creation(self):
-        """Test creating a TilePosition."""
-        pos = TilePosition(row=0, col=1, tile_id="test-tile")
-        assert pos.row == 0
-        assert pos.col == 1
-        assert pos.tile_id == "test-tile"
-
-    def test_tile_position_equality(self):
-        """Test TilePosition equality."""
-        pos1 = TilePosition(row=0, col=0, tile_id="tile-a")
-        pos2 = TilePosition(row=0, col=0, tile_id="tile-a")
-        assert pos1 == pos2
-
-    def test_tile_position_inequality(self):
-        """Test TilePosition inequality."""
-        pos1 = TilePosition(row=0, col=0, tile_id="tile-a")
-        pos2 = TilePosition(row=1, col=0, tile_id="tile-b")
-        assert pos1 != pos2
 
 
 class TestFocusManager:

@@ -7,7 +7,6 @@ Provides visual focus ring and actions hint coordination.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from textual.message import Message
@@ -18,15 +17,6 @@ if TYPE_CHECKING:
     from gpt_trader.tui.app import TraderApp
 
 logger = get_logger(__name__, component="tui")
-
-
-@dataclass
-class TilePosition:
-    """Position of a tile in the 2D grid."""
-
-    row: int
-    col: int
-    tile_id: str
 
 
 class FocusManager:

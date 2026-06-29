@@ -8,17 +8,12 @@ from textual.message import Message
 
 from gpt_trader.tui.events import (
     BotModeChanged,
-    BotModeChangeRequested,
     BotStartRequested,
     BotStateChanged,
-    BotStopRequested,
     ConfigChanged,
     ConfigReloadRequested,
-    HeartbeatTick,
     ResponsiveStateChanged,
     ThemeChanged,
-    ThemeChangeRequested,
-    UIRefreshRequested,
 )
 from gpt_trader.tui.responsive_state import ResponsiveState
 
@@ -29,11 +24,6 @@ class TestBotLifecycleEvents:
     def test_bot_start_requested_creation(self):
         """Test BotStartRequested event creation."""
         event = BotStartRequested()
-        assert isinstance(event, Message)
-
-    def test_bot_stop_requested_creation(self):
-        """Test BotStopRequested event creation."""
-        event = BotStopRequested()
         assert isinstance(event, Message)
 
     def test_bot_state_changed_creation(self):
@@ -49,12 +39,6 @@ class TestBotLifecycleEvents:
         assert event.running is False
         assert event.uptime == 0.0
 
-    def test_bot_mode_change_requested_creation(self):
-        """Test BotModeChangeRequested event creation."""
-        event = BotModeChangeRequested(target_mode="paper")
-        assert isinstance(event, Message)
-        assert event.target_mode == "paper"
-
     def test_bot_mode_changed_creation(self):
         """Test BotModeChanged event creation."""
         event = BotModeChanged(new_mode="live", old_mode="demo")
@@ -65,22 +49,6 @@ class TestBotLifecycleEvents:
 
 class TestUICoordinationEvents:
     """Test UI coordination events."""
-
-    def test_ui_refresh_requested_creation(self):
-        """Test UIRefreshRequested event creation."""
-        event = UIRefreshRequested()
-        assert isinstance(event, Message)
-
-    def test_heartbeat_tick_creation(self):
-        """Test HeartbeatTick event creation."""
-        event = HeartbeatTick(pulse_value=0.75)
-        assert isinstance(event, Message)
-        assert event.pulse_value == 0.75
-
-    def test_heartbeat_tick_default_pulse(self):
-        """Test HeartbeatTick with default pulse value."""
-        event = HeartbeatTick()
-        assert event.pulse_value == 0.0
 
     def test_responsive_state_changed_creation(self):
         """Test ResponsiveStateChanged event creation."""
@@ -108,12 +76,6 @@ class TestConfigurationEvents:
 
 class TestThemeEvents:
     """Test theme events."""
-
-    def test_theme_change_requested_creation(self):
-        """Test ThemeChangeRequested event creation."""
-        event = ThemeChangeRequested(theme_mode="dark")
-        assert isinstance(event, Message)
-        assert event.theme_mode == "dark"
 
     def test_theme_changed_creation(self):
         """Test ThemeChanged event creation."""

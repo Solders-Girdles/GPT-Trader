@@ -252,3 +252,42 @@ async def test_unfilled_order_alert_emitted_once(engine) -> None:
         e for e in engine._event_store.list_events() if e.get("type") == "unfilled_order_alert"
     ]
     assert len(alert_events) == 1
+
+
+@pytest.mark.asyncio
+async def test_unfilled_order_alert_dedupes_client_and_order_ids(engine) -> None:
+    engine.context.risk_manager.config.unfilled_order_alert_seconds = 1
+    engine.context.broker.list_orders.side_effect = [
+        {
+            "orders": [
+                {
+                    "client_order_id": "submit-1",
+                    "product_id": "BTC-USD",
+                    "side": "BUY",
+                    "status": "OPEN",
+                    "created_time": time.time() - 10,
+                }
+            ]
+        },
+        {
+            "orders": [
+                {
+                    "order_id": "order-1",
+                    "client_order_id": "submit-1",
+                    "product_id": "BTC-USD",
+                    "side": "BUY",
+                    "status": "OPEN",
+                    "created_time": time.time() - 10,
+                }
+            ]
+        },
+    ]
+
+    await engine._audit_orders()
+    await engine._audit_orders()
+
+    alert_events = [
+        e for e in engine._event_store.list_events() if e.get("type") == "unfilled_order_alert"
+    ]
+    assert len(alert_events) == 1
+    assert alert_events[0]["data"]["order_id"] == "submit-1"

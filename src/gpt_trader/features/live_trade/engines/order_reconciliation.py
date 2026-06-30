@@ -209,12 +209,16 @@ class OrderReconciliationService:
                     self._open_orders.append(updated.order_id)
                 refreshed_orders.append(order)
             else:
-                if updated.order_id in self._open_orders:
-                    self._open_orders.remove(updated.order_id)
+                self._remove_open_order_ids(
+                    record.order_id,
+                    record.client_order_id,
+                    updated.order_id,
+                    updated.client_order_id,
+                )
 
         return refreshed_orders
 
-    async def reconcile_open_orders(self, orders: list[Any]) -> None:
+    async def reconcile_open_orders(self, orders: list[Any]) -> list[Any]:
         """Reconcile internal open-order tracking with broker + persistence state."""
         bot_id = str(self._context.bot_id or self._context.config.profile or "live")
         prefix = f"{bot_id}_"
@@ -258,7 +262,7 @@ class OrderReconciliationService:
                 if not pending and self._open_orders:
                     self._open_orders.clear()
                 self._reset_drift()
-                return
+                return []
 
         order_index: dict[str, Any] = {}
 
@@ -329,6 +333,8 @@ class OrderReconciliationService:
             )
             for refreshed_order in refreshed_orders:
                 _index_order(refreshed_order)
+            if refreshed_orders:
+                orders = [*orders, *refreshed_orders]
 
         snapshot = list(self._open_orders)
         snapshot_set = set(snapshot)
@@ -391,7 +397,7 @@ class OrderReconciliationService:
 
         if not unknown_bot_orders:
             self._reset_drift()
-            return
+            return orders
 
         payload = {
             "timestamp": time.time(),
@@ -410,14 +416,15 @@ class OrderReconciliationService:
         )
 
         if self._drift_escalated:
-            return
+            return orders
 
         self._drift_failures += 1
         if self._drift_failures < self._drift_max_failures:
-            return
+            return orders
 
         self._drift_escalated = True
         await self.handle_order_reconciliation_drift(unknown_bot_orders)
+        return orders
 
     async def handle_order_reconciliation_drift(self, order_ids: list[str]) -> None:
         """Escalate persistent order-reconciliation drift to graceful degradation."""
@@ -492,3 +499,11 @@ class OrderReconciliationService:
     def _reset_drift(self) -> None:
         self._drift_failures = 0
         self._drift_escalated = False
+
+    def _remove_open_order_ids(self, *order_ids: str | None) -> None:
+        identifiers = {str(order_id) for order_id in order_ids if order_id is not None}
+        if not identifiers:
+            return
+        self._open_orders[:] = [
+            order_id for order_id in self._open_orders if str(order_id) not in identifiers
+        ]

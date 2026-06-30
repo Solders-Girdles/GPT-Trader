@@ -44,6 +44,7 @@ class OrderAuditService:
         self._append_event = append_event
         self._cycle_count_provider = cycle_count_provider
         self._unfilled_order_alerts: dict[str, float] = {}
+        self._unfilled_order_alert_aliases: dict[str, set[str]] = {}
 
     async def audit_orders(self) -> None:
         """Audit broker open orders for reconciliation and status reporting."""
@@ -52,18 +53,18 @@ class OrderAuditService:
             return
         try:
             orders = await self._load_open_orders(broker)
-            await self._reconciliation.reconcile_open_orders(orders)
+            reconciled_orders = await self._reconciliation.reconcile_open_orders(orders)
 
-            if orders:
+            if reconciled_orders:
                 logger.info(
                     "AUDIT: Found OPEN orders",
-                    open_order_count=len(orders),
+                    open_order_count=len(reconciled_orders),
                     operation="order_audit",
                     stage="list",
                 )
 
-            self.record_unfilled_order_alerts(orders)
-            self._status_reporter.update_orders(self._status_orders(orders))
+            self.record_unfilled_order_alerts(reconciled_orders)
+            self._status_reporter.update_orders(self._status_orders(reconciled_orders))
 
             if self._cycle_count_provider() % 60 == 0:
                 await self._update_account_metrics(broker)
@@ -76,18 +77,22 @@ class OrderAuditService:
         threshold = getattr(config, "unfilled_order_alert_seconds", 300)
         if not orders or threshold <= 0:
             self._unfilled_order_alerts.clear()
+            self._unfilled_order_alert_aliases.clear()
             return
 
         now = time.time()
         active_ids: set[str] = set()
 
         for order in orders:
-            order_id = get_order_field(order, "order_id", "id", "client_order_id", "client_id")
-            if order_id is None:
+            order_identifiers = self._order_identifiers(order)
+            if not order_identifiers:
                 continue
-            order_id_str = str(order_id)
-            active_ids.add(order_id_str)
-            if order_id_str in self._unfilled_order_alerts:
+            order_id_str = order_identifiers[0]
+            identifier_group = self._alert_identifier_group(order_identifiers)
+            active_ids.update(order_identifiers)
+            alert_timestamp = self._existing_alert_timestamp(identifier_group)
+            if alert_timestamp is not None:
+                self._track_alert_aliases(identifier_group, alert_timestamp)
                 continue
 
             status = get_order_field(order, "status")
@@ -114,13 +119,59 @@ class OrderAuditService:
                 "timestamp": now,
             }
             self._append_event("unfilled_order_alert", payload)
-            self._unfilled_order_alerts[order_id_str] = now
+            self._track_alert_aliases(identifier_group, now)
 
+        active_ids.update(
+            alias
+            for identifier in tuple(active_ids)
+            for alias in self._unfilled_order_alert_aliases.get(identifier, set())
+        )
         stale_ids = [
             order_id for order_id in self._unfilled_order_alerts if order_id not in active_ids
         ]
         for order_id in stale_ids:
             del self._unfilled_order_alerts[order_id]
+            self._unfilled_order_alert_aliases.pop(order_id, None)
+
+        if stale_ids:
+            stale_set = set(stale_ids)
+            for order_id, aliases in list(self._unfilled_order_alert_aliases.items()):
+                aliases.difference_update(stale_set)
+                if not aliases:
+                    del self._unfilled_order_alert_aliases[order_id]
+
+    def _order_identifiers(self, order: Any) -> list[str]:
+        identifiers: list[str] = []
+        seen: set[str] = set()
+        for key in ("order_id", "id", "client_order_id", "client_id"):
+            value = get_order_field(order, key)
+            if value is None:
+                continue
+            identifier = str(value)
+            if identifier in seen:
+                continue
+            seen.add(identifier)
+            identifiers.append(identifier)
+        return identifiers
+
+    def _alert_identifier_group(self, identifiers: list[str]) -> set[str]:
+        identifier_group = set(identifiers)
+        for identifier in identifiers:
+            identifier_group.update(self._unfilled_order_alert_aliases.get(identifier, set()))
+        return identifier_group
+
+    def _existing_alert_timestamp(self, identifiers: set[str]) -> float | None:
+        for identifier in identifiers:
+            timestamp = self._unfilled_order_alerts.get(identifier)
+            if timestamp is not None:
+                return timestamp
+        return None
+
+    def _track_alert_aliases(self, identifiers: set[str], timestamp: float) -> None:
+        for identifier in identifiers:
+            self._unfilled_order_alerts[identifier] = timestamp
+        for identifier in identifiers:
+            self._unfilled_order_alert_aliases[identifier] = set(identifiers)
 
     async def _load_open_orders(self, broker: Any) -> list[Any]:
         response: Any = None

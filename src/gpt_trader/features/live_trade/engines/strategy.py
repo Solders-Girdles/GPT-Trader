@@ -103,6 +103,12 @@ from gpt_trader.features.live_trade.engines.telemetry_streaming import (
     _start_streaming,
     _stop_streaming,
 )
+from gpt_trader.features.live_trade.engines.trading_cycle import (
+    report_system_status,
+    run_cycle,
+    run_cycle_inner,
+    run_loop,
+)
 from gpt_trader.features.live_trade.engines.ws_health_monitor import monitor_ws_health
 from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
 from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
@@ -124,7 +130,6 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
     Action,
     Decision,
 )
-from gpt_trader.logging.correlation import correlation_context
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.feature_seeds import build_feature_seed, summarize_seed_reason
 from gpt_trader.monitoring.health_checks import HealthCheckRunner
@@ -132,7 +137,6 @@ from gpt_trader.monitoring.heartbeat import HeartbeatService
 from gpt_trader.monitoring.metrics_collector import record_histogram, record_trade_blocked
 from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.monitoring.status_reporter import StatusReporter
-from gpt_trader.monitoring.tracing import trace_span
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import (
     OrderRecord,
@@ -671,112 +675,16 @@ class TradingEngine(BaseEngine):
         await monitor_ws_health(self)
 
     async def _run_loop(self) -> None:
-        logger.info("Starting strategy loop...")
-        while self.running:
-            try:
-                await self._cycle()
-                # Record successful cycle
-                self._status_reporter.record_cycle()
-            except Exception as e:
-                logger.error(f"Error in strategy cycle: {e}", exc_info=True)
-                # Record error in status reporter
-                self._status_reporter.record_error(str(e))
-                await self._notify(
-                    title="Strategy Cycle Error",
-                    message=f"Error during trading cycle: {e}",
-                    severity=AlertSeverity.ERROR,
-                    context={"error": str(e)},
-                )
-
-            await asyncio.sleep(self.context.config.interval)
+        await run_loop(self)
 
     def _report_system_status(self) -> None:
-        """Collect and report system health metrics.
-
-        Delegates to SystemMaintenanceService for the actual reporting.
-        """
-        self._system_maintenance.report_system_status(
-            latency_seconds=self._last_latency,
-            connection_status=self._connection_status,
-        )
+        report_system_status(self)
 
     async def _cycle(self) -> None:
-        """One trading cycle."""
-        assert self.context.broker is not None, "Broker not initialized"
-        self._cycle_count += 1
-
-        # Wrap entire cycle in correlation context and trace span
-        start_time = time.perf_counter()
-        result = "ok"
-        with correlation_context(cycle=self._cycle_count):
-            with trace_span("cycle", {"cycle": self._cycle_count}) as span:
-                try:
-                    await self._cycle_inner()
-                except Exception:
-                    result = "error"
-                    if span:
-                        span.set_attribute("error", True)
-                    raise
-                finally:
-                    duration = time.perf_counter() - start_time
-                    if span:
-                        span.set_attribute("duration_seconds", duration)
-                        span.set_attribute("result", result)
-                    record_histogram(
-                        "gpt_trader_cycle_duration_seconds",
-                        duration,
-                        labels={"result": result},
-                    )
+        await run_cycle(self)
 
     async def _cycle_inner(self) -> None:
-        """Inner cycle logic wrapped in correlation context."""
-        logger.info(f"=== CYCLE {self._cycle_count} START ===")
-
-        # Report system status at start of cycle
-        self._report_system_status()
-        broker = self.context.broker
-        if broker is None:
-            logger.error("Broker not initialized", operation="cycle")
-            self._connection_status = "DISCONNECTED"
-            return
-
-        positions, audit_task = await self._fetch_positions_and_audit()
-        equity = await self._compute_equity(positions)
-        if equity is None:
-            await self._await_audit_task(audit_task, context="during equity error path")
-            return
-
-        await self._await_audit_task(audit_task, context="post equity")
-        self._update_equity_and_risk(equity)
-
-        # Ensure symbols is a list to avoid iterator exhaustion during multiple iterations
-        symbols = list(self.context.config.symbols)
-        tickers = await self._fetch_batch_tickers(broker, symbols)
-
-        tasks = [
-            self._process_symbol(
-                symbol=symbol,
-                broker=broker,
-                ticker=tickers.get(symbol),
-                positions=positions,
-                equity=equity,
-            )
-            for symbol in symbols
-        ]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        failures: list[Exception] = []
-
-        for symbol, res in zip(symbols, results):
-            if isinstance(res, Exception):
-                logger.error(
-                    f"Failed to process symbol {symbol}: {res}",
-                    exc_info=res,
-                    symbol=symbol,
-                )
-                failures.append(res)
-
-        if failures:
-            raise ExceptionGroup("Cycle completed with symbol processing errors", failures)
+        await run_cycle_inner(self)
 
     async def _fetch_positions_and_audit(
         self,

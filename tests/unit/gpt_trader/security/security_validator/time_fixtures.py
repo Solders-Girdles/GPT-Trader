@@ -1,35 +1,35 @@
 from __future__ import annotations
 
-import time
-from typing import Any
+from collections.abc import Iterator
 
 import pytest
-from freezegun import freeze_time
+
+from gpt_trader.security import rate_limiter as rate_limiter_module
+
+
+class RateLimiterClock:
+    """Controllable stand-in for the rate limiter's ``time`` module.
+
+    The :class:`~gpt_trader.security.rate_limiter.RateLimiter` reads wall-clock
+    time via the module-level ``time`` reference. Swapping that reference for
+    this object lets tests advance time deterministically without freezegun's
+    global monkeypatching (which also patches ``perf_counter`` and pollutes
+    pytest's ``--durations`` reporting).
+    """
+
+    def __init__(self, start: float = 1_000_000.0) -> None:
+        self._now = float(start)
+
+    def time(self) -> float:
+        return self._now
+
+    def advance(self, seconds: float) -> None:
+        self._now += float(seconds)
 
 
 @pytest.fixture
-def frozen_time() -> Any:
-    """Freeze time for deterministic rate limiting tests."""
-    with freeze_time("2024-01-01 12:00:00") as frozen:
-        yield frozen
-
-
-@pytest.fixture
-def rate_limiter_time_control() -> Any:
-    """Time control fixture for rate limiter testing."""
-
-    class TimeControl:
-        def __init__(self):
-            self.current_time = time.time()
-            self.selfincrements = 0
-
-        def advance(self, seconds: int) -> None:
-            """Advance time by specified seconds."""
-            self.current_time += seconds
-            self.selfincrements += 1
-
-        def get_time(self) -> float:
-            """Get current time."""
-            return self.current_time
-
-    return TimeControl()
+def rate_limiter_clock(monkeypatch: pytest.MonkeyPatch) -> Iterator[RateLimiterClock]:
+    """Replace the rate limiter's wall clock with a deterministic fake."""
+    clock = RateLimiterClock()
+    monkeypatch.setattr(rate_limiter_module, "time", clock)
+    yield clock

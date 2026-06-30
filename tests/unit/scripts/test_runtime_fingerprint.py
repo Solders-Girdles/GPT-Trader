@@ -9,13 +9,12 @@ import sys
 from pathlib import Path
 
 import pytest
+from scripts.ops import runtime_fingerprint
 
 from gpt_trader.app.runtime.fingerprint import (
     StartupConfigFingerprint,
     write_startup_config_fingerprint,
 )
-
-from scripts.ops import runtime_fingerprint
 
 
 def _create_events_db(db_path: Path) -> None:

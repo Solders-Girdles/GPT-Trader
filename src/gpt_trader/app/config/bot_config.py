@@ -375,7 +375,7 @@ class BotConfig:
         # Derivatives = CFM US futures (INTX perpetuals removed). Source enablement
         # from the CFM controls. COINBASE_ENABLE_INTX_PERPS is retired; honor it as
         # a deprecated alias until removal (see docs/DEPRECATIONS.md).
-        derivatives_enabled = parse_bool_env("CFM_ENABLED", default=False)
+        cfm_enabled = parse_bool_env("CFM_ENABLED", default=False)
         if os.getenv("COINBASE_ENABLE_INTX_PERPS") is not None and parse_bool_env(
             "COINBASE_ENABLE_INTX_PERPS", default=False
         ):
@@ -386,7 +386,8 @@ class BotConfig:
                 DeprecationWarning,
                 stacklevel=2,
             )
-            derivatives_enabled = True
+            cfm_enabled = True
+        derivatives_enabled = cfm_enabled
 
         # Build health thresholds config from env (HEALTH_* prefix)
         def _health_float(key: str, default: float) -> float:
@@ -453,7 +454,7 @@ class BotConfig:
             broker_hint=os.getenv("BROKER"),
             # CFM settings
             trading_modes=parse_list_env("TRADING_MODES", str, default=["spot"]),
-            cfm_enabled=parse_bool_env("CFM_ENABLED", default=False),
+            cfm_enabled=cfm_enabled,
             cfm_max_leverage=parse_int_env("CFM_MAX_LEVERAGE", 5) or 5,
             cfm_symbols=parse_list_env("CFM_SYMBOLS", str, default=[]),
             cfm_margin_window=os.getenv("CFM_MARGIN_WINDOW", "STANDARD"),

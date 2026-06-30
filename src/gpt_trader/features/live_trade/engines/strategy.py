@@ -35,6 +35,7 @@ from gpt_trader.features.live_trade.engines.base import (
     CoordinatorContext,
     HealthStatus,
 )
+from gpt_trader.features.live_trade.engines.cycle_runner import run_cycle
 from gpt_trader.features.live_trade.engines.equity_calculator import (
     EquityCalculator,
 )
@@ -108,7 +109,6 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
     Action,
     Decision,
 )
-from gpt_trader.logging.correlation import correlation_context
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.feature_seeds import build_feature_seed, summarize_seed_reason
 from gpt_trader.monitoring.health_checks import HealthCheckRunner
@@ -116,7 +116,6 @@ from gpt_trader.monitoring.heartbeat import HeartbeatService
 from gpt_trader.monitoring.metrics_collector import record_histogram, record_trade_blocked
 from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.monitoring.status_reporter import StatusReporter
-from gpt_trader.monitoring.tracing import trace_span
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import (
     OrderRecord,
@@ -1039,183 +1038,9 @@ class TradingEngine(BaseEngine):
 
             await asyncio.sleep(self.context.config.interval)
 
-    def _report_system_status(self) -> None:
-        """Collect and report system health metrics.
-
-        Delegates to SystemMaintenanceService for the actual reporting.
-        """
-        self._system_maintenance.report_system_status(
-            latency_seconds=self._last_latency,
-            connection_status=self._connection_status,
-        )
-
     async def _cycle(self) -> None:
         """One trading cycle."""
-        assert self.context.broker is not None, "Broker not initialized"
-        self._cycle_count += 1
-
-        # Wrap entire cycle in correlation context and trace span
-        start_time = time.perf_counter()
-        result = "ok"
-        with correlation_context(cycle=self._cycle_count):
-            with trace_span("cycle", {"cycle": self._cycle_count}) as span:
-                try:
-                    await self._cycle_inner()
-                except Exception:
-                    result = "error"
-                    if span:
-                        span.set_attribute("error", True)
-                    raise
-                finally:
-                    duration = time.perf_counter() - start_time
-                    if span:
-                        span.set_attribute("duration_seconds", duration)
-                        span.set_attribute("result", result)
-                    record_histogram(
-                        "gpt_trader_cycle_duration_seconds",
-                        duration,
-                        labels={"result": result},
-                    )
-
-    async def _cycle_inner(self) -> None:
-        """Inner cycle logic wrapped in correlation context."""
-        logger.info(f"=== CYCLE {self._cycle_count} START ===")
-
-        # Report system status at start of cycle
-        self._report_system_status()
-        broker = self.context.broker
-        if broker is None:
-            logger.error("Broker not initialized", operation="cycle")
-            self._connection_status = "DISCONNECTED"
-            return
-
-        positions, audit_task = await self._fetch_positions_and_audit()
-        equity = await self._compute_equity(positions)
-        if equity is None:
-            await self._await_audit_task(audit_task, context="during equity error path")
-            return
-
-        await self._await_audit_task(audit_task, context="post equity")
-        self._update_equity_and_risk(equity)
-
-        # Ensure symbols is a list to avoid iterator exhaustion during multiple iterations
-        symbols = list(self.context.config.symbols)
-        tickers = await self._fetch_batch_tickers(broker, symbols)
-
-        tasks = [
-            self._process_symbol(
-                symbol=symbol,
-                broker=broker,
-                ticker=tickers.get(symbol),
-                positions=positions,
-                equity=equity,
-            )
-            for symbol in symbols
-        ]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        failures: list[Exception] = []
-
-        for symbol, res in zip(symbols, results):
-            if isinstance(res, Exception):
-                logger.error(
-                    f"Failed to process symbol {symbol}: {res}",
-                    exc_info=res,
-                    symbol=symbol,
-                )
-                failures.append(res)
-
-        if failures:
-            raise ExceptionGroup("Cycle completed with symbol processing errors", failures)
-
-    async def _fetch_positions_and_audit(
-        self,
-    ) -> tuple[dict[str, Position], asyncio.Task[None]]:
-        logger.info("Step 1: Fetching positions and auditing orders (parallel)...")
-        positions_task = asyncio.create_task(self._fetch_positions())
-        if getattr(self.context.config, "dry_run", False):
-            logger.info(
-                "Dry-run enabled; skipping order audit",
-                operation="order_audit",
-                stage="skip",
-            )
-            audit_task = asyncio.create_task(asyncio.sleep(0))
-        else:
-            audit_task = asyncio.create_task(self._audit_orders())
-
-        with profile_span("fetch_positions") as _pos_span:
-            positions = await positions_task
-        self._current_positions = positions
-        logger.info(f"Fetched {len(positions)} positions")
-
-        self._status_reporter.update_positions(self._positions_to_status_format(positions))
-        return positions, audit_task
-
-    async def _await_audit_task(self, task: asyncio.Task, *, context: str) -> None:
-        try:
-            await task
-        except Exception as e:
-            logger.warning(f"Order audit failed {context}: {e}")
-
-    async def _compute_equity(self, positions: dict[str, Position]) -> Decimal | None:
-        logger.info("Step 2: Calculating total equity...")
-        with profile_span("equity_computation") as _eq_span:
-            equity = await self._fetch_total_equity(positions)
-        if equity is None:
-            logger.error(
-                "Failed to fetch equity - cannot continue cycle. "
-                "Check logs above for balance fetch errors."
-            )
-            self._status_reporter.record_error("Failed to fetch equity")
-            return None
-        return equity
-
-    def _update_equity_and_risk(self, equity: Decimal) -> None:
-        logger.info(f"Successfully calculated equity: ${equity}")
-        self._status_reporter.update_equity(equity)
-        logger.info("Equity updated in status reporter")
-
-        if self.context.risk_manager:
-            triggered = self.context.risk_manager.track_daily_pnl(equity, {})
-            if triggered:
-                logger.warning("Daily loss limit triggered! Reduce-only mode activated.")
-
-            rm = self.context.risk_manager
-            daily_loss_pct = 0.0
-            start_equity = getattr(rm, "_start_of_day_equity", 0)
-            if start_equity and start_equity > 0:
-                daily_pnl = equity - start_equity
-                daily_loss_pct = float(-daily_pnl / start_equity)
-
-            self._status_reporter.update_risk(
-                max_leverage=float(getattr(rm.config, "max_leverage", 0.0) if rm.config else 0.0),
-                daily_loss_limit=float(
-                    getattr(rm.config, "daily_loss_limit_pct", 0.0) if rm.config else 0.0
-                ),
-                current_daily_loss=daily_loss_pct,
-                reduce_only=getattr(rm, "_reduce_only_mode", False),
-                reduce_reason=getattr(rm, "_reduce_only_reason", ""),
-            )
-
-    async def _fetch_batch_tickers(
-        self, broker: Any, symbols: list[str]
-    ) -> dict[str, dict[str, Any]]:
-        tickers: dict[str, dict[str, Any]] = {}
-        batch_start = time.time()
-
-        get_tickers_method = getattr(broker, "get_tickers", None)
-        if get_tickers_method is not None and callable(get_tickers_method):
-            try:
-                result = await self._broker_calls(get_tickers_method, symbols)
-                if isinstance(result, dict):
-                    tickers = result
-                    logger.debug(
-                        f"Batch ticker fetch: {len(tickers)}/{len(symbols)} symbols "
-                        f"in {time.time() - batch_start:.3f}s"
-                    )
-            except Exception as e:
-                logger.warning(f"Batch ticker fetch failed, falling back to individual: {e}")
-
-        return tickers
+        await run_cycle(self)
 
     async def _process_symbol(
         self,

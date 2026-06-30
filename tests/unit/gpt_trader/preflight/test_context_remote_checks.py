@@ -141,6 +141,20 @@ class TestPreflightContextTradingIntent:
 
         assert ctx.requires_trade_permission() is True
 
+    def test_deprecated_intx_alias_still_requires_trade_permission(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.delenv("DRY_RUN", raising=False)
+        monkeypatch.delenv("PAPER_MODE", raising=False)
+        monkeypatch.delenv("PERPS_PAPER", raising=False)
+        monkeypatch.delenv("COINBASE_SANDBOX", raising=False)
+        monkeypatch.setenv("TRADING_MODES", "intx")
+        monkeypatch.setenv("COINBASE_ENABLE_INTX_PERPS", "1")
+
+        ctx = PreflightContext()
+
+        assert ctx.requires_trade_permission() is True
+
     def test_dev_profile_does_not_require_trade_permission_without_dry_run_env(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:

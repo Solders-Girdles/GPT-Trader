@@ -220,6 +220,7 @@ def test_diagnostics_bundle_matches_fixture_healthy(monkeypatch: pytest.MonkeyPa
         "warn_only",
         "trading_modes",
         "cfm_enabled",
+        "intx_perps_enabled",
         "intends_real_orders",
         "requires_trade_permission",
         "expected_env_defaults",

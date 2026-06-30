@@ -71,7 +71,7 @@ def check_key_permissions(checker: PreflightCheck) -> bool:
     permissions: dict[str, object] | None = None
     for attempt in range(1, max_attempts + 1):
         try:
-            permissions = client.get_key_permissions() or {}
+            permissions = client.get_key_permissions()
             break
         except (HTTPError, URLError, TimeoutError, ConnectionError) as exc:
             if attempt == max_attempts:
@@ -86,7 +86,7 @@ def check_key_permissions(checker: PreflightCheck) -> bool:
             checker.log_error(f"Failed to fetch key permissions: {exc}")
             return False
 
-    if permissions is None:
+    if not permissions:
         checker.log_error("Key permissions response empty; cannot validate entitlements")
         return False
 

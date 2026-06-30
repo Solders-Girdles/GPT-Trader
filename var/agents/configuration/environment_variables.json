@@ -486,7 +486,7 @@
           "reader": "parse_bool_env"
         },
         {
-          "line": 150,
+          "line": 153,
           "path": "src/gpt_trader/preflight/context.py",
           "reader": "os.getenv"
         }

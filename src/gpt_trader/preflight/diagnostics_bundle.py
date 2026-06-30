@@ -150,6 +150,7 @@ def _build_config_summary(context: PreflightContext, warn_only: bool) -> dict[st
         "warn_only": bool(warn_only),
         "trading_modes": sorted(context.trading_modes()),
         "cfm_enabled": context.cfm_enabled(),
+        "intx_perps_enabled": False,
         "intends_real_orders": context.intends_real_orders(),
         "requires_trade_permission": context.requires_trade_permission(),
         "expected_env_defaults": expected,

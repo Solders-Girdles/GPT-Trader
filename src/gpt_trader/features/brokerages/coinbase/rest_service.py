@@ -1,7 +1,7 @@
 """Composable REST service facade for Coinbase brokerage operations.
 
-This module provides CoinbaseRestService which uses composition internally
-while maintaining the same public API as the previous mixin-based implementation.
+This module provides CoinbaseRestService, a composition-based facade over the
+supported Coinbase REST operations.
 
 The facade delegates to specialized service classes:
 - ProductService: Product and market data operations
@@ -46,8 +46,8 @@ from gpt_trader.persistence.event_store import EventStore
 class CoinbaseRestService:
     """Composable facade for Coinbase REST endpoints.
 
-    This class provides the same public API as before but uses
-    composition internally instead of mixin inheritance.
+    This class exposes the supported Coinbase REST facade API using composition
+    internally instead of mixin inheritance.
 
     Each method delegates to the appropriate composed service:
     - ProductService: list_products, get_product, get_candles, etc.

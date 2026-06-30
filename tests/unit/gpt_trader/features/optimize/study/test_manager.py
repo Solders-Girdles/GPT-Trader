@@ -5,7 +5,6 @@ import importlib
 import sys
 from unittest.mock import Mock
 
-import optuna
 import pytest
 
 from gpt_trader.features.optimize.study.manager import OptimizationStudyManager
@@ -15,6 +14,10 @@ from gpt_trader.features.optimize.types import (
     ParameterSpace,
     ParameterType,
 )
+
+# optuna is an optional extra (gpt-trader[optimize]); skip this module when absent
+# rather than failing collection. The source module (manager.py) guards the import.
+optuna = pytest.importorskip("optuna")
 
 
 @pytest.fixture

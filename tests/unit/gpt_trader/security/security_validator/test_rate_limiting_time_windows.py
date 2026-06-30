@@ -8,7 +8,9 @@ from typing import Any
 class TestRateLimitingTimeWindows:
     """Test rate limiting behaviors that depend on time windows."""
 
-    def test_rate_limit_time_window_reset(self, security_validator: Any, frozen_time: Any) -> None:
+    def test_rate_limit_time_window_reset(
+        self, security_validator: Any, rate_limiter_clock: Any
+    ) -> None:
         """Test rate limit resets after time window."""
         user_id = "test-user"
         limit_type = "api_calls"
@@ -25,13 +27,15 @@ class TestRateLimitingTimeWindows:
         assert allowed is False
 
         # Advance time beyond period
-        frozen_time.tick(delta=period + 1)
+        rate_limiter_clock.advance(period + 1)
 
         # Should be allowed again
         allowed, _ = security_validator.check_rate_limit(user_id, limit_type)
         assert allowed is True
 
-    def test_rate_limit_time_precision(self, security_validator: Any, frozen_time: Any) -> None:
+    def test_rate_limit_time_precision(
+        self, security_validator: Any, rate_limiter_clock: Any
+    ) -> None:
         """Test rate limiting time precision."""
         user_id = "test-user"
         limit_type = "api_calls"
@@ -47,7 +51,7 @@ class TestRateLimitingTimeWindows:
         assert allowed is False
 
         # Advance time slightly (but not enough to reset)
-        frozen_time.tick(delta=1)
+        rate_limiter_clock.advance(1)
 
         # Should still be blocked
         allowed, _ = security_validator.check_rate_limit(user_id, limit_type)

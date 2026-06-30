@@ -15,9 +15,17 @@ from gpt_trader.features.optimize.types import (
     ParameterType,
 )
 
-# optuna is an optional extra (gpt-trader[optimize]); skip this module when absent
-# rather than failing collection. The source module (manager.py) guards the import.
-optuna = pytest.importorskip("optuna")
+
+@pytest.fixture
+def optuna():
+    """Provide the optuna module, skipping only the tests that need a real import.
+
+    optuna is an optional extra (gpt-trader[optimize]). Tests that exercise real
+    optuna objects request this fixture so they skip cleanly when the extra is
+    absent, while the missing-dependency regression test below still runs and
+    verifies the install-guidance error path in that exact environment.
+    """
+    return pytest.importorskip("optuna")
 
 
 @pytest.fixture
@@ -34,7 +42,7 @@ def mock_config():
 
 
 class TestOptimizationStudyManager:
-    def test_create_study(self, mock_config, monkeypatch: pytest.MonkeyPatch):
+    def test_create_study(self, mock_config, optuna, monkeypatch: pytest.MonkeyPatch):
         """Test study creation."""
         manager = OptimizationStudyManager(mock_config)
 
@@ -47,7 +55,7 @@ class TestOptimizationStudyManager:
         assert call_kwargs["study_name"] == "test_study"
         assert call_kwargs["direction"] == "maximize"
 
-    def test_suggest_parameters(self, mock_config):
+    def test_suggest_parameters(self, mock_config, optuna):
         """Test parameter suggestion."""
         manager = OptimizationStudyManager(mock_config)
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 import scripts.ci.check_legacy_patterns as check_legacy_patterns
 
 

@@ -16,8 +16,11 @@ def main() -> None:
     """Run the demo TUI."""
     # Configure logging for TUI mode BEFORE any other initialization
     from gpt_trader.logging.setup import configure_logging
+    from gpt_trader.tui.log_manager import attach_tui_log_handler
 
     configure_logging(tui_mode=True)
+    # Attach the TUI log handler early so startup logs are captured in the UI.
+    attach_tui_log_handler()
 
     logger.info("Starting TUI Demo Mode")
 

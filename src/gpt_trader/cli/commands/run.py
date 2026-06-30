@@ -118,8 +118,11 @@ def _run_demo_tui(scenario: str = "mixed") -> int:
 
     # Reconfigure logging in TUI mode (no console output to avoid corrupting display)
     from gpt_trader.logging.setup import configure_logging
+    from gpt_trader.tui.log_manager import attach_tui_log_handler
 
     configure_logging(tui_mode=True)
+    # Attach the TUI log handler early so startup logs are captured in the UI.
+    attach_tui_log_handler()
 
     # Create demo bot using the shared factory
     demo_bot = create_bot_for_mode("demo", demo_scenario=scenario)
@@ -147,8 +150,11 @@ def _run_tui(bot: Any) -> int:
 
     # Reconfigure logging in TUI mode (no console output to avoid corrupting display)
     from gpt_trader.logging.setup import configure_logging
+    from gpt_trader.tui.log_manager import attach_tui_log_handler
 
     configure_logging(tui_mode=True)
+    # Attach the TUI log handler early so startup logs are captured in the UI.
+    attach_tui_log_handler()
 
     # Pass bot with initial_mode set so live warning is shown if applicable
     app = TraderApp(bot=bot, initial_mode="direct")

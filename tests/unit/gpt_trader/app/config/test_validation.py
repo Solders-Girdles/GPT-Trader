@@ -183,6 +183,52 @@ class TestValidateConfigCFMConsistency:
             "BTC-PERP. Use US futures symbols or spot symbols."
         ) in errors
 
+    def test_cfm_us_futures_rejects_lowercase_intx_perp_symbols(self) -> None:
+        errors = validate_config(
+            BotConfig(
+                cfm_enabled=True,
+                derivatives_enabled=True,
+                trading_modes=["cfm"],
+                coinbase_derivatives_type="us_futures",
+                symbols=["btc-perp"],
+            )
+        )
+
+        assert (
+            "CFM US futures configuration does not support INTX perpetual symbols: "
+            "BTC-PERP. Use US futures symbols or spot symbols."
+        ) in errors
+
+    def test_cfm_us_futures_rejects_unsupported_us_futures_symbols(self) -> None:
+        errors = validate_config(
+            BotConfig(
+                cfm_enabled=True,
+                derivatives_enabled=True,
+                trading_modes=["cfm"],
+                coinbase_derivatives_type="us_futures",
+                symbols=["DOGE-FUTURES"],
+            )
+        )
+
+        assert (
+            "CFM US futures configuration does not support these US futures symbols: "
+            "DOGE-FUTURES. Allowed US futures symbols: "
+            "BTC-FUTURES, ETH-FUTURES, SOL-FUTURES, XRP-FUTURES."
+        ) in errors
+
+    def test_cfm_us_futures_accepts_allowlisted_us_futures_symbols(self) -> None:
+        errors = validate_config(
+            BotConfig(
+                cfm_enabled=True,
+                derivatives_enabled=True,
+                trading_modes=["cfm"],
+                coinbase_derivatives_type="us_futures",
+                symbols=["BTC-FUTURES"],
+            )
+        )
+
+        assert errors == []
+
 
 class TestValidateConfigCoinbaseDerivativesType:
     """Tests for Coinbase derivatives venue type validation."""

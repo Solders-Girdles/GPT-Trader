@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-import gpt_trader.monitoring.status_reporter as status_reporter
+import gpt_trader.monitoring.status_models as status_models
 from gpt_trader.monitoring.status_reporter import (
     MAX_TICKER_FRESHNESS_SYMBOLS,
     DecimalEncoder,
@@ -34,7 +34,7 @@ def _freeze_time(
     start: float = 1000.0,
 ) -> Callable[[float], None]:
     clock = _TestClock(start)
-    monkeypatch.setattr(status_reporter, "get_clock", lambda: clock)
+    monkeypatch.setattr(status_models, "get_clock", lambda: clock)
     return clock.advance
 
 

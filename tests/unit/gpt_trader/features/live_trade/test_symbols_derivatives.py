@@ -72,11 +72,6 @@ class TestSymbolNormalizationLog:
 class TestAllowlistConstants:
     """Tests for allowlist constants."""
 
-    def test_perps_allowlist_constant(self) -> None:
-        expected_symbols = {"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"}
-        assert symbols.PERPS_ALLOWLIST == expected_symbols
-        assert isinstance(symbols.PERPS_ALLOWLIST, frozenset)
-
     def test_us_futures_allowlist_constant(self) -> None:
         expected_symbols = {"BTC-FUTURES", "ETH-FUTURES", "SOL-FUTURES", "XRP-FUTURES"}
         assert symbols.US_FUTURES_ALLOWLIST == expected_symbols

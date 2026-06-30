@@ -36,7 +36,7 @@ class Order:
 class Position:
     """Trading position representation.
 
-    Supports both spot and derivatives (CFM futures, INTX perpetuals).
+    Supports both spot and derivatives (CFM futures).
     """
 
     symbol: str

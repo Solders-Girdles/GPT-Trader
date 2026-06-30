@@ -50,31 +50,12 @@ def check_api_connectivity(checker: PreflightCheck) -> bool:
             checker.log_error(f"{test_name}: {str(exc)[:100]}")
             all_good = False
 
-    try:
-        products = client.list_products()
-        perps = [p for p in products if p.get("product_id", "").endswith("-PERP")]
-        if perps:
-            checker.log_success(f"Found {len(perps)} perpetual products")
-            if checker.verbose:
-                for product in perps[:3]:
-                    checker.log_info(f"  - {product.get('product_id')}")
-        else:
-            intx_perps_enabled = ctx.intx_perps_enabled()
-            if intx_perps_enabled:
-                checker.log_error("No perpetual products found")
-                all_good = False
-            else:
-                checker.log_info("No perpetual products found (INTX perps disabled)")
-    except Exception as exc:
-        checker.log_error(f"Failed to list products: {exc}")
-        all_good = False
-
     return all_good
 
 
 def check_key_permissions(checker: PreflightCheck) -> bool:
-    """Validate Coinbase key permissions and INTX portfolio readiness."""
-    checker.section_header("5. KEY PERMISSIONS & INTX READINESS")
+    """Validate Coinbase key permissions."""
+    checker.section_header("5. KEY PERMISSIONS")
 
     ctx = checker.context
     if ctx.should_skip_remote_checks():
@@ -90,7 +71,7 @@ def check_key_permissions(checker: PreflightCheck) -> bool:
     permissions: dict[str, object] | None = None
     for attempt in range(1, max_attempts + 1):
         try:
-            permissions = client.get_key_permissions() or {}
+            permissions = client.get_key_permissions()
             break
         except (HTTPError, URLError, TimeoutError, ConnectionError) as exc:
             if attempt == max_attempts:
@@ -105,15 +86,13 @@ def check_key_permissions(checker: PreflightCheck) -> bool:
             checker.log_error(f"Failed to fetch key permissions: {exc}")
             return False
 
-    if permissions is None:
+    if not permissions:
         checker.log_error("Key permissions response empty; cannot validate entitlements")
         return False
 
     can_trade = bool(permissions.get("can_trade"))
     can_view = bool(permissions.get("can_view"))
-    portfolio_type = str(permissions.get("portfolio_type") or "").upper()
     portfolio_uuid = permissions.get("portfolio_uuid")
-    intx_perps_enabled = ctx.intx_perps_enabled()
     requires_trade_permission = ctx.requires_trade_permission()
 
     all_good = True
@@ -144,19 +123,5 @@ def check_key_permissions(checker: PreflightCheck) -> bool:
         checker.log_info(f"Portfolio UUID detected: {portfolio_uuid}")
     else:
         checker.log_warning("Portfolio UUID not returned; verify CDP key portfolio access")
-
-    if intx_perps_enabled:
-        if portfolio_type == "INTX":
-            checker.log_success("INTX portfolio detected (derivatives can execute)")
-        else:
-            display_type = portfolio_type or "UNKNOWN"
-            checker.log_error(
-                f"INTX gating check failed: portfolio_type={display_type} "
-                "(expected INTX when derivatives are enabled)"
-            )
-            all_good = False
-    else:
-        if portfolio_type == "INTX":
-            checker.log_info("INTX portfolio available; derivatives flag is currently disabled")
 
     return all_good

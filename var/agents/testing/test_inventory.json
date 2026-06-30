@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 7050,
+    "total_tests": 7046,
     "total_files": 836,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6883,
+    "unit": 6879,
     "asyncio": 442,
     "parametrize": 203,
     "property": 82,
@@ -10969,8 +10969,17 @@
         "class": "TestInstantiateBot"
       },
       {
-        "name": "TestInstantiateBot::test_allows_observe_read_only_zero_position_fraction",
+        "name": "TestInstantiateBot::test_coerces_removed_perp_symbols_before_startup_validation",
         "line": 116,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Test startup migrates removed INTX symbols before CFM validation.",
+        "class": "TestInstantiateBot"
+      },
+      {
+        "name": "TestInstantiateBot::test_allows_observe_read_only_zero_position_fraction",
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -10979,7 +10988,7 @@
       },
       {
         "name": "TestInstantiateBot::test_rejects_non_observe_zero_position_fraction",
-        "line": 134,
+        "line": 159,
         "markers": [
           "unit"
         ],
@@ -10988,7 +10997,7 @@
       },
       {
         "name": "TestInstantiateBot::test_observe_profile_still_rejects_cfm_mismatch",
-        "line": 152,
+        "line": 177,
         "markers": [
           "unit"
         ],
@@ -10997,7 +11006,7 @@
       },
       {
         "name": "TestRunBotCleanup::test_clears_container_on_shutdown",
-        "line": 175,
+        "line": 200,
         "markers": [
           "unit"
         ],
@@ -11006,7 +11015,7 @@
       },
       {
         "name": "TestRunBotCleanup::test_clears_container_even_on_exception",
-        "line": 197,
+        "line": 222,
         "markers": [
           "unit"
         ],
@@ -30615,7 +30624,7 @@
         "class": "TestSymbolNormalizationLog"
       },
       {
-        "name": "TestAllowlistConstants::test_perps_allowlist_constant",
+        "name": "TestAllowlistConstants::test_us_futures_allowlist_constant",
         "line": 75,
         "markers": [
           "unit"
@@ -30624,17 +30633,8 @@
         "class": "TestAllowlistConstants"
       },
       {
-        "name": "TestAllowlistConstants::test_us_futures_allowlist_constant",
-        "line": 80,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestAllowlistConstants"
-      },
-      {
         "name": "TestUsFuturesEnabled::test_returns_false_when_derivatives_disabled",
-        "line": 88,
+        "line": 83,
         "markers": [
           "unit"
         ],
@@ -30643,7 +30643,7 @@
       },
       {
         "name": "TestUsFuturesEnabled::test_returns_true_when_us_futures_flag_enabled",
-        "line": 93,
+        "line": 88,
         "markers": [
           "unit"
         ],
@@ -30652,7 +30652,7 @@
       },
       {
         "name": "TestUsFuturesEnabled::test_returns_true_when_derivatives_type_is_us_futures",
-        "line": 101,
+        "line": 96,
         "markers": [
           "unit"
         ],
@@ -30661,7 +30661,7 @@
       },
       {
         "name": "TestUsFuturesEnabled::test_returns_false_by_default",
-        "line": 109,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -30671,8 +30671,8 @@
     ],
     "tests/unit/gpt_trader/features/live_trade/test_symbols_normalization.py": [
       {
-        "name": "TestNormalizeSymbolListDerivatives::test_with_derivatives_enabled",
-        "line": 18,
+        "name": "TestNormalizeSymbolListDerivatives::test_removed_perps_coercion_does_not_fallback_empty_inputs",
+        "line": 20,
         "markers": [
           "unit"
         ],
@@ -30680,8 +30680,17 @@
         "class": "TestNormalizeSymbolListDerivatives"
       },
       {
-        "name": "TestNormalizeSymbolListDerivatives::test_with_derivatives_disabled",
-        "line": 32,
+        "name": "TestNormalizeSymbolListDerivatives::test_perps_coerced_to_spot_when_derivatives_enabled",
+        "line": 26,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestNormalizeSymbolListDerivatives"
+      },
+      {
+        "name": "TestNormalizeSymbolListDerivatives::test_perps_coerced_to_spot_when_derivatives_disabled",
+        "line": 38,
         "markers": [
           "unit"
         ],
@@ -30690,7 +30699,7 @@
       },
       {
         "name": "TestNormalizeSymbolListEmpty::test_empty_and_whitespace",
-        "line": 47,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -30699,7 +30708,7 @@
       },
       {
         "name": "TestNormalizeSymbolListFormatting::test_case_and_whitespace_normalization",
-        "line": 65,
+        "line": 72,
         "markers": [
           "unit"
         ],
@@ -30708,7 +30717,7 @@
       },
       {
         "name": "TestNormalizeSymbolListFormatting::test_custom_fallback_bases",
-        "line": 73,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -30717,7 +30726,7 @@
       },
       {
         "name": "TestNormalizeSymbolListFormatting::test_duplicate_removal",
-        "line": 82,
+        "line": 90,
         "markers": [
           "unit"
         ],
@@ -30726,7 +30735,7 @@
       },
       {
         "name": "TestNormalizeSymbolListUsFutures::test_allows_valid_us_futures",
-        "line": 93,
+        "line": 102,
         "markers": [
           "unit"
         ],
@@ -30735,7 +30744,7 @@
       },
       {
         "name": "TestNormalizeSymbolListUsFutures::test_filters_unsupported_us_futures",
-        "line": 104,
+        "line": 113,
         "markers": [
           "unit"
         ],
@@ -30744,7 +30753,7 @@
       },
       {
         "name": "TestNormalizeSymbolListFallback::test_uses_default_fallback_bases_when_none",
-        "line": 120,
+        "line": 129,
         "markers": [
           "unit"
         ],
@@ -30753,7 +30762,7 @@
       },
       {
         "name": "TestNormalizeSymbolsIntegration::test_normalize_symbols_integration",
-        "line": 132,
+        "line": 141,
         "markers": [
           "unit"
         ],
@@ -30762,7 +30771,7 @@
       },
       {
         "name": "TestNormalizeSymbolsIntegration::test_normalize_symbols_custom_quote_and_config",
-        "line": 146,
+        "line": 156,
         "markers": [
           "unit"
         ],
@@ -35559,7 +35568,7 @@
     ],
     "tests/unit/gpt_trader/monitoring/configuration_guardian/test_environment_monitor_edges.py": [
       {
-        "name": "test_critical_env_change_emits_shutdown_event",
+        "name": "test_deprecated_intx_alias_change_emits_shutdown_event",
         "line": 10,
         "markers": [
           "unit"
@@ -41831,35 +41840,8 @@
         "class": "TestCheckApiConnectivity"
       },
       {
-        "name": "TestCheckApiConnectivity::test_fails_when_no_perps_found",
-        "line": 140,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should fail when no perpetual products found.",
-        "class": "TestCheckApiConnectivity"
-      },
-      {
-        "name": "TestCheckApiConnectivity::test_logs_perp_count_when_found",
-        "line": 166,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should log count of perpetual products found.",
-        "class": "TestCheckApiConnectivity"
-      },
-      {
-        "name": "TestCheckApiConnectivity::test_logs_perp_names_when_verbose",
-        "line": 190,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should log perpetual product names when verbose.",
-        "class": "TestCheckApiConnectivity"
-      },
-      {
         "name": "TestCheckApiConnectivity::test_prints_section_header",
-        "line": 215,
+        "line": 140,
         "markers": [
           "unit"
         ],
@@ -41952,35 +41934,8 @@
     ],
     "tests/unit/gpt_trader/preflight/test_checks_connectivity_keys.py": [
       {
-        "name": "TestCheckKeyPermissionsIntx::test_passes_intx_check_when_derivatives_enabled",
-        "line": 27,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should pass INTX check when derivatives enabled and portfolio is INTX.",
-        "class": "TestCheckKeyPermissionsIntx"
-      },
-      {
-        "name": "TestCheckKeyPermissionsIntx::test_fails_intx_check_when_wrong_portfolio_type",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should fail when derivatives enabled but not INTX portfolio.",
-        "class": "TestCheckKeyPermissionsIntx"
-      },
-      {
-        "name": "TestCheckKeyPermissionsIntx::test_logs_intx_available_when_disabled",
-        "line": 87,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Should log INTX available when derivatives disabled but INTX portfolio.",
-        "class": "TestCheckKeyPermissionsIntx"
-      },
-      {
         "name": "TestCheckKeyPermissionsRetries::test_retries_on_transient_errors",
-        "line": 138,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -41989,7 +41944,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_after_max_retries",
-        "line": 159,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -41998,7 +41953,7 @@
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_on_non_transient_error",
-        "line": 175,
+        "line": 78,
         "markers": [
           "unit"
         ],
@@ -42007,11 +41962,20 @@
       },
       {
         "name": "TestCheckKeyPermissionsRetries::test_fails_on_empty_permissions_response",
-        "line": 191,
+        "line": 94,
         "markers": [
           "unit"
         ],
         "docstring": "Should fail when permissions response is empty/None.",
+        "class": "TestCheckKeyPermissionsRetries"
+      },
+      {
+        "name": "TestCheckKeyPermissionsRetries::test_fails_on_empty_permissions_dict",
+        "line": 108,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "Should fail when the permissions response has no entitlement fields.",
         "class": "TestCheckKeyPermissionsRetries"
       }
     ],
@@ -43453,7 +43417,7 @@
         "class": "TestPreflightContextTradingIntent"
       },
       {
-        "name": "TestPreflightContextTradingIntent::test_dev_profile_does_not_require_trade_permission_without_dry_run_env",
+        "name": "TestPreflightContextTradingIntent::test_deprecated_intx_alias_still_requires_trade_permission",
         "line": 144,
         "markers": [
           "unit"
@@ -43462,8 +43426,8 @@
         "class": "TestPreflightContextTradingIntent"
       },
       {
-        "name": "TestPreflightContextTradingIntent::test_requires_trade_permission_for_intx_only_when_enabled",
-        "line": 164,
+        "name": "TestPreflightContextTradingIntent::test_dev_profile_does_not_require_trade_permission_without_dry_run_env",
+        "line": 158,
         "markers": [
           "unit"
         ],
@@ -43471,7 +43435,7 @@
         "class": "TestPreflightContextTradingIntent"
       },
       {
-        "name": "TestPreflightContextTradingIntent::test_requires_trade_permission_false_when_intx_only_disabled",
+        "name": "TestPreflightContextTradingIntent::test_requires_trade_permission_false_for_unknown_modes",
         "line": 178,
         "markers": [
           "unit"
@@ -43680,7 +43644,7 @@
       },
       {
         "name": "test_diagnostics_bundle_matches_fixture_healthy",
-        "line": 205,
+        "line": 202,
         "markers": [
           "unit"
         ],
@@ -43688,7 +43652,7 @@
       },
       {
         "name": "test_diagnostics_bundle_matches_fixture_partial",
-        "line": 236,
+        "line": 233,
         "markers": [
           "unit"
         ],
@@ -43696,7 +43660,7 @@
       },
       {
         "name": "test_diagnostics_bundle_matches_fixture_degraded",
-        "line": 256,
+        "line": 253,
         "markers": [
           "unit"
         ],
@@ -43704,7 +43668,7 @@
       },
       {
         "name": "test_diagnostics_bundle_warn_only_reads_env",
-        "line": 282,
+        "line": 279,
         "markers": [
           "unit"
         ],
@@ -43712,7 +43676,7 @@
       },
       {
         "name": "test_diagnostics_bundle_warn_only_scopes_env_override",
-        "line": 294,
+        "line": 291,
         "markers": [
           "unit"
         ],

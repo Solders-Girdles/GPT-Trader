@@ -11,25 +11,31 @@ from gpt_trader.config.types import Profile
 from gpt_trader.features.live_trade import symbols
 from tests.unit.gpt_trader.features.live_trade.symbols_test_helpers import make_bot_config
 
+_PERP_REPLACED_MESSAGE = "INTX perpetuals are no longer supported. Replacing %s with spot symbol %s"
+
 
 class TestNormalizeSymbolListDerivatives:
-    """Tests for normalize_symbol_list with derivatives."""
+    """Tests for normalize_symbol_list with derivatives (INTX perps removed)."""
 
-    def test_with_derivatives_enabled(self) -> None:
-        symbols_list = ["BTC-PERP", "ETH-PERP", "INVALID-PERP", "BTC-USD"]
+    def test_removed_perps_coercion_does_not_fallback_empty_inputs(self) -> None:
+        result, logs = symbols.coerce_removed_perpetual_symbols([], quote="USD")
+
+        assert result == []
+        assert logs == []
+
+    def test_perps_coerced_to_spot_when_derivatives_enabled(self) -> None:
+        # INTX is gone; -PERP symbols coerce to spot even when CFM derivatives are on.
+        symbols_list = ["BTC-PERP", "ETH-PERP", "BTC-USD"]
         result, logs = symbols.normalize_symbol_list(
             symbols_list,
             allow_derivatives=True,
             quote="USD",
-            allowed_perps=["BTC-PERP", "ETH-PERP"],
         )
-        assert result == ["BTC-PERP", "ETH-PERP", "BTC-USD"]
-        assert len(logs) == 1
-        assert logs[0].level == logging.WARNING
-        assert logs[0].message == "Filtering unsupported perpetual symbol %s. Allowed perps: %s"
-        assert logs[0].args == ("INVALID-PERP", ["BTC-PERP", "ETH-PERP"])
+        assert result == ["BTC-USD", "ETH-USD"]
+        assert len(logs) == 2
+        assert all(log.message == _PERP_REPLACED_MESSAGE for log in logs)
 
-    def test_with_derivatives_disabled(self) -> None:
+    def test_perps_coerced_to_spot_when_derivatives_disabled(self) -> None:
         symbols_list = ["BTC-PERP", "ETH-USD"]
         result, logs = symbols.normalize_symbol_list(
             symbols_list, allow_derivatives=False, quote="USD"
@@ -37,7 +43,7 @@ class TestNormalizeSymbolListDerivatives:
         assert result == ["BTC-USD", "ETH-USD"]
         assert len(logs) == 1
         assert logs[0].level == logging.WARNING
-        assert logs[0].message == "Derivatives disabled. Replacing %s with spot symbol %s"
+        assert logs[0].message == _PERP_REPLACED_MESSAGE
         assert logs[0].args == ("BTC-PERP", "BTC-USD")
 
 
@@ -46,7 +52,7 @@ class TestNormalizeSymbolListEmpty:
 
     def test_empty_and_whitespace(self) -> None:
         result, logs = symbols.normalize_symbol_list(None, allow_derivatives=True, quote="USD")
-        assert result == ["BTC-PERP", "ETH-PERP", "BTC-FUTURES", "ETH-FUTURES"]
+        assert result == ["BTC-FUTURES", "ETH-FUTURES"]
         assert len(logs) == 1
         assert logs[0].level == logging.INFO
         assert "No valid symbols provided. Falling back to" in logs[0].message
@@ -55,8 +61,9 @@ class TestNormalizeSymbolListEmpty:
         result, logs = symbols.normalize_symbol_list(
             symbols_list, allow_derivatives=True, quote="USD"
         )
-        assert result == ["BTC-PERP"]
-        assert logs == []
+        assert result == ["BTC-USD"]
+        assert len(logs) == 1
+        assert logs[0].message == _PERP_REPLACED_MESSAGE
 
 
 class TestNormalizeSymbolListFormatting:
@@ -67,8 +74,9 @@ class TestNormalizeSymbolListFormatting:
         result, logs = symbols.normalize_symbol_list(
             symbols_list, allow_derivatives=True, quote="USD"
         )
-        assert result == ["BTC-PERP", "ETH-USD", "SOL-USD"]
-        assert logs == []
+        assert result == ["BTC-USD", "ETH-USD", "SOL-USD"]
+        assert len(logs) == 1
+        assert logs[0].message == _PERP_REPLACED_MESSAGE
 
     def test_custom_fallback_bases(self) -> None:
         result, logs = symbols.normalize_symbol_list(
@@ -84,7 +92,8 @@ class TestNormalizeSymbolListFormatting:
         result, logs = symbols.normalize_symbol_list(
             symbols_list, allow_derivatives=True, quote="USD"
         )
-        assert result == ["BTC-PERP", "ETH-PERP", "BTC-USD"]
+        # -PERP coerces to spot, then duplicates collapse.
+        assert result == ["BTC-USD", "ETH-USD"]
 
 
 class TestNormalizeSymbolListUsFutures:
@@ -139,9 +148,10 @@ class TestNormalizeSymbolsIntegration:
                 Profile.PROD, symbols_list, config=config
             )
             assert derivatives_enabled is True
-            assert "BTC-PERP" in result
-            assert "INVALID-PERP" not in result
-            assert mock_log.call_count == 1
+            # INTX perps coerce to their spot equivalents.
+            assert result == ["BTC-EUR", "INVALID-EUR"]
+            assert "BTC-PERP" not in result
+            assert mock_log.call_count == 2
 
     def test_normalize_symbols_custom_quote_and_config(self) -> None:
         config = make_bot_config(coinbase_default_quote="USD", derivatives_enabled=False)

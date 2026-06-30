@@ -109,9 +109,6 @@ class _DummyContext:
     def cfm_enabled(self) -> bool:
         return True
 
-    def intx_perps_enabled(self) -> bool:
-        return False
-
     def intends_real_orders(self) -> bool:
         return True
 

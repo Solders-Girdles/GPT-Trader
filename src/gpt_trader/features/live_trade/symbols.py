@@ -15,7 +15,6 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="symbols")
 
-PERPS_ALLOWLIST = frozenset({"BTC-PERP", "ETH-PERP", "SOL-PERP", "XRP-PERP"})
 US_FUTURES_ALLOWLIST = frozenset({"BTC-FUTURES", "ETH-FUTURES", "SOL-FUTURES", "XRP-FUTURES"})
 
 # CFM (Coinbase Financial Markets) symbol mapping
@@ -37,6 +36,40 @@ class SymbolNormalizationLog:
     level: int
     message: str
     args: tuple[object, ...] = ()
+
+
+def coerce_removed_perpetual_symbols(
+    symbols: Sequence[str] | None,
+    *,
+    quote: str,
+) -> tuple[list[str], list[SymbolNormalizationLog]]:
+    """Coerce retired INTX perpetual symbols to spot equivalents without fallback."""
+
+    logs: list[SymbolNormalizationLog] = []
+    normalized: list[str] = []
+    quote_currency = quote.upper()
+
+    for raw in symbols or []:
+        token = (raw or "").strip().upper()
+        if not token:
+            continue
+
+        if token.endswith("-PERP"):
+            base = token.split("-", 1)[0]
+            replacement = f"{base}-{quote_currency}"
+            logs.append(
+                SymbolNormalizationLog(
+                    logging.WARNING,
+                    "INTX perpetuals are no longer supported. Replacing %s with spot symbol %s",
+                    (token, replacement),
+                )
+            )
+            normalized.append(replacement)
+            continue
+
+        normalized.append(token)
+
+    return normalized, logs
 
 
 def derivatives_enabled(profile: Profile, *, config: BotConfig) -> bool:
@@ -84,37 +117,22 @@ def normalize_symbol_list(
     *,
     allow_derivatives: bool,
     quote: str,
-    allowed_perps: Iterable[str] | None = None,
     allowed_us_futures: Iterable[str] | None = None,
     fallback_bases: Sequence[str] | None = None,
 ) -> tuple[list[str], list[SymbolNormalizationLog]]:
     """Produce a normalised symbol list and captured log records."""
 
     logs: list[SymbolNormalizationLog] = []
-    allowed_perps_set = set(allowed_perps) if allowed_perps is not None else set(PERPS_ALLOWLIST)
     allowed_us_futures_set = (
         set(allowed_us_futures) if allowed_us_futures is not None else set(US_FUTURES_ALLOWLIST)
     )
     normalized: list[str] = []
+    coerced_symbols, coercion_logs = coerce_removed_perpetual_symbols(symbols, quote=quote)
+    logs.extend(coercion_logs)
 
-    for raw in symbols or []:
-        token = (raw or "").strip().upper()
-        if not token:
-            continue
-
+    for token in coerced_symbols:
         if allow_derivatives:
-            if token.endswith("-PERP"):
-                if token in allowed_perps_set:
-                    normalized.append(token)
-                else:
-                    logs.append(
-                        SymbolNormalizationLog(
-                            logging.WARNING,
-                            "Filtering unsupported perpetual symbol %s. Allowed perps: %s",
-                            (token, sorted(allowed_perps_set)),
-                        )
-                    )
-            elif token.endswith("-FUTURES"):
+            if token.endswith("-FUTURES"):
                 if token in allowed_us_futures_set:
                     normalized.append(token)
                 else:
@@ -129,18 +147,6 @@ def normalize_symbol_list(
                 normalized.append(token)
             continue
 
-        if token.endswith("-PERP"):
-            base = token.split("-", 1)[0]
-            replacement = f"{base}-{quote}"
-            logs.append(
-                SymbolNormalizationLog(
-                    logging.WARNING,
-                    "Derivatives disabled. Replacing %s with spot symbol %s",
-                    (token, replacement),
-                )
-            )
-            token = replacement
-
         normalized.append(token)
 
     normalized = list(dict.fromkeys(normalized))
@@ -148,7 +154,7 @@ def normalize_symbol_list(
         return normalized, logs
 
     if allow_derivatives:
-        fallback = ["BTC-PERP", "ETH-PERP", "BTC-FUTURES", "ETH-FUTURES"]
+        fallback = ["BTC-FUTURES", "ETH-FUTURES"]
     else:
         if fallback_bases is None:
             from gpt_trader.app.config.defaults import TOP_VOLUME_BASES

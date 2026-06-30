@@ -2,7 +2,7 @@
 IP Allowlist Enforcer for GPT-Trader
 
 Enforces IP allowlisting for API keys to prevent unauthorized access.
-Critical for INTX (Coinbase International Exchange) and production trading.
+Critical for production trading.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ logger = get_logger(__name__, component="ip_allowlist")
 class IPAllowlistRule:
     """IP allowlist rule with metadata"""
 
-    service_name: str  # e.g., 'coinbase_intx', 'coinbase_production'
+    service_name: str  # e.g., 'coinbase_advanced', 'coinbase_production'
     allowed_ips: list[str]  # IP addresses or CIDR blocks
     created_at: datetime
     updated_at: datetime
@@ -111,7 +111,7 @@ class IPAllowlistEnforcer:
         Add or update IP allowlist rule.
 
         Args:
-            service_name: Service identifier (e.g., 'coinbase_intx', 'coinbase_production')
+            service_name: Service identifier (e.g., 'coinbase_advanced', 'coinbase_production')
             allowed_ips: List of allowed IP addresses or CIDR blocks
             description: Optional description of the rule
 

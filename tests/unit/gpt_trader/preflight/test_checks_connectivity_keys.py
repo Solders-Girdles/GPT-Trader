@@ -1,4 +1,4 @@
-"""Tests for key permissions preflight checks: INTX gating and retry handling."""
+"""Tests for key permissions preflight checks: retry and error handling."""
 
 from __future__ import annotations
 
@@ -21,101 +21,6 @@ def _set_env(monkeypatch: pytest.MonkeyPatch, env: dict[str, str], *, clear: boo
         monkeypatch.setenv(key, value)
 
 
-class TestCheckKeyPermissionsIntx:
-    """Tests for INTX gating functionality."""
-
-    def test_passes_intx_check_when_derivatives_enabled(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Should pass INTX check when derivatives enabled and portfolio is INTX."""
-        checker = PreflightCheck(profile="prod")
-
-        mock_client = MagicMock()
-        mock_auth = MagicMock()
-        mock_client.get_key_permissions.return_value = {
-            "can_trade": True,
-            "can_view": True,
-            "portfolio_type": "INTX",
-        }
-
-        env = {
-            "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_INTX_PERPS": "1",
-        }
-        with monkeypatch.context() as mp:
-            _set_env(mp, env, clear=True)
-            mp.setattr(
-                checker,
-                "_build_cdp_client",
-                MagicMock(return_value=(mock_client, mock_auth)),
-            )
-            result = check_key_permissions(checker)
-
-        assert result is True
-        assert any("INTX portfolio detected" in s for s in checker.successes)
-
-    def test_fails_intx_check_when_wrong_portfolio_type(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        """Should fail when derivatives enabled but not INTX portfolio."""
-        checker = PreflightCheck(profile="prod")
-
-        mock_client = MagicMock()
-        mock_auth = MagicMock()
-        mock_client.get_key_permissions.return_value = {
-            "can_trade": True,
-            "can_view": True,
-            "portfolio_type": "SPOT",
-        }
-
-        env = {
-            "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_INTX_PERPS": "1",
-        }
-        with monkeypatch.context() as mp:
-            _set_env(mp, env, clear=True)
-            mp.setattr(
-                checker,
-                "_build_cdp_client",
-                MagicMock(return_value=(mock_client, mock_auth)),
-            )
-            result = check_key_permissions(checker)
-
-        assert result is False
-        assert any("INTX gating check failed" in e for e in checker.errors)
-
-    def test_logs_intx_available_when_disabled(
-        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
-    ) -> None:
-        """Should log INTX available when derivatives disabled but INTX portfolio."""
-        checker = PreflightCheck(profile="prod", verbose=True)
-
-        mock_client = MagicMock()
-        mock_auth = MagicMock()
-        mock_client.get_key_permissions.return_value = {
-            "can_trade": True,
-            "can_view": True,
-            "portfolio_type": "INTX",
-        }
-
-        env = {
-            "COINBASE_PREFLIGHT_FORCE_REMOTE": "1",
-            "COINBASE_ENABLE_INTX_PERPS": "0",
-        }
-        with monkeypatch.context() as mp:
-            _set_env(mp, env, clear=True)
-            mp.setattr(
-                checker,
-                "_build_cdp_client",
-                MagicMock(return_value=(mock_client, mock_auth)),
-            )
-            result = check_key_permissions(checker)
-
-        assert result is True
-        captured = capsys.readouterr()
-        assert "INTX portfolio available" in captured.out
-
-
 class TestCheckKeyPermissionsRetries:
     """Tests for retry and error handling in key permissions checks."""
 
@@ -124,7 +29,6 @@ class TestCheckKeyPermissionsRetries:
         """Isolate env-driven behavior for deterministic key-permissions tests."""
         for key in (
             "COINBASE_ENABLE_INTX_PERPS",
-            "COINBASE_ENABLE_INTX_PERPS",
             "DRY_RUN",
             "PAPER_MODE",
             "PERPS_PAPER",
@@ -132,7 +36,6 @@ class TestCheckKeyPermissionsRetries:
         ):
             monkeypatch.delenv(key, raising=False)
         monkeypatch.setenv("COINBASE_PREFLIGHT_FORCE_REMOTE", "1")
-        monkeypatch.setenv("COINBASE_ENABLE_INTX_PERPS", "0")
         monkeypatch.setenv("COINBASE_ENABLE_INTX_PERPS", "0")
 
     def test_retries_on_transient_errors(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -194,13 +97,24 @@ class TestCheckKeyPermissionsRetries:
 
         mock_client = MagicMock()
         mock_auth = MagicMock()
-        # When get_key_permissions returns None, it becomes {} via `or {}`
-        # and can_trade/can_view will be False
         mock_client.get_key_permissions.return_value = None
         monkeypatch.setattr(checker, "_build_cdp_client", lambda: (mock_client, mock_auth))
 
         result = check_key_permissions(checker)
 
         assert result is False
-        # Empty response leads to missing view permission error
-        assert any("missing portfolio view permission" in e for e in checker.errors)
+        assert any("Key permissions response empty" in e for e in checker.errors)
+
+    def test_fails_on_empty_permissions_dict(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Should fail when the permissions response has no entitlement fields."""
+        checker = PreflightCheck(profile="prod")
+
+        mock_client = MagicMock()
+        mock_auth = MagicMock()
+        mock_client.get_key_permissions.return_value = {}
+        monkeypatch.setattr(checker, "_build_cdp_client", lambda: (mock_client, mock_auth))
+
+        result = check_key_permissions(checker)
+
+        assert result is False
+        assert any("Key permissions response empty" in e for e in checker.errors)

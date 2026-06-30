@@ -30,7 +30,6 @@ def bot_config_factory():
         spot_force_live: bool = False,
         broker_hint: str | None = None,
         risk_config_path: str | None = None,
-        coinbase_intx_portfolio_uuid: str | None = None,
         **kwargs,
     ) -> BotConfig:
         return BotConfig(
@@ -53,7 +52,6 @@ def bot_config_factory():
             spot_force_live=spot_force_live,
             broker_hint=broker_hint,
             risk_config_path=risk_config_path,
-            coinbase_intx_portfolio_uuid=coinbase_intx_portfolio_uuid,
             **kwargs,
         )
 

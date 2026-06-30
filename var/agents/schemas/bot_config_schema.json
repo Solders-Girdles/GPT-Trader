@@ -145,13 +145,9 @@
       "type": "boolean",
       "default": false
     },
-    "coinbase_intx_perpetuals_enabled": {
-      "type": "boolean",
-      "default": false
-    },
     "coinbase_derivatives_type": {
       "type": "string",
-      "default": "intx_perps"
+      "default": "us_futures"
     },
     "coinbase_sandbox_enabled": {
       "type": "boolean",
@@ -160,10 +156,6 @@
     "coinbase_api_mode": {
       "type": "string",
       "default": "advanced"
-    },
-    "coinbase_intx_portfolio_uuid": {
-      "type": "string",
-      "nullable": true
     },
     "broker_hint": {
       "type": "string",

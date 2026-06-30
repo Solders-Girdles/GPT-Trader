@@ -137,27 +137,32 @@ class TestReduceOnlyModeEnvParsing:
 
 
 class TestDerivativesEnvParsing:
-    """Test derivatives/perps environment flag parsing."""
+    """Test derivatives environment flag parsing."""
 
-    def test_derivatives_enabled_when_intx_perps_flag_set(
-        self, clean_env: pytest.MonkeyPatch
-    ) -> None:
-        """COINBASE_ENABLE_INTX_PERPS=1 enables derivatives."""
-        clean_env.setenv("COINBASE_ENABLE_INTX_PERPS", "1")
+    def test_derivatives_enabled_when_cfm_enabled(self, clean_env: pytest.MonkeyPatch) -> None:
+        """CFM_ENABLED=1 enables derivatives (CFM US futures)."""
+        clean_env.setenv("CFM_ENABLED", "1")
         config = BotConfig.from_env()
         assert config.derivatives_enabled is True
 
-    def test_derivatives_disabled_when_intx_perps_flag_unset(
-        self, clean_env: pytest.MonkeyPatch
-    ) -> None:
-        """COINBASE_ENABLE_INTX_PERPS defaults to disabled when unset."""
+    def test_derivatives_disabled_by_default(self, clean_env: pytest.MonkeyPatch) -> None:
+        """Derivatives default to disabled when no flags are set."""
         config = BotConfig.from_env()
         assert config.derivatives_enabled is False
 
-    def test_derivatives_disabled_when_intx_perps_flag_zero(
+    def test_deprecated_intx_perps_flag_still_enables_with_warning(
         self, clean_env: pytest.MonkeyPatch
     ) -> None:
-        """COINBASE_ENABLE_INTX_PERPS=0 disables derivatives."""
+        """The retired COINBASE_ENABLE_INTX_PERPS alias still enables, but warns."""
+        clean_env.setenv("COINBASE_ENABLE_INTX_PERPS", "1")
+        with pytest.warns(DeprecationWarning, match="COINBASE_ENABLE_INTX_PERPS"):
+            config = BotConfig.from_env()
+        assert config.derivatives_enabled is True
+
+    def test_deprecated_intx_perps_flag_zero_does_not_warn(
+        self, clean_env: pytest.MonkeyPatch
+    ) -> None:
+        """COINBASE_ENABLE_INTX_PERPS=0 disables derivatives without warning."""
         clean_env.setenv("COINBASE_ENABLE_INTX_PERPS", "0")
         config = BotConfig.from_env()
         assert config.derivatives_enabled is False

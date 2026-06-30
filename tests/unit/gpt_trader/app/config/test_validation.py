@@ -171,11 +171,19 @@ class TestValidateConfigCFMConsistency:
 class TestValidateConfigCoinbaseDerivativesType:
     """Tests for Coinbase derivatives venue type validation."""
 
-    def test_known_derivatives_types_are_valid(self) -> None:
-        for derivatives_type in ("intx_perps", "perpetuals", "us_futures"):
+    def test_us_futures_is_the_only_valid_type(self) -> None:
+        errors = validate_config(BotConfig(coinbase_derivatives_type="us_futures"))
+
+        assert errors == []
+
+    def test_removed_intx_types_report_migration_error(self) -> None:
+        for derivatives_type in ("intx_perps", "perpetuals"):
             errors = validate_config(BotConfig(coinbase_derivatives_type=derivatives_type))
 
-            assert errors == []
+            assert (
+                f"coinbase_derivatives_type {derivatives_type!r} is no longer "
+                "supported; INTX perpetuals were removed. Use 'us_futures'."
+            ) in errors
 
     def test_derivatives_type_is_case_and_whitespace_tolerant(self) -> None:
         errors = validate_config(BotConfig(coinbase_derivatives_type=" US_FUTURES "))
@@ -185,10 +193,7 @@ class TestValidateConfigCoinbaseDerivativesType:
     def test_unknown_derivatives_type_is_invalid(self) -> None:
         errors = validate_config(BotConfig(coinbase_derivatives_type="options"))
 
-        assert (
-            "coinbase_derivatives_type must be one of: intx_perps, perpetuals, us_futures; "
-            "got 'options'"
-        ) in errors
+        assert "coinbase_derivatives_type must be one of: us_futures; got 'options'" in errors
 
     def test_derivatives_enabled_requires_nonempty_derivatives_type(self) -> None:
         errors = validate_config(BotConfig(derivatives_enabled=True, coinbase_derivatives_type=""))
@@ -198,6 +203,4 @@ class TestValidateConfigCoinbaseDerivativesType:
     def test_derivatives_type_must_be_a_string(self) -> None:
         errors = validate_config(BotConfig(coinbase_derivatives_type=None))  # type: ignore[arg-type]
 
-        assert (
-            "coinbase_derivatives_type must be one of: intx_perps, perpetuals, us_futures" in errors
-        )
+        assert "coinbase_derivatives_type must be one of: us_futures" in errors

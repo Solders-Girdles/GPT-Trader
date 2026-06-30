@@ -1,8 +1,9 @@
 # INTX default derivatives venue
 
 ---
-status: proposed
+status: accepted
 date: 2026-06-28
+decided: 2026-06-30
 deciders: rj
 supersedes:
 superseded-by:
@@ -10,11 +11,13 @@ superseded-by:
 
 ## Status
 
-Partial. A.1 has landed; the A.2 default-venue decision is still pending.
+Accepted (2026-06-30). A.1 landed earlier; the A.2 default-venue decision is now
+resolved in favor of **A2 + enablement alignment** (see [Decision](#decision)).
+INTX is being removed as a selectable venue, not merely demoted as a default.
 
-This packet records an unresolved owner decision. It is not a live-operation
-runbook and does not authorize broker/API calls, canary operations, live trading
-commands, money movement, or order submission.
+This packet recorded an owner decision and now records its resolution. It is not
+a live-operation runbook and does not authorize broker/API calls, canary
+operations, live trading commands, money movement, or order submission.
 
 ## Authority
 
@@ -137,13 +140,44 @@ derivatives are enabled. This avoids an implicit default entirely, but it has
 more config and preflight churn because current defaults assume a value. It is
 the cleaner guardrail if an INTX-named toggle must not silently select CFM.
 
-## Decision Needed
+## Decision
 
-1. Choose the default model: `us_futures` by default, or explicit venue required.
-2. If choosing `us_futures`, explicitly decide whether to keep or replace the
-   current `COINBASE_ENABLE_INTX_PERPS` source for `derivatives_enabled`.
-3. If choosing explicit-required, approve the config and preflight changes
-   needed to make a missing derivatives type invalid.
+Resolved 2026-06-30 (rj): **A2 (default to CFM) plus the scoped enablement
+alignment**, combined with removal of INTX as a selectable venue. Option C
+(explicit-venue-required) was rejected as unnecessary config churn once only one
+derivatives lane remains.
+
+Concretely:
+
+1. **Default model:** `coinbase_derivatives_type` defaults to `us_futures`.
+2. **Reject INTX types:** `intx_perps` and `perpetuals` are removed from
+   `ALLOWED_COINBASE_DERIVATIVES_TYPES`; selecting them is a validation error
+   with a clear "INTX perpetuals removed; use `us_futures`" message.
+3. **Replace the INTX-named enablement source:** `derivatives_enabled` is sourced
+   from the CFM controls (`CFM_ENABLED` / `TRADING_MODES`) instead of
+   `COINBASE_ENABLE_INTX_PERPS`. The `COINBASE_ENABLE_INTX_PERPS` env var is
+   retired into [DEPRECATIONS](../DEPRECATIONS.md) with a back-compat alias that
+   is still read (emitting a `DeprecationWarning`) rather than hard-removed.
+   `COINBASE_ENABLE_DERIVATIVES` is **not** reintroduced.
+4. **Prune INTX-only code:** the unimported INTX/derivatives modules and the
+   INTX branches in shared modules are deleted (see implementation plan below).
+
+This resolves the A2 precondition: rather than tolerate an INTX-named flag
+selecting the CFM default, the INTX naming is removed from the enablement path.
+
+### Implementation plan (B0–B4)
+
+- **B0** Record this decision (this change).
+- **B1** Config flip: `bot_config.py` defaults/env parsing, `validation.py`
+  allowed-types, `profile_loader.py`, `config/environments/.env.template`. Lands
+  first so config never references a rejected type mid-flight.
+- **B2** Delete unimported INTX modules (`intx_portfolio_service.py`,
+  `derivatives_discovery.py`, `derivatives_products.py`) and the
+  `coinbase_intx_portfolio_uuid` config.
+- **B3** Strip INTX branches from shared modules and `symbols.py`
+  (`intx_perpetuals_enabled()`, `PERPS_ALLOWLIST`, `-PERP` handling).
+- **B4** Update docs (DEPRECATIONS, DIRECTION/STATUS), tests, and regenerate
+  agent artifacts.
 
 ## Verification For The Next Change
 

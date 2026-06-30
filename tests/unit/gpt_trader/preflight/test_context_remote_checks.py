@@ -69,7 +69,6 @@ class TestPreflightContextEnvDefaults:
 
         assert defaults["BROKER"] == ("coinbase", True)
         assert defaults["COINBASE_SANDBOX"] == ("1", False)  # Not strict
-        assert defaults["COINBASE_ENABLE_INTX_PERPS"] == ("0", False)  # Not strict
 
     def test_prod_profile_defaults(self) -> None:
         """Prod profile should have strict defaults."""
@@ -78,7 +77,6 @@ class TestPreflightContextEnvDefaults:
 
         assert defaults["BROKER"] == ("coinbase", True)
         assert defaults["COINBASE_SANDBOX"] == ("0", True)  # Strict
-        assert defaults["COINBASE_ENABLE_INTX_PERPS"] == ("0", True)  # Strict
 
     def test_canary_profile_uses_prod_defaults(self) -> None:
         """Canary profile should use prod-like defaults."""

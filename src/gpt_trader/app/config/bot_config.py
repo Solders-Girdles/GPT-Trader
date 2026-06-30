@@ -218,11 +218,11 @@ class BotConfig:
     # Broker / Exchange Settings
     coinbase_default_quote: str = "USD"
     coinbase_us_futures_enabled: bool = False
-    coinbase_intx_perpetuals_enabled: bool = False
-    coinbase_derivatives_type: str = "intx_perps"
+    # Derivatives venue type. INTX perpetuals are removed; CFM US futures is the
+    # only supported derivatives lane (see docs/decisions/intx-default-derivatives-venue.md).
+    coinbase_derivatives_type: str = "us_futures"
     coinbase_sandbox_enabled: bool = False
     coinbase_api_mode: str = "advanced"
-    coinbase_intx_portfolio_uuid: str | None = None
     broker_hint: str | None = None
 
     # CFM (Coinbase Financial Markets) Futures Settings
@@ -372,7 +372,21 @@ class BotConfig:
             daily_loss_limit_pct=_risk_float("DAILY_LOSS_LIMIT_PCT", 0.05),
         )
 
-        derivatives_enabled = parse_bool_env("COINBASE_ENABLE_INTX_PERPS", default=False)
+        # Derivatives = CFM US futures (INTX perpetuals removed). Source enablement
+        # from the CFM controls. COINBASE_ENABLE_INTX_PERPS is retired; honor it as
+        # a deprecated alias until removal (see docs/DEPRECATIONS.md).
+        derivatives_enabled = parse_bool_env("CFM_ENABLED", default=False)
+        if os.getenv("COINBASE_ENABLE_INTX_PERPS") is not None and parse_bool_env(
+            "COINBASE_ENABLE_INTX_PERPS", default=False
+        ):
+            warnings.warn(
+                "COINBASE_ENABLE_INTX_PERPS is deprecated and slated for removal; "
+                "INTX perpetuals are no longer supported. Use CFM_ENABLED / "
+                "TRADING_MODES to enable CFM derivatives.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            derivatives_enabled = True
 
         # Build health thresholds config from env (HEALTH_* prefix)
         def _health_float(key: str, default: float) -> float:
@@ -433,13 +447,9 @@ class BotConfig:
             coinbase_us_futures_enabled=parse_bool_env(
                 "COINBASE_US_FUTURES_ENABLED", default=False
             ),
-            coinbase_intx_perpetuals_enabled=parse_bool_env(
-                "COINBASE_INTX_PERPETUALS_ENABLED", default=False
-            ),
-            coinbase_derivatives_type=os.getenv("COINBASE_DERIVATIVES_TYPE", "intx_perps"),
+            coinbase_derivatives_type=os.getenv("COINBASE_DERIVATIVES_TYPE", "us_futures"),
             coinbase_sandbox_enabled=parse_bool_env("COINBASE_SANDBOX", default=False),
             coinbase_api_mode=os.getenv("COINBASE_API_MODE", "advanced"),
-            coinbase_intx_portfolio_uuid=os.getenv("COINBASE_INTX_PORTFOLIO_UUID"),
             broker_hint=os.getenv("BROKER"),
             # CFM settings
             trading_modes=parse_list_env("TRADING_MODES", str, default=["spot"]),

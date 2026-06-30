@@ -16,7 +16,11 @@ from pydantic import BaseModel, Field, ValidationError
 if TYPE_CHECKING:
     from gpt_trader.app.config.bot_config import BotConfig
 
-ALLOWED_COINBASE_DERIVATIVES_TYPES = frozenset({"intx_perps", "perpetuals", "us_futures"})
+# CFM US futures is the only supported derivatives venue. INTX perpetuals were
+# removed (see docs/decisions/intx-default-derivatives-venue.md).
+ALLOWED_COINBASE_DERIVATIVES_TYPES = frozenset({"us_futures"})
+# Retired venue types kept here only to emit a clear migration error.
+REMOVED_COINBASE_DERIVATIVES_TYPES = frozenset({"intx_perps", "perpetuals"})
 
 
 class ConfigValidationError(Exception):
@@ -109,7 +113,12 @@ def validate_config(config: BotConfig) -> list[str]:
         derivatives_type = ""
     else:
         derivatives_type = raw_derivatives_type.strip().lower()
-        if derivatives_type and derivatives_type not in ALLOWED_COINBASE_DERIVATIVES_TYPES:
+        if derivatives_type in REMOVED_COINBASE_DERIVATIVES_TYPES:
+            errors.append(
+                f"coinbase_derivatives_type {raw_derivatives_type!r} is no longer "
+                "supported; INTX perpetuals were removed. Use 'us_futures'."
+            )
+        elif derivatives_type and derivatives_type not in ALLOWED_COINBASE_DERIVATIVES_TYPES:
             errors.append(
                 f"coinbase_derivatives_type must be one of: "
                 f"{', '.join(sorted(ALLOWED_COINBASE_DERIVATIVES_TYPES))}; "

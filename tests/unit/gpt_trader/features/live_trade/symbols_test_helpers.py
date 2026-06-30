@@ -30,7 +30,6 @@ def make_bot_config(
         coinbase_sandbox_enabled=kwargs.get("coinbase_sandbox_enabled", False),
         coinbase_api_mode=kwargs.get("coinbase_api_mode", "advanced"),
         risk_config_path=kwargs.get("risk_config_path"),
-        coinbase_intx_portfolio_uuid=kwargs.get("coinbase_intx_portfolio_uuid"),
     )
 
 
@@ -39,7 +38,6 @@ def make_bot_config_extended(
     derivatives_enabled: bool = False,
     coinbase_default_quote: str = "USD",
     coinbase_us_futures_enabled: bool = False,
-    coinbase_intx_perpetuals_enabled: bool = False,
     coinbase_derivatives_type: str = "",
     **kwargs: dict,
 ) -> BotConfig:
@@ -53,7 +51,6 @@ def make_bot_config_extended(
         coinbase_default_quote=coinbase_default_quote,
         derivatives_enabled=derivatives_enabled,
         coinbase_us_futures_enabled=coinbase_us_futures_enabled,
-        coinbase_intx_perpetuals_enabled=coinbase_intx_perpetuals_enabled,
         coinbase_derivatives_type=coinbase_derivatives_type,
         perps_enable_streaming=kwargs.get("perps_enable_streaming", False),
         perps_stream_level=kwargs.get("perps_stream_level", 1),
@@ -66,5 +63,4 @@ def make_bot_config_extended(
         coinbase_sandbox_enabled=kwargs.get("coinbase_sandbox_enabled", False),
         coinbase_api_mode=kwargs.get("coinbase_api_mode", "advanced"),
         risk_config_path=kwargs.get("risk_config_path"),
-        coinbase_intx_portfolio_uuid=kwargs.get("coinbase_intx_portfolio_uuid"),
     )

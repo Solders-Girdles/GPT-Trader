@@ -9,6 +9,10 @@ import pathlib
 import sys
 from collections.abc import Sequence
 
+# Repository root, derived from this file's location so allowlist existence
+# checks stay correct even when scan() is pointed at a synthetic root (tests).
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
+
 # Increased from 240 to 400 to accommodate comprehensive test coverage.
 # Comprehensive test files (e.g., testing all validation rules in a CI script)
 # often require more lines to cover all edge cases properly.
@@ -183,14 +187,20 @@ def scan(paths: Sequence[str]) -> int:
                 f"{rel} calls time.sleep without using fake_clock fixture. Use fake_clock or justify with an explicit helper."
             )
 
-    # Keep the size allowlist from accumulating stale exemptions: any allowlisted
-    # file that was scanned but no longer exceeds THRESHOLD must be removed. Only
-    # files actually present in this scan are audited, so the check stays correct
-    # when run against a synthetic root (e.g. this checker's own unit tests).
+    # Keep the size allowlist from accumulating stale exemptions. An entry is
+    # stale if its file dropped to <= THRESHOLD lines (caught via the scanned
+    # line counts) or if the file was deleted/renamed (never scanned, so checked
+    # against _REPO_ROOT — stable even when scan() runs against a synthetic root).
     for entry, seen in sorted(size_allowlist_line_counts.items()):
         if seen <= THRESHOLD:
             problems.append(
                 f"{entry} is on the size allowlist but is now {seen} lines (<= {THRESHOLD}). "
+                "Remove the stale allowlist entry."
+            )
+    for entry in sorted(SIZE_ALLOWLIST - set(size_allowlist_line_counts)):
+        if not (_REPO_ROOT / entry).exists():
+            problems.append(
+                f"{entry} is on the size allowlist but no longer exists. "
                 "Remove the stale allowlist entry."
             )
 

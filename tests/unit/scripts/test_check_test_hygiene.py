@@ -218,6 +218,20 @@ class TestSizeAllowlistHygiene:
 
         assert result == 0
 
+    def test_allowlisted_file_deleted_flagged_as_stale(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """An allowlist entry whose file no longer exists must be flagged."""
+        monkeypatch.chdir(tmp_path)
+        _write_test_file(tmp_path / "tests/unit/gpt_trader/test_present.py", lines=10)
+        monkeypatch.setattr(
+            check_test_hygiene, "SIZE_ALLOWLIST", {"tests/unit/gpt_trader/test_deleted.py"}
+        )
+
+        result = check_test_hygiene.scan(["tests/unit/gpt_trader"])
+
+        assert result == 1
+
 
 class TestSleepViolations:
     """Tests for time.sleep() usage violations."""

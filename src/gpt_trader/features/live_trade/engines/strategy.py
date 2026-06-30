@@ -74,12 +74,11 @@ from gpt_trader.features.live_trade.engines.price_tick_store import (
 )
 from gpt_trader.features.live_trade.engines.runtime.coordinator import RuntimeEngine
 from gpt_trader.features.live_trade.engines.runtime.models import (
-    RuntimeDependency,
     RuntimeLifecycleError,
     RuntimeLifecyclePlan,
-    RuntimeLifecycleStep,
-    RuntimeStepKind,
-    RuntimeStopCondition,
+)
+from gpt_trader.features.live_trade.engines.runtime_lifecycle_plan import (
+    build_runtime_lifecycle_plan,
 )
 from gpt_trader.features.live_trade.engines.system_maintenance import (
     SystemMaintenanceService,
@@ -434,153 +433,7 @@ class TradingEngine(BaseEngine):
         )
 
     def _runtime_lifecycle_plan(self) -> RuntimeLifecyclePlan:
-        shutdown_timeout_seconds = getattr(
-            self.context.config,
-            "runtime_shutdown_timeout_seconds",
-            5.0,
-        )
-        return RuntimeLifecyclePlan(
-            dependencies=(
-                RuntimeDependency("config", self.context.config),
-                RuntimeDependency("container", self.context.container),
-                RuntimeDependency("broker", self.context.broker),
-                RuntimeDependency("risk_manager", self.context.risk_manager, required=False),
-                RuntimeDependency("event_store", self.context.event_store, required=False),
-                RuntimeDependency("orders_store", self.context.orders_store, required=False),
-                RuntimeDependency(
-                    "notification_service",
-                    self.context.notification_service,
-                    required=False,
-                ),
-            ),
-            stop_conditions=(
-                RuntimeStopCondition(
-                    name="engine_error_state",
-                    is_met=lambda: self.state == EngineState.ERROR,
-                    reason="trading_engine_error",
-                ),
-            ),
-            startup_steps=(
-                RuntimeLifecycleStep(
-                    name="engine_state_starting",
-                    kind=RuntimeStepKind.STARTUP_HOOK,
-                    callback=self._runtime_mark_starting,
-                ),
-                RuntimeLifecycleStep(
-                    name="price_history_rehydrate",
-                    kind=RuntimeStepKind.STARTUP_HOOK,
-                    callback=self._runtime_rehydrate_once,
-                ),
-                RuntimeLifecycleStep(
-                    name="runtime_start_event",
-                    kind=RuntimeStepKind.STARTUP_HOOK,
-                    callback=self._record_runtime_start,
-                ),
-                RuntimeLifecycleStep(
-                    name="engine_state_running",
-                    kind=RuntimeStepKind.STARTUP_HOOK,
-                    callback=self._runtime_mark_running,
-                ),
-                RuntimeLifecycleStep(
-                    name="trading_loop",
-                    kind=RuntimeStepKind.BACKGROUND_TASK,
-                    callback=self._start_trading_loop_task,
-                ),
-                RuntimeLifecycleStep(
-                    name="heartbeat_service",
-                    kind=RuntimeStepKind.HEARTBEAT,
-                    callback=self._heartbeat.start,
-                ),
-                RuntimeLifecycleStep(
-                    name="status_reporter",
-                    kind=RuntimeStepKind.HEALTH,
-                    callback=self._status_reporter.start,
-                ),
-                RuntimeLifecycleStep(
-                    name="health_check_runner",
-                    kind=RuntimeStepKind.HEALTH,
-                    callback=self._health_check_runner.start,
-                ),
-                RuntimeLifecycleStep(
-                    name="system_maintenance_prune",
-                    kind=RuntimeStepKind.HEALTH,
-                    callback=self._system_maintenance.start_prune_loop,
-                ),
-                RuntimeLifecycleStep(
-                    name="runtime_guard_checkpoint",
-                    kind=RuntimeStepKind.POLICY_CHECKPOINT,
-                    callback=self._runtime_guard_checkpoint,
-                    register_task=False,
-                ),
-                RuntimeLifecycleStep(
-                    name="runtime_guard_sweep",
-                    kind=RuntimeStepKind.POLICY_CHECKPOINT,
-                    callback=self._start_runtime_guard_task,
-                ),
-                RuntimeLifecycleStep(
-                    name="streaming",
-                    kind=RuntimeStepKind.STREAMING,
-                    callback=self._runtime_start_streaming,
-                ),
-                RuntimeLifecycleStep(
-                    name="ws_health_watchdog",
-                    kind=RuntimeStepKind.HEALTH,
-                    callback=self._start_ws_health_watchdog_task,
-                ),
-            ),
-            shutdown_steps=(
-                RuntimeLifecycleStep(
-                    name="ws_health_watchdog",
-                    kind=RuntimeStepKind.SHUTDOWN_HOOK,
-                    callback=self._stop_ws_health_watchdog_task,
-                    timeout_seconds=shutdown_timeout_seconds,
-                    register_task=False,
-                ),
-                RuntimeLifecycleStep(
-                    name="streaming",
-                    kind=RuntimeStepKind.STREAMING,
-                    callback=self._runtime_stop_streaming,
-                    timeout_seconds=shutdown_timeout_seconds,
-                    register_task=False,
-                ),
-                RuntimeLifecycleStep(
-                    name="health_check_runner",
-                    kind=RuntimeStepKind.HEALTH,
-                    callback=self._health_check_runner.stop,
-                    timeout_seconds=shutdown_timeout_seconds,
-                    register_task=False,
-                ),
-                RuntimeLifecycleStep(
-                    name="system_maintenance",
-                    kind=RuntimeStepKind.SHUTDOWN_HOOK,
-                    callback=self._system_maintenance.stop,
-                    timeout_seconds=shutdown_timeout_seconds,
-                    register_task=False,
-                ),
-                RuntimeLifecycleStep(
-                    name="status_reporter",
-                    kind=RuntimeStepKind.HEALTH,
-                    callback=self._status_reporter.stop,
-                    timeout_seconds=shutdown_timeout_seconds,
-                    register_task=False,
-                ),
-                RuntimeLifecycleStep(
-                    name="heartbeat_service",
-                    kind=RuntimeStepKind.HEARTBEAT,
-                    callback=self._heartbeat.stop,
-                    timeout_seconds=shutdown_timeout_seconds,
-                    register_task=False,
-                ),
-                RuntimeLifecycleStep(
-                    name="broker_call_executor",
-                    kind=RuntimeStepKind.SHUTDOWN_HOOK,
-                    callback=self._runtime_shutdown_broker_calls,
-                    register_task=False,
-                ),
-            ),
-            task_cleanup_timeout_seconds=shutdown_timeout_seconds,
-            shutdown_step_timeout_seconds=shutdown_timeout_seconds,
-        )
+        return build_runtime_lifecycle_plan(self)
 
     def _runtime_mark_starting(self) -> None:
         self._transition_state(EngineState.STARTING, reason="start_background_tasks")

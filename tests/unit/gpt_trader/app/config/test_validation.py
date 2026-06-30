@@ -167,6 +167,22 @@ class TestValidateConfigCFMConsistency:
 
         assert errors == []
 
+    def test_cfm_us_futures_rejects_intx_perp_symbols(self) -> None:
+        errors = validate_config(
+            BotConfig(
+                cfm_enabled=True,
+                derivatives_enabled=True,
+                trading_modes=["cfm"],
+                coinbase_derivatives_type="us_futures",
+                symbols=["BTC-PERP"],
+            )
+        )
+
+        assert (
+            "CFM US futures configuration does not support INTX perpetual symbols: "
+            "BTC-PERP. Use US futures symbols or spot symbols."
+        ) in errors
+
 
 class TestValidateConfigCoinbaseDerivativesType:
     """Tests for Coinbase derivatives venue type validation."""

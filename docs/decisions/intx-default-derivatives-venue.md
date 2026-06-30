@@ -1,5 +1,3 @@
-# INTX default derivatives venue
-
 ---
 status: accepted
 date: 2026-06-28
@@ -8,6 +6,8 @@ deciders: rj
 supersedes:
 superseded-by:
 ---
+
+# INTX default derivatives venue
 
 ## Status
 

@@ -4,7 +4,6 @@ from datetime import datetime as real_datetime
 from pathlib import Path
 
 import pytest
-
 import scripts.ci.check_dedupe_manifest as check_dedupe_manifest
 
 

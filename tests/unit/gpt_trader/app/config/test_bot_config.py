@@ -158,6 +158,7 @@ class TestDerivativesEnvParsing:
         with pytest.warns(DeprecationWarning, match="COINBASE_ENABLE_INTX_PERPS"):
             config = BotConfig.from_env()
         assert config.derivatives_enabled is True
+        assert config.cfm_enabled is True
 
     def test_deprecated_intx_perps_flag_zero_does_not_warn(
         self, clean_env: pytest.MonkeyPatch

@@ -143,6 +143,20 @@ def validate_config(config: BotConfig) -> list[str]:
     if cfm_mode_enabled and not config.cfm_enabled:
         errors.append("trading_modes includes 'cfm' but cfm_enabled is false")
 
+    if derivatives_type == "us_futures" and (
+        config.derivatives_enabled or config.cfm_enabled or cfm_mode_enabled
+    ):
+        intx_symbols = sorted(
+            symbol
+            for symbol in config.symbols
+            if isinstance(symbol, str) and symbol.endswith("-PERP")
+        )
+        if intx_symbols:
+            errors.append(
+                "CFM US futures configuration does not support INTX perpetual symbols: "
+                f"{', '.join(intx_symbols)}. Use US futures symbols or spot symbols."
+            )
+
     return errors
 
 

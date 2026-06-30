@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 744,
+    "tests_scanned": 746,
     "source_modules": 381,
     "unresolved_modules": 3
   },
@@ -301,11 +301,12 @@
       "tests/unit/scripts/test_local_ci.py"
     ],
     "gpt_trader.cli": [
+      "tests/unit/gpt_trader/cli/commands/test_strategy_profile_diff.py",
       "tests/unit/gpt_trader/cli/test_services_build_config.py"
     ],
     "gpt_trader.cli.commands": [
-      "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py",
+      "tests/unit/gpt_trader/cli/commands/test_strategy_profile_diff.py",
       "tests/unit/gpt_trader/cli/test_commands_controls.py",
       "tests/unit/gpt_trader/cli/test_commands_preflight.py"
     ],
@@ -372,6 +373,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py",
+      "tests/unit/gpt_trader/cli/commands/test_strategy_profile_diff.py",
       "tests/unit/gpt_trader/cli/test_commands_orders_history.py",
       "tests/unit/gpt_trader/cli/test_commands_report.py",
       "tests/unit/gpt_trader/cli/test_response_cli_response.py",
@@ -1356,6 +1358,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation_conflicts.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
@@ -2200,7 +2203,9 @@
     "gpt_trader.utilities.time_provider": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py",
+      "tests/unit/gpt_trader/monitoring/guards/test_builtins_behaviour.py",
       "tests/unit/gpt_trader/monitoring/guards/test_launcher_starvation_guard.py",
+      "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_feed_staleness.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_staleness.py",
@@ -2754,7 +2759,6 @@
       "gpt_trader.cli.commands.optimize"
     ],
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py": [
-      "gpt_trader.cli.commands",
       "gpt_trader.cli.commands.optimize",
       "gpt_trader.cli.response"
     ],
@@ -2879,6 +2883,11 @@
       "gpt_trader.cli.response",
       "gpt_trader.core",
       "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_strategy_profile_diff.py": [
+      "gpt_trader.cli",
+      "gpt_trader.cli.commands",
+      "gpt_trader.cli.response"
     ],
     "tests/unit/gpt_trader/cli/test_broker_connectivity.py": [
       "gpt_trader.cli.commands.broker_connectivity",
@@ -4123,6 +4132,9 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py": [
       "gpt_trader.features.trade_ideas"
     ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation_conflicts.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
     "tests/unit/gpt_trader/features/trade_ideas/test_policy.py": [
       "gpt_trader.features.trade_ideas"
     ],
@@ -4278,7 +4290,8 @@
     "tests/unit/gpt_trader/monitoring/guards/test_builtins_behaviour.py": [
       "gpt_trader.monitoring.alert_types",
       "gpt_trader.monitoring.guards.base",
-      "gpt_trader.monitoring.guards.builtins"
+      "gpt_trader.monitoring.guards.builtins",
+      "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/monitoring/guards/test_builtins_edge_cases.py": [
       "gpt_trader.monitoring.alert_types",
@@ -4343,7 +4356,8 @@
       "gpt_trader.monitoring.alert_types",
       "gpt_trader.monitoring.guards.base",
       "gpt_trader.monitoring.guards.builtins",
-      "gpt_trader.monitoring.guards.manager"
+      "gpt_trader.monitoring.guards.manager",
+      "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/monitoring/test_guard_manager_handlers.py": [
       "gpt_trader.monitoring.alert_types",

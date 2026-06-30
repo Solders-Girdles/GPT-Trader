@@ -32196,7 +32196,7 @@
     "tests/unit/gpt_trader/features/optimize/study/test_manager.py": [
       {
         "name": "TestOptimizationStudyManager::test_create_study",
-        "line": 34,
+        "line": 45,
         "markers": [
           "unit"
         ],
@@ -32205,7 +32205,7 @@
       },
       {
         "name": "TestOptimizationStudyManager::test_suggest_parameters",
-        "line": 47,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -32214,7 +32214,7 @@
       },
       {
         "name": "TestOptimizationStudyManager::test_missing_optuna_raises_install_extra_message",
-        "line": 59,
+        "line": 70,
         "markers": [
           "unit"
         ],
@@ -37137,7 +37137,7 @@
     "tests/unit/gpt_trader/monitoring/guards/test_builtins_behaviour.py": [
       {
         "name": "test_daily_loss_guard_resets_each_day",
-        "line": 25,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -37145,7 +37145,7 @@
       },
       {
         "name": "test_stale_mark_guard_handles_formats",
-        "line": 39,
+        "line": 41,
         "markers": [
           "unit"
         ],
@@ -37153,7 +37153,7 @@
       },
       {
         "name": "test_error_rate_guard_sliding_window",
-        "line": 55,
+        "line": 58,
         "markers": [
           "unit"
         ],
@@ -37161,7 +37161,7 @@
       },
       {
         "name": "test_position_stuck_guard_tracks_and_clears",
-        "line": 69,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -38652,7 +38652,7 @@
     "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e.py": [
       {
         "name": "TestDefaultGuardManagerCreation::test_create_default_runtime_guard_manager",
-        "line": 26,
+        "line": 28,
         "markers": [
           "unit"
         ],
@@ -38661,7 +38661,7 @@
       },
       {
         "name": "TestDefaultGuardManagerCreation::test_create_default_with_missing_config",
-        "line": 75,
+        "line": 77,
         "markers": [
           "unit"
         ],
@@ -38670,7 +38670,7 @@
       },
       {
         "name": "TestGuardStateTransitions::test_guard_status_transitions_healthy_to_warning",
-        "line": 89,
+        "line": 91,
         "markers": [
           "unit"
         ],
@@ -38679,7 +38679,7 @@
       },
       {
         "name": "TestGuardStateTransitions::test_guard_status_transitions_warning_to_breached",
-        "line": 102,
+        "line": 104,
         "markers": [
           "unit"
         ],
@@ -38688,7 +38688,7 @@
       },
       {
         "name": "TestGuardStateTransitions::test_guard_status_transitions_breached_to_warning",
-        "line": 113,
+        "line": 115,
         "markers": [
           "unit"
         ],
@@ -38697,7 +38697,7 @@
       },
       {
         "name": "TestGuardStateTransitions::test_position_stuck_guard_state_tracking",
-        "line": 129,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -38706,7 +38706,7 @@
       },
       {
         "name": "TestGuardStateTransitions::test_drawdown_guard_peak_tracking",
-        "line": 150,
+        "line": 152,
         "markers": [
           "unit"
         ],
@@ -38715,7 +38715,7 @@
       },
       {
         "name": "TestRuntimeGuardManager::test_guard_registration_and_status_tracking",
-        "line": 168,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -38724,7 +38724,7 @@
       },
       {
         "name": "TestRuntimeGuardManager::test_alert_fan_out_to_multiple_handlers",
-        "line": 186,
+        "line": 188,
         "markers": [
           "unit"
         ],
@@ -38733,7 +38733,7 @@
       },
       {
         "name": "TestRuntimeGuardManager::test_guard_cooldown_prevents_alert_spam",
-        "line": 206,
+        "line": 208,
         "markers": [
           "unit"
         ],
@@ -38742,7 +38742,7 @@
       },
       {
         "name": "TestRuntimeGuardManager::test_multiple_guards_trigger_multiple_alerts",
-        "line": 222,
+        "line": 224,
         "markers": [
           "unit"
         ],
@@ -46328,7 +46328,7 @@
       },
       {
         "name": "TestRateLimitingTimeWindows::test_rate_limit_time_precision",
-        "line": 34,
+        "line": 36,
         "markers": [
           "unit"
         ],

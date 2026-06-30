@@ -2207,7 +2207,9 @@
     "gpt_trader.utilities.time_provider": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_retry.py",
+      "tests/unit/gpt_trader/monitoring/guards/test_builtins_behaviour.py",
       "tests/unit/gpt_trader/monitoring/guards/test_launcher_starvation_guard.py",
+      "tests/unit/gpt_trader/monitoring/test_guard_manager_e2e.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_feed_staleness.py",
       "tests/unit/gpt_trader/monitoring/test_health_checks_market_data_staleness.py",
@@ -4294,7 +4296,8 @@
     "tests/unit/gpt_trader/monitoring/guards/test_builtins_behaviour.py": [
       "gpt_trader.monitoring.alert_types",
       "gpt_trader.monitoring.guards.base",
-      "gpt_trader.monitoring.guards.builtins"
+      "gpt_trader.monitoring.guards.builtins",
+      "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/monitoring/guards/test_builtins_edge_cases.py": [
       "gpt_trader.monitoring.alert_types",
@@ -4359,7 +4362,8 @@
       "gpt_trader.monitoring.alert_types",
       "gpt_trader.monitoring.guards.base",
       "gpt_trader.monitoring.guards.builtins",
-      "gpt_trader.monitoring.guards.manager"
+      "gpt_trader.monitoring.guards.manager",
+      "gpt_trader.utilities.time_provider"
     ],
     "tests/unit/gpt_trader/monitoring/test_guard_manager_handlers.py": [
       "gpt_trader.monitoring.alert_types",

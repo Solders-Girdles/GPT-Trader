@@ -25,9 +25,6 @@ REAL_API_TEST_PREFIX = "tests/real_api/"
 # Files exempt from the THRESHOLD line cap. Each entry is self-policing: once a
 # file drops to <= THRESHOLD lines it must be removed from this map (CI enforces).
 SIZE_ALLOWLIST_REASONS: dict[str, str] = {
-    "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py": (
-        "Optimize CLI execution tests are consolidated; split pending per docs/test_hygiene.md."
-    ),
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py": (
         "Order engine tests cover BUY/SELL/CLOSE signal paths and risk-manager enforcement; split pending."
     ),

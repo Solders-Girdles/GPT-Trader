@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 746,
-    "source_modules": 381,
+    "tests_scanned": 747,
+    "source_modules": 383,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -226,6 +226,9 @@
     "gpt_trader.backtesting.simulation": [
       "tests/unit/gpt_trader/backtesting/test_simulation_basics.py"
     ],
+    "gpt_trader.backtesting.simulation.accounting": [
+      "tests/unit/gpt_trader/backtesting/simulation/test_accounting.py"
+    ],
     "gpt_trader.backtesting.simulation.broker": [
       "tests/integration/test_funding_pnl_accumulation.py",
       "tests/integration/test_funding_pnl_equity_effect.py",
@@ -302,7 +305,6 @@
     ],
     "gpt_trader.cli.commands": [
       "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py",
-      "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py",
       "tests/unit/gpt_trader/cli/test_commands_controls.py",
       "tests/unit/gpt_trader/cli/test_commands_preflight.py"
@@ -423,6 +425,7 @@
       "tests/integration/test_funding_pnl_long_short.py",
       "tests/integration/test_order_flow.py",
       "tests/integration/test_validation_escalation_flow.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_accounting.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_limit.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model_queue.py",
@@ -1589,6 +1592,10 @@
     "gpt_trader.monitoring.profiling": [
       "tests/unit/gpt_trader/monitoring/test_profiling.py"
     ],
+    "gpt_trader.monitoring.status_models": [
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py",
+      "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py"
+    ],
     "gpt_trader.monitoring.status_reporter": [
       "tests/unit/gpt_trader/monitoring/test_metrics_exporter.py",
       "tests/unit/gpt_trader/monitoring/test_status_reporter.py",
@@ -2628,6 +2635,10 @@
     "tests/unit/gpt_trader/backtesting/metrics/test_statistics_trade_statistics_dataclass.py": [
       "gpt_trader.backtesting.metrics.statistics"
     ],
+    "tests/unit/gpt_trader/backtesting/simulation/test_accounting.py": [
+      "gpt_trader.backtesting.simulation.accounting",
+      "gpt_trader.core"
+    ],
     "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py": [
       "gpt_trader.backtesting.simulation.fee_calculator",
       "gpt_trader.backtesting.types"
@@ -2807,7 +2818,6 @@
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py": [
       "gpt_trader",
-      "gpt_trader.cli.commands",
       "gpt_trader.cli.response",
       "gpt_trader.features.trade_ideas"
     ],
@@ -4440,10 +4450,12 @@
     ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_file_output.py": [
       "gpt_trader.monitoring.health_checks",
+      "gpt_trader.monitoring.status_models",
       "gpt_trader.monitoring.status_reporter"
     ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py": [
       "gpt_trader.monitoring.metrics_collector",
+      "gpt_trader.monitoring.status_models",
       "gpt_trader.monitoring.status_reporter"
     ],
     "tests/unit/gpt_trader/monitoring/test_status_reporter_time.py": [
@@ -5278,6 +5290,7 @@
     "gpt_trader.backtesting.metrics.risk": "src/gpt_trader/backtesting/metrics/risk.py",
     "gpt_trader.backtesting.metrics.statistics": "src/gpt_trader/backtesting/metrics/statistics.py",
     "gpt_trader.backtesting.simulation": "src/gpt_trader/backtesting/simulation/__init__.py",
+    "gpt_trader.backtesting.simulation.accounting": "src/gpt_trader/backtesting/simulation/accounting.py",
     "gpt_trader.backtesting.simulation.broker": "src/gpt_trader/backtesting/simulation/broker.py",
     "gpt_trader.backtesting.simulation.fee_calculator": "src/gpt_trader/backtesting/simulation/fee_calculator.py",
     "gpt_trader.backtesting.simulation.fill_model": "src/gpt_trader/backtesting/simulation/fill_model.py",
@@ -5488,6 +5501,7 @@
     "gpt_trader.monitoring.notifications.backends": "src/gpt_trader/monitoring/notifications/backends.py",
     "gpt_trader.monitoring.notifications.service": "src/gpt_trader/monitoring/notifications/service.py",
     "gpt_trader.monitoring.profiling": "src/gpt_trader/monitoring/profiling.py",
+    "gpt_trader.monitoring.status_models": "src/gpt_trader/monitoring/status_models.py",
     "gpt_trader.monitoring.status_reporter": "src/gpt_trader/monitoring/status_reporter.py",
     "gpt_trader.monitoring.system": "src/gpt_trader/monitoring/system/__init__.py",
     "gpt_trader.monitoring.system.metrics": "src/gpt_trader/monitoring/system/metrics.py",

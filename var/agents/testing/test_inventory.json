@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 7086,
-    "total_files": 837,
+    "total_tests": 7095,
+    "total_files": 838,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,8 +102,8 @@
     ]
   },
   "marker_counts": {
-    "unit": 6919,
-    "asyncio": 440,
+    "unit": 6928,
+    "asyncio": 442,
     "parametrize": 207,
     "endpoints": 83,
     "property": 82,
@@ -167,6 +167,7 @@
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_streak_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_timing_metrics.py",
       "tests/unit/gpt_trader/backtesting/metrics/test_statistics_trade_statistics_dataclass.py",
+      "tests/unit/gpt_trader/backtesting/simulation/test_accounting.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator_volume.py",
       "tests/unit/gpt_trader/backtesting/simulation/test_fill_model.py",
@@ -6269,6 +6270,56 @@
         "class": "TestTradeStatisticsDataclass"
       }
     ],
+    "tests/unit/gpt_trader/backtesting/simulation/test_accounting.py": [
+      {
+        "name": "test_calculate_margin_used_sums_notional_over_leverage",
+        "line": 29,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_calculate_margin_used_empty",
+        "line": 37,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_lock_margin_moves_available_to_hold",
+        "line": 41,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_lock_margin_defaults_leverage_to_one",
+        "line": 52,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_release_margin_floors_hold_at_zero",
+        "line": 60,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_credit_pnl_adjusts_total_and_available_only",
+        "line": 69,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      }
+    ],
     "tests/unit/gpt_trader/backtesting/simulation/test_fee_calculator.py": [
       {
         "name": "TestFeeCalculatorInitialization::test_default_initialization",
@@ -9481,7 +9532,7 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_lifecycle.py": [
       {
         "name": "test_propose_from_file_persists_record_and_warns_for_non_compliant_idea",
-        "line": 80,
+        "line": 79,
         "markers": [
           "unit"
         ],
@@ -9489,7 +9540,7 @@
       },
       {
         "name": "test_propose_from_stdin_returns_json_envelope",
-        "line": 101,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -9497,7 +9548,7 @@
       },
       {
         "name": "test_propose_missing_required_field_returns_invalid_argument",
-        "line": 119,
+        "line": 118,
         "markers": [
           "unit"
         ],
@@ -9505,7 +9556,7 @@
       },
       {
         "name": "test_propose_malformed_decimal_returns_invalid_argument",
-        "line": 145,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -9513,7 +9564,7 @@
       },
       {
         "name": "test_approve_happy_path_records_human_actor",
-        "line": 171,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -9521,7 +9572,7 @@
       },
       {
         "name": "test_approve_policy_violation_returns_all_violations",
-        "line": 204,
+        "line": 203,
         "markers": [
           "unit"
         ],
@@ -9529,7 +9580,7 @@
       },
       {
         "name": "test_approve_rejects_absolute_decision_id_before_audit_or_budget_writes",
-        "line": 236,
+        "line": 235,
         "markers": [
           "unit"
         ],
@@ -9537,7 +9588,7 @@
       },
       {
         "name": "test_request_changes_resubmit_and_approve_loop",
-        "line": 266,
+        "line": 265,
         "markers": [
           "unit"
         ],
@@ -9545,7 +9596,7 @@
       },
       {
         "name": "test_reject_cancel_expire_and_sweep_paths",
-        "line": 326,
+        "line": 325,
         "markers": [
           "unit"
         ],
@@ -21691,6 +21742,15 @@
           "unit"
         ],
         "docstring": ""
+      },
+      {
+        "name": "test_unfilled_order_alert_dedupes_client_and_order_ids",
+        "line": 258,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py": [
@@ -21832,7 +21892,7 @@
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py": [
       {
         "name": "test_audit_orders_normalizes_submit_id_to_broker_order_id",
-        "line": 15,
+        "line": 16,
         "markers": [
           "asyncio",
           "unit"
@@ -21841,7 +21901,7 @@
       },
       {
         "name": "test_audit_orders_recovers_unknown_bot_owned_orders",
-        "line": 71,
+        "line": 72,
         "markers": [
           "asyncio",
           "unit"
@@ -21850,7 +21910,7 @@
       },
       {
         "name": "test_audit_orders_escalates_without_orders_store",
-        "line": 108,
+        "line": 109,
         "markers": [
           "asyncio",
           "unit"
@@ -21859,7 +21919,16 @@
       },
       {
         "name": "test_audit_orders_refreshes_missing_persisted_order",
-        "line": 146,
+        "line": 147,
+        "markers": [
+          "asyncio",
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_audit_orders_reports_refreshed_open_order_snapshot",
+        "line": 210,
         "markers": [
           "asyncio",
           "unit"
@@ -40809,7 +40878,7 @@
     "tests/unit/gpt_trader/monitoring/test_status_reporter_health.py": [
       {
         "name": "test_update_positions_coerces_invalid_and_skips_non_dict",
-        "line": 25,
+        "line": 26,
         "markers": [
           "unit"
         ],
@@ -40817,7 +40886,7 @@
       },
       {
         "name": "test_update_orders_invalid_fields_use_defaults",
-        "line": 52,
+        "line": 53,
         "markers": [
           "unit"
         ],
@@ -40825,7 +40894,7 @@
       },
       {
         "name": "test_update_account_skips_zero_or_invalid_balances",
-        "line": 90,
+        "line": 89,
         "markers": [
           "unit"
         ],
@@ -40833,7 +40902,7 @@
       },
       {
         "name": "test_update_strategy_generates_decision_id_and_handles_invalid_timestamp",
-        "line": 110,
+        "line": 109,
         "markers": [
           "unit"
         ],
@@ -40841,7 +40910,7 @@
       },
       {
         "name": "test_update_equity_swallows_record_gauge_exceptions",
-        "line": 133,
+        "line": 132,
         "markers": [
           "unit"
         ],
@@ -40849,7 +40918,7 @@
       },
       {
         "name": "test_add_trade_caps_recent_trades",
-        "line": 146,
+        "line": 145,
         "markers": [
           "unit"
         ],
@@ -40857,7 +40926,7 @@
       },
       {
         "name": "test_update_strategy_caps_decisions",
-        "line": 171,
+        "line": 170,
         "markers": [
           "unit"
         ],
@@ -40865,7 +40934,7 @@
       },
       {
         "name": "test_update_account_accepts_object_balances_and_coerces_invalid",
-        "line": 183,
+        "line": 182,
         "markers": [
           "unit"
         ],
@@ -40873,7 +40942,7 @@
       },
       {
         "name": "test_update_ws_health_coerces_invalid_timestamps_and_clamps_future_age",
-        "line": 202,
+        "line": 201,
         "markers": [
           "unit"
         ],
@@ -40881,7 +40950,7 @@
       },
       {
         "name": "test_update_ws_health_records_heartbeat_lag_histogram",
-        "line": 246,
+        "line": 245,
         "markers": [
           "unit"
         ],
@@ -40889,7 +40958,7 @@
       },
       {
         "name": "test_update_risk_normalizes_guard_payloads",
-        "line": 268,
+        "line": 267,
         "markers": [
           "unit"
         ],
@@ -40897,7 +40966,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_healthy_status",
-        "line": 302,
+        "line": 301,
         "markers": [
           "asyncio",
           "unit"
@@ -40907,7 +40976,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_recent_error",
-        "line": 317,
+        "line": 316,
         "markers": [
           "unit"
         ],
@@ -40916,7 +40985,7 @@
       },
       {
         "name": "TestStatusReporterHealth::test_unhealthy_stale_prices",
-        "line": 329,
+        "line": 328,
         "markers": [
           "unit"
         ],
@@ -63171,6 +63240,14 @@
       {
         "name": "test_default_rules_cover_lower_layer_entrypoint_guards",
         "line": 96,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_every_guarded_package_exists_on_disk",
+        "line": 118,
         "markers": [
           "unit"
         ],

@@ -10185,7 +10185,7 @@
       },
       {
         "name": "TestStrategyProfileDiffCommand::test_cli_profile_diff_missing_runtime_profile_returns_error",
-        "line": 106,
+        "line": 105,
         "markers": [
           "unit"
         ],
@@ -10194,7 +10194,7 @@
       },
       {
         "name": "TestStrategyProfileDiffCommand::test_execute_uses_first_existing_default_runtime_profile_path",
-        "line": 136,
+        "line": 134,
         "markers": [
           "unit"
         ],

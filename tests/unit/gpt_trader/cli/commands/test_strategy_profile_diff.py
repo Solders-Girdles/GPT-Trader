@@ -6,7 +6,6 @@ Extracted from the optimize command-execution suite: this exercises
 
 from __future__ import annotations
 
-import importlib
 import json
 from argparse import Namespace
 from pathlib import Path
@@ -14,6 +13,7 @@ from typing import Any
 
 import pytest
 
+import gpt_trader.cli as cli
 from gpt_trader.cli.commands import strategy_profile as strategy_cmd
 from gpt_trader.cli.response import CliErrorCode, CliResponse
 
@@ -76,7 +76,6 @@ class TestStrategyProfileDiffCommand:
         self._write_json(baseline, {"name": "alpha", "risk": {"max": 0.1}})
         self._write_json(runtime, {"name": "alpha", "risk": {"max": 0.2}})
 
-        cli = importlib.import_module("gpt_trader.cli")
         argv = [
             "strategy",
             "profile-diff",
@@ -108,7 +107,6 @@ class TestStrategyProfileDiffCommand:
         self._write_json(baseline, {"name": "alpha"})
         missing_runtime = tmp_path / "missing.json"
 
-        cli = importlib.import_module("gpt_trader.cli")
         argv = [
             "strategy",
             "profile-diff",

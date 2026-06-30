@@ -301,6 +301,7 @@
       "tests/unit/scripts/test_local_ci.py"
     ],
     "gpt_trader.cli": [
+      "tests/unit/gpt_trader/cli/commands/test_strategy_profile_diff.py",
       "tests/unit/gpt_trader/cli/test_services_build_config.py"
     ],
     "gpt_trader.cli.commands": [
@@ -2891,6 +2892,7 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/cli/commands/test_strategy_profile_diff.py": [
+      "gpt_trader.cli",
       "gpt_trader.cli.commands",
       "gpt_trader.cli.response"
     ],

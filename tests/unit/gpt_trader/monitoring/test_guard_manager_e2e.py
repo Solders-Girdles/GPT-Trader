@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from decimal import Decimal
 
 import pytest
@@ -20,6 +21,7 @@ from gpt_trader.monitoring.guards.manager import (
     RuntimeGuardManager,
     create_default_runtime_guard_manager,
 )
+from gpt_trader.utilities.time_provider import FakeClock
 
 
 class TestDefaultGuardManagerCreation:
@@ -110,15 +112,14 @@ class TestGuardStateTransitions:
         assert guard.status == GuardStatus.BREACHED
         assert guard.breach_count == 1
 
-    def test_guard_status_transitions_breached_to_warning(self, frozen_time):
-        from datetime import timedelta
-
-        guard = DailyLossGuard(GuardConfig(name="test", threshold=100.0))
+    def test_guard_status_transitions_breached_to_warning(self):
+        clock = FakeClock()
+        guard = DailyLossGuard(GuardConfig(name="test", threshold=100.0), time_provider=clock)
 
         guard.check({"pnl": -110.0})
         assert guard.status == GuardStatus.BREACHED
 
-        frozen_time.tick(delta=timedelta(days=1))
+        clock.advance(timedelta(days=1).total_seconds())
         result = guard.check({"pnl": -10.0})
         assert result is None
         assert guard.status == GuardStatus.HEALTHY
@@ -126,10 +127,11 @@ class TestGuardStateTransitions:
         guard.check({"pnl": -110.0})
         assert guard.status == GuardStatus.BREACHED
 
-    def test_position_stuck_guard_state_tracking(self, frozen_time):
-        from datetime import timedelta
-
-        guard = PositionStuckGuard(GuardConfig(name="position_stuck", threshold=60.0))
+    def test_position_stuck_guard_state_tracking(self):
+        clock = FakeClock()
+        guard = PositionStuckGuard(
+            GuardConfig(name="position_stuck", threshold=60.0), time_provider=clock
+        )
 
         result = guard.check({"positions": {}})
         assert result is None
@@ -138,7 +140,7 @@ class TestGuardStateTransitions:
         result = guard.check({"positions": positions})
         assert result is None
 
-        frozen_time.tick(delta=timedelta(minutes=2))
+        clock.advance(timedelta(minutes=2).total_seconds())
         result = guard.check({"positions": positions})
 
         assert result is not None

@@ -39,7 +39,7 @@ except ImportError:  # pragma: no cover - fallback stub for tests
             )
 
     websocket = _WebsocketStub()  # type: ignore[assignment]
-    sys.modules.setdefault("websocket", websocket)  # allow unittest.mock.patch
+    sys.modules.setdefault("websocket", websocket)  # type: ignore[arg-type]  # allow patch
     _HAS_WEBSOCKET = False
 
 if TYPE_CHECKING:

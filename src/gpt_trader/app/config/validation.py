@@ -13,6 +13,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError
 
+from gpt_trader.features.live_trade.symbols import US_FUTURES_ALLOWLIST
+
 if TYPE_CHECKING:
     from gpt_trader.app.config.bot_config import BotConfig
 
@@ -142,6 +144,31 @@ def validate_config(config: BotConfig) -> list[str]:
         errors.append("cfm_enabled requires trading_modes to include 'cfm'")
     if cfm_mode_enabled and not config.cfm_enabled:
         errors.append("trading_modes includes 'cfm' but cfm_enabled is false")
+
+    if derivatives_type == "us_futures" and (
+        config.derivatives_enabled or config.cfm_enabled or cfm_mode_enabled
+    ):
+        normalized_symbols = [
+            symbol.strip().upper() for symbol in config.symbols if isinstance(symbol, str)
+        ]
+        intx_symbols = sorted(symbol for symbol in normalized_symbols if "-PERP" in symbol)
+        if intx_symbols:
+            errors.append(
+                "CFM US futures configuration does not support INTX perpetual symbols: "
+                f"{', '.join(intx_symbols)}. Use US futures symbols or spot symbols."
+            )
+
+        unsupported_us_futures = sorted(
+            symbol
+            for symbol in normalized_symbols
+            if symbol.endswith("-FUTURES") and symbol not in US_FUTURES_ALLOWLIST
+        )
+        if unsupported_us_futures:
+            errors.append(
+                "CFM US futures configuration does not support these US futures symbols: "
+                f"{', '.join(unsupported_us_futures)}. Allowed US futures symbols: "
+                f"{', '.join(sorted(US_FUTURES_ALLOWLIST))}."
+            )
 
     return errors
 

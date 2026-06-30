@@ -26,11 +26,9 @@ REAL_API_TEST_PREFIX = "tests/real_api/"
 # file drops to <= THRESHOLD lines it must be removed from this map (CI enforces).
 SIZE_ALLOWLIST_REASONS: dict[str, str] = {
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py": (
-        "Order engine tests cover BUY/SELL/CLOSE signal paths and risk-manager enforcement; split pending."
-    ),
-    "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py": (
-        "Paper-fill reconciliation matching/dedup coverage (legacy, decision/client id, "
-        "submitted-order, mock order-id reuse) is cohesive; split pending."
+        "Cohesive TradingEngine order-pipeline suite (placement, guards, exits, "
+        "telemetry) whose file-local helpers are shared across every group; "
+        "splitting would fragment one narrative behind a shared helper module."
     ),
 }
 SIZE_ALLOWLIST: set[str] = set(SIZE_ALLOWLIST_REASONS)

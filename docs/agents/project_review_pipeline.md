@@ -276,10 +276,12 @@ machine validation; until then, the bullet contract above is the source.
 
 ## Stage 7: Merge And Closeout
 
-After checks and review are clean, merge according to `AGENTS.md`:
+Merge is a separate, later decision — not part of packaging (see Stage 5). When
+the change is explicitly routed/approved for merge and all review threads are
+resolved, merge per `AGENTS.md`:
 
 ```bash
-gh pr merge --auto --squash --delete-branch
+gh pr merge --squash --delete-branch
 ```
 
 After merge, confirm the issue is closed or comment with the merged PR and any
@@ -307,6 +309,8 @@ This supports repeatable review workflow without polluting commits or losing han
 
 ## Cadence
 
-Start with an hourly Codex automation. Tighten the cadence only after the issue
-promotion rate is low, dedupe is reliable, and implementation agents are not
-receiving stale or duplicate work.
+Cadence is owner-managed: the project owner decides how often the scout runs and
+may run it on demand. There is no required automation. If a recurring schedule is
+set up, keep the interval loose and tighten it only after the issue promotion
+rate is low, dedupe is reliable, and implementation agents are not receiving
+stale or duplicate work.

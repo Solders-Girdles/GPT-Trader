@@ -20,26 +20,23 @@ Related issue / finding / routed package:
 - [ ] Ran locally: `pytest -m "unit and not slow"`
 - [ ] Markers used appropriately (`unit`/`integration`/`slow`/`perf`)
 
-## Complexity & Quality Gates
-- [ ] Mypy/type-check passed
-- [ ] Xenon/radon complexity gate passed (CC ≤ 15 on live_trade execution)
-- [ ] No `sys.path` hacks in tests
-- [ ] No `MagicMock` on `async def` (use `AsyncMock`)
-- [ ] Import-lint rules respected (no “import up the stack”)
+## Quality Gates
+- [ ] `make ci-required` passes locally (lint/format, docs audits, type check, agent freshness, TUI CSS, test guardrails, core unit tests)
+- [ ] `uv run mypy src/gpt_trader` clean, or new errors documented in the summary
+- [ ] No `sys.path` hacks in tests; `AsyncMock` (not `MagicMock`) on `async def`
+- [ ] Import boundaries respected (`scripts/ci/check_import_boundaries.py`)
 
 ## Observability & Errors
 - [ ] Structured JSON logs for new/changed paths
 - [ ] Errors include diagnostic context (symbol, order_id, correlation_id)
-- [ ] Added/updated sampling examples in tests (if applicable)
 
-## Configuration
-- [ ] If config changed: `python -m gpt_trader.cli.config validate --profile <name>` passes
-- [ ] Env docs re-generated (if applicable) and committed
-- [ ] No `ConfigLoader` usages introduced (ConfigManager-only)
+## Agent Artifacts & Config (if touched)
+- [ ] If `var/agents/**` inputs changed (`scripts/agents/**`, `config/environments/.env.template`): ran `uv run agent-regenerate` and committed artifacts (`uv run agent-regenerate --verify` clean)
+- [ ] If docs changed: `make agent-docs-links` passes
 
 ## Breaking Changes
 - [ ] None
-- [ ] Documented in PR body and release notes if any
+- [ ] Documented in PR body and the linked issue if any
 
 ## Screenshots / Logs (optional)
 <!-- Paste sample structured logs or screenshots to aid review -->
@@ -47,4 +44,3 @@ Related issue / finding / routed package:
 ## Checklist
 - [ ] Acceptance criteria in linked issue(s), finding packet, or routed package met
 - [ ] Affected paths listed in PR description
-- [ ] Changelog entry (if repo uses one)

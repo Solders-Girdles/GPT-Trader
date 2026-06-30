@@ -95,13 +95,18 @@ For faster loops without readiness reports or regenerating `var/agents`, use the
 
 ## GitHub Workflow
 
-`main` is protected: changes must land via pull request, with required checks passing (0 approvals required). Use auto-merge to keep the loop fast.
+`main` is protected: changes must land via pull request with required checks
+passing. Open the PR; **merge is a separate, later decision** — merge only when
+the change is explicitly routed/approved for merge and all review threads are
+resolved. Green CI is not sufficient (`uv run agent-pr-ready` reconciles real
+mergeability against green checks).
 
 ```bash
 git switch -c <branch>
 git push -u origin HEAD
 gh pr create --fill
-gh pr merge --auto --squash --delete-branch
+# Merge only once explicitly approved/routed and review threads are resolved:
+# gh pr merge --squash --delete-branch
 ```
 
 If you touch `var/agents/**` or any agent-artifact inputs (notably `scripts/agents/**` or `config/environments/.env.template`), run `uv run agent-regenerate` and commit the updated artifacts. Local `make ci-required` and non-PR CI fail when they are stale; GitHub pull request CI reports stale artifacts as non-blocking. To check quickly: `uv run agent-regenerate --verify`.

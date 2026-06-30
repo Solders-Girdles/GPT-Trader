@@ -130,7 +130,7 @@ the bot runtime.
   `python scripts/build_tui_css.py` after editing it. Never edit
   `styles/main.tcss` directly.
 - Any `DEFAULT_CSS` uses hardcoded hex + `/* $variable */` comments per
-  CLAUDE.md.
+  `docs/TUI_STYLE_GUIDE.md`.
 - State colors should reuse the theme palette conventions in
   `docs/TUI_STYLE_GUIDE.md` (e.g., success-green for `approved`,
   warning-yellow for `needs_changes`/stale-soon, error-red for

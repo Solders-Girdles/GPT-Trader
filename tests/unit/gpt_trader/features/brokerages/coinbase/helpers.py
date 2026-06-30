@@ -17,7 +17,6 @@ import pytest
 
 from gpt_trader.core import (
     Balance,
-    InvalidRequestError,
     Order,
     Position,
     Product,
@@ -156,26 +155,6 @@ class CoinbaseBrokerage:
         return self.rest_service.update_cfm_margin_window(
             margin_window, effective_time=effective_time, extra_payload=extra_payload
         )
-
-    # INTX methods
-    def intx_allocate(self, payload):
-        return self.rest_service.intx_allocate(payload)
-
-    def get_intx_balances(self, portfolio_uuid):
-        return self.rest_service.get_intx_balances(portfolio_uuid)
-
-    def get_intx_portfolio(self, portfolio_uuid):
-        return self.rest_service.get_intx_portfolio(portfolio_uuid)
-
-    def list_intx_positions(self, portfolio_uuid):
-        return self.rest_service.list_intx_positions(portfolio_uuid)
-
-    def get_intx_position(self, portfolio_uuid, symbol):
-        pos = self.rest_service.get_intx_position(portfolio_uuid, symbol)
-        return pos if pos is not None else {}
-
-    def get_intx_multi_asset_collateral(self):
-        return self.rest_service.get_intx_multi_asset_collateral()
 
 
 def make_client(
@@ -729,8 +708,6 @@ CLIENT_ENDPOINT_CASES = [
 class StubBroker:
     def __init__(self):
         self.calls = []
-        self.intx_supported = True
-        self.intx_resolved_uuid = "pf-1"
 
     def get_key_permissions(self):
         self.calls.append("key_permissions")
@@ -759,46 +736,6 @@ class StubBroker:
     def connect(self):
         self.calls.append("connect")
         return True
-
-    def supports_intx(self):
-        self.calls.append("supports_intx")
-        return self.intx_supported
-
-    def resolve_intx_portfolio(self, preferred_uuid=None, refresh=False):
-        self.calls.append(("resolve_intx", preferred_uuid, refresh))
-        if not self.intx_supported:
-            return None
-        return self.intx_resolved_uuid if preferred_uuid is None else preferred_uuid
-
-    def get_intx_balances(self, portfolio_uuid=None):
-        self.calls.append(("intx_balances", portfolio_uuid))
-        if not self.intx_supported or portfolio_uuid is None:
-            raise InvalidRequestError("INTX unsupported")
-        return [{"asset": "USD", "available": "100.00"}]
-
-    def get_intx_portfolio(self, portfolio_uuid=None):
-        self.calls.append(("intx_portfolio", portfolio_uuid))
-        if not self.intx_supported or portfolio_uuid is None:
-            return {}
-        return {"uuid": portfolio_uuid, "nav": "500.00"}
-
-    def list_intx_positions(self, portfolio_uuid=None):
-        self.calls.append(("intx_positions", portfolio_uuid))
-        if not self.intx_supported or portfolio_uuid is None:
-            return []
-        return [{"symbol": "BTC-USD", "quantity": "1.0"}]
-
-    def get_intx_position(self, portfolio_uuid, symbol):
-        self.calls.append(("intx_position", portfolio_uuid, symbol))
-        if not self.intx_supported or portfolio_uuid is None:
-            return {}
-        return {"symbol": symbol, "quantity": "0.5"}
-
-    def get_intx_collateral(self):
-        self.calls.append("intx_collateral")
-        if not self.intx_supported:
-            return {}
-        return {"collateral_value": "750.00"}
 
     def get_cfm_balance_summary(self):
         self.calls.append("cfm_balance_summary")
@@ -831,12 +768,6 @@ class StubBroker:
     def move_portfolio_funds(self, payload):
         self.calls.append(("move_funds", payload))
         return {"status": "ok", "transfer_id": "tf-1"}
-
-    def get_intx_multi_asset_collateral(self):
-        self.calls.append("intx_collateral")
-        if not self.intx_supported:
-            return {}
-        return {"collateral_value": "750.00"}
 
 
 class StubEventStore:

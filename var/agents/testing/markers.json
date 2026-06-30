@@ -95,12 +95,12 @@
     ]
   },
   "counts": {
-    "unit": 6900,
+    "unit": 6876,
     "asyncio": 442,
     "parametrize": 203,
-    "endpoints": 83,
     "property": 82,
     "integration": 81,
+    "endpoints": 69,
     "usefixtures": 17,
     "skipif": 9,
     "slow": 4,

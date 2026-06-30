@@ -1,10 +1,9 @@
 """
-Manages Coinbase account state, positions, balances, and CFM/INTX specific features.
+Manages Coinbase account state, positions, balances, and CFM-specific features.
 """
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, cast
 
@@ -50,67 +49,6 @@ class CoinbaseAccountManager:
             snapshot_data[key] = result
             freshness_data[key] = metadata
 
-        intx_available = self.broker.supports_intx()
-        snapshot_data["intx_available"] = intx_available
-        freshness_data["intx_available"] = self._freshness_entry(
-            self._FRESHNESS_FRESH if intx_available else self._FRESHNESS_UNAVAILABLE,
-            error_code=None if intx_available else "INTX_NOT_SUPPORTED",
-        )
-
-        if not intx_available:
-            self._record_intx_fallback(
-                snapshot_data,
-                freshness_data,
-                reason="intx_not_supported",
-                status=self._FRESHNESS_UNAVAILABLE,
-                error_code="INTX_NOT_SUPPORTED",
-            )
-        else:
-            try:
-                intx_portfolio_uuid = self.broker.resolve_intx_portfolio()
-                balances, balances_meta, resolved_uuid = self._fetch_intx_balances_with_retry(
-                    intx_portfolio_uuid
-                )
-                snapshot_data["intx_balances"] = balances
-                freshness_data["intx_balances"] = balances_meta
-
-                target_uuid = resolved_uuid
-                if not target_uuid:
-                    snapshot_data["intx_available"] = False
-                    self._record_intx_fallback(
-                        snapshot_data,
-                        freshness_data,
-                        reason="intx_portfolio_not_found",
-                        status=self._FRESHNESS_UNAVAILABLE,
-                        error_code="INTX_PORTFOLIO_NOT_FOUND",
-                    )
-                else:
-                    snapshot_data["intx_portfolio_uuid"] = target_uuid
-                    positions, positions_meta = self._fetch_intx_section(
-                        "intx_positions",
-                        lambda: self.broker.list_intx_positions(target_uuid),
-                        [],
-                    )
-                    snapshot_data["intx_positions"] = positions
-                    freshness_data["intx_positions"] = positions_meta
-
-                    collateral, collateral_meta = self._fetch_intx_section(
-                        "intx_collateral",
-                        self.broker.get_intx_multi_asset_collateral,
-                        {},
-                    )
-                    snapshot_data["intx_collateral"] = collateral
-                    freshness_data["intx_collateral"] = collateral_meta
-            except Exception as error:  # noqa: BLE001 - snapshot must degrade on broker failures
-                logger.warning("Failed to get INTX data: %s", error, exc_info=error)
-                self._record_intx_fallback(
-                    snapshot_data,
-                    freshness_data,
-                    reason=str(error),
-                    status=self._FRESHNESS_ERROR,
-                    error_code=self._error_code_from_exception(error),
-                )
-
         snapshot_data["freshness"] = freshness_data
 
         emit_metric(
@@ -154,85 +92,6 @@ class CoinbaseAccountManager:
             }
         }
 
-    def _fetch_intx_balances_with_retry(
-        self, portfolio_uuid: str | None
-    ) -> tuple[list[Any], dict[str, Any], str | None]:
-        if not portfolio_uuid:
-            return (
-                [],
-                self._freshness_entry(
-                    self._FRESHNESS_UNAVAILABLE,
-                    error_code="INTX_PORTFOLIO_NOT_FOUND",
-                ),
-                None,
-            )
-        try:
-            balances = self.broker.get_intx_balances(portfolio_uuid)
-            return balances, self._freshness_entry(self._FRESHNESS_FRESH), portfolio_uuid
-        except Exception as error:  # noqa: BLE001 - INTX balance probe is best-effort
-            logger.warning("Failed to collect intx_balances: %s", error, exc_info=error)
-            refreshed_uuid = self.broker.resolve_intx_portfolio(refresh=True)
-            if refreshed_uuid:
-                try:
-                    balances = self.broker.get_intx_balances(refreshed_uuid)
-                    return balances, self._freshness_entry(self._FRESHNESS_FRESH), refreshed_uuid
-                except Exception as retry_error:  # noqa: BLE001
-                    # Retry is best-effort; failure returns deterministic metadata.
-                    logger.warning(
-                        "Retry failed for intx_balances: %s",
-                        retry_error,
-                        exc_info=retry_error,
-                    )
-                    return (
-                        [],
-                        self._freshness_entry(
-                            self._FRESHNESS_ERROR,
-                            error_code=self._error_code_from_exception(retry_error),
-                        ),
-                        refreshed_uuid,
-                    )
-            return (
-                [],
-                self._freshness_entry(
-                    self._FRESHNESS_ERROR,
-                    error_code=self._error_code_from_exception(error),
-                ),
-                None,
-            )
-
-    def _fetch_intx_section(
-        self, key: str, fetcher: Callable[[], Any], default: Any
-    ) -> tuple[Any, dict[str, Any]]:
-        try:
-            value = fetcher()
-            return value, self._freshness_entry(self._FRESHNESS_FRESH)
-        except Exception as error:  # noqa: BLE001 - INTX sections should degrade independently
-            logger.warning("Failed to collect %s: %s", key, error, exc_info=error)
-            return (
-                default,
-                self._freshness_entry(
-                    self._FRESHNESS_ERROR,
-                    error_code=self._error_code_from_exception(error),
-                ),
-            )
-
-    def _record_intx_fallback(
-        self,
-        snapshot_data: dict[str, Any],
-        freshness_data: dict[str, dict[str, Any]],
-        *,
-        reason: str,
-        status: str,
-        error_code: str,
-    ) -> None:
-        snapshot_data["intx_unavailable_reason"] = reason
-        snapshot_data["intx_balances"] = []
-        snapshot_data["intx_positions"] = []
-        snapshot_data["intx_collateral"] = {}
-        freshness_data["intx_available"] = self._freshness_entry(status, error_code=error_code)
-        for section in ("intx_balances", "intx_positions", "intx_collateral"):
-            freshness_data[section] = self._freshness_entry(status, error_code=error_code)
-
     def _freshness_entry(self, status: str, *, error_code: str | None = None) -> dict[str, Any]:
         entry: dict[str, Any] = {
             "status": status,
@@ -271,16 +130,3 @@ class CoinbaseAccountManager:
             logger=logger,
         )
         return cast(dict[str, Any], result)
-
-    def supports_intx(self) -> bool:
-        """Check if INTX is supported by the broker."""
-        return bool(self.broker.supports_intx())
-
-    def get_intx_portfolio_uuid(self, *, refresh: bool = False) -> str | None:
-        """Get the INTX portfolio UUID, with optional refresh."""
-        return cast(str | None, self.broker.resolve_intx_portfolio(refresh=refresh))
-
-    def invalidate_intx_cache(self) -> None:
-        """Invalidate the cached INTX portfolio UUID."""
-        if hasattr(self.broker, "invalidate_intx_cache"):
-            self.broker.invalidate_intx_cache()

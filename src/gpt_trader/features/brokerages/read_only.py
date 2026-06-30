@@ -34,7 +34,6 @@ class ReadOnlyBroker(BrokerProtocol):
         "cancel_order",
         "close_position",
         "edit_order",
-        "intx_allocate",
     }
 
     def __init__(

@@ -52,7 +52,7 @@ class CoinbaseRestService:
     Each method delegates to the appropriate composed service:
     - ProductService: list_products, get_product, get_candles, etc.
     - OrderService: place_order, cancel_order, list_orders, etc.
-    - PortfolioService: list_balances, list_positions, intx_*, cfm_*
+    - PortfolioService: list_balances, list_positions, cfm_*
     - PnLService: process_fill_for_pnl, get_position_pnl, get_portfolio_pnl
     - CoinbaseRestServiceCore: update_position_metrics, payload building
     """
@@ -159,10 +159,6 @@ class CoinbaseRestService:
     def get_candles(self, symbol: str, **kwargs: Any) -> list[Candle]:
         """Get historical OHLCV candles for a symbol."""
         return self._product_service.get_candles(symbol, **kwargs)
-
-    def get_perpetuals(self) -> list[Product]:
-        """List perpetual products."""
-        return self._product_service.get_perpetuals()
 
     def get_futures(self) -> list[Product]:
         """List futures products."""
@@ -275,30 +271,6 @@ class CoinbaseRestService:
     def get_position(self, symbol: str) -> Position | None:
         """Get position for a symbol."""
         return self._portfolio_service.get_position(symbol)
-
-    def intx_allocate(self, amount_dict: dict[str, Any]) -> dict[str, Any]:
-        """Allocate funds to/from INTX portfolio."""
-        return self._portfolio_service.intx_allocate(amount_dict)
-
-    def get_intx_balances(self, portfolio_id: str) -> list[dict[str, Any]]:
-        """Get INTX portfolio balances."""
-        return self._portfolio_service.get_intx_balances(portfolio_id)
-
-    def get_intx_portfolio(self, portfolio_id: str) -> dict[str, Any]:
-        """Get INTX portfolio details."""
-        return self._portfolio_service.get_intx_portfolio(portfolio_id)
-
-    def list_intx_positions(self, portfolio_id: str) -> list[Position]:
-        """List INTX positions."""
-        return self._portfolio_service.list_intx_positions(portfolio_id)
-
-    def get_intx_position(self, portfolio_id: str, symbol: str) -> Position | None:
-        """Get a single INTX position."""
-        return self._portfolio_service.get_intx_position(portfolio_id, symbol)
-
-    def get_intx_multi_asset_collateral(self) -> dict[str, Any]:
-        """Get INTX multi-asset collateral details."""
-        return self._portfolio_service.get_intx_multi_asset_collateral()
 
     def get_cfm_balance_summary(self) -> dict[str, Any]:
         """Get CFM balance summary."""

@@ -93,50 +93,6 @@ class PortfolioClientMixin(CoinbaseClientProtocol):
         path = self._get_endpoint_path("cfm_position", product_id=product_id)
         return self._request("GET", path)
 
-    def intx_allocate(self: CoinbaseClientProtocol, payload: dict[str, Any]) -> dict[str, Any]:
-        path = self._get_endpoint_path("intx_allocate")
-        return self._request("POST", path, payload)
-
-    def intx_balances(self: CoinbaseClientProtocol, portfolio_uuid: str) -> dict[str, Any]:
-        path = self._get_endpoint_path("intx_balances", portfolio_uuid=portfolio_uuid)
-        return self._request("GET", path)
-
-    def intx_portfolio(self: CoinbaseClientProtocol, portfolio_uuid: str) -> dict[str, Any]:
-        path = self._get_endpoint_path("intx_portfolio", portfolio_uuid=portfolio_uuid)
-        return self._request("GET", path)
-
-    # Alias for intx_portfolio
-    def get_intx_portfolio(self, portfolio_uuid: str) -> dict[str, Any]:
-        return self.intx_portfolio(portfolio_uuid)
-
-    def intx_positions(self: CoinbaseClientProtocol, portfolio_uuid: str) -> dict[str, Any]:
-        path = self._get_endpoint_path("intx_positions", portfolio_uuid=portfolio_uuid)
-        return self._request("GET", path)
-
-    # Alias for intx_positions
-    def list_intx_positions(self, portfolio_uuid: str) -> dict[str, Any]:
-        return self.intx_positions(portfolio_uuid)
-
-    def intx_position(
-        self: CoinbaseClientProtocol, portfolio_uuid: str, symbol: str
-    ) -> dict[str, Any]:
-        path = self._get_endpoint_path(
-            "intx_position", portfolio_uuid=portfolio_uuid, symbol=symbol
-        )
-        return self._request("GET", path)
-
-    # Alias for intx_position
-    def get_intx_position(self, portfolio_uuid: str, symbol: str) -> dict[str, Any]:
-        return self.intx_position(portfolio_uuid, symbol)
-
-    def intx_multi_asset_collateral(self: CoinbaseClientProtocol) -> dict[str, Any]:
-        path = self._get_endpoint_path("intx_multi_asset_collateral")
-        return self._request("GET", path)
-
-    # Alias for intx_multi_asset_collateral
-    def get_intx_multi_asset_collateral(self) -> dict[str, Any]:
-        return self.intx_multi_asset_collateral()
-
     # ------------------------------------------------------------------
     # Clearing & Treasury (CFM)
     # ------------------------------------------------------------------

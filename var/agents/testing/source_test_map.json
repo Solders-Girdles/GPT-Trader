@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 744,
+    "tests_scanned": 743,
     "source_modules": 381,
     "unresolved_modules": 3
   },
@@ -444,7 +444,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_find_existing_order_by_client_id.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_listing_and_get_product.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_account_manager_snapshot.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_balances_and_products.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_positions_and_treasury.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py",
@@ -456,7 +455,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_product_catalog.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_retry_behaviour.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_enforce_perps_rules.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_specs_service.py",
@@ -3138,7 +3136,6 @@
       "gpt_trader.features.brokerages.coinbase.errors"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_account_manager_snapshot.py": [
-      "gpt_trader.core",
       "gpt_trader.features.brokerages.coinbase.account_manager"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_balances_and_products.py": [
@@ -3201,9 +3198,6 @@
       "gpt_trader.core",
       "gpt_trader.features.brokerages.coinbase.auth",
       "gpt_trader.features.brokerages.coinbase.client"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py": [
-      "gpt_trader.core"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py": [
       "gpt_trader.features.brokerages.coinbase.client",

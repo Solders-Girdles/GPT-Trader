@@ -35,7 +35,6 @@ ENDPOINT_PRIORITIES: dict[str, RequestPriority] = {
     "positions": RequestPriority.HIGH,
     "cfm/balance": RequestPriority.HIGH,
     "cfm/positions": RequestPriority.HIGH,
-    "intx/positions": RequestPriority.HIGH,
     "fills": RequestPriority.HIGH,
     # Normal - market data
     "ticker": RequestPriority.NORMAL,

@@ -57,8 +57,6 @@
       "event_store",
       "extract_mark",
       "flatten_and_stop",
-      "get_intx_multi_asset_collateral",
-      "get_intx_portfolio",
       "init_tracing",
       "lifecycle_transition",
       "log_collateral_update",
@@ -113,15 +111,12 @@
       "execute_order",
       "fill_persist",
       "get_cfm_balance",
-      "get_intx_balances",
-      "get_intx_position",
       "get_order",
       "get_position",
       "handle_order_failure",
       "list_balances",
       "list_cfm_positions",
       "list_fills",
-      "list_intx_positions",
       "list_orders",
       "list_positions",
       "list_spot_positions_as_core",
@@ -736,70 +731,6 @@
       ],
       "statuses": null
     },
-    "get_intx_balances": {
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "portfolio_id"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR"
-      ],
-      "occurrence_count": 1,
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ],
-      "statuses": null
-    },
-    "get_intx_multi_asset_collateral": {
-      "common_fields": [
-        "error_message",
-        "error_type"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR"
-      ],
-      "occurrence_count": 1,
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ],
-      "statuses": null
-    },
-    "get_intx_portfolio": {
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "portfolio_id"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR"
-      ],
-      "occurrence_count": 1,
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ],
-      "statuses": null
-    },
-    "get_intx_position": {
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "portfolio_id",
-        "symbol"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR"
-      ],
-      "occurrence_count": 1,
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
-      ],
-      "statuses": null
-    },
     "get_order": {
       "common_fields": [
         "error_message",
@@ -1120,22 +1051,6 @@
       "occurrence_count": 1,
       "source_files": [
         "features/brokerages/coinbase/rest/order_service.py"
-      ],
-      "statuses": null
-    },
-    "list_intx_positions": {
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "portfolio_id"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR"
-      ],
-      "occurrence_count": 1,
-      "source_files": [
-        "features/brokerages/coinbase/rest/portfolio_service.py"
       ],
       "statuses": null
     },
@@ -2519,8 +2434,8 @@
     "details": 5,
     "environment": 12,
     "error": 60,
-    "error_message": 93,
-    "error_type": 91,
+    "error_message": 88,
+    "error_type": 86,
     "event_type": 7,
     "flatten_operation_id": 9,
     "granularity": 6,
@@ -2540,15 +2455,15 @@
     "service": 9,
     "side": 27,
     "stage": 151,
-    "symbol": 84
+    "symbol": 83
   },
   "level_distribution": {
     "CRITICAL": 2,
     "DEBUG": 40,
-    "ERROR": 123,
+    "ERROR": 118,
     "INFO": 88,
     "WARNING": 100
   },
-  "total_event_types": 136,
+  "total_event_types": 131,
   "version": "1.0"
 }

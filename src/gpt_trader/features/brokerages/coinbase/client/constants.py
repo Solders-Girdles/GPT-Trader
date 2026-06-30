@@ -99,13 +99,6 @@ ADVANCED_ENDPOINTS: Final[dict[str, str]] = {
     # Payment Methods
     "payment_methods": f"{API_PREFIX}/payment_methods",
     "payment_method": f"{API_PREFIX}/payment_methods/{{payment_method_id}}",
-    # INTX (International Perpetuals)
-    "intx_portfolio": f"{API_PREFIX}/intx/portfolio/{{portfolio_uuid}}",
-    "intx_allocate": f"{API_PREFIX}/intx/allocate",
-    "intx_balances": f"{API_PREFIX}/intx/balances/{{portfolio_uuid}}",
-    "intx_positions": f"{API_PREFIX}/intx/positions/{{portfolio_uuid}}",
-    "intx_position": f"{API_PREFIX}/intx/positions/{{portfolio_uuid}}/{{symbol}}",
-    "intx_multi_asset_collateral": f"{API_PREFIX}/intx/multi_asset_collateral",
     # CFM (Coinbase Financial Markets - US Futures)
     "cfm_balance_summary": f"{API_PREFIX}/cfm/balance_summary",
     "cfm_positions": f"{API_PREFIX}/cfm/positions",

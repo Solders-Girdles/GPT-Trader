@@ -413,16 +413,6 @@ def assert_portfolio_service_contracts(
     assert portfolio_service.get_position(BTC_SYMBOL) is not None
     mock_client.get_cfm_position.side_effect = Exception("Position not found")
     assert portfolio_service.get_position(BTC_SYMBOL) is None
-    mock_endpoints.mode = "advanced"
-    mock_client.intx_allocate.return_value = {"allocation_id": "alloc_123"}
-    assert (
-        portfolio_service.intx_allocate({"amount": "1000", "currency": "USD"})["allocation_id"]
-        == "alloc_123"
-    )
-    portfolio_service._event_store.append_metric.assert_called()
-    mock_client.intx_allocate.side_effect = Exception("Allocation failed")
-    with pytest.raises(Exception, match="Allocation failed"):
-        portfolio_service.intx_allocate({"amount": "1000"})
     mock_client.cfm_balance_summary.return_value = balance_summary("10000.00", "9500.00")
     summary = portfolio_service.get_cfm_balance_summary()
     assert summary["total_balance"] == Decimal("10000.00")

@@ -643,9 +643,10 @@ uv run gpt-trader ideas closeout list \
 
 ## Output standards
 
-Per CLAUDE.md: text mode prints `✓ ideas <action> OK (<details>)` /
-`✗ ideas <action> FAILED: <error>`; exit 0 on success, 1 on failure; JSON
-mode returns the `CliResponse` envelope with `command="ideas <subcommand>"`.
+Output standard (this spec is canonical for the `ideas` surface): text mode
+prints `✓ ideas <action> OK (<details>)` / `✗ ideas <action> FAILED: <error>`;
+exit 0 on success, 1 on failure; JSON mode returns the `CliResponse` envelope
+with `command="ideas <subcommand>"`.
 
 ## Serialization notes
 
@@ -699,7 +700,7 @@ Required cases:
     `MISSING_ARGUMENT`.
 15. `audit verify` OK path; tampered line in `audit.jsonl` → failure.
 16. JSON mode for at least propose/approve/list/report/replay baseline asserting the
-    `CliResponse` envelope per CLAUDE.md patterns
+    `CliResponse` envelope
     (`result.errors[0].code == CliErrorCode.POLICY_VIOLATION.value`).
 17. `propose-baseline` success from a local snapshot fixture, no-signal
     no-op behavior, duplicate decision handling, malformed snapshot input, and

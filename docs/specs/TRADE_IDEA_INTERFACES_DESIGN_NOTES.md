@@ -74,7 +74,7 @@ cancel, or reconcile orders, and it does not call broker/account APIs.
 5. **JSON-first for agents.** All CLI commands support
    `--format json` via the existing `CliResponse` envelope so Codex/Claude
    and CI can drive the workflow programmatically. Text output follows the
-   `✓`/`✗` standards in CLAUDE.md.
+   `✓`/`✗` standards in [`TRADE_IDEA_CLI_SPEC.md`](TRADE_IDEA_CLI_SPEC.md).
 6. **Append-only mindset.** Interfaces never edit records in place. A change
    request produces a `needs_changes` event; the revised record is a new
    version saved via `resubmit`.
@@ -173,10 +173,10 @@ must not treat the TUI review screen as an open backlog item.
 
 - Naming: banned abbreviations `cfg`, `svc`, `mgr`, `util`, `utils`, `amt`,
   `calc`, `upd` (see `docs/naming.md`). Run `uv run agent-naming`.
-- Tests: prefer `monkeypatch`; assert on `CliResponse` per CLAUDE.md
+- Tests: prefer `monkeypatch`; assert on `CliResponse`
   (`result.errors[0].code == CliErrorCode.X.value`). Unit tests live under
   `tests/unit/gpt_trader/...` mirroring source paths.
-- Quality gate before PR: `uv run agent-check` (or `/quality`), plus
+- Quality gate before PR: `uv run agent-check`, plus
   `uv run ruff check . --fix`, `uv run black .`, `uv run mypy src/gpt_trader`.
 - TUI CSS: edit modules under `src/gpt_trader/tui/styles/`, then run
   `python scripts/build_tui_css.py`; never edit `styles/main.tcss` directly.

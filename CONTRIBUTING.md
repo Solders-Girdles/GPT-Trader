@@ -201,9 +201,14 @@ The repository follows a standardized organization optimized for both human deve
 ### File Placement Guidelines
 
 #### New Documentation
-- **Default**: `/docs/` (keep docs flat unless a subdirectory is clearly justified)
-- **AI Agent Context**: `/docs/agents/`
-- **Never**: New archive directories; rely on git history
+[Information Architecture](docs/INFORMATION_ARCHITECTURE.md) governs where each
+kind of fact lives — read it before adding a doc. In short:
+- **Durable prose** (decisions, direction, architecture, standards): `/docs/` (keep flat unless a subdirectory is clearly justified)
+- **Current state**: `docs/STATUS.md` (pointer-only) — not README or other prose
+- **The work queue**: GitHub issues
+- **Per-task plans, audits, scratch**: `work/` (gitignored) — never under `/docs/`
+- **Agent rules**: `AGENTS.md` (canonical); `/docs/agents/` holds agent maps/inventories/workflows, not a second copy of the rules
+- **Never**: archive directories or version-suffixed docs — retire by deleting and rely on git history
 
 #### New Scripts
 - **Core Operations**: `/scripts/` (root helpers)
@@ -230,10 +235,10 @@ The repository follows a standardized organization optimized for both human deve
 - Test links before submitting PRs
 
 ### Documentation Quality
-- Keep README.md updated with current state
-- Document breaking changes
+- Current state lives in [`docs/STATUS.md`](docs/STATUS.md) (pointer-only) — update it there, not in README or other prose
+- Document breaking changes in the PR body and the linked issue
 - Include examples for complex features
-- Update `AGENTS.md` (canonical) or `docs/agents/*` when agent-facing context changes
+- State each fact once and link to it (see [Information Architecture](docs/INFORMATION_ARCHITECTURE.md)); avoid duplicate process prose — agent rules belong in `AGENTS.md`
 
 ## Quality Gate Commands
 
@@ -300,9 +305,6 @@ uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py --snapshot-update
 ```bash
 # Check for naming convention violations
 uv run agent-naming
-
-# Run the /naming skill in Claude Code
-/naming
 ```
 
 ## Common CI Failures and Fixes
@@ -319,13 +321,17 @@ uv run agent-naming
 
 ### Full Quality Gate
 
-Run everything before PR:
+Run the full PR-readiness gate before opening a PR:
 
 ```bash
-# Option 1: Use the /quality skill
-/quality
+make ci-required
+```
 
-# Option 2: Manual commands
+For quick iteration the commands below cover the most common failures, but they
+are **not** a full substitute for `make ci-required` (which also runs docs
+audits, `agent-regenerate --verify`, TUI CSS, and test-guardrails):
+
+```bash
 uv run ruff check .
 uv run black --check .
 uv run mypy src/gpt_trader

@@ -81,6 +81,7 @@ from gpt_trader.features.live_trade.engines.runtime.models import (
 from gpt_trader.features.live_trade.engines.runtime_lifecycle_plan import (
     build_runtime_lifecycle_plan,
 )
+from gpt_trader.features.live_trade.engines.symbol_processor import process_symbol
 from gpt_trader.features.live_trade.engines.system_maintenance import (
     SystemMaintenanceService,
 )
@@ -871,79 +872,13 @@ class TradingEngine(BaseEngine):
         positions: dict[str, Position],
         equity: Decimal,
     ) -> None:
-        candles: list[Any] = []
-        start_time = time.time()
-
-        if ticker is None:
-            try:
-                ticker = await self._broker_calls(broker.get_ticker, symbol)
-            except Exception as e:
-                logger.error(f"Failed to fetch ticker for {symbol}: {e}")
-                self._connection_status = "DISCONNECTED"
-                return
-
-        if ticker is None or not ticker.get("price"):
-            logger.error(f"No ticker data for {symbol}")
-            self._connection_status = "DISCONNECTED"
-            return
-
-        try:
-            candles_result = await self._broker_calls(
-                broker.get_candles,
-                symbol,
-                granularity="ONE_MINUTE",
-            )
-            if isinstance(candles_result, Exception):
-                logger.warning(f"Failed to fetch candles for {symbol}: {candles_result}")
-            else:
-                candles = candles_result or []
-        except Exception as e:
-            logger.warning(f"Failed to fetch candles for {symbol}: {e}")
-
-        self._last_latency = time.time() - start_time
-        self._connection_status = "CONNECTED"
-
-        price = Decimal(str(ticker.get("price", 0)))
-        logger.info(f"{symbol} price: {price}")
-
-        if self.context.risk_manager is not None:
-            self.context.risk_manager.last_mark_update[symbol] = time.time()
-
-        self._status_reporter.update_price(symbol, price)
-        await self._price_tick_store.record_price_tick_async(symbol, price)
-
-        position_state = self._build_position_state(symbol, positions)
-        with profile_span("strategy_decision", {"symbol": symbol}) as _strat_span:
-            decision = self.strategy.decide(
-                symbol=symbol,
-                current_mark=price,
-                position_state=position_state,
-                recent_marks=self.price_history[symbol],
-                equity=equity,
-                product=None,
-                candles=candles,
-            )
-
-        logger.info(f"Strategy Decision for {symbol}: {decision.action} ({decision.reason})")
-
-        active_strats = getattr(
-            self.strategy, "active_strategies", [self.strategy.__class__.__name__]
-        )
-        decision_record = {
-            "symbol": symbol,
-            "action": decision.action.value,
-            "reason": decision.reason,
-            "confidence": str(decision.confidence),
-            "timestamp": time.time(),
-        }
-        self._status_reporter.update_strategy(active_strats, [decision_record])
-
-        await self._handle_decision(
+        await process_symbol(
+            self,
             symbol=symbol,
-            decision=decision,
-            price=price,
+            broker=broker,
+            ticker=ticker,
+            positions=positions,
             equity=equity,
-            position_state=position_state,
         )
 
     async def _handle_decision(

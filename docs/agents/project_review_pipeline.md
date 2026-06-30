@@ -37,6 +37,24 @@ only vague claims such as "clean up architecture" or "improve tests", cover too
 many unrelated paths, require live broker/API access, or cannot be completed and
 verified in one bounded PR.
 
+## Canonical Artifacts In This Pipeline
+
+The pipeline moves a finding through several homes. Each stage has one canonical
+source; later stages may render or link the earlier packet, but they do not keep
+it as a second queue.
+
+| Stage | Canonical source | Allowed derived/display form | Validation / owner |
+|-------|------------------|------------------------------|--------------------|
+| Scout candidate | Local JSON packet with `schema_version: "gpt-trader.agent-finding.v1"` | Promoter dry-run body for human review | `uv run python scripts/maintenance/project_review_issue_promoter.py --packet <packet>` |
+| Promoted finding | GitHub issue with the hidden `finding_id` marker and routing labels | Packet details rendered into the issue body or refresh comments | `project_review_issue_promoter.py` plus GitHub issue state |
+| Implementation | GitHub issue or direct owner-routed package, then a PR | PR body links issue/finding/package source | PR checks and review state |
+| Review feedback | GitHub review thread, check output, or a bounded feedback packet copied into issue/PR comments | Short fix packet for the active executor | PR review/check evidence; `codex-review-feedback` label when it becomes queue work |
+| Review deliverable | Intended `review_artifacts/*.csv` or `review_artifacts/*.xlsx` file | PR body summary of provenance and purpose | `.gitignore` policy plus `git status` review |
+
+The packet is canonical only before promotion. After promotion, the GitHub issue
+is the durable queue item; local packet files are inputs or receipts, not the
+ongoing source of truth.
+
 ## Stage 1: Scout
 
 The scout is read-only and can run frequently. It should inspect current truth
@@ -85,6 +103,19 @@ unsafe.
 ## Stage 2: Normalize
 
 Candidate findings use schema `gpt-trader.agent-finding.v1`.
+
+The current contract authority is the in-repo promoter:
+
+- `SCHEMA_VERSION`, `validate_packet()`, and `example_packet()` in
+  `scripts/maintenance/project_review_issue_promoter.py`
+- `uv run python scripts/maintenance/project_review_issue_promoter.py --print-template`
+  for a starter packet
+- `uv run python scripts/maintenance/project_review_issue_promoter.py --packet <packet>`
+  for validation and dry-run rendering
+
+Do not introduce a second packet shape. Extract a standalone JSON Schema only
+when a second machine consumer needs it, and keep that schema generated from or
+tested against the promoter validator so the two contracts cannot drift.
 
 Required fields:
 
@@ -238,6 +269,11 @@ If the feedback contradicts the issue acceptance criteria or crosses an
 undecided policy boundary, label the issue or PR `decision-needed` and route a
 decision packet before implementation continues.
 
+Review-feedback packets are routing packets, not a new durable planning system.
+Keep them attached to the PR, the linked issue, or the active executor handoff.
+Use a structured JSON contract only if repeated review-feedback routing needs
+machine validation; until then, the bullet contract above is the source.
+
 ## Stage 7: Merge And Closeout
 
 After checks and review are clean, merge according to `AGENTS.md`:
@@ -253,12 +289,19 @@ follow-up. New work gets a new finding packet.
 
 Review and analysis artifacts (spreadsheets, CSVs, reports) produced by agent review lanes:
 
-- Committed only under `review_artifacts/`
-- Use narrow exceptions in `.gitignore` (for example, `!review_artifacts/*.csv`) so global `*.csv` and `data/` ignores do not swallow handoff deliverables.
-- Non-durable temps go in `review_artifacts/tmp/` (still ignored).
-- Document format/location in this file and AGENTS.md.
-- XLSX and targeted CSVs are allowed; avoid committing large datasets or secrets.
-- Verification: after creating artifact, `git status` should show only the intended review files; broad generated CSVs outside remain ignored.
+- Commit only intended root-level `review_artifacts/*.csv` and
+  `review_artifacts/*.xlsx` files under the existing `.gitignore` exceptions.
+- Put non-durable temps in `review_artifacts/tmp/` (still ignored).
+- Treat committed CSV/XLSX files as review deliverables, not canonical planning
+  state. The queue remains GitHub issues; project status remains `docs/STATUS.md`.
+- Name durable files with a stable subject and date or run id, and include enough
+  context in the PR body to explain provenance, source command, and intended
+  reviewer.
+- Avoid committing large datasets, secrets, runtime databases, or broad generated
+  CSVs. If a review needs those locally, keep them ignored.
+- Verification: after creating an artifact, `git status --short review_artifacts
+  .gitignore` should show only the intended review files; broad generated CSVs
+  outside remain ignored.
 
 This supports repeatable review workflow without polluting commits or losing handoff data.
 

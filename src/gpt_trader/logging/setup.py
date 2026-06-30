@@ -39,7 +39,10 @@ def configure_logging(config: Any = None, tui_mode: bool = False) -> None:
     Args:
         config: Optional configuration object (unused, kept for backward compatibility)
         tui_mode: If True, suppress console StreamHandler to avoid corrupting TUI display.
-                  Logs will still be written to files and can be displayed via TuiLogHandler.
+                  Logs will still be written to files. Callers launching the TUI are
+                  responsible for attaching the TUI log handler themselves via
+                  ``gpt_trader.tui.log_manager.attach_tui_log_handler`` so this
+                  infrastructure layer stays decoupled from the TUI entrypoint.
     """
 
     ensure_directories((LOG_DIR,))
@@ -154,13 +157,3 @@ def configure_logging(config: Any = None, tui_mode: bool = False) -> None:
     if _env_flag("COINBASE_TRADER_DEBUG", "0") or _env_flag("PERPS_DEBUG", "0"):
         logging.getLogger("gpt_trader.features.brokerages.coinbase").setLevel(logging.DEBUG)
         logging.getLogger("gpt_trader.features.live_trade").setLevel(logging.DEBUG)
-
-    # Attach TUI handler early when in TUI mode to capture startup logs
-    if tui_mode:
-        try:
-            from gpt_trader.tui.log_manager import attach_tui_log_handler
-
-            attach_tui_log_handler()
-        except ImportError:
-            # TUI dependencies not installed, skip handler attachment
-            pass

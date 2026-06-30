@@ -45,6 +45,12 @@ from datetime import datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 
+from gpt_trader.backtesting.simulation.accounting import (
+    calculate_margin_used,
+    credit_pnl,
+    lock_margin,
+    release_margin,
+)
 from gpt_trader.backtesting.simulation.fee_calculator import FeeCalculator
 from gpt_trader.backtesting.simulation.fill_model import FillResult, OrderFillModel
 from gpt_trader.backtesting.simulation.funding_tracker import FundingPnLTracker
@@ -237,12 +243,7 @@ class SimulatedBroker:
 
     def _calculate_margin_used(self) -> Decimal:
         """Calculate total margin used by open positions."""
-        total_margin = Decimal("0")
-        for pos in self.positions.values():
-            notional = abs(pos.quantity) * pos.mark_price
-            leverage = pos.leverage or 1
-            total_margin += notional / Decimal(leverage)
-        return total_margin
+        return calculate_margin_used(self.positions)
 
     # =========================================================================
     # Position Methods
@@ -792,48 +793,18 @@ class SimulatedBroker:
 
     def _lock_margin(self, notional: Decimal, leverage: int | None) -> None:
         """Lock margin for a position."""
-        lev = leverage or 1
-        margin = notional / Decimal(lev)
-
         if "USDC" in self.balances:
-            balance = self.balances["USDC"]
-            new_available = balance.available - margin
-            new_hold = balance.hold + margin
-            self.balances["USDC"] = Balance(
-                asset="USDC",
-                total=balance.total,
-                available=new_available,
-                hold=new_hold,
-            )
+            self.balances["USDC"] = lock_margin(self.balances["USDC"], notional, leverage)
 
     def _release_margin(self, notional: Decimal, leverage: int | None) -> None:
         """Release margin from a closed position."""
-        lev = leverage or 1
-        margin = notional / Decimal(lev)
-
         if "USDC" in self.balances:
-            balance = self.balances["USDC"]
-            new_available = balance.available + margin
-            new_hold = max(Decimal("0"), balance.hold - margin)
-            self.balances["USDC"] = Balance(
-                asset="USDC",
-                total=balance.total,
-                available=new_available,
-                hold=new_hold,
-            )
+            self.balances["USDC"] = release_margin(self.balances["USDC"], notional, leverage)
 
     def _credit_pnl(self, pnl: Decimal) -> None:
         """Credit realized PnL to balance."""
         if "USDC" in self.balances:
-            balance = self.balances["USDC"]
-            new_total = balance.total + pnl
-            new_available = balance.available + pnl
-            self.balances["USDC"] = Balance(
-                asset="USDC",
-                total=new_total,
-                available=new_available,
-                hold=balance.hold,
-            )
+            self.balances["USDC"] = credit_pnl(self.balances["USDC"], pnl)
 
     # =========================================================================
     # Extended Protocol Methods

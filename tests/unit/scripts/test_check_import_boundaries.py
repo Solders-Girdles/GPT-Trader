@@ -96,7 +96,27 @@ def test_container_import_violation(tmp_path, monkeypatch, capsys) -> None:
 def test_default_rules_cover_lower_layer_entrypoint_guards() -> None:
     rule_names = {rule.name for rule in check_import_boundaries.RULES}
 
-    assert "features_no_entrypoint_imports" in rule_names
-    assert "monitoring_no_entrypoint_imports" in rule_names
-    assert "persistence_no_entrypoint_imports" in rule_names
-    assert "security_no_entrypoint_imports" in rule_names
+    # Feature slices plus every shared infrastructure package must be guarded so
+    # the dependency direction (lower layers never import entrypoints) cannot
+    # silently regress.
+    expected = {
+        "features_no_entrypoint_imports",
+        "monitoring_no_entrypoint_imports",
+        "persistence_no_entrypoint_imports",
+        "security_no_entrypoint_imports",
+        "core_no_entrypoint_imports",
+        "logging_no_entrypoint_imports",
+        "utilities_no_entrypoint_imports",
+        "validation_no_entrypoint_imports",
+        "errors_no_entrypoint_imports",
+        "backtesting_no_entrypoint_imports",
+        "config_no_entrypoint_imports",
+    }
+    assert expected <= rule_names
+
+
+def test_every_guarded_package_exists_on_disk() -> None:
+    # A typo'd package name would create a rule whose source_root never exists,
+    # silently guarding nothing. Each guarded package must be a real directory.
+    for rule in check_import_boundaries.RULES:
+        assert rule.source_root.is_dir(), f"missing guarded package: {rule.source_root}"

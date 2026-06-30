@@ -10,11 +10,10 @@ from __future__ import annotations
 import os
 import time
 import uuid
-from dataclasses import dataclass
+from collections.abc import Callable
 from datetime import datetime, timezone
 from decimal import Decimal
-from enum import Enum
-from typing import Any, Callable, cast
+from typing import Any, cast
 
 from gpt_trader.app.protocols import EventStoreProtocol
 from gpt_trader.core import OrderSide, OrderType
@@ -28,6 +27,10 @@ from gpt_trader.features.live_trade.execution.rejection_reason import (
 from gpt_trader.features.live_trade.execution.status_codec import (
     ExecutionStatusCodecError,
     execution_status_for_store,
+)
+from gpt_trader.features.live_trade.execution.submission_outcome import (
+    OrderSubmissionOutcome,
+    OrderSubmissionOutcomeStatus,
 )
 from gpt_trader.logging.correlation import order_context
 from gpt_trader.monitoring.metrics_collector import (
@@ -57,44 +60,6 @@ SUBMISSION_RETRY_POLICY = RetryPolicy(
 )
 TRANSIENT_SUBMISSION_REASONS = {"timeout", "network", "rate_limit"}
 MISSING_DECISION_ID_METRIC = "gpt_trader_order_missing_decision_id_total"
-
-
-class OrderSubmissionOutcomeStatus(str, Enum):
-    """Outcome status for broker submission attempts."""
-
-    SUCCESS = "success"
-    REJECTED = "rejected"
-    FAILED = "failed"
-
-
-@dataclass(frozen=True)
-class OrderSubmissionOutcome:
-    """Structured result for broker submission attempts."""
-
-    status: OrderSubmissionOutcomeStatus
-    order_id: str | None = None
-    order: Any | None = None
-    reason: str | None = None
-    reason_detail: str | None = None
-    error: str | None = None
-
-    @property
-    def success(self) -> bool:
-        return self.status is OrderSubmissionOutcomeStatus.SUCCESS
-
-    @property
-    def rejected(self) -> bool:
-        return self.status is OrderSubmissionOutcomeStatus.REJECTED
-
-    @property
-    def failed(self) -> bool:
-        return self.status is OrderSubmissionOutcomeStatus.FAILED
-
-    @property
-    def error_message(self) -> str | None:
-        if self.reason and self.reason_detail:
-            return f"{self.reason}:{self.reason_detail}"
-        return self.reason or self.error
 
 
 def _classify_rejection_reason(status_or_error: str) -> str:

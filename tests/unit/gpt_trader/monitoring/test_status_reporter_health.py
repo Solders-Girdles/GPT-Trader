@@ -10,6 +10,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+import gpt_trader.monitoring.status_models as status_models
 from gpt_trader.monitoring.metrics_collector import reset_all
 from gpt_trader.monitoring.status_reporter import HEARTBEAT_LAG_METRIC, StatusReporter
 
@@ -50,13 +51,11 @@ def test_update_positions_coerces_invalid_and_skips_non_dict() -> None:
 
 
 def test_update_orders_invalid_fields_use_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
-    import gpt_trader.monitoring.status_reporter as status_reporter
-
     class _TestClock:
         def time(self) -> float:
             return 123.45
 
-    monkeypatch.setattr(status_reporter, "get_clock", lambda: _TestClock())
+    monkeypatch.setattr(status_models, "get_clock", lambda: _TestClock())
     reporter = StatusReporter()
 
     reporter.update_orders(
@@ -210,7 +209,7 @@ def test_update_ws_health_coerces_invalid_timestamps_and_clamps_future_age(
             return 1000.0
 
     reset_all()
-    monkeypatch.setattr(status_reporter, "get_clock", lambda: _Clock())
+    monkeypatch.setattr(status_models, "get_clock", lambda: _Clock())
     mock_record_histogram = MagicMock()
     monkeypatch.setattr(status_reporter, "record_histogram", mock_record_histogram)
     reporter = StatusReporter()
@@ -250,7 +249,7 @@ def test_update_ws_health_records_heartbeat_lag_histogram(monkeypatch: pytest.Mo
         def time(self) -> float:
             return 2000.0
 
-    monkeypatch.setattr(status_reporter, "get_clock", lambda: _Clock())
+    monkeypatch.setattr(status_models, "get_clock", lambda: _Clock())
     mock_record_histogram = MagicMock()
     monkeypatch.setattr(status_reporter, "record_histogram", mock_record_histogram)
 

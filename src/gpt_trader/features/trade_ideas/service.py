@@ -12,12 +12,10 @@ import getpass
 import os
 import shutil
 from collections.abc import Callable
-from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
-from enum import Enum
 from pathlib import Path
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import (
@@ -49,10 +47,20 @@ from gpt_trader.features.trade_ideas.models import (
     ConfidenceLabel,
     TicketStatus,
     TicketVenue,
-    TradeDirection,
     TradeIdea,
 )
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
+from gpt_trader.features.trade_ideas.service_models import (
+    DuplicateTradeIdeaError,
+    PreApprovalBrokerTicketError,
+    TradeIdeaListQuery,
+    TradeIdeaListResult,
+    TradeIdeaListSortKey,
+    TradeIdeaQueryPage,
+    TradeIdeaView,
+    UnknownTradeIdeaError,
+    _QueryItem,
+)
 from gpt_trader.features.trade_ideas.store import TradeIdeaStore
 from gpt_trader.features.trade_ideas.workflow import (
     TERMINAL_STATES,
@@ -72,7 +80,6 @@ EXPIRABLE_STATES = frozenset(
     }
 )
 _AUDIT_VENUES = frozenset({TicketVenue.COINBASE, TicketVenue.MANUAL})
-_QueryItem = TypeVar("_QueryItem")
 _CONFIDENCE_RANK = {
     ConfidenceLabel.LOW: 0,
     ConfidenceLabel.MEDIUM: 1,
@@ -83,83 +90,6 @@ _STATE_SORT_RANK = {
     TradeIdeaState.NEEDS_CHANGES: 1,
     TradeIdeaState.APPROVED: 2,
 }
-
-
-class UnknownTradeIdeaError(ValidationError):
-    """Raised when a decision_id has no stored record."""
-
-
-class DuplicateTradeIdeaError(ValidationError):
-    """Raised when a new proposal reuses an existing decision_id."""
-
-
-class PreApprovalBrokerTicketError(ValidationError):
-    """Raised when a proposed record carries broker-specific ticket state."""
-
-
-@dataclass(frozen=True, slots=True)
-class TradeIdeaView:
-    """A record plus its derived workflow state and full history."""
-
-    idea: TradeIdea
-    state: TradeIdeaState
-    events: tuple[AuditEvent, ...]
-    closeout_attribution: CloseoutAttribution | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class TradeIdeaQueryPage(Generic[_QueryItem]):
-    """Stable read-only query page for audit and closeout reporting."""
-
-    items: tuple[_QueryItem, ...]
-    total_count: int
-    limit: int | None
-    offset: int
-
-
-class TradeIdeaListSortKey(str, Enum):
-    DECISION_ID = "decision_id"
-    STATE = "state"
-    INSTRUMENT = "instrument"
-    DIRECTION = "direction"
-    CONFIDENCE = "confidence"
-    MAX_LOSS_PCT = "max_loss_pct"
-    EXPIRES_AT = "expires_at"
-    CREATED_AT = "created_at"
-    UPDATED_AT = "updated_at"
-
-
-@dataclass(frozen=True, slots=True)
-class TradeIdeaListQuery:
-    """Shared read query for trade-idea review adapters."""
-
-    state: TradeIdeaState | None = None
-    instrument: str | None = None
-    decision_id: str | None = None
-    direction: TradeDirection | None = None
-    min_confidence: ConfidenceLabel | None = None
-    max_confidence: ConfidenceLabel | None = None
-    updated_since: datetime | None = None
-    updated_until: datetime | None = None
-    sort_by: TradeIdeaListSortKey | None = None
-    descending: bool = False
-    limit: int | None = None
-    offset: int = 0
-
-
-@dataclass(frozen=True, slots=True)
-class TradeIdeaListResult:
-    """Filtered trade-idea views plus pagination metadata."""
-
-    views: tuple[TradeIdeaView, ...]
-    total_count: int
-    offset: int
-    limit: int | None
-    has_more: bool
-
-    @property
-    def returned_count(self) -> int:
-        return len(self.views)
 
 
 def _utc_now() -> datetime:

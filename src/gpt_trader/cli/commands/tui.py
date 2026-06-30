@@ -52,8 +52,11 @@ def execute(args: Namespace) -> int:
 
     # Reconfigure logging in TUI mode (no console output to avoid corrupting display)
     from gpt_trader.logging.setup import configure_logging
+    from gpt_trader.tui.log_manager import attach_tui_log_handler
 
     configure_logging(tui_mode=True)
+    # Attach the TUI log handler early so startup logs are captured in the UI.
+    attach_tui_log_handler()
 
     # Get mode from args or None to show selection screen
     initial_mode = getattr(args, "mode", None)

@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from collections.abc import Mapping
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
@@ -26,6 +25,13 @@ from gpt_trader.features.live_trade.lifecycle import (
     EngineState,
     LifecycleStateMachine,
     TradingBotState,
+)
+from gpt_trader.features.live_trade.order_value_extraction import (
+    decimal_or_none,
+    decimal_or_zero,
+    extract_order_decimal,
+    extract_order_identifier,
+    stringify_order_value,
 )
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.persistence.orders_store import OrderRecord, OrderStatus
@@ -365,7 +371,7 @@ class TradingBot:
                                 flatten_operation_id=flatten_operation_id,
                                 symbol=pos.symbol,
                                 quantity=str(quantity),
-                                broker_status=self._extract_order_identifier(
+                                broker_status=extract_order_identifier(
                                     order,
                                     ("status",),
                                 ),
@@ -564,25 +570,25 @@ class TradingBot:
         order: Any | None = None,
         error: str | None = None,
     ) -> None:
-        order_id = self._extract_order_identifier(order, ("id", "order_id"))
-        client_order_id = self._extract_order_identifier(
+        order_id = extract_order_identifier(order, ("id", "order_id"))
+        client_order_id = extract_order_identifier(
             order,
             ("client_order_id", "client_id", "client_oid"),
         )
-        broker_status = self._extract_order_identifier(order, ("status",)) or status
-        filled_quantity = self._extract_order_decimal(
+        broker_status = extract_order_identifier(order, ("status",)) or status
+        filled_quantity = extract_order_decimal(
             order,
             ("filled_quantity", "filled_size", "fill_size", "filled_qty"),
         )
-        average_fill_price = self._extract_order_decimal(
+        average_fill_price = extract_order_decimal(
             order,
             ("average_filled_price", "average_fill_price", "avg_fill_price", "fill_price"),
         )
         payload: dict[str, Any] = {
             "flatten_operation_id": flatten_operation_id,
             "symbol": str(symbol),
-            "side": self._stringify_order_value(side),
-            "order_type": self._stringify_order_value(order_type),
+            "side": stringify_order_value(side),
+            "order_type": stringify_order_value(order_type),
             "quantity": str(quantity),
             "reduce_only": True,
             "status": status,
@@ -627,7 +633,7 @@ class TradingBot:
         upsert = getattr(self._orders_store, "upsert_by_client_id", None)
         if not callable(upsert):
             return
-        filled_quantity = self._decimal_or_none(payload.get("filled_quantity"))
+        filled_quantity = decimal_or_none(payload.get("filled_quantity"))
         status = self._emergency_close_store_status(
             payload.get("broker_status"),
             filled_quantity_known=filled_quantity is not None and filled_quantity > 0,
@@ -646,11 +652,11 @@ class TradingBot:
             symbol=str(payload["symbol"]),
             side=str(payload["side"]).lower(),
             order_type=str(payload["order_type"]).lower(),
-            quantity=self._decimal_or_zero(payload.get("quantity")),
+            quantity=decimal_or_zero(payload.get("quantity")),
             price=None,
             status=status,
             filled_quantity=filled_quantity or Decimal("0"),
-            average_fill_price=self._decimal_or_none(payload.get("average_fill_price")),
+            average_fill_price=decimal_or_none(payload.get("average_fill_price")),
             created_at=now,
             updated_at=now,
             bot_id=self._emergency_close_bot_id(),
@@ -691,7 +697,7 @@ class TradingBot:
         return store_status
 
     def _emergency_close_rejection_error(self, order: Any | None) -> str | None:
-        broker_status = self._extract_order_identifier(order, ("status",))
+        broker_status = extract_order_identifier(order, ("status",))
         if broker_status is None:
             return None
         try:
@@ -709,56 +715,6 @@ class TradingBot:
         }:
             return f"Broker returned non-accepted emergency close status: {store_status.value}"
         return None
-
-    @staticmethod
-    def _extract_order_identifier(order: Any | None, field_names: tuple[str, ...]) -> str | None:
-        if order is None:
-            return None
-        if isinstance(order, Mapping):
-            for field_name in field_names:
-                value = order.get(field_name)
-                if value is not None:
-                    return str(getattr(value, "value", value))
-            return None
-        for field_name in field_names:
-            value = getattr(order, field_name, None)
-            if value is not None:
-                return str(getattr(value, "value", value))
-        return None
-
-    @staticmethod
-    def _extract_order_decimal(
-        order: Any | None,
-        field_names: tuple[str, ...],
-    ) -> Decimal | None:
-        if order is None:
-            return None
-        if isinstance(order, Mapping):
-            values = (order.get(field_name) for field_name in field_names)
-        else:
-            values = (getattr(order, field_name, None) for field_name in field_names)
-        for value in values:
-            decimal_value = TradingBot._decimal_or_none(value)
-            if decimal_value is not None:
-                return decimal_value
-        return None
-
-    @staticmethod
-    def _stringify_order_value(value: Any) -> str:
-        return str(getattr(value, "value", value))
-
-    @staticmethod
-    def _decimal_or_none(value: Any) -> Decimal | None:
-        if value is None or value == "":
-            return None
-        try:
-            return Decimal(str(getattr(value, "value", value)))
-        except Exception:
-            return None
-
-    @staticmethod
-    def _decimal_or_zero(value: Any) -> Decimal:
-        return TradingBot._decimal_or_none(value) or Decimal("0")
 
     async def _notify_flatten_failure(self, details: dict[str, Any]) -> None:
         if self._notification_service is None:

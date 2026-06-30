@@ -9,9 +9,10 @@ Usage:
     python scripts/ci/check_import_boundaries.py [paths...]
 
 To extend the rule set:
-- Add an ImportRule entry to RULES with a descriptive name and source_root.
-- Add forbidden_prefixes for the module prefixes to block.
-- Optional: use allowlist_files or allowlist_import_prefixes for temporary exceptions.
+- For the common case (a package that must not import entrypoint layers), add a
+  (package, label) entry to _ENTRYPOINT_GUARDED_PACKAGES.
+- For a custom rule, append an ImportRule to RULES with its own forbidden_prefixes
+  and, optionally, allowlist_files or allowlist_import_prefixes for exceptions.
 """
 
 from __future__ import annotations
@@ -50,37 +51,37 @@ class ImportViolation:
     rule: ImportRule
 
 
-RULES: tuple[ImportRule, ...] = (
-    ImportRule(
-        name="features_no_entrypoint_imports",
-        description=("Feature slices must not import entrypoint layers or the DI container."),
-        source_root=REPO_ROOT / "src" / "gpt_trader" / "features",
+def _entrypoint_guard_rule(package: str, label: str) -> ImportRule:
+    """Build a rule forbidding a lower-layer package from importing entrypoints."""
+    return ImportRule(
+        name=f"{package}_no_entrypoint_imports",
+        description=f"{label} must not import entrypoint layers or the DI container.",
+        source_root=REPO_ROOT / "src" / "gpt_trader" / package,
         forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
-    ),
-    ImportRule(
-        name="monitoring_no_entrypoint_imports",
-        description=(
-            "Monitoring infrastructure must not import entrypoint layers or the DI container."
-        ),
-        source_root=REPO_ROOT / "src" / "gpt_trader" / "monitoring",
-        forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
-    ),
-    ImportRule(
-        name="persistence_no_entrypoint_imports",
-        description=(
-            "Persistence infrastructure must not import entrypoint layers or the DI container."
-        ),
-        source_root=REPO_ROOT / "src" / "gpt_trader" / "persistence",
-        forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
-    ),
-    ImportRule(
-        name="security_no_entrypoint_imports",
-        description=(
-            "Security infrastructure must not import entrypoint layers or the DI container."
-        ),
-        source_root=REPO_ROOT / "src" / "gpt_trader" / "security",
-        forbidden_prefixes=ENTRYPOINT_IMPORT_PREFIXES,
-    ),
+    )
+
+
+# Lower layers (feature slices + shared infrastructure) must never import the
+# entrypoint layers (CLI/TUI/preflight) or the DI container. Listing each guarded
+# package here keeps the architecture's dependency direction enforced in CI.
+# Intentionally excluded: app/ (the composition root, which wires entrypoints),
+# and dev/agent tooling (agents/, ci/) that legitimately drives those layers.
+_ENTRYPOINT_GUARDED_PACKAGES: tuple[tuple[str, str], ...] = (
+    ("features", "Feature slices"),
+    ("monitoring", "Monitoring infrastructure"),
+    ("persistence", "Persistence infrastructure"),
+    ("security", "Security infrastructure"),
+    ("core", "Core domain primitives"),
+    ("logging", "Logging infrastructure"),
+    ("utilities", "Shared utilities"),
+    ("validation", "Validation infrastructure"),
+    ("errors", "Error-handling infrastructure"),
+    ("backtesting", "Backtesting framework"),
+    ("config", "Configuration infrastructure"),
+)
+
+RULES: tuple[ImportRule, ...] = tuple(
+    _entrypoint_guard_rule(package, label) for package, label in _ENTRYPOINT_GUARDED_PACKAGES
 )
 
 

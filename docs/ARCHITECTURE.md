@@ -60,15 +60,23 @@ Additional cross-cutting packages now live at the top level. These intentionally
 
 ```
 src/gpt_trader/
-├── backtesting/          # Canonical backtesting framework
+├── backtesting/         # Canonical backtesting framework
+├── config/              # Path registry, constants, and shared configuration
+├── core/                # Core domain primitives (account, market, trading types)
 ├── errors/              # Centralized error hierarchy providing consistent exception types
-├── monitoring/          # Runtime guards, configuration guardian, system logger
-├── persistence/          # Event/order stores and persistence utilities
+├── logging/             # Structured logging setup, JSON formatter, correlation context
+├── monitoring/          # Runtime guards, configuration guardian, system logger, tracing
+├── persistence/         # Event/order stores and persistence utilities
 ├── preflight/           # Production preflight verification and startup checks
 ├── security/            # Security primitives: input sanitization, secrets management
 ├── tui/                 # Terminal User Interface (Textual-based)
+├── utilities/           # Shared helpers (async, datetime, quantization, logging facade)
 └── validation/          # Declarative validators and decorators
 ```
+
+These lower layers must never import the entrypoint layers (CLI/TUI/preflight)
+or the DI container; the dependency direction is enforced in CI by
+`scripts/ci/check_import_boundaries.py`.
 
 > **Note:** `src/gpt_trader/backtesting/` is the canonical backtesting framework.
 

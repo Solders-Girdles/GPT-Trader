@@ -11,7 +11,6 @@ from typing import Any
 import pytest
 
 from gpt_trader import cli
-from gpt_trader.cli.commands import ideas as ideas_cmd
 from gpt_trader.cli.response import CliErrorCode
 from gpt_trader.features.trade_ideas import MaxLoss, TimeHorizon
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
@@ -103,7 +102,7 @@ def test_propose_from_stdin_returns_json_envelope(
 ) -> None:
     root = tmp_path / "ideas"
     payload = _idea_payload(decision_id="trade-20350612-stdin")
-    monkeypatch.setattr(ideas_cmd.sys, "stdin", io.StringIO(json.dumps(payload)))
+    monkeypatch.setattr("sys.stdin", io.StringIO(json.dumps(payload)))
 
     exit_code, response = _run_json(
         capsys,

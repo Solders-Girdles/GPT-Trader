@@ -321,13 +321,17 @@ uv run agent-naming
 
 ### Full Quality Gate
 
-Run everything before PR:
+Run the full PR-readiness gate before opening a PR:
 
 ```bash
-# Repo-native PR-readiness command set
 make ci-required
+```
 
-# Or run the pieces directly:
+For quick iteration the commands below cover the most common failures, but they
+are **not** a full substitute for `make ci-required` (which also runs docs
+audits, `agent-regenerate --verify`, TUI CSS, and test-guardrails):
+
+```bash
 uv run ruff check .
 uv run black --check .
 uv run mypy src/gpt_trader

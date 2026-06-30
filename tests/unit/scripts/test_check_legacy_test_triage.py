@@ -5,9 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pytest
-import yaml
-
 import scripts.ci.check_legacy_test_triage as check_legacy_test_triage
+import yaml
 
 if TYPE_CHECKING:
     from pathlib import Path

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import pathlib
 from typing import TYPE_CHECKING
 
 import pytest
-
 import scripts.ci.check_test_hygiene as check_test_hygiene
 
 if TYPE_CHECKING:
@@ -187,6 +185,36 @@ class TestSizeViolations:
         _write_test_file(test_file, lines=100)
 
         result = check_test_hygiene.scan([str(test_dir)])
+
+        assert result == 0
+
+
+class TestSizeAllowlistHygiene:
+    """Tests for the self-policing size allowlist."""
+
+    def test_allowlisted_file_under_threshold_flagged_as_stale(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """An allowlisted file that no longer exceeds the cap must be flagged."""
+        monkeypatch.chdir(tmp_path)
+        rel = "tests/unit/gpt_trader/test_shrunk.py"
+        _write_test_file(tmp_path / rel, lines=100)
+        monkeypatch.setattr(check_test_hygiene, "SIZE_ALLOWLIST", {rel})
+
+        result = check_test_hygiene.scan(["tests/unit/gpt_trader"])
+
+        assert result == 1
+
+    def test_allowlisted_file_over_threshold_passes(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """An allowlisted file still over the cap is exempt and not flagged stale."""
+        monkeypatch.chdir(tmp_path)
+        rel = "tests/unit/gpt_trader/test_big.py"
+        _write_test_file(tmp_path / rel, lines=450)
+        monkeypatch.setattr(check_test_hygiene, "SIZE_ALLOWLIST", {rel})
+
+        result = check_test_hygiene.scan(["tests/unit/gpt_trader"])
 
         assert result == 0
 

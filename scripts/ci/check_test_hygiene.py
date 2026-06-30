@@ -22,21 +22,11 @@ UNIT_ALLOWED_PREFIXES = (
 INTEGRATION_TEST_PREFIX = "tests/integration/"
 CONTRACT_TEST_PREFIX = "tests/contract/"
 REAL_API_TEST_PREFIX = "tests/real_api/"
-ALLOWLIST_REASONS: dict[str, str] = {
+# Files exempt from the THRESHOLD line cap. Each entry is self-policing: once a
+# file drops to <= THRESHOLD lines it must be removed from this map (CI enforces).
+SIZE_ALLOWLIST_REASONS: dict[str, str] = {
     "tests/unit/gpt_trader/cli/commands/optimize/test_commands_execution.py": (
         "Optimize CLI execution tests are consolidated; split pending per docs/test_hygiene.md."
-    ),
-    "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_flows.py": (
-        "Order submission flow coverage spans retries, rejection wiring, and telemetry; split pending."
-    ),
-    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py": (
-        "Chaos strategy engine scenarios share fixtures; split pending."
-    ),
-    "tests/unit/gpt_trader/features/live_trade/execution/test_broker_executor.py": (
-        "Broker executor idempotency coverage consolidated; split pending."
-    ),
-    "tests/unit/scripts/test_check_test_hygiene.py": (
-        "Comprehensive CI script coverage requires testing all validation rules (markers, thresholds, patch usage, etc.)."
     ),
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py": (
         "Order engine tests cover BUY/SELL/CLOSE signal paths and risk-manager enforcement; split pending."
@@ -46,7 +36,16 @@ ALLOWLIST_REASONS: dict[str, str] = {
         "submitted-order, mock order-id reuse) is cohesive; split pending."
     ),
 }
-ALLOWLIST: set[str] = set(ALLOWLIST_REASONS)
+SIZE_ALLOWLIST: set[str] = set(SIZE_ALLOWLIST_REASONS)
+
+# Unit-test files that legitimately contain `.mark.integration/contract/real_api`
+# as string literals (e.g. tests that exercise this very hygiene checker) and so
+# must not be reclassified out of `tests/unit/`.
+MARKER_LITERAL_ALLOWLIST: dict[str, str] = {
+    "tests/unit/scripts/test_check_test_hygiene.py": (
+        "Tests this hygiene checker; embeds marker strings as fixtures, not real markers."
+    ),
+}
 PATCH_ALLOWLIST: set[str] = set()
 
 SLEEP_ALLOWLIST: set[str] = set()
@@ -121,6 +120,10 @@ def scan(paths: Sequence[str]) -> int:
     normalized = [path.resolve() for path in test_files]
     python_normalized = sorted({path.resolve() for path in python_files})
 
+    # Track line counts for allowlisted files so the size allowlist stays honest:
+    # an entry that no longer exceeds THRESHOLD (e.g. after a split) must be removed.
+    size_allowlist_line_counts: dict[str, int] = {}
+
     for path in normalized:
         rel = path.relative_to(root)
         rel_str = rel.as_posix()
@@ -157,7 +160,7 @@ def scan(paths: Sequence[str]) -> int:
             and (
                 ".mark.integration" in text or ".mark.contract" in text or ".mark.real_api" in text
             )
-            and rel_str not in ALLOWLIST
+            and rel_str not in MARKER_LITERAL_ALLOWLIST
         ):
             problems.append(
                 f"{rel} is under `tests/unit/` but is marked integration/contract/real_api. Reclassify it under `tests/integration/`, `tests/contract/`, or `tests/real_api/`."
@@ -168,7 +171,10 @@ def scan(paths: Sequence[str]) -> int:
                 f"{rel} is under `tests/integration/` but is marked real_api. Move it to `tests/real_api/`."
             )
 
-        if line_count > THRESHOLD and rel_str not in ALLOWLIST:
+        if rel_str in SIZE_ALLOWLIST:
+            size_allowlist_line_counts[rel_str] = line_count
+
+        if line_count > THRESHOLD and rel_str not in SIZE_ALLOWLIST:
             problems.append(
                 f"{rel} exceeds {THRESHOLD} lines ({line_count}). Split into smaller modules or add to the allowlist with justification."
             )
@@ -180,6 +186,17 @@ def scan(paths: Sequence[str]) -> int:
         ):
             problems.append(
                 f"{rel} calls time.sleep without using fake_clock fixture. Use fake_clock or justify with an explicit helper."
+            )
+
+    # Keep the size allowlist from accumulating stale exemptions: any allowlisted
+    # file that was scanned but no longer exceeds THRESHOLD must be removed. Only
+    # files actually present in this scan are audited, so the check stays correct
+    # when run against a synthetic root (e.g. this checker's own unit tests).
+    for entry, seen in sorted(size_allowlist_line_counts.items()):
+        if seen <= THRESHOLD:
+            problems.append(
+                f"{entry} is on the size allowlist but is now {seen} lines (<= {THRESHOLD}). "
+                "Remove the stale allowlist entry."
             )
 
     for path in python_normalized:

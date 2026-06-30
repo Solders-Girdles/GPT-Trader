@@ -190,7 +190,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 680,
+          "line": 457,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -257,7 +257,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 665,
+          "line": 630,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -273,7 +273,7 @@
       ],
       "locations": [
         {
-          "line": 204,
+          "line": 169,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -290,7 +290,7 @@
       ],
       "locations": [
         {
-          "line": 178,
+          "line": 143,
           "path": "src/gpt_trader/features/live_trade/execution/order_submission.py"
         }
       ],
@@ -357,11 +357,11 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 423,
+          "line": 427,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         },
         {
-          "line": 448,
+          "line": 452,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -376,7 +376,7 @@
       ],
       "locations": [
         {
-          "line": 418,
+          "line": 422,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -389,7 +389,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 493,
+          "line": 497,
           "path": "src/gpt_trader/monitoring/health_checks.py"
         }
       ],
@@ -484,7 +484,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1073,
+          "line": 850,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -497,7 +497,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1084,
+          "line": 861,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -510,7 +510,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1106,
+          "line": 883,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -523,7 +523,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1080,
+          "line": 857,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -536,7 +536,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1097,
+          "line": 874,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -549,7 +549,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1101,
+          "line": 878,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -562,7 +562,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1093,
+          "line": 870,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -575,7 +575,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1089,
+          "line": 866,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -588,7 +588,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1076,
+          "line": 853,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],
@@ -601,7 +601,7 @@
       "label_keys": [],
       "locations": [
         {
-          "line": 1085,
+          "line": 862,
           "path": "src/gpt_trader/monitoring/status_reporter.py"
         }
       ],

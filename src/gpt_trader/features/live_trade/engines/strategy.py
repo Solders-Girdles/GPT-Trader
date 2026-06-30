@@ -36,6 +36,10 @@ from gpt_trader.features.live_trade.engines.base import (
     CoordinatorContext,
     HealthStatus,
 )
+from gpt_trader.features.live_trade.engines.engine_initialization import (
+    init_guard_stack,
+    init_user_event_handler,
+)
 from gpt_trader.features.live_trade.engines.equity_calculator import (
     EquityCalculator,
 )
@@ -264,10 +268,18 @@ class TradingEngine(BaseEngine):
         self._ws_reconnect_delay: float = 1.0
         self._ws_last_health_check: float = 0.0
 
-        # Initialize pre-trade guard stack (Option A: embedded guards)
-        self._init_guard_stack()
+        # Initialize pre-trade guard stack (Option A: embedded guards).
+        # Attributes are declared here and populated in place by init_guard_stack.
+        self._event_store: EventStore
+        self._orders_store: Any
+        self._open_orders: list[str]
+        self._state_collector: StateCollector
+        self._order_submitter: OrderSubmitter
+        self._order_validator: OrderValidator | None
+        self._guard_manager: GuardManager | None
+        init_guard_stack(self)
         self._user_event_handler: Any | None = None
-        self._init_user_event_handler()
+        init_user_event_handler(self)
         self._runtime_engine = RuntimeEngine(
             context,
             shutdown_timeout_seconds=getattr(
@@ -279,155 +291,6 @@ class TradingEngine(BaseEngine):
 
     def preserve_broker_calls_on_shutdown(self) -> None:
         self._preserve_broker_calls_on_shutdown = True
-
-    def _init_guard_stack(self) -> None:
-        """Initialize StateCollector, OrderValidator, OrderSubmitter for pre-trade guards."""
-        # Event store fallback
-        event_store = self.context.event_store or EventStore()
-        self._event_store = event_store
-        bot_id = str(self.context.bot_id or self.context.config.profile or "live")
-
-        # Orders store for durable restart (optional)
-        orders_store = self.context.orders_store
-        if orders_store is None and self.context.container is not None:
-            orders_store = getattr(self.context.container, "orders_store", None)
-        if orders_store is not None:
-            try:
-                orders_store.initialize()
-            except Exception as exc:
-                logger.warning(
-                    "Failed to initialize orders store",
-                    error_type=type(exc).__name__,
-                    error_message=str(exc),
-                    operation="orders_store_init",
-                )
-                orders_store = None
-        self._orders_store = orders_store
-
-        # Broker and risk manager must exist
-        broker = self.context.broker
-        risk_manager = self.context.risk_manager
-
-        # Track open orders
-        self._open_orders: list[str] = []
-        self._rehydrate_open_orders()
-
-        # StateCollector: needs broker, config
-        self._state_collector = StateCollector(
-            broker=broker,  # type: ignore[arg-type]
-            config=self.context.config,
-            integration_mode=False,
-        )
-
-        # OrderSubmitter: broker + event store + bot_id + open_orders
-        self._order_submitter = OrderSubmitter(
-            broker=broker,  # type: ignore[arg-type]
-            event_store=event_store,
-            bot_id=bot_id,
-            open_orders=self._open_orders,
-            enable_retries=getattr(self.context.config, "order_submission_retries_enabled", False),
-            orders_store=self._orders_store,
-            integration_mode=False,
-        )
-
-        # Failure tracker from container (not global) with escalation callback
-        container = self.context.container
-        if container is None:
-            raise RuntimeError(
-                "TradingEngine requires a container in context. "
-                "Pass container=ApplicationContainer(config) to CoordinatorContext."
-            )
-        failure_tracker = container.validation_failure_tracker
-
-        # Wire escalation callback: on repeated validation failures, pause + reduce-only
-        def _on_validation_escalation() -> None:
-            """Handle validation infrastructure failures by pausing and setting reduce-only."""
-            if risk_manager is None:
-                return
-
-            risk_manager.set_reduce_only_mode(True, reason="validation_failures")
-            cooldown = 180
-            if risk_manager.config is not None:
-                cooldown = risk_manager.config.validation_failure_cooldown_seconds
-            self._degradation.pause_all(
-                seconds=cooldown,
-                reason="validation_failures",
-                allow_reduce_only=True,
-            )
-            logger.warning(
-                "Validation escalation triggered - pausing trading",
-                cooldown_seconds=cooldown,
-                operation="degradation",
-                stage="validation_escalation",
-            )
-
-        failure_tracker.escalation_callback = _on_validation_escalation
-
-        # OrderValidator: broker + risk_manager + preview config + callbacks + tracker
-        self._order_validator: OrderValidator | None = None
-        if risk_manager is not None:
-            self._order_validator = OrderValidator(
-                broker=broker,  # type: ignore[arg-type]
-                risk_manager=risk_manager,
-                enable_order_preview=self.context.config.enable_order_preview,
-                record_preview_callback=self._order_submitter.record_preview,
-                record_rejection_callback=self._order_submitter.record_rejection,
-                failure_tracker=failure_tracker,
-                broker_calls=self._broker_calls,
-            )
-
-        # GuardManager: runtime guards (daily loss, liquidation buffer, volatility)
-        self._guard_manager: GuardManager | None = None
-        if broker is not None and risk_manager is not None:
-            self._guard_manager = GuardManager(
-                broker=broker,  # type: ignore[arg-type]
-                risk_manager=risk_manager,
-                equity_calculator=self._state_collector.calculate_equity_from_balances,
-                open_orders=self._open_orders,
-                invalidate_cache_callback=lambda: None,
-                cancel_retries_enabled=getattr(
-                    self.context.config, "order_submission_retries_enabled", False
-                ),
-            )
-
-    def _init_user_event_handler(self) -> None:
-        """Initialize Coinbase WS user-event handling for live order updates."""
-        if getattr(self.context.config, "dry_run", False):
-            logger.info(
-                "Dry-run enabled; skipping Coinbase user-event handling",
-                operation="user_events",
-                stage="skip",
-            )
-            return
-
-        broker = self.context.broker
-        if broker is None:
-            return
-
-        module_name = getattr(broker, "__module__", "")
-        if "coinbase" not in module_name:
-            return
-
-        from gpt_trader.features.brokerages.coinbase.user_event_handler import (
-            CoinbaseUserEventHandler,
-        )
-
-        market_data_service = None
-        product_catalog = None
-        container = self.context.container
-        if container is not None:
-            market_data_service = getattr(container, "market_data_service", None)
-            product_catalog = getattr(container, "product_catalog", None)
-
-        self._user_event_handler = CoinbaseUserEventHandler(
-            broker=broker,
-            orders_store=self._orders_store,
-            event_store=self.context.event_store,
-            bot_id=str(self.context.bot_id or self.context.config.profile or "live"),
-            market_data_service=market_data_service,
-            symbols=list(self.context.config.symbols),
-            product_catalog=product_catalog,
-        )
 
     def _rehydrate_open_orders(self) -> None:
         """Restore open order IDs from the orders store after a restart."""

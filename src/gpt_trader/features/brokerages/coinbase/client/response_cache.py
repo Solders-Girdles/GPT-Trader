@@ -52,7 +52,6 @@ class ResponseCache:
             # Position/balance data (moderate volatility)
             "**/positions*": 30.0,
             "**/cfm/positions*": 30.0,
-            "**/intx/positions*": 30.0,
             "**/accounts*": 60.0,
             "**/cfm/balance_summary*": 60.0,
             # Order data (changes frequently during trading)

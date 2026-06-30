@@ -140,11 +140,6 @@ class ProductService:
             logger.error("Unexpected error getting candles for %s: %s", symbol, e, exc_info=True)
             return []
 
-    def get_perpetuals(self) -> list[Product]:
-        """List perpetual products (INTX)."""
-        products = self.list_products()
-        return [p for p in products if p.market_type == "PERPETUAL"]
-
     def get_futures(self) -> list[Product]:
         """List futures products (includes CFM)."""
         products = self.list_products()

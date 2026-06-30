@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 7074,
-    "total_files": 837,
+    "total_tests": 7050,
+    "total_files": 836,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,12 +102,12 @@
     ]
   },
   "marker_counts": {
-    "unit": 6907,
+    "unit": 6883,
     "asyncio": 442,
     "parametrize": 203,
-    "endpoints": 83,
     "property": 82,
     "integration": 81,
+    "endpoints": 69,
     "usefixtures": 17,
     "skipif": 9,
     "slow": 4,
@@ -332,7 +332,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_endpoint_chains.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
@@ -13836,44 +13835,12 @@
           "unit"
         ],
         "docstring": ""
-      },
-      {
-        "name": "test_get_intx_portfolio_aliases_intx_portfolio",
-        "line": 76,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_list_intx_positions_aliases_intx_positions",
-        "line": 86,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_intx_position_aliases_intx_position",
-        "line": 96,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_get_intx_multi_asset_collateral_aliases_method",
-        "line": 106,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
       }
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/client/test_portfolio_mixin_requests.py": [
       {
         "name": "test_portfolio_requests",
-        "line": 179,
+        "line": 137,
         "markers": [
           "parametrize",
           "unit"
@@ -14906,53 +14873,8 @@
         "class": "TestCfmMarginWindow"
       },
       {
-        "name": "TestIntxAllocate::test_intx_allocate",
-        "line": 107,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxAllocate"
-      },
-      {
-        "name": "TestIntxBalances::test_intx_balances",
-        "line": 121,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxBalances"
-      },
-      {
-        "name": "TestIntxPortfolio::test_intx_portfolio",
-        "line": 140,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPortfolio"
-      },
-      {
-        "name": "TestIntxPositions::test_intx_positions",
-        "line": 151,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPositions"
-      },
-      {
-        "name": "TestIntxCollateral::test_intx_multi_asset_collateral",
-        "line": 164,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxCollateral"
-      },
-      {
         "name": "TestCfmPositionEdges::test_list_cfm_positions_invalid_expiry_sets_none",
-        "line": 173,
+        "line": 107,
         "markers": [
           "unit"
         ],
@@ -14961,7 +14883,7 @@
       },
       {
         "name": "TestSpotPositionEdges::test_list_spot_positions_skips_usd_and_zero",
-        "line": 178,
+        "line": 112,
         "markers": [
           "unit"
         ],
@@ -14970,7 +14892,7 @@
       },
       {
         "name": "TestCfmBalanceEdges::test_cfm_balance_edges",
-        "line": 183,
+        "line": 117,
         "markers": [
           "unit"
         ],
@@ -14979,7 +14901,7 @@
       },
       {
         "name": "TestUnifiedBalanceEdges::test_unified_balance_edges",
-        "line": 190,
+        "line": 124,
         "markers": [
           "unit"
         ],
@@ -14988,7 +14910,7 @@
       },
       {
         "name": "TestAllPositionsEdges::test_all_positions_edges",
-        "line": 196,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -15251,17 +15173,8 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_product_service_product_filters.py": [
       {
-        "name": "TestProductServiceProductFilters::test_get_perpetuals_returns_only_perpetuals",
-        "line": 11,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test get_perpetuals filters to perpetual products.",
-        "class": "TestProductServiceProductFilters"
-      },
-      {
         "name": "TestProductServiceProductFilters::test_get_futures_returns_only_futures",
-        "line": 41,
+        "line": 11,
         "markers": [
           "unit"
         ],
@@ -15270,7 +15183,7 @@
       },
       {
         "name": "TestProductServiceProductFilters::test_get_spot_products",
-        "line": 62,
+        "line": 32,
         "markers": [
           "unit"
         ],
@@ -15279,7 +15192,7 @@
       },
       {
         "name": "TestProductServiceProductFilters::test_get_cfm_products_returns_futures_with_expiry",
-        "line": 92,
+        "line": 62,
         "markers": [
           "unit"
         ],
@@ -15530,47 +15443,7 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_account_manager_snapshot.py": [
       {
         "name": "TestCoinbaseAccountManagerSnapshot::test_snapshot_collects_all_sections",
-        "line": 21,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseAccountManagerSnapshot"
-      },
-      {
-        "name": "TestCoinbaseAccountManagerSnapshot::test_intx_unavailable_marks_reason",
-        "line": 50,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseAccountManagerSnapshot"
-      },
-      {
-        "name": "TestCoinbaseAccountManagerSnapshot::test_intx_portfolio_not_found_marks_reason",
-        "line": 72,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseAccountManagerSnapshot"
-      },
-      {
-        "name": "TestCoinbaseAccountManagerSnapshot::test_intx_recovers_after_refresh",
-        "line": 95,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseAccountManagerSnapshot"
-      },
-      {
-        "name": "TestCoinbaseAccountManagerSnapshot::test_stale_uuid_cleared_when_refresh_returns_none",
-        "line": 130,
+        "line": 20,
         "markers": [
           "endpoints",
           "unit"
@@ -15580,17 +15453,7 @@
       },
       {
         "name": "TestCoinbaseAccountManagerSnapshot::test_snapshot_records_error_payloads",
-        "line": 151,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseAccountManagerSnapshot"
-      },
-      {
-        "name": "TestCoinbaseAccountManagerSnapshot::test_intx_temporary_failure_isolates_section",
-        "line": 174,
+        "line": 43,
         "markers": [
           "endpoints",
           "unit"
@@ -15600,7 +15463,7 @@
       },
       {
         "name": "TestCoinbaseAccountManagerSnapshot::test_snapshot_handles_missing_optional_probe",
-        "line": 198,
+        "line": 66,
         "markers": [
           "endpoints",
           "unit"
@@ -15610,7 +15473,7 @@
       },
       {
         "name": "TestCoinbaseAccountManagerSnapshot::test_convert_commits_when_requested",
-        "line": 215,
+        "line": 83,
         "markers": [
           "endpoints",
           "unit"
@@ -15620,7 +15483,7 @@
       },
       {
         "name": "TestCoinbaseAccountManagerSnapshot::test_move_funds_delegates_to_broker",
-        "line": 227,
+        "line": 95,
         "markers": [
           "endpoints",
           "unit"
@@ -15698,26 +15561,6 @@
       {
         "name": "TestCoinbaseTreasuryDelegation::test_adapter_cfm_telemetry_respects_derivatives_gating",
         "line": 93,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseTreasuryDelegation"
-      },
-      {
-        "name": "TestCoinbaseTreasuryDelegation::test_adapter_intx_methods_delegate_to_rest_service",
-        "line": 115,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestCoinbaseTreasuryDelegation"
-      },
-      {
-        "name": "TestCoinbaseTreasuryDelegation::test_adapter_intx_methods_respect_intx_support",
-        "line": 146,
         "markers": [
           "endpoints",
           "unit"
@@ -16745,71 +16588,6 @@
         "name": "test_error_mapping_when_non_2xx",
         "line": 64,
         "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py": [
-      {
-        "name": "test_intx_allocate_posts_payload",
-        "line": 22,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_balances_formats_path",
-        "line": 40,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_portfolio_formats_path",
-        "line": 53,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_positions_formats_path",
-        "line": 66,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_position_formats_path",
-        "line": 79,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_multi_asset_collateral_formats_path",
-        "line": 92,
-        "markers": [
-          "endpoints",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_endpoints_blocked_in_exchange_mode",
-        "line": 108,
-        "markers": [
-          "endpoints",
           "unit"
         ],
         "docstring": ""

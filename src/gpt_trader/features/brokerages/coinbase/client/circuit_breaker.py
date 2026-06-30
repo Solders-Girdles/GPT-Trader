@@ -176,7 +176,6 @@ class CircuitBreakerRegistry:
             "accounts": "accounts",
             "positions": "positions",
             "cfm": "positions",
-            "intx": "positions",
             "products": "products",
             "market": "market",
             "ticker": "market",

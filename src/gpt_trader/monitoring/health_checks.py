@@ -37,12 +37,15 @@ if TYPE_CHECKING:
     from gpt_trader.app.health_server import HealthState
     from gpt_trader.features.brokerages.core.protocols import BrokerProtocol
     from gpt_trader.features.live_trade.degradation import DegradationState
+    from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
     from gpt_trader.utilities.async_tools.bounded_to_thread import BoundedToThread
+
+# Runtime imports: TickerFreshnessProvider/Source are used at runtime (isinstance
+# checks), so they cannot move under TYPE_CHECKING.
 from gpt_trader.features.brokerages.core.protocols import (
     TickerFreshnessProvider,
     TickerFreshnessProviderSource,
 )
-from gpt_trader.features.live_trade.risk.protocols import RiskManagerProtocol
 
 logger = get_logger(__name__, component="health_checks")
 

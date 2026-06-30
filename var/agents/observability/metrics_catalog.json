@@ -99,8 +99,8 @@
       ],
       "locations": [
         {
-          "line": 1074,
-          "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
+          "line": 53,
+          "path": "src/gpt_trader/features/live_trade/engines/cycle_runner.py"
         }
       ],
       "name": "gpt_trader_cycle_duration_seconds",
@@ -305,7 +305,7 @@
       ],
       "locations": [
         {
-          "line": 1512,
+          "line": 1337,
           "path": "src/gpt_trader/features/live_trade/engines/strategy.py"
         }
       ],

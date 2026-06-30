@@ -79,24 +79,6 @@ def us_futures_enabled(profile: Profile, *, config: BotConfig) -> bool:
     return False
 
 
-def intx_perpetuals_enabled(profile: Profile, *, config: BotConfig) -> bool:
-    """Determine whether INTX perpetuals trading should be enabled for the profile."""
-
-    # Check if derivatives are enabled at all
-    if not derivatives_enabled(profile, config=config):
-        return False
-
-    # Check INTX perpetuals specific flag
-    if config.coinbase_intx_perpetuals_enabled:
-        return True
-
-    # INTX is frozen; only an explicit INTX derivatives type enables this helper.
-    if config.coinbase_derivatives_type.strip().lower() in ("intx_perps", "perpetuals"):
-        return True
-
-    return False
-
-
 def normalize_symbol_list(
     symbols: Sequence[str] | None,
     *,

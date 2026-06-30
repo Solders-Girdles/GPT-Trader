@@ -149,7 +149,6 @@ _DEV_ENV_DEFAULTS = MappingProxyType(
         "BROKER": ("coinbase", True),
         "COINBASE_SANDBOX": ("1", False),
         "COINBASE_API_MODE": ("advanced", False),
-        "COINBASE_ENABLE_INTX_PERPS": ("0", False),
     }
 )
 _PROD_ENV_DEFAULTS = MappingProxyType(
@@ -157,7 +156,6 @@ _PROD_ENV_DEFAULTS = MappingProxyType(
         "BROKER": ("coinbase", True),
         "COINBASE_SANDBOX": ("0", True),
         "COINBASE_API_MODE": ("advanced", True),
-        "COINBASE_ENABLE_INTX_PERPS": ("0", True),
     }
 )
 
@@ -283,7 +281,7 @@ _PROFILE_DEFAULTS: dict[Profile, ProfileSchema] = {
     Profile.PROD: ProfileSchema(
         profile_name="prod",
         environment="production",
-        description="Full production profile for perpetuals",
+        description="Full production profile",
         trading=TradingConfig(symbols=["BTC-USD", "ETH-USD"], mode="normal"),
         risk=RiskConfig(
             max_position_size=Decimal("50000"),

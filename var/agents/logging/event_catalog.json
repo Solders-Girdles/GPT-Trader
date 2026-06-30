@@ -51,8 +51,6 @@
       "database_init",
       "database_repair",
       "degradation",
-      "derivatives_discovery",
-      "derivatives_product_discovery",
       "disable_rule",
       "enable_rule",
       "ensure_mark_is_fresh",
@@ -380,7 +378,7 @@
       ],
       "occurrence_count": 1,
       "source_files": [
-        "features/live_trade/engines/strategy.py"
+        "features/live_trade/engines/cycle_runner.py"
       ],
       "statuses": null
     },
@@ -483,54 +481,6 @@
       "source_files": [
         "features/live_trade/degradation.py",
         "features/live_trade/engines/strategy.py"
-      ],
-      "statuses": null
-    },
-    "derivatives_discovery": {
-      "common_fields": [
-        "balance_summary_keys",
-        "cfm_accessible",
-        "error",
-        "intx_accessible",
-        "intx_enabled",
-        "portfolio_details_keys",
-        "portfolio_uuid",
-        "portfolios_count",
-        "reduce_only_required",
-        "requested_market",
-        "stage",
-        "us_enabled"
-      ],
-      "components": null,
-      "levels": [
-        "DEBUG",
-        "INFO",
-        "WARNING"
-      ],
-      "occurrence_count": 18,
-      "source_files": [
-        "features/brokerages/coinbase/derivatives_discovery.py"
-      ],
-      "statuses": null
-    },
-    "derivatives_product_discovery": {
-      "common_fields": [
-        "error",
-        "futures",
-        "perpetuals",
-        "stage",
-        "symbol",
-        "total"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR",
-        "INFO",
-        "WARNING"
-      ],
-      "occurrence_count": 5,
-      "source_files": [
-        "features/brokerages/coinbase/derivatives_products.py"
       ],
       "statuses": null
     },
@@ -1331,8 +1281,8 @@
       ],
       "occurrence_count": 2,
       "source_files": [
-        "features/live_trade/engines/order_audit.py",
-        "features/live_trade/engines/strategy.py"
+        "features/live_trade/engines/cycle_runner.py",
+        "features/live_trade/engines/order_audit.py"
       ],
       "statuses": null
     },
@@ -2568,7 +2518,7 @@
     "consecutive_failures": 6,
     "details": 5,
     "environment": 12,
-    "error": 66,
+    "error": 60,
     "error_message": 93,
     "error_type": 91,
     "event_type": 7,
@@ -2589,16 +2539,16 @@
     "secret_ref": 6,
     "service": 9,
     "side": 27,
-    "stage": 174,
-    "symbol": 85
+    "stage": 151,
+    "symbol": 84
   },
   "level_distribution": {
     "CRITICAL": 2,
-    "DEBUG": 50,
-    "ERROR": 124,
-    "INFO": 95,
-    "WARNING": 105
+    "DEBUG": 40,
+    "ERROR": 123,
+    "INFO": 88,
+    "WARNING": 100
   },
-  "total_event_types": 138,
+  "total_event_types": 136,
   "version": "1.0"
 }

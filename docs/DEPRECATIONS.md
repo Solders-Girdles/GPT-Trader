@@ -13,7 +13,7 @@ CI enforces this registry for new deprecation shims.
 
 | Deprecated | Replacement | Location | Owner | Removal Date | Notes |
 |------------|-------------|----------|-------|--------------|-------|
-No active deprecations.
+| `COINBASE_ENABLE_INTX_PERPS` env var | `CFM_ENABLED` / `TRADING_MODES` | `src/gpt_trader/app/config/bot_config.py` | Core Config | v4.0 | INTX perpetuals removed. Still honored as an alias for enabling CFM derivatives, emitting a `DeprecationWarning`. Also read by preflight INTX checks, which are removed in the INTX Tier-2 prune. See `docs/decisions/intx-default-derivatives-venue.md`. |
 
 ## Legacy Inventory (Status)
 
@@ -73,7 +73,9 @@ Before removing any deprecated item:
 | TUI legacy status CSS aliases (`good`/`bad`/`risk-status-*`) | Unreleased | Use `status-ok`, `status-warning`, `status-critical` |
 | TUI validation `ValidationError` alias | Unreleased | Use `FieldValidationError` |
 | TUI legacy guard shapes (`active_guards`) | Unreleased | Use `RiskStatus.guards` and `StatusReporter.update_risk(guards=...)`. |
-| `COINBASE_ENABLE_DERIVATIVES` env var alias | Unreleased | Use `COINBASE_ENABLE_INTX_PERPS` |
+| `COINBASE_ENABLE_DERIVATIVES` env var alias | Unreleased | Use `CFM_ENABLED` / `TRADING_MODES` (was `COINBASE_ENABLE_INTX_PERPS`, now also deprecated). |
+| INTX derivatives venue types (`coinbase_derivatives_type` = `intx_perps` / `perpetuals`) | Unreleased | Use `us_futures` (CFM). Validation now rejects the INTX values with a migration error. |
+| INTX dead modules (`intx_portfolio_service`, `derivatives_discovery`, `derivatives_products`) | Unreleased | Removed as unimported dead code; rebuild CFM discovery cleanly if/when CFM activates. |
 | Coinbase REST legacy position dict fallback | v4.0 | Require `PositionStateStore` injection |
 | `PERPS_FORCE_MOCK` env var | v4.0 | Use `MOCK_BROKER` |
 | `SYMBOLS` env var | v4.0 | Use `TRADING_SYMBOLS` |

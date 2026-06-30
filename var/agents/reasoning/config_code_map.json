@@ -70,18 +70,6 @@
           "notes": "No direct usage found"
         },
         {
-          "field": "coinbase_intx_perpetuals_enabled",
-          "usage_count": 0,
-          "files": [],
-          "notes": "No direct usage found"
-        },
-        {
-          "field": "coinbase_intx_portfolio_uuid",
-          "usage_count": 0,
-          "files": [],
-          "notes": "No direct usage found"
-        },
-        {
           "field": "coinbase_sandbox_enabled",
           "usage_count": 0,
           "files": [],

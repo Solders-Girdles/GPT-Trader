@@ -2,8 +2,8 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 7098,
-    "total_files": 840,
+    "total_tests": 7074,
+    "total_files": 837,
     "markers_used": 16
   },
   "marker_definitions": {
@@ -102,9 +102,9 @@
     ]
   },
   "marker_counts": {
-    "unit": 6931,
+    "unit": 6907,
     "asyncio": 442,
-    "parametrize": 207,
+    "parametrize": 203,
     "endpoints": 83,
     "property": 82,
     "integration": 81,
@@ -330,12 +330,9 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_websocket.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_conversion_endpoints.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_markets.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_endpoint_chains.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_service.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_ticker_cache.py",
@@ -2741,35 +2738,44 @@
         "class": "TestReduceOnlyModeEnvParsing"
       },
       {
-        "name": "TestDerivativesEnvParsing::test_derivatives_enabled_when_intx_perps_flag_set",
+        "name": "TestDerivativesEnvParsing::test_derivatives_enabled_when_cfm_enabled",
         "line": 142,
         "markers": [
           "unit"
         ],
-        "docstring": "COINBASE_ENABLE_INTX_PERPS=1 enables derivatives.",
+        "docstring": "CFM_ENABLED=1 enables derivatives (CFM US futures).",
         "class": "TestDerivativesEnvParsing"
       },
       {
-        "name": "TestDerivativesEnvParsing::test_derivatives_disabled_when_intx_perps_flag_unset",
-        "line": 150,
+        "name": "TestDerivativesEnvParsing::test_derivatives_disabled_by_default",
+        "line": 148,
         "markers": [
           "unit"
         ],
-        "docstring": "COINBASE_ENABLE_INTX_PERPS defaults to disabled when unset.",
+        "docstring": "Derivatives default to disabled when no flags are set.",
         "class": "TestDerivativesEnvParsing"
       },
       {
-        "name": "TestDerivativesEnvParsing::test_derivatives_disabled_when_intx_perps_flag_zero",
-        "line": 157,
+        "name": "TestDerivativesEnvParsing::test_deprecated_intx_perps_flag_still_enables_with_warning",
+        "line": 153,
         "markers": [
           "unit"
         ],
-        "docstring": "COINBASE_ENABLE_INTX_PERPS=0 disables derivatives.",
+        "docstring": "The retired COINBASE_ENABLE_INTX_PERPS alias still enables, but warns.",
+        "class": "TestDerivativesEnvParsing"
+      },
+      {
+        "name": "TestDerivativesEnvParsing::test_deprecated_intx_perps_flag_zero_does_not_warn",
+        "line": 163,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "COINBASE_ENABLE_INTX_PERPS=0 disables derivatives without warning.",
         "class": "TestDerivativesEnvParsing"
       },
       {
         "name": "TestFromDictLegacyProfileMapping::test_profile_style_emits_deprecation_warning",
-        "line": 169,
+        "line": 175,
         "markers": [
           "unit"
         ],
@@ -2778,7 +2784,7 @@
       },
       {
         "name": "TestHealthThresholdsConfig::test_to_health_thresholds_preserves_values",
-        "line": 179,
+        "line": 185,
         "markers": [
           "unit"
         ],
@@ -2787,7 +2793,7 @@
       },
       {
         "name": "TestStartupConfigFingerprint::test_deterministic_fingerprint",
-        "line": 212,
+        "line": 218,
         "markers": [
           "unit"
         ],
@@ -2796,7 +2802,7 @@
       },
       {
         "name": "TestStartupConfigFingerprint::test_compare_detects_mismatch",
-        "line": 219,
+        "line": 225,
         "markers": [
           "unit"
         ],
@@ -3608,8 +3614,53 @@
         "class": "TestValidateConfigCFMConsistency"
       },
       {
-        "name": "TestValidateConfigCoinbaseDerivativesType::test_known_derivatives_types_are_valid",
-        "line": 174,
+        "name": "TestValidateConfigCFMConsistency::test_cfm_us_futures_rejects_intx_perp_symbols",
+        "line": 170,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_cfm_us_futures_rejects_lowercase_intx_perp_symbols",
+        "line": 186,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_cfm_us_futures_rejects_unsupported_us_futures_symbols",
+        "line": 202,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCFMConsistency::test_cfm_us_futures_accepts_allowlisted_us_futures_symbols",
+        "line": 219,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCFMConsistency"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_us_futures_is_the_only_valid_type",
+        "line": 236,
+        "markers": [
+          "unit"
+        ],
+        "docstring": "",
+        "class": "TestValidateConfigCoinbaseDerivativesType"
+      },
+      {
+        "name": "TestValidateConfigCoinbaseDerivativesType::test_removed_intx_types_report_migration_error",
+        "line": 241,
         "markers": [
           "unit"
         ],
@@ -3618,7 +3669,7 @@
       },
       {
         "name": "TestValidateConfigCoinbaseDerivativesType::test_derivatives_type_is_case_and_whitespace_tolerant",
-        "line": 180,
+        "line": 250,
         "markers": [
           "unit"
         ],
@@ -3627,7 +3678,7 @@
       },
       {
         "name": "TestValidateConfigCoinbaseDerivativesType::test_unknown_derivatives_type_is_invalid",
-        "line": 185,
+        "line": 255,
         "markers": [
           "unit"
         ],
@@ -3636,7 +3687,7 @@
       },
       {
         "name": "TestValidateConfigCoinbaseDerivativesType::test_derivatives_enabled_requires_nonempty_derivatives_type",
-        "line": 193,
+        "line": 260,
         "markers": [
           "unit"
         ],
@@ -3645,7 +3696,7 @@
       },
       {
         "name": "TestValidateConfigCoinbaseDerivativesType::test_derivatives_type_must_be_a_string",
-        "line": 198,
+        "line": 265,
         "markers": [
           "unit"
         ],
@@ -16644,188 +16695,6 @@
         "docstring": ""
       }
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py": [
-      {
-        "name": "TestDerivativesEligibility::test_eligibility_creation",
-        "line": 18,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test creating a DerivativesEligibility instance.",
-        "class": "TestDerivativesEligibility"
-      },
-      {
-        "name": "TestDerivativesEligibility::test_eligibility_is_frozen",
-        "line": 38,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that DerivativesEligibility is immutable.",
-        "class": "TestDerivativesEligibility"
-      },
-      {
-        "name": "TestDiscoveryData::test_discovery_data_contains_us_details",
-        "line": 57,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that discovery_data includes US discovery details.",
-        "class": "TestDiscoveryData"
-      },
-      {
-        "name": "TestDiscoveryData::test_discovery_data_contains_intx_details",
-        "line": 69,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that discovery_data includes INTX discovery details.",
-        "class": "TestDiscoveryData"
-      },
-      {
-        "name": "TestDiscoveryData::test_discovery_data_contains_error_details",
-        "line": 84,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that discovery_data includes error details.",
-        "class": "TestDiscoveryData"
-      },
-      {
-        "name": "TestDiscoverDerivativesNone::test_none_market_skips_discovery",
-        "line": 98,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that NONE market skips all discovery.",
-        "class": "TestDiscoverDerivativesNone"
-      },
-      {
-        "name": "TestDiscoverDerivativesBoth::test_both_markets_accessible",
-        "line": 119,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test when both markets are accessible.",
-        "class": "TestDiscoverDerivativesBoth"
-      },
-      {
-        "name": "TestDiscoverDerivativesBoth::test_both_markets_us_only_accessible",
-        "line": 137,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test when only US market is accessible.",
-        "class": "TestDiscoverDerivativesBoth"
-      },
-      {
-        "name": "TestDiscoverDerivativesBoth::test_both_markets_intx_only_accessible",
-        "line": 149,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test when only INTX market is accessible.",
-        "class": "TestDiscoverDerivativesBoth"
-      },
-      {
-        "name": "TestDiscoverDerivativesBoth::test_both_markets_neither_accessible",
-        "line": 164,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test when neither market is accessible.",
-        "class": "TestDiscoverDerivativesBoth"
-      },
-      {
-        "name": "TestDiscoverDerivativesBoth::test_both_markets_errors_combined",
-        "line": 176,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that errors from both discoveries are combined.",
-        "class": "TestDiscoverDerivativesBoth"
-      },
-      {
-        "name": "TestFailOnInaccessible::test_fail_on_inaccessible_true_triggers_reduce_only",
-        "line": 192,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that fail_on_inaccessible=True triggers reduce-only.",
-        "class": "TestFailOnInaccessible"
-      },
-      {
-        "name": "TestFailOnInaccessible::test_fail_on_inaccessible_false_no_reduce_only",
-        "line": 203,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that fail_on_inaccessible=False doesn't trigger reduce-only.",
-        "class": "TestFailOnInaccessible"
-      },
-      {
-        "name": "TestFailOnInaccessible::test_fail_on_inaccessible_when_accessible",
-        "line": 214,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "Test that fail_on_inaccessible doesn't affect accessible markets.",
-        "class": "TestFailOnInaccessible"
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_markets.py": [
-      {
-        "name": "test_us_market_variants",
-        "line": 75,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_market_accessible_variants",
-        "line": 109,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_market_portfolio_errors",
-        "line": 132,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_market_missing_list_portfolios_method",
-        "line": 149,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_market_missing_get_intx_portfolio",
-        "line": 160,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_intx_market_list_portfolios_errors",
-        "line": 179,
-        "markers": [
-          "parametrize",
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_endpoint_chains.py": [
       {
         "name": "test_trading_flow_place_get_cancel",
@@ -16941,40 +16810,6 @@
         "line": 108,
         "markers": [
           "endpoints",
-          "unit"
-        ],
-        "docstring": ""
-      }
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py": [
-      {
-        "name": "test_service_honours_config_override",
-        "line": 29,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_service_attempts_refresh_when_initial_lookup_empty",
-        "line": 38,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_service_invalidate_delegates_to_account_manager",
-        "line": 60,
-        "markers": [
-          "unit"
-        ],
-        "docstring": ""
-      },
-      {
-        "name": "test_service_resolve_or_raise_errors_when_unavailable",
-        "line": 69,
-        "markers": [
           "unit"
         ],
         "docstring": ""
@@ -31054,60 +30889,6 @@
         ],
         "docstring": "",
         "class": "TestUsFuturesEnabled"
-      },
-      {
-        "name": "TestIntxPerpetualsEnabled::test_returns_false_when_derivatives_disabled",
-        "line": 118,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPerpetualsEnabled"
-      },
-      {
-        "name": "TestIntxPerpetualsEnabled::test_returns_true_when_intx_flag_enabled",
-        "line": 123,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPerpetualsEnabled"
-      },
-      {
-        "name": "TestIntxPerpetualsEnabled::test_returns_true_when_derivatives_type_is_intx_perps",
-        "line": 131,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPerpetualsEnabled"
-      },
-      {
-        "name": "TestIntxPerpetualsEnabled::test_returns_false_when_derivatives_type_is_us_futures",
-        "line": 139,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPerpetualsEnabled"
-      },
-      {
-        "name": "TestIntxPerpetualsEnabled::test_returns_true_when_derivatives_type_is_perpetuals",
-        "line": 147,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPerpetualsEnabled"
-      },
-      {
-        "name": "TestIntxPerpetualsEnabled::test_returns_false_without_explicit_intx_type",
-        "line": 155,
-        "markers": [
-          "unit"
-        ],
-        "docstring": "",
-        "class": "TestIntxPerpetualsEnabled"
       }
     ],
     "tests/unit/gpt_trader/features/live_trade/test_symbols_normalization.py": [
@@ -43840,7 +43621,7 @@
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_prod_profile_defaults",
-        "line": 74,
+        "line": 73,
         "markers": [
           "unit"
         ],
@@ -43849,7 +43630,7 @@
       },
       {
         "name": "TestPreflightContextEnvDefaults::test_canary_profile_uses_prod_defaults",
-        "line": 83,
+        "line": 81,
         "markers": [
           "unit"
         ],
@@ -43858,7 +43639,7 @@
       },
       {
         "name": "TestPreflightContextTradingIntent::test_trading_modes_defaults_to_spot",
-        "line": 95,
+        "line": 93,
         "markers": [
           "unit"
         ],
@@ -43867,7 +43648,7 @@
       },
       {
         "name": "TestPreflightContextTradingIntent::test_trading_modes_ignores_empty_entries",
-        "line": 102,
+        "line": 100,
         "markers": [
           "unit"
         ],
@@ -43876,7 +43657,7 @@
       },
       {
         "name": "TestPreflightContextTradingIntent::test_intends_real_orders_is_false_when_safety_mode_enabled",
-        "line": 118,
+        "line": 116,
         "markers": [
           "parametrize",
           "unit"
@@ -43886,7 +43667,7 @@
       },
       {
         "name": "TestPreflightContextTradingIntent::test_requires_trade_permission_for_spot_and_cfm",
-        "line": 132,
+        "line": 130,
         "markers": [
           "unit"
         ],
@@ -43895,7 +43676,7 @@
       },
       {
         "name": "TestPreflightContextTradingIntent::test_dev_profile_does_not_require_trade_permission_without_dry_run_env",
-        "line": 146,
+        "line": 144,
         "markers": [
           "unit"
         ],
@@ -43904,7 +43685,7 @@
       },
       {
         "name": "TestPreflightContextTradingIntent::test_requires_trade_permission_for_intx_only_when_enabled",
-        "line": 166,
+        "line": 164,
         "markers": [
           "unit"
         ],
@@ -43913,7 +43694,7 @@
       },
       {
         "name": "TestPreflightContextTradingIntent::test_requires_trade_permission_false_when_intx_only_disabled",
-        "line": 180,
+        "line": 178,
         "markers": [
           "unit"
         ],

@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 749,
-    "source_modules": 383,
+    "tests_scanned": 746,
+    "source_modules": 381,
     "unresolved_modules": 3
   },
   "source_to_tests": {
@@ -644,10 +644,6 @@
     "gpt_trader.features.brokerages.coinbase.credentials": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py"
     ],
-    "gpt_trader.features.brokerages.coinbase.derivatives_discovery": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py",
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_markets.py"
-    ],
     "gpt_trader.features.brokerages.coinbase.endpoints": [
       "tests/contract/test_coinbase_api_contract.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_rest_service_edges.py"
@@ -666,9 +662,6 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_errors.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_permissions_client_endpoint.py",
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_system.py"
-    ],
-    "gpt_trader.features.brokerages.coinbase.intx_portfolio_service": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py"
     ],
     "gpt_trader.features.brokerages.coinbase.market_data_features": [
       "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_market_models.py",
@@ -3213,12 +3206,6 @@
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_credentials_resolution.py": [
       "gpt_trader.features.brokerages.coinbase.credentials"
     ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery.py": [
-      "gpt_trader.features.brokerages.coinbase.derivatives_discovery"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_derivatives_discovery_markets.py": [
-      "gpt_trader.features.brokerages.coinbase.derivatives_discovery"
-    ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_http_request_layer.py": [
       "gpt_trader.core",
       "gpt_trader.features.brokerages.coinbase.auth",
@@ -3226,9 +3213,6 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_endpoints.py": [
       "gpt_trader.core"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_intx_portfolio_service.py": [
-      "gpt_trader.features.brokerages.coinbase.intx_portfolio_service"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_market_data_features.py": [
       "gpt_trader.features.brokerages.coinbase.client",
@@ -5356,10 +5340,8 @@
     "gpt_trader.features.brokerages.coinbase.client.response_cache": "src/gpt_trader/features/brokerages/coinbase/client/response_cache.py",
     "gpt_trader.features.brokerages.coinbase.client.websocket_mixin": "src/gpt_trader/features/brokerages/coinbase/client/websocket_mixin.py",
     "gpt_trader.features.brokerages.coinbase.credentials": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-    "gpt_trader.features.brokerages.coinbase.derivatives_discovery": "src/gpt_trader/features/brokerages/coinbase/derivatives_discovery.py",
     "gpt_trader.features.brokerages.coinbase.endpoints": "src/gpt_trader/features/brokerages/coinbase/endpoints.py",
     "gpt_trader.features.brokerages.coinbase.errors": "src/gpt_trader/features/brokerages/coinbase/errors.py",
-    "gpt_trader.features.brokerages.coinbase.intx_portfolio_service": "src/gpt_trader/features/brokerages/coinbase/intx_portfolio_service.py",
     "gpt_trader.features.brokerages.coinbase.market_data_features": "src/gpt_trader/features/brokerages/coinbase/market_data_features.py",
     "gpt_trader.features.brokerages.coinbase.market_data_service": "src/gpt_trader/features/brokerages/coinbase/market_data_service.py",
     "gpt_trader.features.brokerages.coinbase.models": "src/gpt_trader/features/brokerages/coinbase/models.py",

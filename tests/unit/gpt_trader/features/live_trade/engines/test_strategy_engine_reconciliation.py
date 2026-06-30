@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from datetime import datetime, timezone
 from decimal import Decimal
 from unittest.mock import MagicMock
@@ -169,14 +170,19 @@ async def test_audit_orders_refreshes_missing_persisted_order(engine, monkeypatc
     orders_store = MagicMock()
     orders_store.get_pending_orders.return_value = [record]
     engine._orders_store = orders_store
-    engine._open_orders[:] = ["order-missing"]
+    engine._open_orders[:] = [
+        "order-missing",
+        "client-missing",
+        "order-filled",
+        "client-filled",
+    ]
 
     engine.context.broker.list_orders.return_value = {"orders": []}
     refreshed_order = MagicMock()
     refreshed_order.order_id = None
     refreshed_order.client_order_id = None
-    refreshed_order.id = "order-missing"
-    refreshed_order.client_id = "client-missing"
+    refreshed_order.id = "order-filled"
+    refreshed_order.client_id = "client-filled"
     refreshed_order.symbol = "BTC-USD"
     refreshed_order.side = "BUY"
     refreshed_order.type = "MARKET"
@@ -195,3 +201,59 @@ async def test_audit_orders_refreshes_missing_persisted_order(engine, monkeypatc
     updated = orders_store.upsert_by_client_id.call_args[0][0]
     assert updated.status == PersistedOrderStatus.FILLED
     assert "order-missing" not in engine._open_orders
+    assert "client-missing" not in engine._open_orders
+    assert "order-filled" not in engine._open_orders
+    assert "client-filled" not in engine._open_orders
+
+
+@pytest.mark.asyncio
+async def test_audit_orders_reports_refreshed_open_order_snapshot(engine, monkeypatch) -> None:
+    async def direct_call(func, *args, **kwargs):
+        return func(*args, **kwargs)
+
+    monkeypatch.setattr(engine, "_broker_calls", direct_call)
+    engine._cycle_count = 1
+    engine.context.risk_manager.config.unfilled_order_alert_seconds = 1
+
+    record = OrderRecord(
+        order_id="order-missing",
+        client_order_id="client-missing",
+        symbol="BTC-USD",
+        side="buy",
+        order_type="market",
+        quantity=Decimal("0.01"),
+        price=None,
+        status=PersistedOrderStatus.PENDING,
+        filled_quantity=Decimal("0"),
+        average_fill_price=None,
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+        bot_id="live",
+    )
+    orders_store = MagicMock()
+    orders_store.get_pending_orders.return_value = [record]
+    engine._orders_store = orders_store
+    engine._open_orders[:] = ["order-missing"]
+    engine._status_reporter.update_orders = MagicMock()
+
+    refreshed_order = {
+        "order_id": "order-open",
+        "client_order_id": "client-missing",
+        "product_id": "BTC-USD",
+        "side": "BUY",
+        "status": "OPEN",
+        "created_time": time.time() - 10,
+        "size": "0.01",
+        "price": "50000",
+    }
+    engine.context.broker.list_orders.return_value = {"orders": []}
+    engine.context.broker.get_order.return_value = refreshed_order
+
+    await engine._audit_orders()
+
+    alert_events = [
+        e for e in engine._event_store.list_events() if e.get("type") == "unfilled_order_alert"
+    ]
+    assert len(alert_events) == 1
+    assert alert_events[0]["data"]["order_id"] == "order-open"
+    engine._status_reporter.update_orders.assert_called_once_with([refreshed_order])

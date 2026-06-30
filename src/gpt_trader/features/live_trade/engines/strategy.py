@@ -28,36 +28,19 @@ from gpt_trader.app.runtime.fingerprint import (
     load_startup_config_fingerprint,
 )
 from gpt_trader.config.constants import HEALTH_CHECK_INTERVAL_SECONDS
-from gpt_trader.core import OrderSide, Position, Product
+from gpt_trader.core import OrderSide, OrderType, Position, Product
 from gpt_trader.features.live_trade.degradation import DegradationState
 from gpt_trader.features.live_trade.engines.base import (
     BaseEngine,
     CoordinatorContext,
     HealthStatus,
 )
-from gpt_trader.features.live_trade.engines.cycle_equity import (
-    compute_equity,
-    fetch_batch_tickers,
-    update_equity_and_risk,
-)
-from gpt_trader.features.live_trade.engines.decision_handler import handle_decision
-from gpt_trader.features.live_trade.engines.engine_initialization import (
-    init_guard_stack,
-    init_user_event_handler,
-)
 from gpt_trader.features.live_trade.engines.equity_calculator import (
     EquityCalculator,
 )
-from gpt_trader.features.live_trade.engines.order_placement import (
-    run_order_validator_guards,
-    validate_and_place_order,
-)
+from gpt_trader.features.live_trade.engines.order_audit import OrderAuditService
 from gpt_trader.features.live_trade.engines.order_reconciliation import (
-    handle_order_reconciliation_drift,
-    reconcile_open_orders,
-    recover_unknown_bot_orders,
-    refresh_missing_persisted_orders,
-    rehydrate_open_orders,
+    OrderReconciliationService,
 )
 from gpt_trader.features.live_trade.engines.order_record_mapping import (
     build_record_from_broker_order,
@@ -80,13 +63,13 @@ from gpt_trader.features.live_trade.engines.price_tick_store import (
 )
 from gpt_trader.features.live_trade.engines.runtime.coordinator import RuntimeEngine
 from gpt_trader.features.live_trade.engines.runtime.models import (
+    RuntimeDependency,
     RuntimeLifecycleError,
     RuntimeLifecyclePlan,
+    RuntimeLifecycleStep,
+    RuntimeStepKind,
+    RuntimeStopCondition,
 )
-from gpt_trader.features.live_trade.engines.runtime_lifecycle_plan import (
-    build_runtime_lifecycle_plan,
-)
-from gpt_trader.features.live_trade.engines.symbol_processor import process_symbol
 from gpt_trader.features.live_trade.engines.system_maintenance import (
     SystemMaintenanceService,
 )
@@ -103,13 +86,6 @@ from gpt_trader.features.live_trade.engines.telemetry_streaming import (
     _start_streaming,
     _stop_streaming,
 )
-from gpt_trader.features.live_trade.engines.trading_cycle import (
-    report_system_status,
-    run_cycle,
-    run_cycle_inner,
-    run_loop,
-)
-from gpt_trader.features.live_trade.engines.ws_health_monitor import monitor_ws_health
 from gpt_trader.features.live_trade.execution.decision_trace import OrderDecisionTrace
 from gpt_trader.features.live_trade.execution.guard_manager import GuardManager
 from gpt_trader.features.live_trade.execution.order_submission import OrderSubmitter
@@ -126,10 +102,12 @@ from gpt_trader.features.live_trade.lifecycle import (
     EngineState,
     LifecycleStateMachine,
 )
+from gpt_trader.features.live_trade.risk.manager import ValidationError
 from gpt_trader.features.live_trade.strategies.perps_baseline import (
     Action,
     Decision,
 )
+from gpt_trader.logging.correlation import correlation_context
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.feature_seeds import build_feature_seed, summarize_seed_reason
 from gpt_trader.monitoring.health_checks import HealthCheckRunner
@@ -137,6 +115,7 @@ from gpt_trader.monitoring.heartbeat import HeartbeatService
 from gpt_trader.monitoring.metrics_collector import record_histogram, record_trade_blocked
 from gpt_trader.monitoring.profiling import profile_span
 from gpt_trader.monitoring.status_reporter import StatusReporter
+from gpt_trader.monitoring.tracing import trace_span
 from gpt_trader.persistence.event_store import EventStore
 from gpt_trader.persistence.orders_store import (
     OrderRecord,
@@ -148,6 +127,11 @@ from gpt_trader.utilities.async_tools import BoundedToThread
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="trading_engine")
+
+# Consecutive order reconciliation drift detections required before triggering
+# an escalation (pause + reduce-only). Keep this conservative to avoid
+# flapping on transient list_orders inconsistencies.
+ORDER_RECONCILIATION_DRIFT_MAX_FAILURES = 3
 
 # Re-export for backward compatibility
 __all__ = ["TradingEngine", "EVENT_PRICE_TICK"]
@@ -211,9 +195,6 @@ class TradingEngine(BaseEngine):
 
         # Initialize graceful degradation state
         self._degradation = DegradationState()
-        self._unfilled_order_alerts: dict[str, float] = {}
-        self._order_reconciliation_drift_failures = 0
-        self._order_reconciliation_drift_escalated = False
 
         broker_calls = getattr(context, "broker_calls", None)
         if broker_calls is not None and not asyncio.iscoroutinefunction(
@@ -282,18 +263,10 @@ class TradingEngine(BaseEngine):
         self._ws_reconnect_delay: float = 1.0
         self._ws_last_health_check: float = 0.0
 
-        # Initialize pre-trade guard stack (Option A: embedded guards).
-        # Attributes are declared here and populated in place by init_guard_stack.
-        self._event_store: EventStore
-        self._orders_store: Any
-        self._open_orders: list[str]
-        self._state_collector: StateCollector
-        self._order_submitter: OrderSubmitter
-        self._order_validator: OrderValidator | None
-        self._guard_manager: GuardManager | None
-        init_guard_stack(self)
+        # Initialize pre-trade guard stack (Option A: embedded guards)
+        self._init_guard_stack()
         self._user_event_handler: Any | None = None
-        init_user_event_handler(self)
+        self._init_user_event_handler()
         self._runtime_engine = RuntimeEngine(
             context,
             shutdown_timeout_seconds=getattr(
@@ -306,24 +279,248 @@ class TradingEngine(BaseEngine):
     def preserve_broker_calls_on_shutdown(self) -> None:
         self._preserve_broker_calls_on_shutdown = True
 
+    def _init_guard_stack(self) -> None:
+        """Initialize StateCollector, OrderValidator, OrderSubmitter for pre-trade guards."""
+        # Event store fallback
+        event_store = self.context.event_store or EventStore()
+        self._event_store = event_store
+        bot_id = str(self.context.bot_id or self.context.config.profile or "live")
+
+        # Orders store for durable restart (optional)
+        orders_store = self.context.orders_store
+        if orders_store is None and self.context.container is not None:
+            orders_store = getattr(self.context.container, "orders_store", None)
+        if orders_store is not None:
+            try:
+                orders_store.initialize()
+            except Exception as exc:
+                logger.warning(
+                    "Failed to initialize orders store",
+                    error_type=type(exc).__name__,
+                    error_message=str(exc),
+                    operation="orders_store_init",
+                )
+                orders_store = None
+        self._orders_store = orders_store
+
+        # Broker and risk manager must exist
+        broker = self.context.broker
+        risk_manager = self.context.risk_manager
+
+        # Track open orders
+        self._open_orders: list[str] = []
+        self._rehydrate_open_orders()
+
+        # StateCollector: needs broker, config
+        self._state_collector = StateCollector(
+            broker=broker,  # type: ignore[arg-type]
+            config=self.context.config,
+            integration_mode=False,
+        )
+
+        # OrderSubmitter: broker + event store + bot_id + open_orders
+        self._order_submitter = OrderSubmitter(
+            broker=broker,  # type: ignore[arg-type]
+            event_store=event_store,
+            bot_id=bot_id,
+            open_orders=self._open_orders,
+            enable_retries=getattr(self.context.config, "order_submission_retries_enabled", False),
+            orders_store=self._orders_store,
+            integration_mode=False,
+        )
+        self._order_reconciliation = OrderReconciliationService(
+            context=self.context,
+            open_orders=self._open_orders,
+            orders_store_provider=lambda: self._orders_store,
+            broker_calls_provider=lambda: self._broker_calls,
+            degradation=self._degradation,
+            order_submitter=self._order_submitter,
+            append_event=self._append_event,
+            notify=self._notify,
+            drift_max_failures=ORDER_RECONCILIATION_DRIFT_MAX_FAILURES,
+        )
+        self._order_audit = OrderAuditService(
+            context=self.context,
+            broker_calls_provider=lambda: self._broker_calls,
+            status_reporter=self._status_reporter,
+            reconciliation=self._order_reconciliation,
+            append_event=self._append_event,
+            cycle_count_provider=lambda: self._cycle_count,
+        )
+
+        # Failure tracker from container (not global) with escalation callback
+        container = self.context.container
+        if container is None:
+            raise RuntimeError(
+                "TradingEngine requires a container in context. "
+                "Pass container=ApplicationContainer(config) to CoordinatorContext."
+            )
+        failure_tracker = container.validation_failure_tracker
+
+        # Wire escalation callback: on repeated validation failures, pause + reduce-only
+        def _on_validation_escalation() -> None:
+            """Handle validation infrastructure failures by pausing and setting reduce-only."""
+            if risk_manager is None:
+                return
+
+            risk_manager.set_reduce_only_mode(True, reason="validation_failures")
+            cooldown = 180
+            if risk_manager.config is not None:
+                cooldown = risk_manager.config.validation_failure_cooldown_seconds
+            self._degradation.pause_all(
+                seconds=cooldown,
+                reason="validation_failures",
+                allow_reduce_only=True,
+            )
+            logger.warning(
+                "Validation escalation triggered - pausing trading",
+                cooldown_seconds=cooldown,
+                operation="degradation",
+                stage="validation_escalation",
+            )
+
+        failure_tracker.escalation_callback = _on_validation_escalation
+
+        # OrderValidator: broker + risk_manager + preview config + callbacks + tracker
+        self._order_validator: OrderValidator | None = None
+        if risk_manager is not None:
+            self._order_validator = OrderValidator(
+                broker=broker,  # type: ignore[arg-type]
+                risk_manager=risk_manager,
+                enable_order_preview=self.context.config.enable_order_preview,
+                record_preview_callback=self._order_submitter.record_preview,
+                record_rejection_callback=self._order_submitter.record_rejection,
+                failure_tracker=failure_tracker,
+                broker_calls=self._broker_calls,
+            )
+
+        # GuardManager: runtime guards (daily loss, liquidation buffer, volatility)
+        self._guard_manager: GuardManager | None = None
+        if broker is not None and risk_manager is not None:
+            self._guard_manager = GuardManager(
+                broker=broker,  # type: ignore[arg-type]
+                risk_manager=risk_manager,
+                equity_calculator=self._state_collector.calculate_equity_from_balances,
+                open_orders=self._open_orders,
+                invalidate_cache_callback=lambda: None,
+                cancel_retries_enabled=getattr(
+                    self.context.config, "order_submission_retries_enabled", False
+                ),
+            )
+
+    def _init_user_event_handler(self) -> None:
+        """Initialize Coinbase WS user-event handling for live order updates."""
+        if getattr(self.context.config, "dry_run", False):
+            logger.info(
+                "Dry-run enabled; skipping Coinbase user-event handling",
+                operation="user_events",
+                stage="skip",
+            )
+            return
+
+        broker = self.context.broker
+        if broker is None:
+            return
+
+        module_name = getattr(broker, "__module__", "")
+        if "coinbase" not in module_name:
+            return
+
+        from gpt_trader.features.brokerages.coinbase.user_event_handler import (
+            CoinbaseUserEventHandler,
+        )
+
+        market_data_service = None
+        product_catalog = None
+        container = self.context.container
+        if container is not None:
+            market_data_service = getattr(container, "market_data_service", None)
+            product_catalog = getattr(container, "product_catalog", None)
+
+        self._user_event_handler = CoinbaseUserEventHandler(
+            broker=broker,
+            orders_store=self._orders_store,
+            event_store=self.context.event_store,
+            bot_id=str(self.context.bot_id or self.context.config.profile or "live"),
+            market_data_service=market_data_service,
+            symbols=list(self.context.config.symbols),
+            product_catalog=product_catalog,
+        )
+
     def _rehydrate_open_orders(self) -> None:
-        rehydrate_open_orders(self)
+        """Restore open order IDs from the orders store after a restart."""
+        if self._orders_store is None:
+            return
+        bot_id = str(self.context.bot_id or self.context.config.profile or "")
+        try:
+            pending = self._orders_store.get_pending_orders(bot_id=bot_id or None)
+        except Exception as exc:
+            logger.warning(
+                "Failed to rehydrate open orders",
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="order_recovery",
+            )
+            return
+
+        if not pending:
+            return
+
+        seen: set[str] = set()
+        order_ids: list[str] = []
+        for order in pending:
+            if order.order_id in seen:
+                continue
+            seen.add(order.order_id)
+            order_ids.append(order.order_id)
+
+        self._open_orders[:] = order_ids
+        logger.info(
+            "Rehydrated open orders from persistence",
+            count=len(order_ids),
+            operation="order_recovery",
+        )
 
     async def _recover_unknown_bot_orders(
-        self, orders: list[Any], *, bot_id: str
+        self,
+        orders: list[Any],
+        *,
+        bot_id: str,
     ) -> list[OrderRecord]:
-        return await recover_unknown_bot_orders(self, orders, bot_id=bot_id)
+        return await self._order_reconciliation.recover_unknown_bot_orders(
+            orders,
+            bot_id=bot_id,
+        )
 
     async def _refresh_missing_persisted_orders(
-        self, records: list[OrderRecord], *, bot_id: str
+        self,
+        records: list[OrderRecord],
+        *,
+        bot_id: str,
     ) -> list[Any]:
-        return await refresh_missing_persisted_orders(self, records, bot_id=bot_id)
+        return await self._order_reconciliation.refresh_missing_persisted_orders(
+            records,
+            bot_id=bot_id,
+        )
 
     async def _reconcile_open_orders(self, orders: list[Any]) -> None:
-        await reconcile_open_orders(self, orders)
+        """Reconcile internal open-order tracking with broker + persistence state.
+
+        This addresses a crash-recovery edge case: orders are persisted as pending with
+        ``order_id == client_order_id == submit_id`` before the broker responds with
+        the canonical broker order ID. After restart, rehydration can restore the
+        submit_id into ``self._open_orders``. On the next audit, we normalize tracked
+        IDs back to broker order IDs when the broker returns both IDs.
+        """
+        await self._order_reconciliation.reconcile_open_orders(orders)
 
     async def _handle_order_reconciliation_drift(self, order_ids: list[str]) -> None:
-        await handle_order_reconciliation_drift(self, order_ids)
+        """Escalate persistent order-reconciliation drift to graceful degradation."""
+        await self._order_reconciliation.handle_order_reconciliation_drift(order_ids)
+
+    # =========================================================================
+    # Streaming Lifecycle Methods
+    # =========================================================================
 
     def _should_enable_streaming(self) -> bool:
         """Check if streaming should be enabled based on config."""
@@ -444,7 +641,153 @@ class TradingEngine(BaseEngine):
         )
 
     def _runtime_lifecycle_plan(self) -> RuntimeLifecyclePlan:
-        return build_runtime_lifecycle_plan(self)
+        shutdown_timeout_seconds = getattr(
+            self.context.config,
+            "runtime_shutdown_timeout_seconds",
+            5.0,
+        )
+        return RuntimeLifecyclePlan(
+            dependencies=(
+                RuntimeDependency("config", self.context.config),
+                RuntimeDependency("container", self.context.container),
+                RuntimeDependency("broker", self.context.broker),
+                RuntimeDependency("risk_manager", self.context.risk_manager, required=False),
+                RuntimeDependency("event_store", self.context.event_store, required=False),
+                RuntimeDependency("orders_store", self.context.orders_store, required=False),
+                RuntimeDependency(
+                    "notification_service",
+                    self.context.notification_service,
+                    required=False,
+                ),
+            ),
+            stop_conditions=(
+                RuntimeStopCondition(
+                    name="engine_error_state",
+                    is_met=lambda: self.state == EngineState.ERROR,
+                    reason="trading_engine_error",
+                ),
+            ),
+            startup_steps=(
+                RuntimeLifecycleStep(
+                    name="engine_state_starting",
+                    kind=RuntimeStepKind.STARTUP_HOOK,
+                    callback=self._runtime_mark_starting,
+                ),
+                RuntimeLifecycleStep(
+                    name="price_history_rehydrate",
+                    kind=RuntimeStepKind.STARTUP_HOOK,
+                    callback=self._runtime_rehydrate_once,
+                ),
+                RuntimeLifecycleStep(
+                    name="runtime_start_event",
+                    kind=RuntimeStepKind.STARTUP_HOOK,
+                    callback=self._record_runtime_start,
+                ),
+                RuntimeLifecycleStep(
+                    name="engine_state_running",
+                    kind=RuntimeStepKind.STARTUP_HOOK,
+                    callback=self._runtime_mark_running,
+                ),
+                RuntimeLifecycleStep(
+                    name="trading_loop",
+                    kind=RuntimeStepKind.BACKGROUND_TASK,
+                    callback=self._start_trading_loop_task,
+                ),
+                RuntimeLifecycleStep(
+                    name="heartbeat_service",
+                    kind=RuntimeStepKind.HEARTBEAT,
+                    callback=self._heartbeat.start,
+                ),
+                RuntimeLifecycleStep(
+                    name="status_reporter",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._status_reporter.start,
+                ),
+                RuntimeLifecycleStep(
+                    name="health_check_runner",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._health_check_runner.start,
+                ),
+                RuntimeLifecycleStep(
+                    name="system_maintenance_prune",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._system_maintenance.start_prune_loop,
+                ),
+                RuntimeLifecycleStep(
+                    name="runtime_guard_checkpoint",
+                    kind=RuntimeStepKind.POLICY_CHECKPOINT,
+                    callback=self._runtime_guard_checkpoint,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="runtime_guard_sweep",
+                    kind=RuntimeStepKind.POLICY_CHECKPOINT,
+                    callback=self._start_runtime_guard_task,
+                ),
+                RuntimeLifecycleStep(
+                    name="streaming",
+                    kind=RuntimeStepKind.STREAMING,
+                    callback=self._runtime_start_streaming,
+                ),
+                RuntimeLifecycleStep(
+                    name="ws_health_watchdog",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._start_ws_health_watchdog_task,
+                ),
+            ),
+            shutdown_steps=(
+                RuntimeLifecycleStep(
+                    name="ws_health_watchdog",
+                    kind=RuntimeStepKind.SHUTDOWN_HOOK,
+                    callback=self._stop_ws_health_watchdog_task,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="streaming",
+                    kind=RuntimeStepKind.STREAMING,
+                    callback=self._runtime_stop_streaming,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="health_check_runner",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._health_check_runner.stop,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="system_maintenance",
+                    kind=RuntimeStepKind.SHUTDOWN_HOOK,
+                    callback=self._system_maintenance.stop,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="status_reporter",
+                    kind=RuntimeStepKind.HEALTH,
+                    callback=self._status_reporter.stop,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="heartbeat_service",
+                    kind=RuntimeStepKind.HEARTBEAT,
+                    callback=self._heartbeat.stop,
+                    timeout_seconds=shutdown_timeout_seconds,
+                    register_task=False,
+                ),
+                RuntimeLifecycleStep(
+                    name="broker_call_executor",
+                    kind=RuntimeStepKind.SHUTDOWN_HOOK,
+                    callback=self._runtime_shutdown_broker_calls,
+                    register_task=False,
+                ),
+            ),
+            task_cleanup_timeout_seconds=shutdown_timeout_seconds,
+            shutdown_step_timeout_seconds=shutdown_timeout_seconds,
+        )
 
     def _runtime_mark_starting(self) -> None:
         self._transition_state(EngineState.STARTING, reason="start_background_tasks")
@@ -672,19 +1015,331 @@ class TradingEngine(BaseEngine):
         )
 
     async def _monitor_ws_health(self) -> None:
-        await monitor_ws_health(self)
+        """Monitor WebSocket health and trigger degradation on staleness.
+
+        Periodically polls WS health metrics from the broker. If messages
+        or heartbeats are stale beyond configured thresholds, triggers:
+        - Reduce-only mode for affected symbols
+        - Symbol pause for configured cooldown
+        - Notification alerts
+
+        On reconnect, pauses briefly to allow state synchronization.
+        """
+        risk_manager = self.context.risk_manager
+        config = getattr(risk_manager, "config", None) if risk_manager else None
+
+        def _coerce_seconds(value: Any, default: float) -> float:
+            if value is None or isinstance(value, bool):
+                return default
+            if isinstance(value, (int, float)):
+                return float(value)
+            if isinstance(value, str):
+                try:
+                    return float(value)
+                except ValueError:
+                    return default
+            return default
+
+        # Get thresholds from config or use defaults
+        interval = _coerce_seconds(getattr(config, "ws_health_interval_seconds", None), 5.0)
+        message_stale_threshold = _coerce_seconds(
+            getattr(config, "ws_message_stale_seconds", None), 15.0
+        )
+        heartbeat_stale_threshold = _coerce_seconds(
+            getattr(config, "ws_heartbeat_stale_seconds", None), 30.0
+        )
+        reconnect_pause = _coerce_seconds(getattr(config, "ws_reconnect_pause_seconds", None), 30.0)
+
+        interval = max(0.1, interval)
+        message_stale_threshold = max(0.0, message_stale_threshold)
+        heartbeat_stale_threshold = max(0.0, heartbeat_stale_threshold)
+        reconnect_pause = max(0.0, reconnect_pause)
+
+        last_reconnect_count = 0
+
+        while self.running:
+            try:
+                # Get WS health from broker (if it supports the method)
+                broker = self.context.broker
+                ws_health: dict[str, Any] = {}
+
+                if broker is not None and hasattr(broker, "get_ws_health"):
+                    try:
+                        ws_health = broker.get_ws_health()
+                    except Exception as exc:
+                        logger.debug(
+                            "Failed to get WS health",
+                            error=str(exc),
+                            operation="ws_health",
+                            stage="poll",
+                        )
+
+                if not ws_health:
+                    # No WS connection or broker doesn't support health check
+                    await asyncio.sleep(interval)
+                    continue
+
+                current_time = time.time()
+
+                last_message_ts_raw = ws_health.get("last_message_ts")
+                last_message_ts = (
+                    float(last_message_ts_raw)
+                    if isinstance(last_message_ts_raw, (int, float))
+                    and not isinstance(last_message_ts_raw, bool)
+                    else None
+                )
+                last_heartbeat_ts_raw = ws_health.get("last_heartbeat_ts")
+                last_heartbeat_ts = (
+                    float(last_heartbeat_ts_raw)
+                    if isinstance(last_heartbeat_ts_raw, (int, float))
+                    and not isinstance(last_heartbeat_ts_raw, bool)
+                    else None
+                )
+
+                reconnect_count_raw = ws_health.get("reconnect_count", 0)
+                reconnect_count = (
+                    int(reconnect_count_raw)
+                    if isinstance(reconnect_count_raw, (int, float))
+                    and not isinstance(reconnect_count_raw, bool)
+                    else 0
+                )
+                gap_count_raw = ws_health.get("gap_count", 0)
+                gap_count = (
+                    int(gap_count_raw)
+                    if isinstance(gap_count_raw, (int, float))
+                    and not isinstance(gap_count_raw, bool)
+                    else 0
+                )
+
+                connected_raw = ws_health.get("connected", False)
+                connected = connected_raw if isinstance(connected_raw, bool) else False
+
+                # Check for reconnect event
+                if reconnect_count > last_reconnect_count:
+                    logger.warning(
+                        "WebSocket reconnected - pausing for state sync",
+                        reconnect_count=reconnect_count,
+                        pause_seconds=reconnect_pause,
+                        operation="ws_health",
+                        stage="reconnect",
+                    )
+                    self._append_event(
+                        "websocket_reconnect",
+                        {
+                            "reconnect_count": reconnect_count,
+                            "gap_count": gap_count,
+                            "connected": connected,
+                            "timestamp": current_time,
+                        },
+                    )
+                    last_reconnect_count = reconnect_count
+
+                    # Reset reconnect attempts on successful reconnect
+                    self._ws_reconnect_attempts = 0
+                    self._ws_reconnect_delay = 1.0
+
+                    if self._user_event_handler is not None:
+                        backfill = getattr(self._user_event_handler, "request_backfill", None)
+                        if callable(backfill):
+                            backfill(reason="ws_reconnect", run_in_thread=True)
+
+                    # Pause all symbols briefly after reconnect
+                    self._degradation.pause_all(
+                        seconds=reconnect_pause,
+                        reason="ws_reconnect",
+                        allow_reduce_only=True,
+                    )
+
+                    await self._notify(
+                        title="WebSocket Reconnected",
+                        message=f"Trading paused for {reconnect_pause}s for state sync.",
+                        severity=AlertSeverity.WARNING,
+                        context={"reconnect_count": reconnect_count},
+                    )
+
+                    await asyncio.sleep(interval)
+                    continue
+
+                # Check message staleness
+                is_message_stale = False
+                if last_message_ts is not None:
+                    message_age = current_time - last_message_ts
+                    is_message_stale = message_age > message_stale_threshold
+
+                # Check heartbeat staleness
+                is_heartbeat_stale = False
+                if last_heartbeat_ts is not None:
+                    heartbeat_age = current_time - last_heartbeat_ts
+                    is_heartbeat_stale = heartbeat_age > heartbeat_stale_threshold
+
+                # Trigger degradation if stale
+                if is_message_stale or is_heartbeat_stale:
+                    stale_reason = "ws_message_stale" if is_message_stale else "ws_heartbeat_stale"
+                    stale_age = (
+                        (current_time - last_message_ts)
+                        if is_message_stale and last_message_ts
+                        else (current_time - last_heartbeat_ts if last_heartbeat_ts else 0)
+                    )
+
+                    logger.warning(
+                        "WebSocket data stale - triggering degradation",
+                        reason=stale_reason,
+                        stale_age_seconds=stale_age,
+                        message_stale=is_message_stale,
+                        heartbeat_stale=is_heartbeat_stale,
+                        connected=connected,
+                        gap_count=gap_count,
+                        operation="ws_health",
+                        stage="degradation",
+                    )
+
+                    # Set reduce-only mode
+                    if risk_manager is not None:
+                        risk_manager.set_reduce_only_mode(True, reason=stale_reason)
+
+                    # Pause all trading (allow reduce-only)
+                    cooldown = reconnect_pause
+                    self._degradation.pause_all(
+                        seconds=cooldown,
+                        reason=stale_reason,
+                        allow_reduce_only=True,
+                    )
+
+                    await self._notify(
+                        title="WebSocket Stale - Trading Paused",
+                        message=f"No WS data for {stale_age:.1f}s. Reduce-only mode enabled.",
+                        severity=AlertSeverity.WARNING,
+                        context={
+                            "reason": stale_reason,
+                            "stale_age_seconds": stale_age,
+                            "cooldown_seconds": cooldown,
+                        },
+                    )
+
+                # Log gap detection warnings
+                if gap_count > 0 and self._cycle_count % 60 == 0:
+                    logger.info(
+                        "WebSocket sequence gaps detected",
+                        gap_count=gap_count,
+                        operation="ws_health",
+                        stage="info",
+                    )
+
+                # Update status reporter with WS health
+                self._status_reporter.update_ws_health(ws_health)
+
+            except Exception:
+                logger.exception("WS health watchdog error", operation="ws_health")
+
+            await asyncio.sleep(interval)
 
     async def _run_loop(self) -> None:
-        await run_loop(self)
+        logger.info("Starting strategy loop...")
+        while self.running:
+            try:
+                await self._cycle()
+                # Record successful cycle
+                self._status_reporter.record_cycle()
+            except Exception as e:
+                logger.error(f"Error in strategy cycle: {e}", exc_info=True)
+                # Record error in status reporter
+                self._status_reporter.record_error(str(e))
+                await self._notify(
+                    title="Strategy Cycle Error",
+                    message=f"Error during trading cycle: {e}",
+                    severity=AlertSeverity.ERROR,
+                    context={"error": str(e)},
+                )
+
+            await asyncio.sleep(self.context.config.interval)
 
     def _report_system_status(self) -> None:
-        report_system_status(self)
+        """Collect and report system health metrics.
+
+        Delegates to SystemMaintenanceService for the actual reporting.
+        """
+        self._system_maintenance.report_system_status(
+            latency_seconds=self._last_latency,
+            connection_status=self._connection_status,
+        )
 
     async def _cycle(self) -> None:
-        await run_cycle(self)
+        """One trading cycle."""
+        assert self.context.broker is not None, "Broker not initialized"
+        self._cycle_count += 1
+
+        # Wrap entire cycle in correlation context and trace span
+        start_time = time.perf_counter()
+        result = "ok"
+        with correlation_context(cycle=self._cycle_count):
+            with trace_span("cycle", {"cycle": self._cycle_count}) as span:
+                try:
+                    await self._cycle_inner()
+                except Exception:
+                    result = "error"
+                    if span:
+                        span.set_attribute("error", True)
+                    raise
+                finally:
+                    duration = time.perf_counter() - start_time
+                    if span:
+                        span.set_attribute("duration_seconds", duration)
+                        span.set_attribute("result", result)
+                    record_histogram(
+                        "gpt_trader_cycle_duration_seconds",
+                        duration,
+                        labels={"result": result},
+                    )
 
     async def _cycle_inner(self) -> None:
-        await run_cycle_inner(self)
+        """Inner cycle logic wrapped in correlation context."""
+        logger.info(f"=== CYCLE {self._cycle_count} START ===")
+
+        # Report system status at start of cycle
+        self._report_system_status()
+        broker = self.context.broker
+        if broker is None:
+            logger.error("Broker not initialized", operation="cycle")
+            self._connection_status = "DISCONNECTED"
+            return
+
+        positions, audit_task = await self._fetch_positions_and_audit()
+        equity = await self._compute_equity(positions)
+        if equity is None:
+            await self._await_audit_task(audit_task, context="during equity error path")
+            return
+
+        await self._await_audit_task(audit_task, context="post equity")
+        self._update_equity_and_risk(equity)
+
+        # Ensure symbols is a list to avoid iterator exhaustion during multiple iterations
+        symbols = list(self.context.config.symbols)
+        tickers = await self._fetch_batch_tickers(broker, symbols)
+
+        tasks = [
+            self._process_symbol(
+                symbol=symbol,
+                broker=broker,
+                ticker=tickers.get(symbol),
+                positions=positions,
+                equity=equity,
+            )
+            for symbol in symbols
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        failures: list[Exception] = []
+
+        for symbol, res in zip(symbols, results):
+            if isinstance(res, Exception):
+                logger.error(
+                    f"Failed to process symbol {symbol}: {res}",
+                    exc_info=res,
+                    symbol=symbol,
+                )
+                failures.append(res)
+
+        if failures:
+            raise ExceptionGroup("Cycle completed with symbol processing errors", failures)
 
     async def _fetch_positions_and_audit(
         self,
@@ -716,15 +1371,65 @@ class TradingEngine(BaseEngine):
             logger.warning(f"Order audit failed {context}: {e}")
 
     async def _compute_equity(self, positions: dict[str, Position]) -> Decimal | None:
-        return await compute_equity(self, positions)
+        logger.info("Step 2: Calculating total equity...")
+        with profile_span("equity_computation") as _eq_span:
+            equity = await self._fetch_total_equity(positions)
+        if equity is None:
+            logger.error(
+                "Failed to fetch equity - cannot continue cycle. "
+                "Check logs above for balance fetch errors."
+            )
+            self._status_reporter.record_error("Failed to fetch equity")
+            return None
+        return equity
 
     def _update_equity_and_risk(self, equity: Decimal) -> None:
-        update_equity_and_risk(self, equity)
+        logger.info(f"Successfully calculated equity: ${equity}")
+        self._status_reporter.update_equity(equity)
+        logger.info("Equity updated in status reporter")
+
+        if self.context.risk_manager:
+            triggered = self.context.risk_manager.track_daily_pnl(equity, {})
+            if triggered:
+                logger.warning("Daily loss limit triggered! Reduce-only mode activated.")
+
+            rm = self.context.risk_manager
+            daily_loss_pct = 0.0
+            start_equity = getattr(rm, "_start_of_day_equity", 0)
+            if start_equity and start_equity > 0:
+                daily_pnl = equity - start_equity
+                daily_loss_pct = float(-daily_pnl / start_equity)
+
+            self._status_reporter.update_risk(
+                max_leverage=float(getattr(rm.config, "max_leverage", 0.0) if rm.config else 0.0),
+                daily_loss_limit=float(
+                    getattr(rm.config, "daily_loss_limit_pct", 0.0) if rm.config else 0.0
+                ),
+                current_daily_loss=daily_loss_pct,
+                reduce_only=getattr(rm, "_reduce_only_mode", False),
+                reduce_reason=getattr(rm, "_reduce_only_reason", ""),
+            )
 
     async def _fetch_batch_tickers(
         self, broker: Any, symbols: list[str]
     ) -> dict[str, dict[str, Any]]:
-        return await fetch_batch_tickers(self, broker, symbols)
+        tickers: dict[str, dict[str, Any]] = {}
+        batch_start = time.time()
+
+        get_tickers_method = getattr(broker, "get_tickers", None)
+        if get_tickers_method is not None and callable(get_tickers_method):
+            try:
+                result = await self._broker_calls(get_tickers_method, symbols)
+                if isinstance(result, dict):
+                    tickers = result
+                    logger.debug(
+                        f"Batch ticker fetch: {len(tickers)}/{len(symbols)} symbols "
+                        f"in {time.time() - batch_start:.3f}s"
+                    )
+            except Exception as e:
+                logger.warning(f"Batch ticker fetch failed, falling back to individual: {e}")
+
+        return tickers
 
     async def _process_symbol(
         self,
@@ -735,13 +1440,79 @@ class TradingEngine(BaseEngine):
         positions: dict[str, Position],
         equity: Decimal,
     ) -> None:
-        await process_symbol(
-            self,
+        candles: list[Any] = []
+        start_time = time.time()
+
+        if ticker is None:
+            try:
+                ticker = await self._broker_calls(broker.get_ticker, symbol)
+            except Exception as e:
+                logger.error(f"Failed to fetch ticker for {symbol}: {e}")
+                self._connection_status = "DISCONNECTED"
+                return
+
+        if ticker is None or not ticker.get("price"):
+            logger.error(f"No ticker data for {symbol}")
+            self._connection_status = "DISCONNECTED"
+            return
+
+        try:
+            candles_result = await self._broker_calls(
+                broker.get_candles,
+                symbol,
+                granularity="ONE_MINUTE",
+            )
+            if isinstance(candles_result, Exception):
+                logger.warning(f"Failed to fetch candles for {symbol}: {candles_result}")
+            else:
+                candles = candles_result or []
+        except Exception as e:
+            logger.warning(f"Failed to fetch candles for {symbol}: {e}")
+
+        self._last_latency = time.time() - start_time
+        self._connection_status = "CONNECTED"
+
+        price = Decimal(str(ticker.get("price", 0)))
+        logger.info(f"{symbol} price: {price}")
+
+        if self.context.risk_manager is not None:
+            self.context.risk_manager.last_mark_update[symbol] = time.time()
+
+        self._status_reporter.update_price(symbol, price)
+        await self._price_tick_store.record_price_tick_async(symbol, price)
+
+        position_state = self._build_position_state(symbol, positions)
+        with profile_span("strategy_decision", {"symbol": symbol}) as _strat_span:
+            decision = self.strategy.decide(
+                symbol=symbol,
+                current_mark=price,
+                position_state=position_state,
+                recent_marks=self.price_history[symbol],
+                equity=equity,
+                product=None,
+                candles=candles,
+            )
+
+        logger.info(f"Strategy Decision for {symbol}: {decision.action} ({decision.reason})")
+
+        active_strats = getattr(
+            self.strategy, "active_strategies", [self.strategy.__class__.__name__]
+        )
+        decision_record = {
+            "symbol": symbol,
+            "action": decision.action.value,
+            "reason": decision.reason,
+            "confidence": str(decision.confidence),
+            "timestamp": time.time(),
+        }
+        self._status_reporter.update_strategy(active_strats, [decision_record])
+
+        await self._handle_decision(
             symbol=symbol,
-            broker=broker,
-            ticker=ticker,
-            positions=positions,
+            decision=decision,
+            price=price,
             equity=equity,
+            position_state=position_state,
         )
 
     async def _handle_decision(
@@ -753,14 +1524,180 @@ class TradingEngine(BaseEngine):
         equity: Decimal,
         position_state: dict[str, Any] | None,
     ) -> None:
-        await handle_decision(
-            self,
-            symbol=symbol,
-            decision=decision,
-            price=price,
-            equity=equity,
-            position_state=position_state,
-        )
+        if decision.action in (Action.BUY, Action.SELL):
+            logger.info(
+                "Executing order",
+                symbol=symbol,
+                action=decision.action.value,
+                operation="order_placement",
+                stage="start",
+            )
+            try:
+                with profile_span(
+                    "order_placement", {"symbol": symbol, "action": decision.action.value}
+                ):
+                    result = await self._validate_and_place_order(
+                        symbol=symbol,
+                        decision=decision,
+                        price=price,
+                        equity=equity,
+                    )
+                if result.blocked:
+                    logger.warning(
+                        "Order blocked",
+                        symbol=symbol,
+                        action=decision.action.value,
+                        reason=result.reason,
+                        operation="order_placement",
+                        stage="blocked",
+                    )
+                elif result.failed:
+                    logger.error(
+                        "Order submission failed",
+                        symbol=symbol,
+                        action=decision.action.value,
+                        reason=result.reason,
+                        error_message=result.error,
+                        operation="order_placement",
+                        stage="failed",
+                    )
+                    failure_detail = result.error or result.reason or "unknown"
+                    await self._notify(
+                        title="Order Submission Failed",
+                        message=(
+                            f"Failed to submit {decision.action.value} order for {symbol}: "
+                            f"{failure_detail}"
+                        ),
+                        severity=AlertSeverity.ERROR,
+                        context={
+                            "symbol": symbol,
+                            "action": decision.action.value,
+                            "reason": result.reason,
+                            "error": result.error,
+                        },
+                    )
+            except Exception as e:
+                logger.error(
+                    "Order placement failed",
+                    symbol=symbol,
+                    action=decision.action.value,
+                    error_message=str(e),
+                    operation="order_placement",
+                    stage="failed",
+                )
+                await self._notify(
+                    title="Order Placement Failed",
+                    message=f"Failed to execute {decision.action} for {symbol}: {e}",
+                    severity=AlertSeverity.ERROR,
+                    context={
+                        "symbol": symbol,
+                        "action": decision.action.value,
+                        "error": str(e),
+                    },
+                )
+        elif decision.action == Action.CLOSE:
+            if position_state is None:
+                logger.info(
+                    "CLOSE signal ignored - no open position",
+                    symbol=symbol,
+                    action=decision.action.value,
+                    operation="order_placement",
+                    stage="skip",
+                )
+                return
+
+            close_order = self._resolve_close_order(position_state)
+            if close_order is None:
+                logger.warning(
+                    "CLOSE signal ignored - invalid position state",
+                    symbol=symbol,
+                    action=decision.action.value,
+                    position_state=position_state,
+                    operation="order_placement",
+                    stage="invalid_position_state",
+                )
+                return
+
+            close_side, close_quantity = close_order
+            logger.info(
+                "Executing close order",
+                symbol=symbol,
+                action=decision.action.value,
+                side=close_side.value,
+                quantity=str(close_quantity),
+                operation="order_placement",
+                stage="start",
+            )
+            try:
+                with profile_span(
+                    "order_placement",
+                    {"symbol": symbol, "action": decision.action.value, "side": close_side.value},
+                ):
+                    result = await self.submit_order(
+                        symbol=symbol,
+                        side=close_side,
+                        price=price,
+                        equity=equity,
+                        quantity_override=close_quantity,
+                        reduce_only=True,
+                        reason=decision.reason,
+                        confidence=decision.confidence,
+                    )
+                if result.blocked:
+                    logger.warning(
+                        "Close order blocked",
+                        symbol=symbol,
+                        action=decision.action.value,
+                        side=close_side.value,
+                        reason=result.reason,
+                        operation="order_placement",
+                        stage="blocked",
+                    )
+                elif result.failed:
+                    logger.error(
+                        "Close order submission failed",
+                        symbol=symbol,
+                        action=decision.action.value,
+                        side=close_side.value,
+                        reason=result.reason,
+                        error_message=result.error,
+                        operation="order_placement",
+                        stage="failed",
+                    )
+                    failure_detail = result.error or result.reason or "unknown"
+                    await self._notify(
+                        title="Close Order Submission Failed",
+                        message=f"Failed to close {symbol}: {failure_detail}",
+                        severity=AlertSeverity.ERROR,
+                        context={
+                            "symbol": symbol,
+                            "action": decision.action.value,
+                            "side": close_side.value,
+                            "reason": result.reason,
+                            "error": result.error,
+                        },
+                    )
+            except Exception as e:
+                logger.error(
+                    "Close order placement failed",
+                    symbol=symbol,
+                    action=decision.action.value,
+                    side=close_side.value,
+                    error_message=str(e),
+                    operation="order_placement",
+                    stage="failed",
+                )
+                await self._notify(
+                    title="Close Order Placement Failed",
+                    message=f"Failed to close {symbol}: {e}",
+                    severity=AlertSeverity.ERROR,
+                    context={
+                        "symbol": symbol,
+                        "action": decision.action.value,
+                        "side": close_side.value,
+                        "error": str(e),
+                    },
+                )
 
     async def _fetch_total_equity(self, positions: dict[str, Position]) -> Decimal | None:
         """Fetch total equity = collateral + unrealized PnL."""
@@ -1043,58 +1980,7 @@ class TradingEngine(BaseEngine):
         return parse_timestamp(value)
 
     def _record_unfilled_order_alerts(self, orders: list[Any]) -> None:
-        risk_manager = self.context.risk_manager
-        config = risk_manager.config if risk_manager else None
-        threshold = getattr(config, "unfilled_order_alert_seconds", 300)
-        if not orders or threshold <= 0:
-            self._unfilled_order_alerts.clear()
-            return
-
-        now = time.time()
-        active_ids: set[str] = set()
-
-        for order in orders:
-            order_id = self._get_order_field(
-                order, "order_id", "id", "client_order_id", "client_id"
-            )
-            if order_id is None:
-                continue
-            order_id_str = str(order_id)
-            active_ids.add(order_id_str)
-            if order_id_str in self._unfilled_order_alerts:
-                continue
-
-            status = self._get_order_field(order, "status")
-            status_str = (status.value if hasattr(status, "value") else str(status or "")).upper()
-            if status_str in {"FILLED", "CANCELLED", "CANCELED", "REJECTED"}:
-                continue
-
-            created_at = self._get_order_field(
-                order, "created_time", "created_at", "submitted_at", "created"
-            )
-            created_ts = self._parse_timestamp(created_at)
-            age_seconds = now - created_ts
-            if age_seconds < threshold:
-                continue
-
-            payload = {
-                "order_id": order_id_str,
-                "symbol": self._get_order_field(order, "product_id", "symbol") or "",
-                "side": self._get_order_field(order, "side") or "",
-                "status": status_str,
-                "created_time": created_ts,
-                "age_seconds": age_seconds,
-                "threshold_seconds": threshold,
-                "timestamp": now,
-            }
-            self._append_event("unfilled_order_alert", payload)
-            self._unfilled_order_alerts[order_id_str] = now
-
-        stale_ids = [
-            order_id for order_id in self._unfilled_order_alerts if order_id not in active_ids
-        ]
-        for order_id in stale_ids:
-            del self._unfilled_order_alerts[order_id]
+        self._order_audit.record_unfilled_order_alerts(orders)
 
     def _finalize_decision_trace(
         self,
@@ -1603,16 +2489,180 @@ class TradingEngine(BaseEngine):
         reduce_only_flag: bool,
         trace: OrderDecisionTrace,
     ) -> tuple[Decimal, Decimal, bool, OrderSubmissionResult | None]:
-        return await run_order_validator_guards(
-            self,
-            symbol=symbol,
-            side=side,
-            price=price,
-            equity=equity,
-            quantity=quantity,
-            reduce_only_flag=reduce_only_flag,
-            trace=trace,
-        )
+        effective_price = price
+        if self._order_validator is None:
+            trace.record_outcome("order_validation", "skipped")
+            return quantity, effective_price, reduce_only_flag, None
+
+        try:
+            with profile_span("pre_trade_validation", {"symbol": symbol}) as _val_span:
+                product = self._state_collector.require_product(symbol, product=None)
+                effective_price = self._state_collector.resolve_effective_price(
+                    symbol, side.value.lower(), price, product
+                )
+
+                try:
+                    quantity, _ = self._order_validator.validate_exchange_rules(
+                        symbol=symbol,
+                        side=side,
+                        order_type=OrderType.MARKET,
+                        order_quantity=quantity,
+                        price=None,
+                        effective_price=effective_price,
+                        product=product,
+                    )
+                    trace.quantity = quantity
+                    trace.record_outcome("exchange_rules", "passed")
+                except ValidationError as exc:
+                    trace.record_outcome("exchange_rules", "blocked", detail=str(exc))
+                    raise
+
+                current_positions_dict = self._state_collector.build_positions_dict(
+                    list(self._current_positions.values())
+                )
+                try:
+                    self._order_validator.run_pre_trade_validation(
+                        symbol=symbol,
+                        side=side,
+                        order_quantity=quantity,
+                        effective_price=effective_price,
+                        product=product,
+                        equity=equity,
+                        current_positions=current_positions_dict,
+                    )
+                    trace.record_outcome("pre_trade_validation", "passed")
+                except ValidationError as exc:
+                    trace.record_outcome("pre_trade_validation", "blocked", detail=str(exc))
+                    raise
+
+                try:
+                    self._order_validator.enforce_slippage_guard(
+                        symbol, side, quantity, effective_price
+                    )
+                    trace.record_outcome("slippage_guard", "passed")
+                    self._degradation.reset_slippage_failures(symbol)
+                except ValidationError as slippage_exc:
+                    trace.record_outcome(
+                        "slippage_guard",
+                        "blocked",
+                        detail=str(slippage_exc),
+                    )
+                    config = self.context.risk_manager.config if self.context.risk_manager else None
+                    if config is not None:
+                        self._degradation.record_slippage_failure(symbol, config)
+                    raise slippage_exc
+
+                # Use container's tracker (validated at init, asserted non-None here)
+                assert self.context.container is not None
+                failure_tracker = self.context.container.validation_failure_tracker
+                config = self.context.risk_manager.config if self.context.risk_manager else None
+                preview_disable_threshold = config.preview_failure_disable_after if config else 5
+
+                if (
+                    self._order_validator.enable_order_preview
+                    and failure_tracker.get_failure_count("order_preview")
+                    >= preview_disable_threshold
+                ):
+                    logger.warning(
+                        "Auto-disabling order preview due to repeated failures",
+                        consecutive_failures=failure_tracker.get_failure_count("order_preview"),
+                        threshold=preview_disable_threshold,
+                        operation="degradation",
+                        stage="preview_disable",
+                    )
+                    self._order_validator.enable_order_preview = False
+
+                if self._order_validator.enable_order_preview:
+                    try:
+                        await self._order_validator.maybe_preview_order_async(
+                            symbol=symbol,
+                            side=side,
+                            order_type=OrderType.MARKET,
+                            order_quantity=quantity,
+                            effective_price=effective_price,
+                            stop_price=None,
+                            tif=self.context.config.time_in_force,
+                            reduce_only=reduce_only_flag,
+                            leverage=None,
+                        )
+                        trace.record_outcome("order_preview", "passed")
+                    except ValidationError as exc:
+                        trace.record_outcome(
+                            "order_preview",
+                            "blocked",
+                            detail=str(exc),
+                        )
+                        raise
+                else:
+                    trace.record_outcome("order_preview", "skipped")
+
+                reduce_only_flag = self._order_validator.finalize_reduce_only_flag(
+                    reduce_only_flag, symbol
+                )
+                trace.reduce_only_final = reduce_only_flag
+        except ValidationError as exc:
+            logger.warning(f"Pre-trade guard rejected order: {exc}")
+            blocked_stage = None
+            for stage, outcome in trace.outcomes.items():
+                if outcome.get("status") == "blocked":
+                    blocked_stage = stage
+                    break
+            reason_code = blocked_stage or "order_validation"
+            self._emit_trade_gate_blocked(
+                gate=reason_code,
+                symbol=symbol,
+                side=side,
+                reason=str(exc),
+                params={
+                    "blocked_stage": reason_code,
+                    "reduce_only": reduce_only_flag,
+                },
+                decision_id=trace.decision_id,
+            )
+            self._order_submitter.record_rejection(
+                symbol, side.value, quantity, effective_price, reason_code
+            )
+            await self._notify(
+                title="Order Blocked - Guard Rejection",
+                message=f"Cannot place order for {symbol}: {exc}",
+                severity=AlertSeverity.WARNING,
+                context={"symbol": symbol, "side": side.value, "reason": str(exc)},
+            )
+            trace.record_outcome("order_validation", "blocked", detail=str(exc))
+            return (
+                quantity,
+                effective_price,
+                reduce_only_flag,
+                self._finalize_decision_trace(
+                    trace,
+                    status=OrderSubmissionStatus.BLOCKED,
+                    reason=str(exc),
+                ),
+            )
+        except Exception as exc:
+            logger.error(f"Guard check error: {exc}")
+            self._order_submitter.record_rejection(
+                symbol, side.value, quantity, price, "guard_error"
+            )
+            await self._notify(
+                title="Order Blocked - Guard Error",
+                message=f"Cannot place order for {symbol}: guard check failed",
+                severity=AlertSeverity.ERROR,
+                context={"symbol": symbol, "side": side.value, "error": str(exc)},
+            )
+            trace.record_outcome("order_validation", "error", detail=str(exc))
+            return (
+                quantity,
+                effective_price,
+                reduce_only_flag,
+                self._finalize_decision_trace(
+                    trace,
+                    status=OrderSubmissionStatus.FAILED,
+                    error=str(exc),
+                ),
+            )
+
+        return quantity, effective_price, reduce_only_flag, None
 
     async def _validate_and_place_order(
         self,
@@ -1623,14 +2673,210 @@ class TradingEngine(BaseEngine):
         quantity_override: Decimal | None = None,
         reduce_only_requested: bool = False,
     ) -> OrderSubmissionResult:
-        return await validate_and_place_order(
-            self,
-            symbol,
-            decision,
-            price,
-            equity,
+        """Validate and submit an order through the guard stack.
+
+        Returns:
+            OrderSubmissionResult describing success/blocked/failed.
+        """
+        side = OrderSide.BUY if decision.action == Action.BUY else OrderSide.SELL
+
+        # Early check: is this order actually reduce-only? (needed for degradation check)
+        current_pos = self._current_positions.get(symbol)
+        is_reducing = self._is_reduce_only_order(current_pos, side)
+        reduce_only_flag = is_reducing
+
+        decision_id = self._order_submitter.generate_client_order_id(None)
+        trace = OrderDecisionTrace(
+            symbol=symbol,
+            side=side.value,
+            price=price,
+            equity=equity,
+            quantity=None,
+            reduce_only=reduce_only_requested,
+            reduce_only_final=reduce_only_flag,
+            reason=decision.reason,
+            decision_id=decision_id,
+            bot_id=str(self.context.bot_id) if self.context.bot_id is not None else None,
+        )
+
+        config = getattr(self.context.risk_manager, "config", None)
+        kill_switch_enabled = getattr(config, "kill_switch_enabled", False) is True
+        if kill_switch_enabled:
+            trace.record_outcome(
+                "kill_switch",
+                "blocked",
+                detail="kill_switch_enabled",
+            )
+            self._order_submitter.record_rejection(
+                symbol,
+                side.value,
+                Decimal("0"),
+                price,
+                "kill_switch",
+                client_order_id=decision_id,
+            )
+            return self._finalize_decision_trace(
+                trace,
+                status=OrderSubmissionStatus.BLOCKED,
+                reason="kill_switch",
+            )
+
+        result = await self._check_degradation_gate(
+            symbol=symbol,
+            side=side,
+            price=price,
+            trace=trace,
+            reduce_only_flag=reduce_only_flag,
+        )
+        if result is not None:
+            return result
+
+        quantity, result = self._calculate_quantity_and_record(
+            symbol=symbol,
+            side=side,
+            price=price,
+            equity=equity,
             quantity_override=quantity_override,
+            trace=trace,
+        )
+        if result is not None:
+            return result
+
+        result = await self._check_reduce_only_request(
+            symbol=symbol,
+            side=side,
+            quantity=quantity,
+            price=price,
             reduce_only_requested=reduce_only_requested,
+            is_reducing=is_reducing,
+            trace=trace,
+        )
+        if result is not None:
+            return result
+
+        result = await self._run_security_validation(
+            symbol=symbol,
+            side=side,
+            quantity=quantity,
+            price=price,
+            equity=equity,
+            trace=trace,
+        )
+        if result is not None:
+            return result
+
+        quantity, result = await self._apply_reduce_only_mode(
+            symbol=symbol,
+            side=side,
+            price=price,
+            quantity=quantity,
+            reduce_only_flag=reduce_only_flag,
+            is_reducing=is_reducing,
+            current_pos=current_pos,
+            trace=trace,
+        )
+        if result is not None:
+            return result
+
+        result = await self._check_mark_staleness(
+            symbol=symbol,
+            side=side,
+            quantity=quantity,
+            price=price,
+            reduce_only_flag=reduce_only_flag,
+            trace=trace,
+        )
+        if result is not None:
+            return result
+
+        (
+            quantity,
+            effective_price,
+            reduce_only_flag,
+            result,
+        ) = await self._run_order_validator_guards(
+            symbol=symbol,
+            side=side,
+            price=price,
+            equity=equity,
+            quantity=quantity,
+            reduce_only_flag=reduce_only_flag,
+            trace=trace,
+        )
+        if result is not None:
+            return result
+
+        # Place order via OrderSubmitter for proper ID tracking and telemetry
+        submission_outcome = await self._broker_calls(
+            self._order_submitter.submit_order_with_result,
+            symbol=symbol,
+            side=side,
+            order_type=OrderType.MARKET,
+            order_quantity=quantity,
+            price=None,  # Market order
+            effective_price=effective_price,
+            stop_price=None,
+            tif=self.context.config.time_in_force,
+            reduce_only=reduce_only_flag,
+            leverage=None,
+            client_order_id=decision_id,
+        )
+
+        # Notify on successful order placement
+        if submission_outcome.success:
+            order_id = submission_outcome.order_id
+            trace.order_id = order_id
+            await self._notify(
+                title="Order Executed",
+                message=f"{side.value} {quantity} {symbol} at ~{price}",
+                severity=AlertSeverity.INFO,
+                context={
+                    "symbol": symbol,
+                    "side": side.value,
+                    "quantity": str(quantity),
+                    "price": str(price),
+                    "order_id": order_id,
+                },
+            )
+
+            # Record trade in status reporter
+            self._status_reporter.add_trade(
+                {
+                    "symbol": symbol,
+                    "side": side.value,
+                    "quantity": str(quantity),
+                    "price": str(price),
+                    "order_id": order_id,
+                }
+            )
+            trace.record_outcome("submit_order", "success", order_id=order_id)
+            return self._finalize_decision_trace(
+                trace,
+                status=OrderSubmissionStatus.SUCCESS,
+                order_id=order_id,
+            )
+        reason = submission_outcome.reason or "broker_rejected"
+        logger.warning(
+            "Order submission failed",
+            symbol=symbol,
+            side=side.value,
+            reason=reason,
+            reason_detail=submission_outcome.reason_detail,
+            operation="order_submit",
+            stage="failed",
+        )
+        trace.record_outcome(
+            "submit_order",
+            "failed",
+            detail=reason,
+            reason_detail=submission_outcome.reason_detail,
+            error=submission_outcome.error,
+        )
+        return self._finalize_decision_trace(
+            trace,
+            status=OrderSubmissionStatus.FAILED,
+            reason=reason,
+            error=submission_outcome.error_message,
         )
 
     def reset_daily_tracking(self) -> None:
@@ -1775,91 +3021,4 @@ class TradingEngine(BaseEngine):
 
     async def _audit_orders(self) -> None:
         """Audit open orders for reconciliation."""
-        broker = self.context.broker
-        if broker is None:
-            return
-        try:
-            # Fetch open orders
-            response: Any = None
-            module_name = getattr(broker, "__module__", "")
-            if "coinbase" in module_name:
-                # Prefer Coinbase client list_orders to get the raw dict shape expected by StatusReporter.
-                client = getattr(broker, "client", None)
-                client_list_orders = getattr(client, "list_orders", None)
-                if callable(client_list_orders):
-                    response = await self._broker_calls(client_list_orders, order_status="OPEN")
-            if response is None:
-                list_orders = getattr(broker, "list_orders", None)
-                if callable(list_orders):
-                    try:
-                        response = await self._broker_calls(list_orders, order_status="OPEN")
-                    except TypeError:
-                        response = await self._broker_calls(list_orders, status=["OPEN"])
-
-            orders: list[Any]
-            if isinstance(response, dict):
-                orders = list(response.get("orders", []))
-            elif isinstance(response, list):
-                orders = list(response)
-            else:
-                orders = []
-
-            await self._reconcile_open_orders(orders)
-
-            if orders:
-                logger.info(
-                    "AUDIT: Found OPEN orders",
-                    open_order_count=len(orders),
-                    operation="order_audit",
-                    stage="list",
-                )
-
-            self._record_unfilled_order_alerts(orders)
-
-            # Update status reporter (expects dict-like orders).
-            status_orders: list[dict[str, Any]] = []
-            for order in orders:
-                if isinstance(order, dict):
-                    status_orders.append(order)
-                    continue
-                status_orders.append(
-                    {
-                        "order_id": self._get_order_field(order, "order_id", "id") or "",
-                        "product_id": self._get_order_field(order, "product_id", "symbol") or "",
-                        "side": self._get_order_field(order, "side") or "",
-                        "status": self._get_order_field(order, "status") or "",
-                        "price": self._get_order_field(order, "price"),
-                        "size": self._get_order_field(order, "size", "quantity"),
-                        "created_time": self._get_order_field(order, "created_time", "created_at"),
-                        "filled_size": self._get_order_field(
-                            order, "filled_size", "filled_quantity"
-                        ),
-                        "average_filled_price": self._get_order_field(
-                            order, "average_filled_price", "avg_fill_price"
-                        ),
-                    }
-                )
-            self._status_reporter.update_orders(status_orders)
-
-            # Update Account Metrics (every 60 cycles ~ 1 minute)
-            if self._cycle_count % 60 == 0:
-                try:
-                    balances = await self._broker_calls(broker.list_balances)
-                    # Check if broker supports transaction summary (Coinbase specific)
-                    summary = {}
-                    if hasattr(broker, "client") and hasattr(
-                        broker.client, "get_transaction_summary"
-                    ):
-                        try:
-                            summary = await self._broker_calls(
-                                broker.client.get_transaction_summary
-                            )
-                        except Exception:
-                            pass  # Feature might not be available or API mode issue
-
-                    self._status_reporter.update_account(balances, summary)
-                except Exception as e:
-                    logger.warning(f"Failed to update account metrics: {e}")
-
-        except Exception as e:
-            logger.warning(f"Failed to audit orders: {e}")
+        await self._order_audit.audit_orders()

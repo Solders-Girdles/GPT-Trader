@@ -17,6 +17,12 @@ _PERP_REPLACED_MESSAGE = "INTX perpetuals are no longer supported. Replacing %s 
 class TestNormalizeSymbolListDerivatives:
     """Tests for normalize_symbol_list with derivatives (INTX perps removed)."""
 
+    def test_removed_perps_coercion_does_not_fallback_empty_inputs(self) -> None:
+        result, logs = symbols.coerce_removed_perpetual_symbols([], quote="USD")
+
+        assert result == []
+        assert logs == []
+
     def test_perps_coerced_to_spot_when_derivatives_enabled(self) -> None:
         # INTX is gone; -PERP symbols coerce to spot even when CFM derivatives are on.
         symbols_list = ["BTC-PERP", "ETH-PERP", "BTC-USD"]

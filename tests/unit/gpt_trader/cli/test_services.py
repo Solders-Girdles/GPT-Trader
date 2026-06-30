@@ -113,6 +113,31 @@ class TestInstantiateBot:
         mock_create.assert_not_called()
         assert get_application_container() is None
 
+    def test_coerces_removed_perp_symbols_before_startup_validation(
+        self,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Test startup migrates removed INTX symbols before CFM validation."""
+        config = BotConfig(
+            cfm_enabled=True,
+            derivatives_enabled=True,
+            trading_modes=["cfm"],
+            coinbase_derivatives_type="us_futures",
+            symbols=["btc-perp"],
+            mock_broker=True,
+        )
+        mock_container = MagicMock(spec=ApplicationContainer)
+        mock_bot = MagicMock()
+        mock_container.create_bot.return_value = mock_bot
+        mock_create = MagicMock(return_value=mock_container)
+        monkeypatch.setattr(services_module, "create_application_container", mock_create)
+
+        bot = instantiate_bot(config)
+
+        assert config.symbols == ["BTC-USD"]
+        mock_create.assert_called_once_with(config)
+        assert bot is mock_bot
+
     def test_allows_observe_read_only_zero_position_fraction(
         self,
         monkeypatch: pytest.MonkeyPatch,

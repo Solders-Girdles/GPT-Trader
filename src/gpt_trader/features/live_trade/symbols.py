@@ -38,6 +38,40 @@ class SymbolNormalizationLog:
     args: tuple[object, ...] = ()
 
 
+def coerce_removed_perpetual_symbols(
+    symbols: Sequence[str] | None,
+    *,
+    quote: str,
+) -> tuple[list[str], list[SymbolNormalizationLog]]:
+    """Coerce retired INTX perpetual symbols to spot equivalents without fallback."""
+
+    logs: list[SymbolNormalizationLog] = []
+    normalized: list[str] = []
+    quote_currency = quote.upper()
+
+    for raw in symbols or []:
+        token = (raw or "").strip().upper()
+        if not token:
+            continue
+
+        if token.endswith("-PERP"):
+            base = token.split("-", 1)[0]
+            replacement = f"{base}-{quote_currency}"
+            logs.append(
+                SymbolNormalizationLog(
+                    logging.WARNING,
+                    "INTX perpetuals are no longer supported. Replacing %s with spot symbol %s",
+                    (token, replacement),
+                )
+            )
+            normalized.append(replacement)
+            continue
+
+        normalized.append(token)
+
+    return normalized, logs
+
+
 def derivatives_enabled(profile: Profile, *, config: BotConfig) -> bool:
     """Determine whether derivatives trading should be enabled for the profile."""
 
@@ -93,26 +127,10 @@ def normalize_symbol_list(
         set(allowed_us_futures) if allowed_us_futures is not None else set(US_FUTURES_ALLOWLIST)
     )
     normalized: list[str] = []
+    coerced_symbols, coercion_logs = coerce_removed_perpetual_symbols(symbols, quote=quote)
+    logs.extend(coercion_logs)
 
-    for raw in symbols or []:
-        token = (raw or "").strip().upper()
-        if not token:
-            continue
-
-        # INTX perpetuals are removed; coerce any -PERP symbol to its spot equivalent.
-        if token.endswith("-PERP"):
-            base = token.split("-", 1)[0]
-            replacement = f"{base}-{quote}"
-            logs.append(
-                SymbolNormalizationLog(
-                    logging.WARNING,
-                    "INTX perpetuals are no longer supported. Replacing %s with spot symbol %s",
-                    (token, replacement),
-                )
-            )
-            normalized.append(replacement)
-            continue
-
+    for token in coerced_symbols:
         if allow_derivatives:
             if token.endswith("-FUTURES"):
                 if token in allowed_us_futures_set:

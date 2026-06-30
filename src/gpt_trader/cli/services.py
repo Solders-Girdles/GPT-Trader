@@ -22,6 +22,7 @@ from gpt_trader.app.container import (
 )
 from gpt_trader.config.types import Profile
 from gpt_trader.features.live_trade.bot import TradingBot
+from gpt_trader.features.live_trade.symbols import coerce_removed_perpetual_symbols
 from gpt_trader.utilities.logging_patterns import get_logger
 
 logger = get_logger(__name__, component="cli_services")
@@ -212,6 +213,7 @@ def instantiate_bot(config: BotConfig) -> TradingBot:
     via get_application_container(). Avoids overriding an existing container
     (e.g., one set by tests).
     """
+    _coerce_removed_perpetual_startup_symbols(config)
     validation_errors = _validate_startup_config(config)
     if validation_errors:
         raise ConfigValidationError(validation_errors)
@@ -239,6 +241,17 @@ def _validate_startup_config(config: BotConfig) -> list[str]:
         return errors
 
     return [error for error in errors if not _is_observe_position_fraction_error(error)]
+
+
+def _coerce_removed_perpetual_startup_symbols(config: BotConfig) -> None:
+    quote = str(getattr(config, "coinbase_default_quote", "USD") or "USD")
+    normalized_symbols, logs = coerce_removed_perpetual_symbols(config.symbols, quote=quote)
+    if not logs:
+        return
+
+    config.symbols = normalized_symbols
+    for record in logs:
+        logger.log(record.level, record.message, *record.args)
 
 
 def _is_observe_read_only_config(config: BotConfig) -> bool:

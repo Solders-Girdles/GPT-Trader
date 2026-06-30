@@ -138,9 +138,6 @@ class PreflightContext:
     def cfm_enabled(self) -> bool:
         return self._env_bool("CFM_ENABLED", False)
 
-    def intx_perps_enabled(self) -> bool:
-        return self._env_bool("COINBASE_ENABLE_INTX_PERPS", False)
-
     def intends_real_orders(self) -> bool:
         if is_dev_profile(self.profile):
             return False
@@ -158,9 +155,7 @@ class PreflightContext:
         if not self.intends_real_orders():
             return False
         modes = set(self.trading_modes())
-        if modes.intersection({"spot", "cfm"}):
-            return True
-        return self.intx_perps_enabled()
+        return bool(modes.intersection({"spot", "cfm"}))
 
     # ----- Coinbase connectivity helpers -----------------------------------
     def build_cdp_client(self) -> tuple[Any, Any] | None:

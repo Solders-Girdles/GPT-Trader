@@ -14,7 +14,6 @@ def check_environment_variables(checker: PreflightCheck) -> bool:
     checker.section_header("3. ENVIRONMENT CONFIGURATION")
 
     ctx = checker.context
-    intx_perps_enabled = ctx.intx_perps_enabled()
     all_good = True
 
     for var, (expected, strict) in ctx.expected_env_defaults().items():
@@ -56,11 +55,6 @@ def check_environment_variables(checker: PreflightCheck) -> bool:
             all_good = False
     elif cfm_enabled and not cfm_in_modes:
         checker.log_warning("CFM_ENABLED=1 but TRADING_MODES does not include cfm")
-
-    if intx_perps_enabled:
-        checker.log_info("INTX perps enabled via COINBASE_ENABLE_INTX_PERPS")
-    else:
-        checker.log_info("INTX perps disabled (spot/CFM only)")
 
     creds = ctx.resolve_cdp_credentials_info()
     if not creds:

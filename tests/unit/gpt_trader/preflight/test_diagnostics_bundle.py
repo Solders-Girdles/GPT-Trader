@@ -109,9 +109,6 @@ class _DummyContext:
     def cfm_enabled(self) -> bool:
         return True
 
-    def intx_perps_enabled(self) -> bool:
-        return False
-
     def intends_real_orders(self) -> bool:
         return True
 
@@ -223,7 +220,6 @@ def test_diagnostics_bundle_matches_fixture_healthy(monkeypatch: pytest.MonkeyPa
         "warn_only",
         "trading_modes",
         "cfm_enabled",
-        "intx_perps_enabled",
         "intends_real_orders",
         "requires_trade_permission",
         "expected_env_defaults",

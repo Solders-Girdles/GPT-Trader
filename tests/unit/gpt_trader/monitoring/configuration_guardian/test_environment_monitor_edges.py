@@ -8,7 +8,7 @@ from gpt_trader.monitoring.configuration_guardian.responses import DriftResponse
 
 
 def test_critical_env_change_emits_shutdown_event(monkeypatch) -> None:
-    var_name = "COINBASE_ENABLE_INTX_PERPS"
+    var_name = "SPOT_FORCE_LIVE"
     monkeypatch.setenv(var_name, "0")
     monitor = EnvironmentMonitor(BaselineSnapshot())
 

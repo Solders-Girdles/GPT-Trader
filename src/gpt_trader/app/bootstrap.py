@@ -18,7 +18,7 @@ Usage::
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Sequence
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -26,7 +26,7 @@ from gpt_trader.app.config import TOP_VOLUME_BASES, BotConfig
 from gpt_trader.app.runtime import RuntimePaths
 from gpt_trader.app.runtime import resolve_runtime_paths as compute_runtime_paths
 from gpt_trader.config.types import Profile
-from gpt_trader.features.live_trade.symbols import PERPS_ALLOWLIST, normalize_symbol_list
+from gpt_trader.features.live_trade.symbols import normalize_symbol_list
 from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
@@ -49,7 +49,6 @@ def normalise_symbols(
     requested: Sequence[str] | None,
     *,
     config: BotConfig,
-    allowed_perps: Iterable[str] = PERPS_ALLOWLIST,
     fallback_bases: Sequence[str] = TOP_VOLUME_BASES,
 ) -> tuple[list[str], list[BootstrapLogRecord]]:
     """Return canonical symbol list for the configured runtime."""
@@ -59,7 +58,6 @@ def normalise_symbols(
         requested,
         allow_derivatives=config.derivatives_enabled,
         quote=symbol_quote,
-        allowed_perps=allowed_perps,
         fallback_bases=fallback_bases,
     )
     logs = [

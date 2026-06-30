@@ -7,9 +7,10 @@ and permission status.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Mapping, TypedDict
+from typing import Any, TypedDict
 
 
 class ValidationSeverity(Enum):
@@ -164,7 +165,7 @@ class PermissionDetails:
     Attributes:
         can_trade: Whether the key can place/cancel orders.
         can_view: Whether the key can view portfolio and balances.
-        portfolio_type: Type of portfolio ("SPOT" or "INTX" for perpetuals).
+        portfolio_type: Type of portfolio (e.g. "SPOT").
         portfolio_uuid: UUID of the associated portfolio.
     """
 

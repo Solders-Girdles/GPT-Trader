@@ -42,7 +42,6 @@
         "spot"
       ],
       "cfm_enabled": true,
-      "intx_perps_enabled": false,
       "intends_real_orders": true,
       "requires_trade_permission": true,
       "expected_env_defaults": {

@@ -596,17 +596,10 @@ class CredentialValidator:
         # Report portfolio type
         if result.permissions.portfolio_type:
             portfolio_type = result.permissions.portfolio_type.upper()
-            if portfolio_type == "INTX":
-                result.add_success(
-                    ValidationCategory.ACCOUNT_STATUS,
-                    "INTX portfolio (perpetuals enabled)",
-                )
-            else:
-                result.add_info(
-                    ValidationCategory.ACCOUNT_STATUS,
-                    f"Portfolio type: {portfolio_type}",
-                    details="INTX portfolio required for perpetuals trading",
-                )
+            result.add_info(
+                ValidationCategory.ACCOUNT_STATUS,
+                f"Portfolio type: {portfolio_type}",
+            )
 
     def _evaluate_mode_compatibility(
         self,

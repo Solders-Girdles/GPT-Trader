@@ -39,9 +39,11 @@ the envelope.
 - **Validated by** [`agent_artifacts.py`](../../scripts/agents/agent_artifacts.py)
   (`uv run agent-artifacts validate` / `package` / `verify-package`), which
   reads every resource listed in [`var/agents/index.json`](../../var/agents/index.json).
-- **Freshness-gated in CI** by the *Agent Artifacts Freshness* job in
-  [`ci.yml`](../../.github/workflows/ci.yml) (runs `agent-regenerate --verify`;
-  a stale tree fails the build).
+- **Freshness-checked in CI** by the *Agent Artifacts Freshness* job in
+  [`ci.yml`](../../.github/workflows/ci.yml) (runs `agent-regenerate --verify`).
+  A stale tree **fails the build on `push` to `main`/`develop`**; on pull requests
+  it is **advisory** (a warning that does not block the merge), with the scheduled
+  refresh reconciling `main`.
 - **Packaged/published** by the scheduled
   [`agent-artifacts-refresh.yml`](../../.github/workflows/agent-artifacts-refresh.yml).
 
@@ -54,7 +56,7 @@ contract, and the freshness gate. **This PR removes nothing.**
 | Resource (generator) | Committed files | Verdict |
 |----------------------|-----------------|---------|
 | `schemas`, `models`, `logging`, `observability`, `configuration`, `validation`, `broker`, `health` | small JSON/MD inventories | **Keep committed.** Derived truth read as agent context and validated/packaged; low churn. |
-| `testing` (`generate_test_inventory.py`) | `index.json`, `markers.json`, `source_test_map.json` | **Keep committed.** The large `test_inventory.json` (~1.8 MB) is *already* gitignored (`.gitignore:150`) and regenerated locally — the working template for advisory/generated-only treatment. |
+| `testing` (`generate_test_inventory.py`) | `testing/index.json`, `testing/markers.json`, `testing/source_test_map.json` | **Keep committed.** These are the testing-scoped inventory (distinct from the global `var/agents/index.json` registry). The large `testing/test_inventory.json` (~1.8 MB) is *already* gitignored (`.gitignore:150`) and regenerated locally — the working template for advisory/generated-only treatment. |
 | `reasoning` (`generate_reasoning_artifacts.py`) | 8 maps × `.md`/`.json`/`.dot` (24 files) | **Keep committed, flagged as the primary churn candidate.** The `.md` summaries are curated in [reasoning_artifacts.md](reasoning_artifacts.md); the `.json`/`.dot` machine forms regenerate on nearly any `src/**` change and dominate diff noise. |
 
 ### Churn verdict & next step

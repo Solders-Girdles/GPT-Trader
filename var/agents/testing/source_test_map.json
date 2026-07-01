@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 633,
+    "tests_scanned": 635,
     "source_modules": 307,
     "unresolved_modules": 2
   },
@@ -22,6 +22,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_regime_aware.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
@@ -496,6 +497,7 @@
       "tests/unit/gpt_trader/features/live_trade/test_risk.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_time_windows.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_regime_proposer.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
@@ -799,7 +801,8 @@
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_models.py",
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_persistence.py",
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_regime_classification.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py"
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_regime_proposer.py"
     ],
     "gpt_trader.features.intelligence.regime.detector": [
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_edges.py",
@@ -1345,6 +1348,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation_conflicts.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_regime_proposer.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
@@ -2478,6 +2482,9 @@
       "gpt_trader",
       "gpt_trader.cli.response",
       "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_regime_aware.py": [
+      "gpt_trader"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py": [
       "gpt_trader",
@@ -3771,6 +3778,11 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_policy.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_regime_proposer.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.intelligence.regime",
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_replay.py": [

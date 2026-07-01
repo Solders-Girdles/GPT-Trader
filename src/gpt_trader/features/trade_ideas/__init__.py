@@ -69,6 +69,12 @@ from gpt_trader.features.trade_ideas.paper_reconciliation import (
 )
 from gpt_trader.features.trade_ideas.policy import ApprovalPolicy, PolicyViolationError
 from gpt_trader.features.trade_ideas.proposer import Proposer
+from gpt_trader.features.trade_ideas.regime import (
+    DEFAULT_SUPPRESSED_REGIMES,
+    REGIME_DETECTOR_VERSION,
+    RegimeAwareProposer,
+    RegimeAwareProposerConfig,
+)
 from gpt_trader.features.trade_ideas.replay import (
     ReplayOutcome,
     ReplayReport,
@@ -128,6 +134,7 @@ __all__ = [
     "ACTOR_ENV_VAR",
     "DEFAULT_RISK_BUDGET",
     "DEFAULT_IDEAS_ROOT",
+    "DEFAULT_SUPPRESSED_REGIMES",
     "DEFAULT_TIME_IN_FORCE",
     "DEFAULT_VENUE_ORDER_TYPE",
     "DuplicateCloseoutAttributionError",
@@ -176,6 +183,9 @@ __all__ = [
     "ReplayResult",
     "ReplayRunnerConfig",
     "ReplayScoringError",
+    "REGIME_DETECTOR_VERSION",
+    "RegimeAwareProposer",
+    "RegimeAwareProposerConfig",
     "RiskBudget",
     "RiskBudgetLog",
     "ScoringLevels",

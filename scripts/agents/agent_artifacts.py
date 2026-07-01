@@ -375,11 +375,16 @@ def _validate_expected_content(source_dir: Path, report: ValidationReport) -> No
     if not isinstance(broker_index.get("protocols"), list) or not broker_index["protocols"]:
         report.error("broker/index.json must include broker protocols")
 
-    cli_flow = _json_mapping(source_dir / "reasoning" / "cli_flow_map.json", report)
-    if cli_flow.get("artifact") != "cli_flow_map":
-        report.error("reasoning/cli_flow_map.json must declare artifact=cli_flow_map")
-    if not isinstance(cli_flow.get("nodes"), list) or not cli_flow["nodes"]:
-        report.error("reasoning/cli_flow_map.json must include nodes")
+    # reasoning/*.json machine forms are gitignored optional_files (regenerated
+    # on demand); only validate the content when the file is present, e.g. right
+    # after `uv run agent-regenerate` or inside the refresh/packaging workflow.
+    cli_flow_path = source_dir / "reasoning" / "cli_flow_map.json"
+    if cli_flow_path.is_file():
+        cli_flow = _json_mapping(cli_flow_path, report)
+        if cli_flow.get("artifact") != "cli_flow_map":
+            report.error("reasoning/cli_flow_map.json must declare artifact=cli_flow_map")
+        if not isinstance(cli_flow.get("nodes"), list) or not cli_flow["nodes"]:
+            report.error("reasoning/cli_flow_map.json must include nodes")
 
     health_schema = _json_mapping(source_dir / "health" / "agent_health_schema.json", report)
     if health_schema.get("title") != "Agent Health Report":

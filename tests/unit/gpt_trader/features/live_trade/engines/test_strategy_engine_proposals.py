@@ -17,6 +17,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from gpt_trader.core import Position
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 from gpt_trader.features.trade_ideas import (
@@ -122,6 +123,53 @@ async def test_enabled_gate_refuses_cfm_context_without_submission(
         price=Decimal("50000"),
         equity=Decimal("1000"),
         position_state={"symbol": "BTC-USD", "product_type": "FUTURE"},
+    )
+
+    validate.assert_not_called()
+    submit.assert_not_called()
+    mock_broker.place_order.assert_not_called()
+    assert create_trade_idea_service().list_views(state=TradeIdeaState.PROPOSED) == []
+
+
+@pytest.mark.asyncio
+async def test_enabled_gate_preserves_live_position_product_type_without_submission(
+    engine, mock_broker, tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _enable_proposals(engine, tmp_path, monkeypatch)
+    engine.context.config.trading_modes = ["spot", "cfm"]
+    engine.context.config.cfm_enabled = True
+    engine.context.config.cfm_symbols = []
+
+    validate = AsyncMock()
+    submit = AsyncMock()
+    monkeypatch.setattr(engine, "_validate_and_place_order", validate)
+    monkeypatch.setattr(engine, "submit_order", submit)
+
+    position_state = engine._build_position_state(
+        "BTC-USD",
+        {
+            "BTC-USD": Position(
+                symbol="BTC-USD",
+                quantity=Decimal("1"),
+                entry_price=Decimal("40000"),
+                mark_price=Decimal("50000"),
+                unrealized_pnl=Decimal("10000"),
+                realized_pnl=Decimal("0"),
+                side="long",
+                product_type="FUTURE",
+            )
+        },
+    )
+
+    assert position_state is not None
+    assert position_state["product_type"] == "FUTURE"
+
+    await engine._handle_decision(
+        symbol="BTC-USD",
+        decision=Decision(Action.BUY, "existing futures setup", 0.82),
+        price=Decimal("50000"),
+        equity=Decimal("1000"),
+        position_state=position_state,
     )
 
     validate.assert_not_called()

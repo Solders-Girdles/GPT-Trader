@@ -463,6 +463,7 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_position_formatting.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_proposals.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_sizing.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
@@ -3111,6 +3112,7 @@
       "gpt_trader.security.validate"
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_proposals.py": [
+      "gpt_trader.core",
       "gpt_trader.features.live_trade.engines.strategy",
       "gpt_trader.features.live_trade.strategies.perps_baseline",
       "gpt_trader.features.trade_ideas"

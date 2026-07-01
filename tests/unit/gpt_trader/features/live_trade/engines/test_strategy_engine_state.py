@@ -128,6 +128,7 @@ def test_build_position_state(engine):
     assert state["quantity"] == Decimal("0.5")
     assert state["entry_price"] == Decimal("40000")
     assert state["side"] == "long"
+    assert state["product_type"] == "SPOT"
 
     state_none = engine._build_position_state("ETH-USD", positions)
     assert state_none is None
@@ -160,6 +161,7 @@ async def test_position_state_passed_to_strategy(engine):
     assert position_state["quantity"] == Decimal("1.0")
     assert position_state["entry_price"] == Decimal("45000")
     assert position_state["side"] == "long"
+    assert position_state["product_type"] == "SPOT"
 
 
 @pytest.mark.asyncio

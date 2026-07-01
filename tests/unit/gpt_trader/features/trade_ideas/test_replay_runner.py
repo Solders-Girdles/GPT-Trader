@@ -230,6 +230,45 @@ def test_replay_tournament_ranks_proposers_on_shared_window() -> None:
     assert report.to_dict()["rankings"][0]["eligibility_pass_rate"] == "1"
 
 
+def test_replay_tournament_computes_eligibility_pass_rate() -> None:
+    class MixedEligibilityProposer:
+        proposer_id = "mixed-eligibility"
+
+        def propose(self, snapshot: MarketSnapshot) -> list[TradeIdea]:
+            return [
+                scoreable_idea(
+                    decision_id="trade-20260612-eligible",
+                    time_horizon=TimeHorizon(
+                        expected_hold="1-4 hours",
+                        expires_at=snapshot.as_of + timedelta(hours=4),
+                    ),
+                ),
+                scoreable_idea(
+                    decision_id="trade-20260612-missing-data-used",
+                    data_used=(),
+                    time_horizon=TimeHorizon(
+                        expected_hold="1-4 hours",
+                        expires_at=snapshot.as_of + timedelta(hours=4),
+                    ),
+                ),
+            ]
+
+    report = TradeIdeaReplayTournamentRunner(
+        (MixedEligibilityProposer(),),
+        config=ReplayRunnerConfig(source="fixture:candles", min_history=1),
+    ).run_series(
+        symbol="BTC-USD",
+        granularity="ONE_HOUR",
+        candles=(
+            candle(-1, high="102", low="100", close="101"),
+            candle(0, high="114", low="101", close="113"),
+        ),
+    )
+
+    assert report.rankings[0].eligibility_pass_rate == Decimal("0.5")
+    assert report.to_dict()["rankings"][0]["eligibility_pass_rate"] == "0.5"
+
+
 def test_replay_runner_config_rejects_non_positive_min_history() -> None:
     try:
         ReplayRunnerConfig(min_history=0)

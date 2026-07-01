@@ -17,6 +17,7 @@ from typing import Any
 
 from gpt_trader.core import Candle
 from gpt_trader.errors import ValidationError
+from gpt_trader.features.trade_ideas.eligibility import evaluate_eligibility
 from gpt_trader.features.trade_ideas.models import TradeDirection, TradeIdea
 from gpt_trader.features.trade_ideas.proposer import Proposer
 from gpt_trader.features.trade_ideas.snapshot import MarketSnapshot, SymbolSeries
@@ -105,6 +106,8 @@ class ReplayReport:
     source: str
     snapshots_evaluated: int
     ideas: tuple[ReplayResult, ...]
+    eligibility_checked: int = 0
+    eligibility_passed: int = 0
 
     @property
     def ideas_proposed(self) -> int:
@@ -152,6 +155,12 @@ class ReplayReport:
         if not returns:
             return None
         return sum(returns, Decimal("0")) / Decimal(len(returns))
+
+    @property
+    def eligibility_pass_rate(self) -> Decimal:
+        if self.eligibility_checked == 0:
+            return Decimal("0")
+        return Decimal(self.eligibility_passed) / Decimal(self.eligibility_checked)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -423,6 +432,8 @@ class TradeIdeaReplayRunner:
         ordered_candles = tuple(sorted(candles, key=lambda candle: candle.ts))
         results: list[ReplayResult] = []
         snapshots_evaluated = 0
+        eligibility_checked = 0
+        eligibility_passed = 0
 
         for index in range(self._config.min_history, len(ordered_candles)):
             as_of = ordered_candles[index].ts
@@ -441,6 +452,9 @@ class TradeIdeaReplayRunner:
             )
             snapshots_evaluated += 1
             for idea in self._proposer.propose(snapshot):
+                eligibility_checked += 1
+                if not evaluate_eligibility(idea):
+                    eligibility_passed += 1
                 results.append(
                     score_trade_idea(
                         idea,
@@ -458,6 +472,8 @@ class TradeIdeaReplayRunner:
             source=self._config.source,
             snapshots_evaluated=snapshots_evaluated,
             ideas=tuple(results),
+            eligibility_checked=eligibility_checked,
+            eligibility_passed=eligibility_passed,
         )
 
 
@@ -538,7 +554,7 @@ def _rank_tournament_reports(
             target_hit_rate=report.target_hit_rate,
             stop_hit_rate=report.stop_hit_rate,
             average_return_r=report.average_return_r,
-            eligibility_pass_rate=Decimal("1"),
+            eligibility_pass_rate=report.eligibility_pass_rate,
         )
         for index, report in enumerate(ordered, start=1)
     )

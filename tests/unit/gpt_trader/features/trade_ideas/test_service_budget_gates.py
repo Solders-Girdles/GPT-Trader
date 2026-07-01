@@ -15,9 +15,9 @@ from gpt_trader.features.trade_ideas import (
     PolicyViolationError,
     RiskBudget,
     SizingRecommendation,
-    TradeIdeaService,
     TradeIdeaState,
 )
+from gpt_trader.features.trade_ideas.service import TradeIdeaService
 
 
 @pytest.fixture
@@ -164,6 +164,29 @@ def test_open_notional_budget_uses_absolute_signed_notional(
         service.approve(candidate.decision_id, actor_id="rj", reason="Risk verified")
 
     assert any("max_open_notional_pct" in violation for violation in exc_info.value.violations)
+    assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
+
+
+def test_approval_refused_when_candidate_notional_is_missing(
+    service: TradeIdeaService,
+) -> None:
+    candidate = build_trade_idea(
+        decision_id="trade-20260612-missing-notional",
+        sizing_recommendation=SizingRecommendation(
+            quantity=Decimal("0.1"),
+            notional=None,
+            rationale="Missing notional cannot prove exposure budget compliance",
+        ),
+    )
+    service.propose(candidate, actor_id="idea-generator-v1")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(candidate.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert any(
+        "sizing_recommendation.notional is required" in violation
+        for violation in exc_info.value.violations
+    )
     assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
 
 

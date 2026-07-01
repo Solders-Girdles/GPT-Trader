@@ -1378,7 +1378,8 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_closeout_evidence_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py",
-      "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py"
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_budget_gates.py"
     ],
     "gpt_trader.logging.correlation": [
       "tests/unit/gpt_trader/features/live_trade/execution/test_order_submission_observability.py",
@@ -3800,7 +3801,8 @@
       "gpt_trader.features.trade_ideas.service"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service_budget_gates.py": [
-      "gpt_trader.features.trade_ideas"
+      "gpt_trader.features.trade_ideas",
+      "gpt_trader.features.trade_ideas.service"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py": [
       "gpt_trader.features.trade_ideas"

@@ -136,34 +136,40 @@ class ApprovalPolicy:
                     f"candidate_max_loss_pct={_format_decimal(percent)}%)"
                 )
 
-        candidate_notional = abs(idea.sizing_recommendation.notional or Decimal("0"))
         if has_budget_context:
-            projected_notional = abs(budget_context.open_notional) + candidate_notional
-            account_equity = budget_context.account_equity_snapshot
-            if projected_notional > 0:
-                if account_equity is None:
-                    violations.append(
-                        "account_equity_snapshot is required to verify "
-                        "max_open_notional_pct budget exposure"
-                    )
-                elif account_equity <= 0:
-                    violations.append(
-                        "account_equity_snapshot must be positive to verify "
-                        "max_open_notional_pct budget exposure; "
-                        f"got {_format_decimal(account_equity)}"
-                    )
-                else:
-                    projected_open_notional_pct = (
-                        projected_notional / account_equity * _decimal(100)
-                    )
-                    if projected_open_notional_pct > budget.max_open_notional_pct:
+            candidate_notional = idea.sizing_recommendation.notional
+            if candidate_notional is None:
+                violations.append(
+                    "sizing_recommendation.notional is required to verify "
+                    "max_open_notional_pct budget exposure"
+                )
+            else:
+                projected_notional = abs(budget_context.open_notional) + abs(candidate_notional)
+                account_equity = budget_context.account_equity_snapshot
+                if projected_notional > 0:
+                    if account_equity is None:
                         violations.append(
-                            "max_open_notional_pct budget breached: projected open notional "
-                            f"{_format_decimal(projected_open_notional_pct)}% exceeds limit "
-                            f"{_format_decimal(budget.max_open_notional_pct)}% "
-                            f"(projected_open_notional={_format_decimal(projected_notional)}, "
-                            f"account_equity_snapshot={_format_decimal(account_equity)})"
+                            "account_equity_snapshot is required to verify "
+                            "max_open_notional_pct budget exposure"
                         )
+                    elif account_equity <= 0:
+                        violations.append(
+                            "account_equity_snapshot must be positive to verify "
+                            "max_open_notional_pct budget exposure; "
+                            f"got {_format_decimal(account_equity)}"
+                        )
+                    else:
+                        projected_open_notional_pct = (
+                            projected_notional / account_equity * _decimal(100)
+                        )
+                        if projected_open_notional_pct > budget.max_open_notional_pct:
+                            violations.append(
+                                "max_open_notional_pct budget breached: projected open notional "
+                                f"{_format_decimal(projected_open_notional_pct)}% exceeds limit "
+                                f"{_format_decimal(budget.max_open_notional_pct)}% "
+                                f"(projected_open_notional={_format_decimal(projected_notional)}, "
+                                f"account_equity_snapshot={_format_decimal(account_equity)})"
+                            )
 
         if idea.product_type is ProductType.FUTURES and not budget.allow_futures_leverage:
             violations.append(

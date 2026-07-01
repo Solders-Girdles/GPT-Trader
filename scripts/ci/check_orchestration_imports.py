@@ -23,7 +23,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SEARCH_ROOTS: tuple[str, ...] = ("src", "tests", "scripts")
 # Matches "from"/"import" statements that reference the removed subpackage.
 IMPORT_PATTERN = re.compile(
-    r"^\s*(?:from\s+gpt_trader\.orchestration\b|import\s+.*\bgpt_trader\.orchestration\b)"
+    r"\b(?:from\s+gpt_trader\.orchestration\b|import\s+.*\bgpt_trader\.orchestration\b)"
 )
 
 

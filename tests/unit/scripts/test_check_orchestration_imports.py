@@ -54,6 +54,20 @@ def test_detects_comma_separated_import(tmp_path: Path) -> None:
     assert "scripts/tool.py:1" in violations[0]
 
 
+def test_detects_inline_simple_statement_imports(tmp_path: Path) -> None:
+    repo = _make_repo(tmp_path)
+    (repo / "src" / "types.py").write_text(
+        f"if TYPE_CHECKING: from {_ORCH} import Runner\n", encoding="utf-8"
+    )
+    (repo / "scripts" / "setup.py").write_text(f"prepare(); import {_ORCH}\n", encoding="utf-8")
+
+    violations = guard.find_violations(repo)
+
+    assert len(violations) == 2
+    assert "src/types.py:1" in violations[0]
+    assert "scripts/setup.py:1" in violations[1]
+
+
 def test_ignores_similarly_named_module(tmp_path: Path) -> None:
     repo = _make_repo(tmp_path)
     (repo / "src" / "future.py").write_text(f"import {_ORCH}_v2\n", encoding="utf-8")

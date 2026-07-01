@@ -15,7 +15,7 @@ Verify file/function/issue references before relying on them; they reflect the
 dated snapshot below. The next work is the live GitHub issue queue
 (`triage:build-now`), never a list copied here.
 
-## Snapshot (2026-06-28)
+## Snapshot (2026-07-01)
 
 Stage definitions live in [DIRECTION.md](DIRECTION.md#the-ladder); this is only
 the state per stage.
@@ -23,7 +23,7 @@ the state per stage.
 | Stage | State |
 |-------|-------|
 | **0 — Rails** | **Complete** — all rubric evidence shipped and tested |
-| **1 — Human-approved loop** | **In progress (runtime bridge remaining)** — reviewer tooling, attribution, real-data snapshot proposal (#1031), paper-fill reconciliation (#1035), and the default-off strategy-signal adapter are operator-usable; the live strategy path is not yet routed through the approval workflow |
+| **1 — Human-approved loop** | **In progress (runtime routing wired, default-off)** — reviewer tooling, attribution, real-data snapshot proposal (#1031), paper-fill reconciliation (#1035), and the strategy-signal adapter are operator-usable; the live strategy path can now be routed through the approval workflow behind a default-off gate (#1033), but that gate ships off |
 | **2 — Bounded autonomy** | Not started |
 | **3 — Self-directed entity** | Not started |
 
@@ -47,20 +47,28 @@ issue `#1031` closed 2026-06-28), paper-fill reconciliation onto the audit trail
 library adapter that maps supported strategy buy decisions into proposed trade
 ideas through `TradeIdeaService.propose()` only.
 
-The remaining gap is **runtime strategy-signal routing**: the existing
-TA/ensemble intelligence still does not emit trade ideas from the live bot cycle
-through the approval workflow. Build that through the existing spine, not a
-second proposer brain — see
+**Runtime strategy-signal routing now exists behind a default-off gate**
+(`strategy_signal_proposals_enabled`, #1033). When the operator enables it, the
+live bot cycle (`features/live_trade/engines/strategy.py`) routes each strategy
+decision through the existing default-off adapter into
+`TradeIdeaService.propose()` instead of the broker: supported buy shapes become
+`proposed` trade ideas and the engine submits no orders while the gate is on. It
+ships off, so default behavior is unchanged. This deliberately reused the
+existing spine rather than a second proposer brain — see
 [stabilize-before-closing-the-loop](decisions/stabilize-before-closing-the-loop.md).
+Enabling and reviewing the path is documented in the
+[Trade-Idea Interface Design Notes](specs/TRADE_IDEA_INTERFACES_DESIGN_NOTES.md#live-strategy-signal-routing-default-off).
 Track precise per-ticket status in the issue queue, not here.
 
 ## The structural fact
 
 The live TA bot (`features/live_trade/`) and the trade-idea workflow
-(`features/trade_ideas/`) remain separated: strategy-to-idea mapping lives in
-`features/strategy_tools/trade_idea_adapter.py` as an explicit, default-off
-bridge, and the trading intelligence already built does not yet flow from the
-live bot cycle through the approval-gated rails.
+(`features/trade_ideas/`) stay decoupled by default: strategy-to-idea mapping
+lives in `features/strategy_tools/trade_idea_adapter.py` as an explicit,
+default-off bridge. The live engine now *can* drive that bridge — routing
+decisions into the approval-gated rails through `TradeIdeaService.propose()` —
+but only when `strategy_signal_proposals_enabled` is set; with the gate off (the
+default) the trading intelligence still flows straight to direct execution.
 
 ## How to keep this doc honest
 

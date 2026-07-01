@@ -46,13 +46,49 @@ A Textual TUI review screen was also implemented but has since been removed (see
 preserve the interface decisions that shaped the implemented CLI surface; they
 are not a request to re-promote a TUI review workstream.
 
-The Stage 1 strategy-signal bridge starts as a library adapter, not runtime
-engine wiring. `StrategySignalToTradeIdeaAdapter` accepts an existing strategy
-decision shape plus explicit point-in-time context, maps supported buy signals
-to complete broker-neutral `TradeIdea` records, and submits them through
-`TradeIdeaService.propose()` only when explicitly enabled. Disabled, hold, sell,
-or close decisions produce no idea. It does not approve, preview, submit, modify,
-cancel, or reconcile orders, and it does not call broker/account APIs.
+The Stage 1 strategy-signal bridge is a library adapter that the live engine now
+drives behind a default-off gate. `StrategySignalToTradeIdeaAdapter` accepts an
+existing strategy decision shape plus explicit point-in-time context, maps
+supported buy signals to complete broker-neutral `TradeIdea` records, and submits
+them through `TradeIdeaService.propose()` only when explicitly enabled. Disabled,
+hold, sell, or close decisions produce no idea. It does not approve, preview,
+submit, modify, cancel, or reconcile orders, and it does not call broker/account
+APIs. The runtime wiring is described in
+[Live strategy-signal routing](#live-strategy-signal-routing-default-off) below.
+
+## Live strategy-signal routing (default-off)
+
+Issue #1033 wires the adapter into the live bot cycle behind an explicit,
+default-off gate. This is the runtime half of the Stage 1 human-approved loop in
+[docs/DIRECTION.md](../DIRECTION.md); current shipped state is tracked in
+[docs/STATUS.md](../STATUS.md) and the seam is documented in
+[docs/architecture/SEAMS.md](../architecture/SEAMS.md).
+
+**What the gate does.** When enabled, `TradingEngine._handle_decision`
+(`features/live_trade/engines/strategy.py`) routes every strategy decision into
+`TradeIdeaService.propose()` through the adapter and returns before any broker
+interaction — the engine submits no orders while the gate is on. Supported buy
+shapes become `proposed` trade ideas; hold, sell, and close shapes are logged and
+produce no idea. With the gate off (the default) decisions flow to direct
+execution exactly as before.
+
+**How to enable it.** The gate is off by default and must be set explicitly:
+
+- Config field: `BotConfig.strategy_signal_proposals_enabled` (default `False`).
+- Profile YAML: `execution.strategy_signal_proposals: true` under a profile in
+  `config/profiles/`.
+
+Enabling it puts the bot in proposal-only mode: it drafts ideas for human review
+and never places orders. It is not an execution lane and does not bypass
+`ApprovalPolicy`; every proposed idea still requires the human approve step.
+
+**How to review the proposals.** Proposed ideas land in the standard trade-idea
+store (`GPT_TRADER_IDEAS_ROOT`, default `var/data/trade_ideas/`) and are reviewed
+through the existing `gpt-trader ideas` CLI — `ideas list --state proposed`,
+`ideas show <decision_id>`, then `ideas approve` / `ideas reject` /
+`ideas request-changes`. Each proposal records the strategy name, symbol,
+mark/as-of source (`live-strategy:decision:...`), action, and confidence as
+evidence on the audit trail.
 
 ## Design Principles
 

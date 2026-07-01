@@ -193,6 +193,12 @@ class BotConfig:
     time_in_force: str = "GTC"
     enable_order_preview: bool = False
     use_limit_orders: bool = False
+    # Stage 1 human-approved loop (default OFF). When enabled, live strategy
+    # decisions are routed into the approval-gated trade-idea workflow via
+    # TradeIdeaService.propose() instead of being submitted to the broker: the
+    # engine enters proposal-only mode and never places orders while the gate is
+    # on. See docs/DIRECTION.md, docs/STATUS.md, docs/architecture/SEAMS.md.
+    strategy_signal_proposals_enabled: bool = False
     market_order_fallback: bool = True
     # Enabled by default for resiliency; disable only for controlled troubleshooting.
     order_submission_retries_enabled: bool = True

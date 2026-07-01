@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import json
 import re
 import sys
 from collections import defaultdict
@@ -35,6 +34,7 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 SOURCE_TEST_MAP_PATH = PROJECT_ROOT / "var" / "agents" / "testing" / "source_test_map.json"
+TESTS_DIR = PROJECT_ROOT / "tests"
 MANIFEST_PATH = PROJECT_ROOT / "tests" / "_triage" / "dedupe_candidates.yaml"
 TRIAGE_PATH = PROJECT_ROOT / "tests" / "_triage" / "dedupe_triage.yaml"
 
@@ -49,15 +49,40 @@ def generate_cluster_id(files: list[str], source_modules: list[str]) -> str:
     return hashlib.sha256(content.encode()).hexdigest()[:12]
 
 
-def load_source_test_map() -> dict[str, Any]:
-    """Load the source-to-test mapping."""
-    if not SOURCE_TEST_MAP_PATH.exists():
-        print(f"Error: Source test map not found: {SOURCE_TEST_MAP_PATH}", file=sys.stderr)
-        print("Run: uv run agent-tests  # to regenerate", file=sys.stderr)
-        sys.exit(1)
+def _regenerate_source_test_map() -> dict[str, Any] | None:
+    """Rebuild the gitignored source test map in place.
 
-    with open(SOURCE_TEST_MAP_PATH) as f:
-        return json.load(f)
+    Delegates to the same generator `uv run agent-regenerate --only testing`
+    uses (imported directly, not shelled out) and writes the result to
+    SOURCE_TEST_MAP_PATH. Returns the map payload, or None if generation fails.
+    """
+    if str(PROJECT_ROOT) not in sys.path:
+        sys.path.insert(0, str(PROJECT_ROOT))
+    try:
+        from scripts.agents import generate_test_inventory
+
+        return generate_test_inventory.regenerate_source_test_map(
+            SOURCE_TEST_MAP_PATH, tests_dir=TESTS_DIR
+        )
+    except Exception as exc:
+        print(f"Error: failed to regenerate source test map: {exc}", file=sys.stderr)
+        return None
+
+
+def load_source_test_map() -> dict[str, Any]:
+    """Regenerate and load the source-to-test mapping.
+
+    The map is gitignored (regenerate-on-demand): an on-disk copy can be
+    missing or silently stale, so candidate generation always rebuilds it from
+    the current test tree (sub-second scan) before use.
+    """
+    print(f"Regenerating {SOURCE_TEST_MAP_PATH.name} from the current test tree...")
+    source_test_map = _regenerate_source_test_map()
+    if source_test_map is None:
+        print(f"Error: could not rebuild source test map: {SOURCE_TEST_MAP_PATH}", file=sys.stderr)
+        print("Run: uv run agent-regenerate --only testing", file=sys.stderr)
+        sys.exit(1)
+    return source_test_map
 
 
 def load_existing_manifest() -> dict[str, Any]:

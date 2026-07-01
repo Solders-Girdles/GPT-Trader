@@ -512,6 +512,26 @@ def build_source_test_map(imports_by_file: dict[str, list[str]]) -> dict[str, An
     }
 
 
+def regenerate_source_test_map(
+    output_path: Path,
+    tests_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Scan the test tree and (re)write the source test map at ``output_path``.
+
+    ``source_test_map.json`` is gitignored (regenerate-on-demand), so an
+    on-disk copy can be missing or silently stale. Consumers should call this
+    before use instead of trusting an existing file; the scan takes well under
+    a second.
+    """
+    scan_results = scan_test_files(tests_dir or PROJECT_ROOT / "tests")
+    source_test_map = build_source_test_map(scan_results["imports_by_file"])
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(source_test_map, f, indent=2)
+        f.write("\n")
+    return source_test_map
+
+
 def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Generate test inventory for AI agents")
@@ -648,10 +668,10 @@ def main() -> int:
         "description": "Test inventory for AI agent consumption",
         "files": {
             "markers": "markers.json",
-            "source_test_map": "source_test_map.json",
         },
         "optional_files": {
             "test_inventory": "test_inventory.json",
+            "source_test_map": "source_test_map.json",
         },
         "summary": inventory["summary"],
         "quick_commands": {

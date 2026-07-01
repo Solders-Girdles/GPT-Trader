@@ -174,7 +174,6 @@ checks were skipped and why.
 Optional suites:
 
 ```bash
-uv run local-ci --include-snapshots
 uv run local-ci --include-property-tests
 uv run local-ci --include-contract-tests
 uv run local-ci --include-agent-health

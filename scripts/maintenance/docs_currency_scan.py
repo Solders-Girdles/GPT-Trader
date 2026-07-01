@@ -163,6 +163,10 @@ CURRENCY_SUPPRESSIONS: dict[tuple[str, str], str] = {
         "docs/decisions/intx-default-derivatives-venue.md",
         "PERPS_ALLOWLIST",
     ): "removed INTX env var cited as history in a decision record",
+    (
+        "docs/decisions/remove-tui-subsystem.md",
+        "scripts/build_tui_css.py",
+    ): "removed TUI build script cited as history in a decision record",
     ("docs/naming.md", "--kebab-case"): "naming-style example, not a CLI flag",
     ("docs/testing.md", "gpt_trader.api"): "placeholder module name in a prose example",
     ("docs/testing.md", "gpt_trader.module"): "placeholder module name in a prose example",

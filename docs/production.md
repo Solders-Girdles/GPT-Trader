@@ -46,8 +46,7 @@ is ready.
 
 - [ ] Coinbase CDP JWT credentials available for the selected lane.
 - [ ] Product universe selected and supported by API/account capability.
-- [ ] CFM futures enabled only after account/product verification.
-- [ ] INTX perpetuals enabled only after eligible-region/account verification.
+- [ ] CFM futures enabled only after account/product verification (the only supported derivatives venue; INTX perpetuals were removed — see [decision record](decisions/intx-default-derivatives-venue.md)).
 - [ ] Unsupported products remain research-only or ticket-draft only.
 
 ### Risk And Approval

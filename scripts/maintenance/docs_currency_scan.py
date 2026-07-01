@@ -126,7 +126,29 @@ DEPRECATED_MARKERS = (
     "sweep_strategies",
     "test_removed_aliases",
 )
+# Docs whose purpose is to catalog removals: naming a removed module, path, or
+# env var here is correct guidance, not drift, so every such reference is treated
+# as expected rather than missing/stale.
+REMOVAL_REGISTRY_DOCS = ("DEPRECATIONS.md",)
+# Docs that carry an old->new migration table for known-removed identifiers. Only
+# references matching a DEPRECATED_MARKER are exempted here, so unrelated drift in
+# these docs is still reported.
+MIGRATION_GUIDANCE_DOCS = ("ARCHITECTURE.md",)
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def _is_removal_registry_doc(source_doc: str) -> bool:
+    return any(source_doc.endswith(name) for name in REMOVAL_REGISTRY_DOCS)
+
+
+def _is_documented_removal(item: str, source_doc: str) -> bool:
+    """True when ``item`` is referenced by a doc that legitimately documents a
+    removal or migration, so a missing/stale verdict would be a false positive."""
+    if _is_removal_registry_doc(source_doc):
+        return True
+    if any(source_doc.endswith(name) for name in MIGRATION_GUIDANCE_DOCS):
+        return any(marker in item for marker in DEPRECATED_MARKERS)
+    return False
 
 
 @dataclass
@@ -296,7 +318,9 @@ def _grep_repo(state: ScanState, needle: str, *, suffixes: tuple[str, ...] = (".
 
 
 def _is_runtime_or_placeholder_path(item: str) -> bool:
-    if item.startswith(("runtime_data/", "var/data/", "var/results/", "var/snapshots/")):
+    if item.startswith(
+        ("runtime_data/", "var/data/", "var/results/", "var/snapshots/", "review_artifacts/")
+    ):
         return True
     if "{" in item or "}" in item or "<" in item or ">" in item:
         return True
@@ -307,7 +331,7 @@ def _is_runtime_or_placeholder_path(item: str) -> bool:
     return False
 
 
-def verify_path(state: ScanState, item: str) -> VerificationResult:
+def verify_path(state: ScanState, item: str, source_doc: str = "") -> VerificationResult:
     if _is_runtime_or_placeholder_path(item):
         return VerificationResult(
             "uncertain",
@@ -317,6 +341,8 @@ def verify_path(state: ScanState, item: str) -> VerificationResult:
     full = state.repo_root / item
     if full.exists():
         return VerificationResult("ok", f"test -e {item}", "exists on disk")
+    if _is_documented_removal(item, source_doc):
+        return VerificationResult("ok", f"test -e {item}", "documented removal/migration reference")
     if "DEPRECATIONS" in item or any(marker in item for marker in DEPRECATED_MARKERS):
         return VerificationResult("stale", f"test -e {item}", "references removed artifact")
     return VerificationResult("missing", f"test -e {item}", "path not found")
@@ -344,6 +370,8 @@ def _try_import(state: ScanState, dotted: str) -> VerificationResult:
 
 def verify_module(state: ScanState, item: str, source_doc: str) -> VerificationResult:
     if any(marker in item for marker in DEPRECATED_MARKERS):
+        if _is_documented_removal(item, source_doc):
+            return VerificationResult("ok", "documented removal", "removal/migration guidance")
         return VerificationResult("stale", "deprecated module", "references removed module")
     parts = item.split(".")
     if parts[-1][0].islower() and len(parts) >= 3:
@@ -417,7 +445,7 @@ def verify_module(state: ScanState, item: str, source_doc: str) -> VerificationR
     return result
 
 
-def verify_env_var(state: ScanState, item: str) -> VerificationResult:
+def verify_env_var(state: ScanState, item: str, source_doc: str = "") -> VerificationResult:
     if item in state.make_vars:
         return VerificationResult("ok", "Makefile var", f"Makefile variable {item}")
     in_template = bool(re.search(rf"^{re.escape(item)}=", state.env_template_text, re.M))
@@ -432,6 +460,8 @@ def verify_env_var(state: ScanState, item: str) -> VerificationResult:
             "grep source only",
             f"not in .env.template; refs: {', '.join(refs[:3])}",
         )
+    if _is_removal_registry_doc(source_doc):
+        return VerificationResult("ok", "removal registry", "documented as a removed env var")
     return VerificationResult("missing", "grep template+source", "absent from template and source")
 
 
@@ -538,11 +568,11 @@ def verify_command(state: ScanState, item: str) -> VerificationResult:
 
 def verify_item(state: ScanState, ext: ExtractedItem) -> VerificationResult:
     if ext.category in {"path", "script"}:
-        return verify_path(state, ext.item)
+        return verify_path(state, ext.item, ext.source_doc)
     if ext.category == "module":
         return verify_module(state, ext.item, ext.source_doc)
     if ext.category == "env_var":
-        return verify_env_var(state, ext.item)
+        return verify_env_var(state, ext.item, ext.source_doc)
     if ext.category == "cli_flag":
         return verify_cli_flag(state, ext.item, ext.source_doc)
     if ext.category == "command":

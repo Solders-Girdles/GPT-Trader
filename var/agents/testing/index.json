@@ -9,7 +9,7 @@
     "test_inventory": "test_inventory.json"
   },
   "summary": {
-    "total_tests": 7064,
+    "total_tests": 7066,
     "total_files": 837,
     "markers_used": 16
   },

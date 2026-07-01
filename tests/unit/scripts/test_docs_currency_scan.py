@@ -94,11 +94,50 @@ def test_scan_docs_on_fixture_repo_produces_report(tmp_path: Path) -> None:
 def test_verify_module_or_path_marks_removed_items_stale(item: str, expected_status: str) -> None:
     repo_root = Path(__file__).resolve().parents[3]
     state = scan.load_state(repo_root, fetch_help=False)
+    # A doc that is neither a removal registry nor a migration guide: a removed
+    # identifier here is genuine drift.
     if item.startswith("scripts/"):
-        result = scan.verify_path(state, item)
+        result = scan.verify_path(state, item, "docs/SOME_GUIDE.md")
     else:
-        result = scan.verify_module(state, item, "docs/DEPRECATIONS.md")
+        result = scan.verify_module(state, item, "docs/SOME_GUIDE.md")
     assert result.status == expected_status
+
+
+@pytest.mark.parametrize(
+    ("category", "item", "source_doc"),
+    [
+        # DEPRECATIONS.md is a removal registry: any removed module/path named
+        # there is expected guidance, not drift.
+        ("module", "gpt_trader.orchestration", "docs/DEPRECATIONS.md"),
+        ("path", "src/gpt_trader/orchestration/", "docs/DEPRECATIONS.md"),
+        # ARCHITECTURE.md carries an old->new migration table; marker-matched
+        # (known-removed) identifiers there are exempt.
+        ("module", "gpt_trader.orchestration.execution.degradation", "docs/ARCHITECTURE.md"),
+    ],
+)
+def test_documented_removals_are_not_flagged(category: str, item: str, source_doc: str) -> None:
+    repo_root = Path(__file__).resolve().parents[3]
+    state = scan.load_state(repo_root, fetch_help=False)
+    if category == "module":
+        result = scan.verify_module(state, item, source_doc)
+    else:
+        result = scan.verify_path(state, item, source_doc)
+    assert result.status == "ok"
+
+
+def test_removed_env_var_in_registry_doc_is_ok(tmp_path: Path, monkeypatch) -> None:
+    # An env var absent from template and source, named in the removal registry,
+    # is expected guidance (not "missing"). Force "absent from source" so the
+    # test does not depend on the literal appearing elsewhere in the repo.
+    repo_root = Path(__file__).resolve().parents[3]
+    state = scan.load_state(repo_root, fetch_help=False)
+    monkeypatch.setattr(scan, "_grep_repo", lambda *args, **kwargs: [])
+
+    missing = scan.verify_env_var(state, "SOME_REMOVED_ENV_VAR", "docs/OTHER.md")
+    assert missing.status == "missing"
+
+    registry = scan.verify_env_var(state, "SOME_REMOVED_ENV_VAR", "docs/DEPRECATIONS.md")
+    assert registry.status == "ok"
 
 
 def test_short_cli_flags_are_extracted(tmp_path: Path) -> None:

@@ -9,20 +9,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-ORCHESTRATION_GUARD_SCRIPT = "\n".join(
-    [
-        "# The gpt_trader.orchestration package was removed in v3.0",
-        "# Fail if ANY file imports gpt_trader.orchestration",
-        'if grep -rn -E "(from|import)\\s+gpt_trader\\.orchestration" src tests scripts --include="*.py"; then',
-        '  echo "::error::gpt_trader.orchestration was removed in v3.0"',
-        '  echo "Use canonical paths: app.*, features.live_trade.*, features.brokerages.*"',
-        '  echo "See docs/DEPRECATIONS.md for migration guidance."',
-        "  exit 1",
-        "fi",
-        'echo "No orchestration imports found - package was removed in v3.0."',
-    ]
-)
-
 AGENT_HEALTH_SCRIPT = "\n".join(
     [
         "set -u",
@@ -215,7 +201,7 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
         ),
         PlannedStep(
             label="Guard against orchestration imports (removed in v3.0)",
-            command=["bash", "-lc", ORCHESTRATION_GUARD_SCRIPT],
+            command=["python", "scripts/ci/check_orchestration_imports.py"],
         ),
         PlannedStep(
             label="Guard deprecation registry",

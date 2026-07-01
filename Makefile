@@ -77,13 +77,7 @@ test-guardrails:
 ci-required:
 	$(MAKE) lint
 	uv run ruff check scripts/ops scripts/analysis/backtest_runner.py scripts/monitoring scripts/production_preflight.py
-	@if grep -rn -E "(from|import)\\s+gpt_trader\\.orchestration" src tests scripts --include="*.py"; then \
-		echo "::error::gpt_trader.orchestration was removed in v3.0"; \
-		echo "Use canonical paths: app.*, features.live_trade.*, features.brokerages.*"; \
-		echo "See docs/DEPRECATIONS.md for migration guidance."; \
-		exit 1; \
-	fi
-	@echo "No orchestration imports found - package was removed in v3.0."
+	uv run python scripts/ci/check_orchestration_imports.py
 	uv run python scripts/ci/check_deprecation_registry.py
 	$(MAKE) docs-audit
 	$(MAKE) typecheck

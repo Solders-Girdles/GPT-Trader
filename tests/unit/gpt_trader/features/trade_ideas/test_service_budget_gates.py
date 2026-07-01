@@ -11,12 +11,15 @@ from gpt_trader.features.trade_ideas import (
     DEFAULT_RISK_BUDGET,
     ActorType,
     AuditAction,
+    AuditEvent,
     CloseoutResolution,
     MaxLoss,
     PolicyViolationError,
     RiskBudget,
     SizingRecommendation,
+    TradeIdea,
     TradeIdeaState,
+    new_event_id,
 )
 from gpt_trader.features.trade_ideas.service import TradeIdeaService
 
@@ -26,6 +29,28 @@ def service(tmp_path: Path) -> TradeIdeaService:
     return TradeIdeaService(
         tmp_path / "trade_ideas",
         now_factory=lambda: datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
+    )
+
+
+def _append_legacy_approval(
+    service: TradeIdeaService,
+    idea: TradeIdea,
+    *,
+    reason: str,
+) -> None:
+    service.audit_log.append(
+        AuditEvent(
+            event_id=new_event_id(),
+            timestamp=datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
+            decision_id=idea.decision_id,
+            actor_type=ActorType.HUMAN,
+            actor_id="rj",
+            action=AuditAction.APPROVED,
+            before_state=TradeIdeaState.PROPOSED,
+            after_state=TradeIdeaState.APPROVED,
+            reason=reason,
+            record_hash=idea.record_hash(),
+        )
     )
 
 
@@ -52,6 +77,34 @@ def test_approval_refused_when_same_day_loss_budget_is_exhausted(
     assert any("max_daily_loss_pct" in violation for violation in exc_info.value.violations)
     assert any(
         "projected daily loss exposure 10.5% exceeds limit 10%" in violation
+        for violation in exc_info.value.violations
+    )
+    assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
+
+
+def test_approval_refused_when_same_day_closeout_loss_is_unavailable(
+    service: TradeIdeaService,
+) -> None:
+    closed = build_trade_idea(decision_id="trade-20260612-closed-unknown-loss")
+    service.propose(closed, actor_id="idea-generator-v1")
+    service.approve(closed.decision_id, actor_id="rj", reason="Risk verified")
+    service.record_submission(closed.decision_id, actor_id="operator", venue="manual")
+    service.record_fill(closed.decision_id, actor_id="operator", venue="manual")
+    service.record_closeout_attribution(
+        closed.decision_id,
+        actor_id="rj",
+        resolution=CloseoutResolution.EXPIRY,
+        realized_profit_loss_unavailable_reason="Broker statement unavailable",
+    )
+    candidate = build_trade_idea(decision_id="trade-20260612-after-unknown-closeout")
+    service.propose(candidate, actor_id="idea-generator-v1")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(candidate.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert any(
+        "same-day closeout budget exposure includes 1 closeout(s) without realized profit/loss"
+        in violation
         for violation in exc_info.value.violations
     )
     assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
@@ -137,6 +190,32 @@ def test_filled_idea_without_closeout_still_consumes_open_budget_exposure(
     assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
 
 
+def test_approval_refused_when_open_exposure_max_loss_percent_is_missing(
+    service: TradeIdeaService,
+) -> None:
+    legacy_open = build_trade_idea(
+        decision_id="trade-20260612-legacy-open-missing-risk",
+        max_loss=MaxLoss(amount=Decimal("250"), percent_of_account=None),
+    )
+    service.propose(legacy_open, actor_id="idea-generator-v1")
+    _append_legacy_approval(
+        service,
+        legacy_open,
+        reason="Legacy approval before max-loss percent was required",
+    )
+    candidate = build_trade_idea(decision_id="trade-20260612-after-missing-risk")
+    service.propose(candidate, actor_id="idea-generator-v1")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(candidate.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert any(
+        "open budget exposure includes 1 idea(s) without max_loss.percent_of_account" in violation
+        for violation in exc_info.value.violations
+    )
+    assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
+
+
 def test_open_notional_budget_uses_absolute_signed_notional(
     service: TradeIdeaService,
 ) -> None:
@@ -203,13 +282,9 @@ def test_approval_refused_when_open_exposure_notional_is_missing(
         ),
     )
     service.propose(legacy_open, actor_id="idea-generator-v1")
-    # Model a legacy open approval that predates the stricter notional gate.
-    service._append(
+    _append_legacy_approval(
+        service,
         legacy_open,
-        action=AuditAction.APPROVED,
-        after_state=TradeIdeaState.APPROVED,
-        actor_type=ActorType.HUMAN,
-        actor_id="rj",
         reason="Legacy approval before notional was required",
     )
     candidate = build_trade_idea(decision_id="trade-20260612-after-legacy-open")

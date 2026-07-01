@@ -94,11 +94,6 @@
       "type": "boolean",
       "default": true
     },
-    "account_telemetry_interval": {
-      "type": "integer",
-      "nullable": true,
-      "description": "Account snapshot interval in seconds (null to disable)"
-    },
     "broker_calls_use_dedicated_executor": {
       "type": "boolean",
       "default": true

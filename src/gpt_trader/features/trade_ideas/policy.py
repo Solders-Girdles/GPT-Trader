@@ -51,7 +51,9 @@ class ApprovalBudgetContext:
     """Aggregate budget exposure visible at an approval decision."""
 
     same_day_realized_loss_pct: Decimal = Decimal("0")
+    same_day_realized_loss_unavailable_count: int = 0
     open_approved_at_risk_pct: Decimal = Decimal("0")
+    open_at_risk_unavailable_count: int = 0
     open_notional: Decimal = Decimal("0")
     open_notional_unavailable_count: int = 0
     account_equity_snapshot: Decimal | None = None
@@ -108,6 +110,21 @@ class ApprovalPolicy:
             )
 
         violations.extend(evaluate_eligibility(idea))
+
+        if has_budget_context and budget_context.same_day_realized_loss_unavailable_count:
+            violations.append(
+                "same-day closeout budget exposure includes "
+                f"{budget_context.same_day_realized_loss_unavailable_count} closeout(s) "
+                "without realized profit/loss; max_daily_loss_pct budget exposure "
+                "cannot be verified"
+            )
+        if has_budget_context and budget_context.open_at_risk_unavailable_count:
+            violations.append(
+                "open budget exposure includes "
+                f"{budget_context.open_at_risk_unavailable_count} idea(s) without "
+                "max_loss.percent_of_account; max_daily_loss_pct budget exposure "
+                "cannot be verified"
+            )
 
         percent = idea.max_loss.percent_of_account
         if percent is None:

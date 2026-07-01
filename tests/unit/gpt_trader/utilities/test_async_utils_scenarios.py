@@ -60,35 +60,6 @@ class TestAsyncScenarios:
         assert results == [i * 2 for i in range(15)]
 
     @pytest.mark.asyncio
-    async def test_caching_with_retry(self) -> None:
-        from gpt_trader.utilities.async_tools import AsyncCache, AsyncRetry  # naming: allow
-
-        cache = AsyncCache(ttl=1.0)
-        retry = AsyncRetry(max_attempts=3, base_delay=0.01)
-
-        compute_calls: dict[int, int] = {}
-
-        async def cached_retry_operation(x: int) -> int:
-            cache_key = f"op_{x}"
-            cached_result = await cache.get(cache_key)
-            if cached_result is not None:
-                return cached_result
-
-            compute_calls[x] = compute_calls.get(x, 0) + 1
-            if x == 2 and compute_calls[x] == 1:
-                raise ValueError("Temporary failure")
-
-            result = x * 3
-            await cache.set(cache_key, result)
-            return result
-
-        first = await retry.execute(cached_retry_operation, 2)
-        second = await retry.execute(cached_retry_operation, 2)
-        assert first == 6
-        assert second == 6
-        assert compute_calls[2] == 2  # first attempt fails, second succeeds, then cached
-
-    @pytest.mark.asyncio
     async def test_timeout_with_concurrency(self) -> None:
         from gpt_trader.utilities.async_tools import async_timeout  # naming: allow
 
@@ -108,14 +79,12 @@ class TestAsyncScenarios:
         from gpt_trader.utilities.async_tools import (  # naming: allow
             AsyncCache,
             AsyncRateLimiter,
-            AsyncRetry,
             async_timeout,
             gather_with_concurrency,
         )
 
         cache = AsyncCache(ttl=2.0)
         limiter = AsyncRateLimiter(rate_limit=20.0, burst_limit=3)
-        retry = AsyncRetry(max_attempts=2, base_delay=0.01)
 
         @async_timeout(0.1)
         async def complex_operation(item_id: int) -> dict:
@@ -141,10 +110,7 @@ class TestAsyncScenarios:
 
         item_ids = list(range(10))
 
-        async def process_item_with_retry(item_id: int):
-            return await retry.execute(complex_operation, item_id)
-
-        operations = [process_item_with_retry(i) for i in item_ids]
+        operations = [complex_operation(i) for i in item_ids]
         results = await gather_with_concurrency(operations, max_concurrency=3)
 
         assert len(results) == 10

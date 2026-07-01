@@ -162,17 +162,16 @@ def _equity_from_max_loss_amount_percent(
 def _closeout_loss_percent(
     closeout: CloseoutAttribution,
     account_equity_snapshot: Decimal | None,
-) -> Decimal:
+) -> Decimal | None:
     if closeout.realized_profit_loss_percent is not None:
         return abs(min(closeout.realized_profit_loss_percent, Decimal("0")))
     realized_amount = closeout.realized_profit_loss_amount
-    if (
-        realized_amount is None
-        or realized_amount >= 0
-        or account_equity_snapshot is None
-        or account_equity_snapshot <= 0
-    ):
+    if realized_amount is None:
+        return None
+    if realized_amount >= 0:
         return Decimal("0")
+    if account_equity_snapshot is None or account_equity_snapshot <= 0:
+        return None
     return abs(realized_amount) / account_equity_snapshot * Decimal("100")
 
 
@@ -325,17 +324,23 @@ class TradeIdeaService:
             open_ideas=open_ideas,
             closeouts=closeouts,
         )
+        closeout_loss_pcts = tuple(
+            _closeout_loss_percent(closeout, account_equity_snapshot) for closeout in closeouts
+        )
         same_day_realized_loss_pct = sum(
-            (_closeout_loss_percent(closeout, account_equity_snapshot) for closeout in closeouts),
+            (loss_pct for loss_pct in closeout_loss_pcts if loss_pct is not None),
             Decimal("0"),
         )
+        same_day_realized_loss_unavailable_count = sum(
+            1 for loss_pct in closeout_loss_pcts if loss_pct is None
+        )
+        open_at_risk_pcts = tuple(idea.max_loss.percent_of_account for idea in open_ideas)
         open_approved_at_risk_pct = sum(
-            (
-                idea.max_loss.percent_of_account
-                for idea in open_ideas
-                if idea.max_loss.percent_of_account is not None
-            ),
+            (risk_pct for risk_pct in open_at_risk_pcts if risk_pct is not None),
             Decimal("0"),
+        )
+        open_at_risk_unavailable_count = sum(
+            1 for risk_pct in open_at_risk_pcts if risk_pct is None
         )
         open_notionals = tuple(_absolute_notional(idea) for idea in open_ideas)
         open_notional = sum(
@@ -344,7 +349,9 @@ class TradeIdeaService:
         open_notional_unavailable_count = sum(1 for notional in open_notionals if notional is None)
         return ApprovalBudgetContext(
             same_day_realized_loss_pct=same_day_realized_loss_pct,
+            same_day_realized_loss_unavailable_count=(same_day_realized_loss_unavailable_count),
             open_approved_at_risk_pct=open_approved_at_risk_pct,
+            open_at_risk_unavailable_count=open_at_risk_unavailable_count,
             open_notional=open_notional,
             open_notional_unavailable_count=open_notional_unavailable_count,
             account_equity_snapshot=account_equity_snapshot,
@@ -376,7 +383,11 @@ class TradeIdeaService:
             "evaluated_at": evaluation_time.isoformat(),
             "account_equity_snapshot": _decimal_to_str(account_equity),
             "same_day_realized_loss_pct": str(context.same_day_realized_loss_pct),
+            "same_day_realized_loss_unavailable_count": (
+                context.same_day_realized_loss_unavailable_count
+            ),
             "open_approved_at_risk_pct": str(context.open_approved_at_risk_pct),
+            "open_at_risk_unavailable_count": context.open_at_risk_unavailable_count,
             "daily_loss_used_pct": str(daily_loss_used_pct),
             "daily_loss_headroom_pct": str(daily_loss_headroom_pct),
             "open_notional": str(context.open_notional),

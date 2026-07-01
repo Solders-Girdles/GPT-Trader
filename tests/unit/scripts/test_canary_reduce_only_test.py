@@ -24,6 +24,14 @@ class _FakeClient:
         return {"cancelled": order_ids}
 
 
+def test_symbol_is_required(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        canary_reduce_only_test.main([])
+
+    assert excinfo.value.code == 2
+    assert "--symbol" in capsys.readouterr().err
+
+
 def test_live_mode_requires_human_approved_confirmation_before_credentials(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
@@ -35,7 +43,7 @@ def test_live_mode_requires_human_approved_confirmation_before_credentials(
         canary_reduce_only_test, "_resolve_credentials", fail_if_credentials_are_resolved
     )
 
-    result = canary_reduce_only_test.main(["--live"])
+    result = canary_reduce_only_test.main(["--live", "--symbol", "BTC-20DEC30-CDE"])
 
     assert result == 2
     assert "--confirm-human-approved-live-order" in capsys.readouterr().out
@@ -63,7 +71,9 @@ def test_live_mode_with_confirmation_can_place_and_cancel(
     monkeypatch.setattr(canary_reduce_only_test, "CoinbaseClient", build_client)
     monkeypatch.setattr(canary_reduce_only_test.time, "sleep", lambda seconds: None)
 
-    result = canary_reduce_only_test.main(["--live", "--confirm-human-approved-live-order"])
+    result = canary_reduce_only_test.main(
+        ["--live", "--confirm-human-approved-live-order", "--symbol", "BTC-20DEC30-CDE"]
+    )
 
     assert result == 0
     assert len(fake_clients) == 1

@@ -40,7 +40,6 @@ from gpt_trader.utilities.logging_patterns import get_logger
 
 if TYPE_CHECKING:
     from gpt_trader.app.protocols import (
-        AccountManagerProtocol,
         ApplicationContainerProtocol,
         EventStoreProtocol,
         RuntimeStateProtocol,
@@ -76,10 +75,6 @@ class TradingBot:
         # Get services directly from container (legacy registry removed)
         self.broker: BrokerProtocol | None = container.broker
         self.risk_manager: RiskManagerProtocol | None = container.risk_manager
-        self.account_manager: AccountManagerProtocol | None = getattr(
-            container, "account_manager", None
-        )
-        self.account_telemetry: Any = getattr(container, "account_telemetry", None)
         self.runtime_state: RuntimeStateProtocol | None = getattr(container, "runtime_state", None)
 
         # Get event_store from parameter or container

@@ -18,7 +18,7 @@ status: current
 
 ## Current State
 
-GPT-Trader is a Coinbase Advanced Trade oriented trading system with implemented **spot**, **CFM futures**, and gated **INTX perpetuals** paths. Treat these as implementation capabilities, not as blanket approval for live automation.
+GPT-Trader is a Coinbase Advanced Trade oriented trading system with implemented **spot** and **CFM futures** paths. INTX perpetuals were removed (see [decision record](decisions/intx-default-derivatives-venue.md) and [Deprecations](DEPRECATIONS.md)); CFM/`us_futures` is the only supported derivatives venue. Treat spot and CFM as implementation capabilities, not as blanket approval for live automation.
 
 For broader migration, the canonical planning gate is [Direction](DIRECTION.md). New AI-assisted execution work should start from the current approval-gated execution phase (`human_approved_execution` compatibility label), broker-neutral trade records, explicit risk budgets, `decision-needed` packets for unresolved live-control choices, and verified venue/API/account capability.
 
@@ -30,12 +30,12 @@ For broader migration, the canonical planning gate is [Direction](DIRECTION.md).
 |------------|----------|----------------|-------------|-----------|----------|
 | **Spot** | Spot (BTC-USD, ETH-USD, ...) | JWT (CDP key) | Advanced v3 | Real-time | Implemented; requires profile/readiness gate before live use |
 | **CFM** | US Futures (BTC, ETH, SOL, etc.) | CDP (JWT) | Advanced v3 | Real-time | Implemented/gated; verify account and risk constraints |
-| **INTX** | Perpetuals (international) | CDP (JWT) + `COINBASE_ENABLE_INTX_PERPS=1` | Advanced v3 | Real-time | Implemented/gated; requires eligible-region account |
+| **INTX** | Removed (was: perpetuals, international) | — | — | — | Removed; see [decision record](decisions/intx-default-derivatives-venue.md). `COINBASE_ENABLE_INTX_PERPS` is a deprecated alias (a truthy value warns and substitutes for `CFM_ENABLED=1` only; `TRADING_MODES` must still include `cfm`; falsey/unset values are ignored) ([Deprecations](DEPRECATIONS.md)) |
 | **Paper** | All products | — | — | — | Simulated via `PERPS_PAPER=1` |
 
 ### Derivatives Access Summary
-- **CFM (Coinbase Financial Markets)**: US-regulated futures with expiration dates. Endpoints: `cfm_balance_summary`, `cfm_positions`, `cfm_sweeps`, margin settings.
-- **INTX (International Exchange)**: Perpetual futures for non-US users. Endpoints implemented but gated by account access.
+- **CFM (Coinbase Financial Markets)**: US-regulated futures with expiration dates. Endpoints: `cfm_balance_summary`, `cfm_positions`, `cfm_sweeps`, margin settings. The only supported derivatives venue (`coinbase_derivatives_type=us_futures`).
+- **INTX (International Exchange)**: Removed. Selecting `intx_perps`/`perpetuals` is a validation error; see [decision record](decisions/intx-default-derivatives-venue.md) and [Deprecations](DEPRECATIONS.md).
 
 ## Component Architecture
 
@@ -251,9 +251,9 @@ These are capability gates over implementation surfaces; they are not approval t
 trade derivatives. A live derivatives run still requires venue/account
 verification and the gates in [Live Operations](production.md).
 
-**CFM Futures** (US-regulated): Adapter available for approved US futures accounts. Enable via `TRADING_MODES=cfm` (or `spot,cfm`) and `CFM_ENABLED=1`; uses CDP authentication and CFM endpoints (`cfm_balance_summary`, `cfm_positions`, etc.).
+**CFM Futures** (US-regulated): Adapter available for approved US futures accounts. Enable via `TRADING_MODES=cfm` (or `spot,cfm`) and `CFM_ENABLED=1`; uses CDP authentication and CFM endpoints (`cfm_balance_summary`, `cfm_positions`, etc.). This is the only supported derivatives venue.
 
-**INTX Perpetuals**: Adapter requires international INTX account access. Enable via `COINBASE_ENABLE_INTX_PERPS=1`. Code paths stay compiled but live execution is gated on account access and approval.
+**INTX Perpetuals**: Removed; see [decision record](decisions/intx-default-derivatives-venue.md) and [Deprecations](DEPRECATIONS.md). `COINBASE_ENABLE_INTX_PERPS` is retained only as a deprecated alias: a truthy value warns and substitutes for `CFM_ENABLED=1` only (config validation still requires `TRADING_MODES` to include `cfm`); falsey/unset values are ignored. `-PERP`-suffixed symbols are coerced to their spot equivalents.
 
 ### Feature Slice Reference
 
@@ -279,7 +279,7 @@ verification and the gates in [Live Operations](production.md).
 1. **Slice Isolation**: Production slices limit cross-dependencies; experimental ones stay sandboxed.
 2. **Token Awareness**: Documentation highlights slice entry points so agents can load only what they need.
 3. **Type Safety**: Shared interfaces defined in `features/brokerages/core/protocols.py`.
-4. **Environment Separation**: GPT-Trader normalizes symbols to spot unless INTX derivatives access is detected.
+4. **Environment Separation**: GPT-Trader normalizes symbols to spot by default; retired `-PERP`-suffixed (INTX) symbols are coerced to their spot equivalents (see [Deprecations](DEPRECATIONS.md)).
 
 ### Order Execution Pipeline
 
@@ -454,7 +454,7 @@ the gates in [Live Operations](production.md) and the
 - Active test suite (`uv run pytest --collect-only` to verify)
 
 ### ⚠️ Partially Implemented / Capability-Gated
-- Perpetual futures adapters: code paths compile and tests run; INTX account access and approval are required before live execution
+- CFM futures adapter: code paths compile and tests run; account access and approval are required before live execution. INTX perpetuals were removed (see [decision record](decisions/intx-default-derivatives-venue.md)); CFM/`us_futures` is the only derivatives venue
 - Advanced WebSocket user-event handling: baseline support exists; enrichment/backfill still in progress
 - Durable restart state (OrdersStore/EventStore) needs hardening before live reliance
 

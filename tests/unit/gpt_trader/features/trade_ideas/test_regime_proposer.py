@@ -126,6 +126,24 @@ def test_regime_aware_proposer_enriches_baseline_signal() -> None:
     assert len(detectors[0].updates) == len(GOLDEN_CROSS)
 
 
+def test_regime_aware_proposer_uses_configured_suppressed_regime_text() -> None:
+    factory, _detectors = scripted_factory(regime_state(RegimeType.BULL_QUIET))
+    proposer = RegimeAwareProposer(
+        RegimeAwareProposerConfig(
+            baseline_config=CONFIG.baseline_config,
+            suppressed_regimes=(RegimeType.SIDEWAYS_VOLATILE,),
+        ),
+        detector_factory=factory,
+    )
+
+    ideas = proposer.propose(snapshot_of(make_series(GOLDEN_CROSS)))
+
+    assert len(ideas) == 1
+    assert "regime overlay shifts to SIDEWAYS_VOLATILE" in ideas[0].invalidation
+    assert "CRISIS or BEAR_VOLATILE" not in ideas[0].invalidation
+    assert "Regime overlay is SIDEWAYS_VOLATILE before review" in ideas[0].do_not_trade_if
+
+
 def test_regime_aware_proposer_suppresses_crisis_signal() -> None:
     snapshot = snapshot_of(make_series(GOLDEN_CROSS))
     baseline = BaselineProposer(CONFIG.baseline_config)

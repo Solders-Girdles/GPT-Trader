@@ -35,6 +35,7 @@ from gpt_trader.cli.commands.ideas_input import (
 )
 from gpt_trader.cli.response import CliError, CliErrorCode, CliResponse, RawCliOutput
 from gpt_trader.errors import ValidationError
+from gpt_trader.features.intelligence.regime import RegimeConfig
 from gpt_trader.features.trade_ideas import (
     DEFAULT_TIME_IN_FORCE,
     DEFAULT_VENUE_ORDER_TYPE,
@@ -1045,18 +1046,38 @@ def _default_replay_min_history(config: BaselineProposerConfig) -> int:
     return max(config.short_window, config.long_window) + config.crossover_lookback
 
 
-def _resolve_replay_min_history(args: Namespace, config: BaselineProposerConfig) -> int:
-    minimum_history = _default_replay_min_history(config)
+def _default_regime_replay_min_history(
+    config: BaselineProposerConfig,
+    regime_config: RegimeConfig,
+) -> int:
+    return max(
+        _default_replay_min_history(config),
+        regime_config.long_ema_period + regime_config.min_regime_ticks,
+    )
+
+
+def _resolve_replay_min_history(
+    args: Namespace,
+    config: BaselineProposerConfig,
+    *,
+    minimum_history: int | None = None,
+    minimum_context: str | None = None,
+) -> int:
+    required_min_history = (
+        minimum_history if minimum_history is not None else _default_replay_min_history(config)
+    )
     requested_min_history = cast(int | None, args.min_history)
     if requested_min_history is None:
-        return minimum_history
-    if requested_min_history < minimum_history:
+        return required_min_history
+    if requested_min_history < required_min_history:
+        context = f", {minimum_context}" if minimum_context is not None else ""
         raise CandleInputError(
             (
                 "--min-history must be at least "
-                f"{minimum_history} for short-window={config.short_window}, "
+                f"{required_min_history} for short-window={config.short_window}, "
                 f"long-window={config.long_window}, "
                 f"crossover-lookback={config.crossover_lookback}"
+                f"{context}"
             ),
             field="min_history",
         )
@@ -1547,10 +1568,22 @@ def _handle_replay_regime_aware(args: Namespace) -> CliResponse:
         _validate_replay_granularity(args.granularity)
         candles = _load_candle_fixture(args.file)
         proposer_config = _replay_baseline_config_from_args(args)
-        min_history = _resolve_replay_min_history(args, proposer_config)
+        regime_config = RegimeConfig()
+        min_history = _resolve_replay_min_history(
+            args,
+            proposer_config,
+            minimum_history=_default_regime_replay_min_history(proposer_config, regime_config),
+            minimum_context=(
+                f"regime-long-ema={regime_config.long_ema_period}, "
+                f"min-regime-ticks={regime_config.min_regime_ticks}"
+            ),
+        )
         report = TradeIdeaReplayRunner(
             RegimeAwareProposer(
-                RegimeAwareProposerConfig(baseline_config=proposer_config),
+                RegimeAwareProposerConfig(
+                    baseline_config=proposer_config,
+                    regime_config=regime_config,
+                ),
             ),
             config=ReplayRunnerConfig(source=args.source, min_history=min_history),
         ).run_series(symbol=args.symbol, granularity=args.granularity, candles=candles)

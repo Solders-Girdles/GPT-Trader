@@ -365,6 +365,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_regime_aware.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
@@ -2484,7 +2485,8 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_regime_aware.py": [
-      "gpt_trader"
+      "gpt_trader",
+      "gpt_trader.cli.response"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py": [
       "gpt_trader",

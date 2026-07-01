@@ -107,7 +107,10 @@ class RegimeAwareProposer:
             idea,
             decision_id=self._decision_id(_utc_aware(snapshot.as_of), idea.instrument),
             thesis=_regime_thesis(idea.thesis, idea.instrument, state),
-            invalidation=_regime_invalidation(idea.invalidation),
+            invalidation=_regime_invalidation(
+                idea.invalidation,
+                self._config.suppressed_regimes,
+            ),
             data_used=(
                 *idea.data_used,
                 _regime_data_used(idea.instrument, state, self._config_fingerprint),
@@ -116,7 +119,7 @@ class RegimeAwareProposer:
             sizing_recommendation=_regime_sizing(idea.sizing_recommendation, state),
             do_not_trade_if=(
                 *idea.do_not_trade_if,
-                "Regime overlay is CRISIS or BEAR_VOLATILE before review",
+                *_regime_suppression_do_not_trade_if(self._config.suppressed_regimes),
                 "Regime confidence falls below 0.30 before entry",
             ),
         )
@@ -158,11 +161,22 @@ def _regime_thesis(thesis: str, instrument: str, state: RegimeState) -> str:
     )
 
 
-def _regime_invalidation(invalidation: str) -> str:
-    return (
-        f"{invalidation}; invalidate before entry if regime overlay shifts to "
-        "CRISIS or BEAR_VOLATILE"
-    )
+def _regime_names(regimes: tuple[RegimeType, ...]) -> str:
+    return " or ".join(regime.name for regime in regimes)
+
+
+def _regime_suppression_do_not_trade_if(regimes: tuple[RegimeType, ...]) -> tuple[str, ...]:
+    names = _regime_names(regimes)
+    if not names:
+        return ()
+    return (f"Regime overlay is {names} before review",)
+
+
+def _regime_invalidation(invalidation: str, suppressed_regimes: tuple[RegimeType, ...]) -> str:
+    names = _regime_names(suppressed_regimes)
+    if not names:
+        return invalidation
+    return f"{invalidation}; invalidate before entry if regime overlay shifts to {names}"
 
 
 def _regime_confidence(confidence: Confidence, state: RegimeState) -> Confidence:

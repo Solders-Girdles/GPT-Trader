@@ -322,10 +322,11 @@ cat status.json | jq '.market.last_price_update'
 cat status.json | jq '.engine'
 
 # 3. Manually verify prices are available
-curl -s "https://api.coinbase.com/api/v3/brokerage/products/BTC-PERP-USDC/ticker"
+curl -s "https://api.coinbase.com/api/v3/brokerage/products/BTC-USD/ticker"
 
 # 4. Check if market is open
-# Crypto markets are 24/7, but INTX has maintenance windows
+# Crypto spot markets are 24/7; CFM futures may have separate trading hours
+# per Coinbase's CFM product terms
 ```
 
 #### Resolution

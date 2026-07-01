@@ -11,7 +11,7 @@ def test_parse_ps_output_filters_canary_profile() -> None:
     100 1 100 uv run gpt-trader run --profile canary --dry-run
     101 100 100 /usr/bin/python gpt-trader run --profile canary --dry-run
     200 1 200 uv run gpt-trader run --profile canary_open --dry-run
-    300 1 300 uv run gpt-trader run --profile canary --dry-run --tui
+    300 1 300 uv run gpt-trader run --profile demo --dry-run
     400 1 400 uv run other
     """
     processes = canary_process.parse_ps_output(output)

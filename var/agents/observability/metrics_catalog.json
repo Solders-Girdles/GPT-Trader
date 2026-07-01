@@ -221,14 +221,6 @@
         {
           "line": 182,
           "path": "src/gpt_trader/features/live_trade/guard_errors.py"
-        },
-        {
-          "line": 68,
-          "path": "src/gpt_trader/monitoring/guards/manager.py"
-        },
-        {
-          "line": 73,
-          "path": "src/gpt_trader/monitoring/guards/manager.py"
         }
       ],
       "name": "gpt_trader_guard_checks_total",

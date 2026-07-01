@@ -204,20 +204,6 @@ GUARD_STACK_NODES = [
         "cluster": "runtime",
     },
     {
-        "id": "monitoring_guard_manager",
-        "label": "RuntimeGuardManager",
-        "type": "monitoring",
-        "path": "src/gpt_trader/monitoring/guards/manager.py",
-        "cluster": "runtime",
-    },
-    {
-        "id": "monitoring_guards",
-        "label": "Monitoring guards",
-        "type": "monitoring",
-        "path": "src/gpt_trader/monitoring/guards/builtins.py",
-        "cluster": "runtime",
-    },
-    {
         "id": "health_signals",
         "label": "Health signals",
         "type": "monitoring",
@@ -277,21 +263,6 @@ GUARD_STACK_EDGES = [
         "label": "pre-trade guard stack",
     },
     {
-        "from": "trading_engine",
-        "to": "monitoring_guard_manager",
-        "label": "emit guard events",
-    },
-    {
-        "from": "monitoring_guard_manager",
-        "to": "monitoring_guards",
-        "label": "evaluate guards",
-    },
-    {
-        "from": "monitoring_guards",
-        "to": "health_signals",
-        "label": "emit health signals",
-    },
-    {
         "from": "health_signals",
         "to": "health_checks",
         "label": "evaluate thresholds",
@@ -324,13 +295,6 @@ EXECUTION_FLOW_NODES = [
         "label": "Strategy.decide",
         "type": "decision",
         "path": "src/gpt_trader/features/live_trade/strategies/base.py",
-        "cluster": "entry",
-    },
-    {
-        "id": "order_router",
-        "label": "OrderRouter.execute_async (external)",
-        "type": "entrypoint",
-        "path": "src/gpt_trader/features/live_trade/execution/router.py",
         "cluster": "entry",
     },
     {
@@ -485,11 +449,6 @@ EXECUTION_FLOW_EDGES = [
         "from": "strategy_decide",
         "to": "engine_validate",
         "label": "submit decision",
-    },
-    {
-        "from": "order_router",
-        "to": "engine_submit",
-        "label": "external entry",
     },
     {
         "from": "engine_submit",
@@ -2109,7 +2068,6 @@ def build_execution_flow_map() -> dict[str, Any]:
         "edges": EXECUTION_FLOW_EDGES,
         "notes": [
             "TradingEngine._cycle submits strategy decisions directly to the guard stack.",
-            "OrderRouter routes external decisions to TradingEngine.submit_order.",
             "OrderSubmitter handles broker IO, telemetry, and persistence.",
             "Guard rejections emit metrics; stale marks append EventStore events.",
         ],

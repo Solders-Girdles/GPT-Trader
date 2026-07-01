@@ -2,7 +2,7 @@
   "version": "1.0",
   "description": "Machine-readable test inventory for GPT-Trader",
   "summary": {
-    "total_tests": 7047,
+    "total_tests": 7050,
     "total_files": 836,
     "markers_used": 16
   },
@@ -102,7 +102,7 @@
     ]
   },
   "marker_counts": {
-    "unit": 6880,
+    "unit": 6883,
     "asyncio": 442,
     "parametrize": 203,
     "property": 82,
@@ -64102,6 +64102,30 @@
       {
         "name": "test_strict_profile_banner_distinguishes_pull_request_ci",
         "line": 101,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_agent_artifacts_freshness_is_advisory_in_strict_profile",
+        "line": 109,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_steps_marks_advisory_failure_as_warn",
+        "line": 120,
+        "markers": [
+          "unit"
+        ],
+        "docstring": ""
+      },
+      {
+        "name": "test_run_steps_marks_non_advisory_failure_as_fail",
+        "line": 135,
         "markers": [
           "unit"
         ],

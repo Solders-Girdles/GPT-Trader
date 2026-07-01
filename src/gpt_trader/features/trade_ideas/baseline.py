@@ -10,7 +10,7 @@ outscore this on the same replayed snapshots, it is noise.
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
@@ -23,10 +23,14 @@ from gpt_trader.features.trade_ideas.models import (
     EntryZone,
     MaxLoss,
     ProductType,
-    SizingRecommendation,
     TimeHorizon,
     TradeDirection,
     TradeIdea,
+)
+from gpt_trader.features.trade_ideas.sizing import (
+    TradeIdeaPositionSizingBridge,
+    TradeIdeaSizingConfig,
+    TradeIdeaSizingContext,
 )
 from gpt_trader.features.trade_ideas.snapshot import MarketSnapshot, SymbolSeries
 
@@ -42,6 +46,7 @@ class BaselineProposerConfig:
     expiry_hours: int = 48
     expected_hold: str = "5-15 days"
     price_precision: Decimal = Decimal("0.01")
+    sizing_config: TradeIdeaSizingConfig = field(default_factory=TradeIdeaSizingConfig)
 
 
 def _moving_average(closes: list[Decimal], window: int, end_index: int) -> Decimal:
@@ -58,8 +63,16 @@ def _utc_aware(value: datetime) -> datetime:
 class BaselineProposer:
     """Long-only MA-crossover proposer over spot symbols in a snapshot."""
 
-    def __init__(self, config: BaselineProposerConfig | None = None) -> None:
+    def __init__(
+        self,
+        config: BaselineProposerConfig | None = None,
+        *,
+        sizing_bridge: TradeIdeaPositionSizingBridge | None = None,
+    ) -> None:
         self._config = config or BaselineProposerConfig()
+        self._sizing_bridge = sizing_bridge or TradeIdeaPositionSizingBridge(
+            self._config.sizing_config
+        )
 
     @property
     def proposer_id(self) -> str:
@@ -120,6 +133,16 @@ class BaselineProposer:
                 else "Crossover lacks volume confirmation; treat as a weaker signal"
             ),
         )
+        sizing = self._sizing_bridge.recommend(
+            TradeIdeaSizingContext(
+                symbol=series.symbol,
+                current_price=close,
+                confidence_label=confidence.label,
+                stop_loss_distance=close - stop_level,
+                take_profit_distance=target - close,
+                max_loss_pct=config.risk_per_idea_pct,
+            )
+        )
 
         idea = TradeIdea(
             decision_id=self._decision_id(as_of, series.symbol),
@@ -146,12 +169,7 @@ class BaselineProposer:
                     f"Stop distance is {stop_distance_pct}% from the last close",
                 ),
             ),
-            sizing_recommendation=SizingRecommendation(
-                rationale=(
-                    f"Size = ({config.risk_per_idea_pct}% of equity) / "
-                    f"({stop_distance_pct}% stop distance) in notional terms"
-                ),
-            ),
+            sizing_recommendation=sizing.recommendation,
             time_horizon=TimeHorizon(
                 expected_hold=config.expected_hold,
                 expires_at=as_of + timedelta(hours=config.expiry_hours),
@@ -159,6 +177,7 @@ class BaselineProposer:
             data_used=(
                 f"{snapshot.source}:{series.symbol}:{series.granularity}"
                 f":as_of={as_of.isoformat()}",
+                sizing.data_used,
             ),
             confidence=confidence,
             failure_mode=(

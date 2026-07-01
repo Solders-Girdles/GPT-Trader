@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 633,
-    "source_modules": 307,
+    "source_modules": 308,
     "unresolved_modules": 2
   },
   "source_to_tests": {
@@ -799,7 +799,8 @@
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_models.py",
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_persistence.py",
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_regime_classification.py",
-      "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py"
+      "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py"
     ],
     "gpt_trader.features.intelligence.regime.detector": [
       "tests/unit/gpt_trader/features/intelligence/regime/test_detector_edges.py",
@@ -815,6 +816,9 @@
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_voting_weighted_majority.py",
       "tests/unit/gpt_trader/features/intelligence/ensemble/test_weighting.py",
       "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer.py"
+    ],
+    "gpt_trader.features.intelligence.sizing": [
+      "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py"
     ],
     "gpt_trader.features.intelligence.sizing.position_sizer": [
       "tests/unit/gpt_trader/features/intelligence/sizing/test_position_sizer.py",
@@ -3749,6 +3753,8 @@
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py": [
       "gpt_trader.core",
+      "gpt_trader.features.intelligence.regime",
+      "gpt_trader.features.intelligence.sizing",
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_broker_payloads.py": [
@@ -4554,6 +4560,7 @@
     "gpt_trader.features.intelligence.regime": "src/gpt_trader/features/intelligence/regime/__init__.py",
     "gpt_trader.features.intelligence.regime.detector": "src/gpt_trader/features/intelligence/regime/detector.py",
     "gpt_trader.features.intelligence.regime.models": "src/gpt_trader/features/intelligence/regime/models.py",
+    "gpt_trader.features.intelligence.sizing": "src/gpt_trader/features/intelligence/sizing/__init__.py",
     "gpt_trader.features.intelligence.sizing.position_sizer": "src/gpt_trader/features/intelligence/sizing/position_sizer.py",
     "gpt_trader.features.live_trade.bot": "src/gpt_trader/features/live_trade/bot.py",
     "gpt_trader.features.live_trade.combiners.regime": "src/gpt_trader/features/live_trade/combiners/regime.py",

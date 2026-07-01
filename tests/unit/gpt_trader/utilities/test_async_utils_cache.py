@@ -1,4 +1,4 @@
-"""Tests for async caching and retry utilities."""
+"""Tests for async caching utilities."""
 
 from __future__ import annotations
 
@@ -9,9 +9,7 @@ import pytest
 from gpt_trader.utilities.async_tools import (  # naming: allow
     AsyncBatchProcessor,
     AsyncCache,
-    AsyncRetry,
     async_cache,
-    async_retry,
 )
 
 
@@ -102,57 +100,6 @@ class TestAsyncCache:
         assert removed >= 0
 
 
-class TestAsyncRetry:
-    """Test AsyncRetry functionality."""
-
-    @pytest.mark.asyncio
-    async def test_async_retry_success(self) -> None:
-        """Test retry with eventual success."""
-        call_count = 0
-
-        async def failing_func():
-            nonlocal call_count
-            call_count += 1
-            if call_count < 3:
-                raise ValueError("Temporary failure")
-            return "success"
-
-        retry = AsyncRetry(max_attempts=3, base_delay=0.01)
-        result = await retry.execute(failing_func)
-
-        assert result == "success"
-        assert call_count == 3
-
-    @pytest.mark.asyncio
-    async def test_async_retry_failure(self) -> None:
-        """Test retry with eventual failure."""
-
-        async def always_failing_func():
-            raise ValueError("Permanent failure")
-
-        retry = AsyncRetry(max_attempts=2, base_delay=0.01)
-
-        with pytest.raises(ValueError, match="Permanent failure"):
-            await retry.execute(always_failing_func)
-
-    @pytest.mark.asyncio
-    async def test_async_retry_decorator(self) -> None:
-        """Test async retry decorator."""
-        call_count = 0
-
-        @async_retry(max_attempts=3, base_delay=0.01)
-        async def retry_func():
-            nonlocal call_count
-            call_count += 1
-            if call_count < 2:
-                raise ValueError("Temporary failure")
-            return "success"
-
-        result = await retry_func()
-        assert result == "success"
-        assert call_count == 2
-
-
 class TestAsyncEdgeCases:
     """Test edge cases and error conditions."""
 
@@ -162,14 +109,3 @@ class TestAsyncEdgeCases:
         processor = AsyncBatchProcessor()
         results = await processor.process_batch([])
         assert results == []
-
-    @pytest.mark.asyncio
-    async def test_retry_zero_attempts(self) -> None:
-        """Test retry with zero attempts."""
-
-        async def func():
-            return "result"
-
-        retry = AsyncRetry(max_attempts=1)  # Only one attempt
-        result = await retry.execute(func)
-        assert result == "result"

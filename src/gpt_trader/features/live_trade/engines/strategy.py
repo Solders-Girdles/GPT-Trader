@@ -2726,9 +2726,9 @@ class TradingEngine(BaseEngine):
     ) -> OrderSubmissionResult:
         """Public entrypoint for order submission through the canonical guard stack.
 
-        This method provides external callers (OrderRouter, etc.) access
-        to the full pre-trade validation pipeline. All orders should route through
-        here to ensure consistent guard enforcement.
+        This method provides external callers access to the full pre-trade
+        validation pipeline. All orders should route through here to ensure
+        consistent guard enforcement.
 
         Args:
             symbol: Trading symbol (e.g., "BTC-USD").

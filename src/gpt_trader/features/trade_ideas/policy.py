@@ -10,7 +10,9 @@ risk budget.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas.audit import ActorType
@@ -44,6 +46,24 @@ BOUNDED_AUTONOMY_NON_HUMAN_BUDGET_CHANGE_VIOLATION = (
 )
 
 
+@dataclass(frozen=True, slots=True)
+class ApprovalBudgetContext:
+    """Aggregate budget exposure visible at an approval decision."""
+
+    same_day_realized_loss_pct: Decimal = Decimal("0")
+    open_approved_at_risk_pct: Decimal = Decimal("0")
+    open_notional: Decimal = Decimal("0")
+    account_equity_snapshot: Decimal | None = None
+
+
+def _decimal(value: Decimal | int | str) -> Decimal:
+    return value if isinstance(value, Decimal) else Decimal(str(value))
+
+
+def _format_decimal(value: Decimal) -> str:
+    return format(value.normalize(), "f")
+
+
 class ApprovalPolicy:
     """Checks workflow actions against the active autonomy mode and budget."""
 
@@ -62,9 +82,12 @@ class ApprovalPolicy:
         open_approved_count: int,
         now: datetime,
         review_started_at: datetime | None = None,
+        budget_context: ApprovalBudgetContext | None = None,
     ) -> list[str]:
         """Return every reason this approval must be refused; empty means allowed."""
         violations: list[str] = []
+        has_budget_context = budget_context is not None
+        budget_context = budget_context or ApprovalBudgetContext()
 
         if self._autonomy_mode is AutonomyMode.RESEARCH_ONLY:
             violations.append("Autonomy mode 'research_only' does not permit approvals")
@@ -95,6 +118,52 @@ class ApprovalPolicy:
                 f"max_loss {percent}% exceeds budget cap of "
                 f"{budget.max_loss_per_idea_pct}% per idea"
             )
+        else:
+            projected_daily_loss_pct = (
+                budget_context.same_day_realized_loss_pct
+                + budget_context.open_approved_at_risk_pct
+                + percent
+            )
+            if projected_daily_loss_pct > budget.max_daily_loss_pct:
+                violations.append(
+                    "max_daily_loss_pct budget breached: projected daily loss exposure "
+                    f"{_format_decimal(projected_daily_loss_pct)}% exceeds limit "
+                    f"{_format_decimal(budget.max_daily_loss_pct)}% "
+                    f"(same_day_realized_loss_pct="
+                    f"{_format_decimal(budget_context.same_day_realized_loss_pct)}%, "
+                    f"open_approved_at_risk_pct="
+                    f"{_format_decimal(budget_context.open_approved_at_risk_pct)}%, "
+                    f"candidate_max_loss_pct={_format_decimal(percent)}%)"
+                )
+
+        candidate_notional = idea.sizing_recommendation.notional or Decimal("0")
+        if has_budget_context:
+            projected_notional = budget_context.open_notional + candidate_notional
+            account_equity = budget_context.account_equity_snapshot
+            if projected_notional > 0:
+                if account_equity is None:
+                    violations.append(
+                        "account_equity_snapshot is required to verify "
+                        "max_open_notional_pct budget exposure"
+                    )
+                elif account_equity <= 0:
+                    violations.append(
+                        "account_equity_snapshot must be positive to verify "
+                        "max_open_notional_pct budget exposure; "
+                        f"got {_format_decimal(account_equity)}"
+                    )
+                else:
+                    projected_open_notional_pct = (
+                        projected_notional / account_equity * _decimal(100)
+                    )
+                    if projected_open_notional_pct > budget.max_open_notional_pct:
+                        violations.append(
+                            "max_open_notional_pct budget breached: projected open notional "
+                            f"{_format_decimal(projected_open_notional_pct)}% exceeds limit "
+                            f"{_format_decimal(budget.max_open_notional_pct)}% "
+                            f"(projected_open_notional={_format_decimal(projected_notional)}, "
+                            f"account_equity_snapshot={_format_decimal(account_equity)})"
+                        )
 
         if idea.product_type is ProductType.FUTURES and not budget.allow_futures_leverage:
             violations.append(

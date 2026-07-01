@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 633,
+    "tests_scanned": 634,
     "source_modules": 307,
     "unresolved_modules": 2
   },
@@ -1352,6 +1352,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_integrity.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_audit_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_budget_gates.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_preapproval_broker_ticket.py",
@@ -3797,6 +3798,9 @@
     "tests/unit/gpt_trader/features/trade_ideas/test_service_batch_rollback.py": [
       "gpt_trader.features.trade_ideas",
       "gpt_trader.features.trade_ideas.service"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_service_budget_gates.py": [
+      "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service_closeout.py": [
       "gpt_trader.features.trade_ideas"

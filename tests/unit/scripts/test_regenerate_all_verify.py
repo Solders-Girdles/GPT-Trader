@@ -229,3 +229,43 @@ def test_diff_directories_still_reports_tracked_stale_health_files(
     assert diff_text is not None
     assert "agent_health_schema.json" in diff_text
     assert "health_report.json" not in diff_text
+
+
+def test_diff_directories_ignores_git_ignored_generated_output_absent_from_commit(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # A generated output that is git-ignored and NOT committed must not read as
+    # stale even though it only exists on the freshly generated side. This
+    # regression-guards un-committing large regenerated inventories: the file is
+    # present on the generated side but absent from a fresh checkout.
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    _init_git_repo(repo_root)
+    (repo_root / ".gitignore").write_text(
+        "var/agents/testing/test_inventory.json\n",
+        encoding="utf-8",
+    )
+
+    committed_dir = repo_root / "var" / "agents" / "testing"
+    generated_dir = tmp_path / "generated" / "testing"
+    committed_dir.mkdir(parents=True)
+    generated_dir.mkdir(parents=True)
+
+    # Committed side: only the tracked index; test_inventory.json is uncommitted.
+    (committed_dir / "index.json").write_text('{"summary": 1}\n', encoding="utf-8")
+    subprocess.run(
+        ["git", "add", ".gitignore", "var/agents/testing/index.json"],
+        cwd=repo_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    # Generated side: the same index plus the git-ignored inventory.
+    (generated_dir / "index.json").write_text('{"summary": 1}\n', encoding="utf-8")
+    (generated_dir / "test_inventory.json").write_text('{"big": "data"}\n', encoding="utf-8")
+
+    monkeypatch.setattr(regenerate_all, "PROJECT_ROOT", repo_root)
+
+    assert regenerate_all._diff_directories(committed_dir, generated_dir) is None

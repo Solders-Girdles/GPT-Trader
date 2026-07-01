@@ -249,16 +249,22 @@ def _diff_directories(committed_dir: Path, generated_dir: Path) -> str | None:
             f"{generated_dir.as_posix()})."
         )
 
-    ignored_paths = _git_ignored_paths_under(committed_dir)
+    # Exclude git-ignored generated outputs from the freshness comparison. Some
+    # generated files are intentionally not committed (e.g. large, high-churn
+    # inventories); a fresh regeneration recreating them must not read as
+    # "stale". Detection is rule-based (git check-ignore) so it is independent of
+    # whether the file happens to be present in a given checkout, and it is
+    # applied to BOTH sides so the comparison stays symmetric.
+    candidate_relatives = _relative_files(committed_dir) | _relative_files(generated_dir)
+    ignored_paths = _git_ignored_relatives(committed_dir, candidate_relatives)
     if ignored_paths:
         with tempfile.TemporaryDirectory(prefix="agent-diff-") as temp_dir:
-            filtered_committed_dir = Path(temp_dir) / committed_dir.name
-            _copy_directory_without_paths(
-                committed_dir,
-                filtered_committed_dir,
-                ignored_paths,
-            )
-            return _run_directory_diff(filtered_committed_dir, generated_dir)
+            temp_root = Path(temp_dir)
+            filtered_committed_dir = temp_root / "committed" / committed_dir.name
+            filtered_generated_dir = temp_root / "generated" / generated_dir.name
+            _copy_directory_without_paths(committed_dir, filtered_committed_dir, ignored_paths)
+            _copy_directory_without_paths(generated_dir, filtered_generated_dir, ignored_paths)
+            return _run_directory_diff(filtered_committed_dir, filtered_generated_dir)
 
     return _run_directory_diff(committed_dir, generated_dir)
 
@@ -289,39 +295,43 @@ def _run_directory_diff(committed_dir: Path, generated_dir: Path) -> str | None:
     return f"git diff failed ({diff_result.returncode}): {message}"
 
 
-def _git_ignored_paths_under(directory: Path) -> set[Path]:
-    try:
-        repo_relative_dir = directory.resolve().relative_to(PROJECT_ROOT.resolve())
-    except ValueError:
+def _relative_files(directory: Path) -> set[Path]:
+    """Return every file under `directory` as a path relative to it."""
+    return {path.relative_to(directory) for path in directory.rglob("*") if path.is_file()}
+
+
+def _git_ignored_relatives(in_repo_base: Path, relatives: set[Path]) -> set[Path]:
+    """Return the subset of `relatives` whose in-repo path is git-ignored.
+
+    `in_repo_base` is the committed artifact directory (inside the repo). Each
+    relative path is resolved against it and tested with ``git check-ignore``,
+    which is rule-based and therefore independent of whether the file currently
+    exists on disk. This lets freshness diffs drop generated-but-git-ignored
+    outputs on both the committed and freshly generated sides.
+    """
+    if not relatives:
         return set()
 
+    query_to_relative: dict[str, Path] = {
+        (in_repo_base / relative).as_posix(): relative for relative in relatives
+    }
     result = subprocess.run(
-        [
-            "git",
-            "ls-files",
-            "--others",
-            "--ignored",
-            "--exclude-standard",
-            "-z",
-            "--",
-            repo_relative_dir.as_posix(),
-        ],
+        ["git", "check-ignore", "--stdin", "-z"],
+        input="\0".join(query_to_relative) + "\0",
         cwd=PROJECT_ROOT,
         capture_output=True,
         text=True,
     )
-    if result.returncode != 0:
+    # Exit 0 = at least one path ignored, 1 = none ignored; anything else is an
+    # error, in which case fail open (treat nothing as ignored).
+    if result.returncode not in (0, 1):
         return set()
 
-    ignored_paths: set[Path] = set()
-    for raw_path in result.stdout.split("\0"):
-        if not raw_path:
-            continue
-        try:
-            ignored_paths.add(Path(raw_path).relative_to(repo_relative_dir))
-        except ValueError:
-            continue
-    return ignored_paths
+    return {
+        query_to_relative[token]
+        for token in result.stdout.split("\0")
+        if token in query_to_relative
+    }
 
 
 def _copy_directory_without_paths(

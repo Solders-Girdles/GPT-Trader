@@ -155,14 +155,14 @@ uv run agent-regenerate --only testing
 
 ### Agent Tools
 
-Commands for AI-assisted development:
+Commands for AI-assisted development. The canonical local quality gate is
+`make ci-required`; these helpers are optional conveniences on top of it:
 
 ```bash
-uv run agent-check      # Quality gate with JSON output
+uv run agent-check      # Optional JSON summary of lint/format/types/tests
 uv run agent-impact     # Analyze change impact
 uv run agent-map        # Generate dependency graph
 uv run agent-naming     # Check naming conventions
-uv run agent-risk       # Query risk configuration
 uv run agent-pr-ready   # Reconcile PR mergeability vs green CI
 ```
 

@@ -50,6 +50,8 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| `agent-risk` CLI (`scripts/agents/query_risk_config.py`) | Unreleased | Removed as a dead agent tool (owner-approved 2026-07-01). Read risk configuration via `var/agents/schemas/risk_config_schema.json` (`uv run agent-regenerate --only schemas`) or `gpt-trader` config commands. |
+| `agent-dedupe-triage` CLI (`scripts/agents/dedupe_triage.py`) | Unreleased | Removed as a dead agent tool (owner-approved 2026-07-01). Edit `tests/_triage/dedupe_triage.yaml` directly; it remains the hand-editable triage record consumed by `uv run agent-dedupe`. |
 | Hybrid strategy framework (`features/live_trade/strategies/hybrid/`: `HybridStrategyBase`, `HybridStrategyConfig`, `HybridDecision`, hybrid `Action` enum) | Unreleased | Dead parallel surface — never reachable from `factory.py`/config. Use the strategy registry in `features/live_trade/factory.py`. |
 | `OrderRouter` / `OrderResult` (`features/live_trade/execution/router.py`) | Unreleased | Never instantiated in production. External submissions go through `TradingEngine.submit_order()`. |
 | `monitoring/guards/` package (`RuntimeGuardManager`, builtin guards, alert handlers) | Unreleased | Dead parallel of the canonical runtime guard stack in `features/live_trade/execution/guards/` (managed by `execution/guard_manager.py`). |

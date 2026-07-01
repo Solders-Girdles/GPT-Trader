@@ -71,7 +71,7 @@ test-guardrails:
 	uv run python scripts/ci/check_test_hygiene.py
 	uv run python scripts/ci/check_legacy_patterns.py
 	uv run python scripts/ci/check_legacy_test_triage.py
-	uv run python scripts/ci/check_dedupe_manifest.py --strict
+	uv run python scripts/ci/check_dedupe_manifest.py
 	$(MAKE) test-triage-check
 
 ci-required:

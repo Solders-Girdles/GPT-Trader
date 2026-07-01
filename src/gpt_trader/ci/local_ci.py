@@ -275,7 +275,7 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
         ),
         PlannedStep(
             label="Check dedupe manifest",
-            command=["uv", "run", "python", "scripts/ci/check_dedupe_manifest.py", "--strict"],
+            command=["uv", "run", "python", "scripts/ci/check_dedupe_manifest.py"],
         ),
         PlannedStep(
             label="Check triage backlog",

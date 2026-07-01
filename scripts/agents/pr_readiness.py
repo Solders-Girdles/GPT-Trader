@@ -130,6 +130,7 @@ class PullRequestState:
     protection: BranchProtection
     base_ref_name: str = "main"
     head_committed_at: str | None = None
+    reaction_freshness_floor: str | None = None
     review_signals: tuple[ReviewSignal, ...] = ()
 
 
@@ -247,6 +248,7 @@ def parse_pr_state(
 
     head_oid = str(pr_json.get("headRefOid", ""))
     head_committed_at = _current_head_committed_at(pr_json, head_oid)
+    reaction_freshness_floor = _latest_timestamp(head_committed_at, pr_json.get("updatedAt"))
 
     return PullRequestState(
         number=int(pr_json.get("number", 0)),
@@ -258,12 +260,13 @@ def parse_pr_state(
         threads=tuple(threads),
         protection=protection,
         head_committed_at=head_committed_at,
+        reaction_freshness_floor=reaction_freshness_floor,
         review_signals=tuple(
             _parse_review_signals(
                 pr_json,
                 reactions_json or [],
                 head_oid,
-                head_committed_at,
+                reaction_freshness_floor,
                 review_bot=review_bot,
                 acceptance_marker=acceptance_marker,
             )
@@ -352,7 +355,7 @@ def _parse_review_signals(
     pr_json: dict[str, Any],
     reactions_json: list[dict[str, Any]],
     head_oid: str,
-    head_committed_at: str | None,
+    reaction_freshness_floor: str | None,
     *,
     review_bot: str | None,
     acceptance_marker: str | None,
@@ -386,7 +389,7 @@ def _parse_review_signals(
             if not _reaction_matches(reaction, acceptance_marker, review_bot):
                 continue
             created_at = reaction.get("created_at") or reaction.get("createdAt")
-            current_head = _timestamp_at_or_after(created_at, head_committed_at)
+            current_head = _timestamp_at_or_after(created_at, reaction_freshness_floor)
             signals.append(
                 ReviewSignal(
                     kind="pr_reaction",
@@ -483,6 +486,19 @@ def _timestamp_at_or_after(value: Any, baseline: Any) -> bool:
     if timestamp is None or baseline_timestamp is None:
         return False
     return timestamp >= baseline_timestamp
+
+
+def _latest_timestamp(*values: Any) -> str | None:
+    latest_value: str | None = None
+    latest_timestamp: datetime | None = None
+    for value in values:
+        timestamp = _parse_timestamp(value)
+        if timestamp is None:
+            continue
+        if latest_timestamp is None or timestamp > latest_timestamp:
+            latest_timestamp = timestamp
+            latest_value = str(value)
+    return latest_value
 
 
 def _has_current_head_review_signal(state: PullRequestState) -> bool:
@@ -699,7 +715,7 @@ def fetch_pr_payload(repo: str, pr: int) -> dict[str, Any]:
             "--repo",
             repo,
             "--json",
-            "number,headRefOid,baseRefName,mergeStateStatus,reviewDecision,statusCheckRollup,reviews,commits",
+            "number,headRefOid,baseRefName,mergeStateStatus,reviewDecision,statusCheckRollup,reviews,commits,updatedAt",
         ]
     )
     if not isinstance(payload, dict):

@@ -90,8 +90,18 @@ def to_product(payload: dict) -> Product:
 
     return Product(
         symbol=normalize_symbol(payload.get("product_id") or payload.get("id") or ""),
-        base_asset=payload.get("base_currency") or payload.get("base_asset") or "",
-        quote_asset=payload.get("quote_currency") or payload.get("quote_asset") or "",
+        base_asset=(
+            payload.get("base_currency")
+            or payload.get("base_asset")
+            or payload.get("base_currency_id")
+            or ""
+        ),
+        quote_asset=(
+            payload.get("quote_currency")
+            or payload.get("quote_asset")
+            or payload.get("quote_currency_id")
+            or ""
+        ),
         market_type=market_type,
         min_size=Decimal(str(payload.get("base_min_size") or payload.get("min_size") or "0")),
         step_size=Decimal(
@@ -171,20 +181,59 @@ def to_candle(payload: dict) -> Candle:
 
 _STATUS_MAP = {
     "pending": OrderStatus.PENDING,
+    "queued": OrderStatus.PENDING,
     "open": OrderStatus.SUBMITTED,
     "new": OrderStatus.SUBMITTED,
     "partially_filled": OrderStatus.PARTIALLY_FILLED,
     "filled": OrderStatus.FILLED,
     "canceled": OrderStatus.CANCELLED,
     "cancelled": OrderStatus.CANCELLED,
+    "expired": OrderStatus.EXPIRED,
+    "failed": OrderStatus.FAILED,
     "rejected": OrderStatus.REJECTED,
 }
 
 
+def _order_configuration_fields(payload: dict) -> dict:
+    """Flatten the single nested Advanced Trade ``order_configuration`` entry.
+
+    Advanced Trade responses carry size/price under a variant key such as
+    ``limit_limit_gtc`` instead of at the top level.
+    """
+    configuration = payload.get("order_configuration")
+    if not isinstance(configuration, dict):
+        return {}
+    for value in configuration.values():
+        if isinstance(value, dict):
+            return value
+    return {}
+
+
+def _order_type_from_configuration(payload: dict) -> OrderType | None:
+    configuration = payload.get("order_configuration")
+    if not isinstance(configuration, dict):
+        return None
+    for key in configuration:
+        if key.startswith("stop_limit"):
+            return OrderType.STOP_LIMIT
+        if key.startswith("market"):
+            return OrderType.MARKET
+        if key.startswith(("limit", "sor_limit")):
+            return OrderType.LIMIT
+    return None
+
+
 def to_order(payload: dict) -> Order:
+    # Advanced Trade create-order responses wrap order fields in a success
+    # envelope instead of returning them at the top level.
+    if isinstance(payload.get("success_response"), dict):
+        payload = {**payload, **payload["success_response"]}
+
+    config_fields = _order_configuration_fields(payload)
+
     status = _STATUS_MAP.get(str(payload.get("status", "")).lower(), OrderStatus.SUBMITTED)
     side = OrderSide.BUY if str(payload.get("side", "")).lower() == "buy" else OrderSide.SELL
-    otype_str = str(payload.get("type", "")).lower()
+    otype_str = str(payload.get("type") or payload.get("order_type") or "").lower()
     if otype_str in ("limit",):
         otype = OrderType.LIMIT
     elif otype_str in ("market",):
@@ -194,16 +243,18 @@ def to_order(payload: dict) -> Order:
     elif otype_str in ("stop_limit",):
         otype = OrderType.STOP_LIMIT
     else:
-        otype = OrderType.LIMIT
+        otype = _order_type_from_configuration(payload) or OrderType.LIMIT
 
     tif = TimeInForce.GTC
     tif_str = str(payload.get("time_in_force", "")).lower()
-    if tif_str == "ioc":
+    if tif_str in ("ioc", "immediate_or_cancel"):
         tif = TimeInForce.IOC
-    elif tif_str == "fok":
+    elif tif_str in ("fok", "fill_or_kill"):
         tif = TimeInForce.FOK
 
-    submitted = payload.get("created_at") or payload.get("submitted_at")
+    submitted = (
+        payload.get("created_at") or payload.get("submitted_at") or payload.get("created_time")
+    )
     updated = payload.get("updated_at") or submitted
 
     raw_quantity = quantity_from(payload, default=None)
@@ -212,6 +263,7 @@ def to_order(payload: dict) -> Order:
             payload.get("size")
             or payload.get("contracts")
             or payload.get("position_quantity")
+            or config_fields.get("base_size")
             or "0"
         )
         raw_quantity = Decimal(str(fallback_size))
@@ -225,6 +277,9 @@ def to_order(payload: dict) -> Order:
     )
     filled_quantity = Decimal(str(filled_raw))
 
+    price_raw = payload.get("price") or config_fields.get("limit_price")
+    stop_raw = payload.get("stop_price") or config_fields.get("stop_price")
+
     order = Order(
         id=str(payload.get("order_id") or payload.get("id") or ""),
         client_id=payload.get("client_order_id") or payload.get("client_id"),
@@ -232,8 +287,8 @@ def to_order(payload: dict) -> Order:
         side=side,
         type=otype,
         quantity=quantity,
-        price=Decimal(str(payload.get("price"))) if payload.get("price") else None,
-        stop_price=Decimal(str(payload.get("stop_price"))) if payload.get("stop_price") else None,
+        price=Decimal(str(price_raw)) if price_raw else None,
+        stop_price=Decimal(str(stop_raw)) if stop_raw else None,
         tif=tif,
         status=status,
         filled_quantity=filled_quantity,

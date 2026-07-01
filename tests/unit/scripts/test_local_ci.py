@@ -104,3 +104,40 @@ def test_strict_profile_banner_distinguishes_pull_request_ci(capsys) -> None:
     output = capsys.readouterr().out
     assert "local PR-readiness validation set" in output
     assert "readiness checks beyond GitHub pull_request CI" in output
+
+
+def test_agent_artifacts_freshness_is_advisory_in_strict_profile() -> None:
+    args = _make_args("strict")
+    profile = local_ci.resolve_profile(args.profile)
+    steps = local_ci.build_steps(profile, args)
+
+    freshness_step = _find_step(steps, "Agent artifacts freshness")
+
+    assert freshness_step.enabled is True
+    assert freshness_step.advisory is True
+
+
+def test_run_steps_marks_advisory_failure_as_warn(tmp_path) -> None:
+    step = local_ci.PlannedStep(
+        label="Advisory probe",
+        command=["python", "-c", "import sys; sys.exit(3)"],
+        advisory=True,
+    )
+
+    results = local_ci.run_steps([step], tmp_path)
+
+    assert results[0].status == "warn"
+    assert results[0].return_code == 3
+    # Advisory warnings must not fail the overall run.
+    assert not any(result.status == "fail" for result in results)
+
+
+def test_run_steps_marks_non_advisory_failure_as_fail(tmp_path) -> None:
+    step = local_ci.PlannedStep(
+        label="Blocking probe",
+        command=["python", "-c", "import sys; sys.exit(3)"],
+    )
+
+    results = local_ci.run_steps([step], tmp_path)
+
+    assert results[0].status == "fail"

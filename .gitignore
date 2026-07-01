@@ -144,3 +144,6 @@ var/agents/health/health_report.*
 var/agents/health/chaos_smoke.*
 var/agents/health/chaos_week.*
 var/agents/health/agent_regenerate_verify.txt
+# Large, generated-on-demand test dedupe candidates (uv run agent-dedupe);
+# regenerate locally rather than committing a stale snapshot.
+tests/_triage/dedupe_candidates.yaml

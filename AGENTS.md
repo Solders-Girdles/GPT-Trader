@@ -81,8 +81,9 @@ For testing without real API access, set `MOCK_BROKER=1` in `.env`.
 Run `make ci-required` when you want the local PR-readiness command set. It runs
 lint/format, docs audits, type checks, agent artifact freshness, TUI CSS checks,
 test guardrails, and core unit tests, stopping on the first local failure.
-GitHub pull_request CI runs a related agent-freshness job, but stale artifacts
-are reported as non-blocking on pull requests. GitHub pull_request CI also does
+Agent-artifact freshness is advisory locally — it warns on stale artifacts but
+does not stop the run. GitHub pull_request CI runs a related agent-freshness job,
+but stale artifacts are reported as non-blocking on pull requests. GitHub pull_request CI also does
 not run the canary readiness gate.
 
 Run `uv run local-ci` (or `python -m gpt_trader.ci.local_ci`) with the default
@@ -109,7 +110,7 @@ gh pr create --fill
 # gh pr merge --squash --delete-branch
 ```
 
-If you touch `var/agents/**` or any agent-artifact inputs (notably `scripts/agents/**` or `config/environments/.env.template`), run `uv run agent-regenerate` and commit the updated artifacts. Local `make ci-required` and non-PR CI fail when they are stale; GitHub pull request CI reports stale artifacts as non-blocking. To check quickly: `uv run agent-regenerate --verify`.
+If you touch `var/agents/**` or any agent-artifact inputs (notably `scripts/agents/**` or `config/environments/.env.template`), run `uv run agent-regenerate` and commit the updated artifacts. Non-PR GitHub CI fails when they are stale; local `make ci-required` / strict `uv run local-ci` and GitHub pull request CI report stale artifacts as a non-blocking advisory warning. To check quickly: `uv run agent-regenerate --verify`.
 
 ### Quality Checks
 

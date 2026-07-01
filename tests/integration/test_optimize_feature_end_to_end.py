@@ -20,7 +20,7 @@ class TestOptimizationEndToEnd:
     """End-to-end tests for the optimization pipeline."""
 
     @pytest.mark.asyncio
-    async def test_optimization_runs_multiple_trials(self) -> None:
+    async def test_optimization_runs_multiple_trials(self, optuna) -> None:
         """Test that optimization executes multiple trials and collects results."""
         parameter_space = ParameterSpace(
             strategy_parameters=[
@@ -72,7 +72,7 @@ class TestOptimizationEndToEnd:
         assert study.best_trial is not None, "Study should have a best trial"
 
     @pytest.mark.asyncio
-    async def test_optimization_identifies_best_parameters(self) -> None:
+    async def test_optimization_identifies_best_parameters(self, optuna) -> None:
         """Test that optimization correctly identifies better parameters."""
         parameter_space = ParameterSpace(
             strategy_parameters=[

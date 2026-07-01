@@ -208,6 +208,7 @@ class TestCancelOrderSuppression:
 
         wrapper.cancel_order("order-1")
 
+        assert len(event_store.events) == 1
         event_type, data = event_store.events[0]
         assert event_type == "order_suppressed"
         assert data["action"] == "cancel_order"
@@ -243,6 +244,7 @@ class TestFactoryWrappingRule:
         assert order.status == OrderStatus.REJECTED
         assert order.dry_run_suppressed is True
 
+        assert len(event_store.events) == 1
         event_type, data = event_store.events[0]
         assert event_type == "order_suppressed"
         assert data["bot_id"] == "dev"  # bot_id wired from config.profile

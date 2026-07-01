@@ -38,6 +38,16 @@ def _root_access_error(ideas_root: Path) -> str | None:
     return None
 
 
+def _existing_log_append_error(path: Path, *, label: str) -> str | None:
+    if not path.exists():
+        return None
+    if not path.is_file():
+        return f"Trade ideas {label} is not a file: {path}"
+    if not os.access(path, os.W_OK):
+        return f"Trade ideas {label} is not appendable: {path}"
+    return None
+
+
 def _latest_state_counts(events: list[AuditEvent]) -> Counter[TradeIdeaState]:
     latest_states: dict[str, TradeIdeaState] = {}
     for event in events:
@@ -94,6 +104,14 @@ def check_trade_ideas_readiness(checker: PreflightCheck) -> bool:
     else:
         checker.log_error(root_error, details=details)
         all_good = False
+
+    for append_error in (
+        _existing_log_append_error(audit_path, label="audit log"),
+        _existing_log_append_error(budget_path, label="risk budget log"),
+    ):
+        if append_error is not None:
+            checker.log_error(append_error, details=details)
+            all_good = False
 
     if not _check_cli_surface(checker, details):
         all_good = False

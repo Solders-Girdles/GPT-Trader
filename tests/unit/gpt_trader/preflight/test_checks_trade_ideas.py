@@ -108,6 +108,39 @@ def test_trade_ideas_readiness_fails_on_non_utf8_audit_jsonl(
     assert result["details"]["audit_path"] == str(audit_path)
 
 
+@pytest.mark.parametrize(
+    ("log_name", "message_fragment", "detail_key"),
+    (
+        ("audit.jsonl", "audit log is not appendable", "audit_path"),
+        ("risk_budget.jsonl", "risk budget log is not appendable", "budget_path"),
+    ),
+)
+def test_trade_ideas_readiness_fails_when_existing_log_is_not_appendable(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    log_name: str,
+    message_fragment: str,
+    detail_key: str,
+) -> None:
+    ideas_root = tmp_path / "trade_ideas"
+    _seed_budget(ideas_root)
+    audit_path = ideas_root / "audit.jsonl"
+    audit_path.write_text("", encoding="utf-8")
+    readonly_path = ideas_root / log_name
+    readonly_path.chmod(0o400)
+    monkeypatch.setenv("GPT_TRADER_IDEAS_ROOT", str(ideas_root))
+
+    checker = PreflightCheck(profile="dev")
+
+    try:
+        assert check_trade_ideas_readiness(checker) is False
+    finally:
+        readonly_path.chmod(0o600)
+    result = _failed_result(checker, message_fragment)
+    assert result["details"]["ideas_root"] == str(ideas_root)
+    assert result["details"][detail_key] == str(readonly_path)
+
+
 def test_trade_ideas_readiness_fails_when_budget_is_missing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

@@ -280,7 +280,7 @@
       ],
       "code_references": [
         {
-          "line": 47,
+          "line": 64,
           "path": "scripts/monitoring/canary_reduce_only_test.py",
           "reader": "os.getenv"
         },

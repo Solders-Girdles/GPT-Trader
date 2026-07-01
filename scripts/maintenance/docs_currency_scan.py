@@ -171,6 +171,22 @@ CURRENCY_SUPPRESSIONS: dict[tuple[str, str], str] = {
         "docs/decisions/remove-tui-subsystem.md",
         "src/gpt_trader/tui/",
     ): "removed TUI package cited as history in a decision record",
+    (
+        "docs/decisions/remove-tui-subsystem.md",
+        "--tui",
+    ): "removed TUI run flag cited as history in a decision record",
+    (
+        "docs/decisions/remove-tui-subsystem.md",
+        "--demo",
+    ): "removed TUI run flag cited as history in a decision record",
+    (
+        "docs/DEPRECATIONS.md",
+        "--tui",
+    ): "removed TUI run flag cited as history in the removal registry",
+    (
+        "docs/DEPRECATIONS.md",
+        "--demo",
+    ): "removed TUI run flag cited as history in the removal registry",
     ("docs/naming.md", "--kebab-case"): "naming-style example, not a CLI flag",
     ("docs/testing.md", "gpt_trader.api"): "placeholder module name in a prose example",
     ("docs/testing.md", "gpt_trader.module"): "placeholder module name in a prose example",

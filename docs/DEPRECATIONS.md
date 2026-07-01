@@ -84,6 +84,9 @@ Before removing any deprecated item:
 | `COINBASE_ENABLE_DERIVATIVES` env var alias | Unreleased | Use `CFM_ENABLED` / `TRADING_MODES` (was `COINBASE_ENABLE_INTX_PERPS`, now also deprecated). |
 | INTX derivatives venue types (`coinbase_derivatives_type` = `intx_perps` / `perpetuals`) | Unreleased | Use `us_futures` (CFM). Validation now rejects the INTX values with a migration error. |
 | INTX dead modules (`intx_portfolio_service`, `derivatives_discovery`, `derivatives_products`) | Unreleased | Removed as unimported dead code; rebuild CFM discovery cleanly if/when CFM activates. |
+| `config/tui_preferences.json` file | Unreleased | Removed from tree (fallback logic already removed; see prior TUI legacy preferences row); no readers remained. |
+| `scripts/ops/canary_process.py` TUI/demo token filter (`_is_tui_or_demo`) | Unreleased | Removed; `--tui`/`--demo` run flags no longer exist and the exact `--profile` match already excludes non-target profiles (e.g. `--profile demo`). |
+| `scripts/analysis/perps_bot_hot_path_benchmark.py` | Unreleased | Removed; one-off before/after benchmark for a long-landed `TradingBot.update_marks` optimization. |
 | Coinbase REST legacy position dict fallback | v4.0 | Require `PositionStateStore` injection |
 | `PERPS_FORCE_MOCK` env var | v4.0 | Use `MOCK_BROKER` |
 | `SYMBOLS` env var | v4.0 | Use `TRADING_SYMBOLS` |

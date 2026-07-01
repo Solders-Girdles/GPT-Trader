@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 604,
-    "source_modules": 297,
+    "tests_scanned": 591,
+    "source_modules": 290,
     "unresolved_modules": 2
   },
   "source_to_tests": {
@@ -307,7 +307,7 @@
       "tests/unit/gpt_trader/cli/test_commands_preflight.py"
     ],
     "gpt_trader.cli.commands.account": [
-      "tests/unit/gpt_trader/cli/test_commands_account_treasury.py"
+      "tests/unit/gpt_trader/cli/test_commands_account.py"
     ],
     "gpt_trader.cli.commands.broker_connectivity": [
       "tests/unit/gpt_trader/cli/test_broker_connectivity.py"
@@ -346,9 +346,6 @@
       "tests/integration/test_container_lifecycle_cli.py",
       "tests/unit/gpt_trader/cli/test_commands_run.py",
       "tests/unit/gpt_trader/cli/test_services.py"
-    ],
-    "gpt_trader.cli.commands.treasury": [
-      "tests/unit/gpt_trader/cli/test_commands_account_treasury.py"
     ],
     "gpt_trader.cli.options": [
       "tests/unit/gpt_trader/cli/test_options.py"
@@ -536,9 +533,6 @@
     ],
     "gpt_trader.errors.handler": [
       "tests/unit/gpt_trader/errors/test_handler.py"
-    ],
-    "gpt_trader.features.brokerages.coinbase.account_manager": [
-      "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_account_manager_snapshot.py"
     ],
     "gpt_trader.features.brokerages.coinbase.auth": [
       "tests/real_api/test_coinbase_permissions.py",
@@ -1185,11 +1179,6 @@
     "gpt_trader.features.live_trade.strategies.regime_switcher": [
       "tests/unit/gpt_trader/features/live_trade/strategies/test_regime_switcher.py"
     ],
-    "gpt_trader.features.live_trade.telemetry.account": [
-      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py",
-      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_broker_calls.py",
-      "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py"
-    ],
     "gpt_trader.features.optimize.objectives.base": [
       "tests/unit/gpt_trader/features/optimize/runner/test_batch_runner.py"
     ],
@@ -1250,23 +1239,6 @@
     "gpt_trader.features.strategy_dev.config.strategy_profile": [
       "tests/unit/gpt_trader/features/strategy_dev/config/test_registry.py",
       "tests/unit/gpt_trader/features/strategy_dev/config/test_strategy_profile.py"
-    ],
-    "gpt_trader.features.strategy_dev.lab.experiment": [
-      "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py",
-      "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment_result.py"
-    ],
-    "gpt_trader.features.strategy_dev.lab.parameter_grid": [
-      "tests/unit/gpt_trader/features/strategy_dev/lab/test_parameter_grid.py"
-    ],
-    "gpt_trader.features.strategy_dev.monitor.alerts": [
-      "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts_defaults.py",
-      "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts_manager.py",
-      "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts_rule.py"
-    ],
-    "gpt_trader.features.strategy_dev.monitor.metrics": [
-      "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics_aggregator.py",
-      "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics_snapshot.py",
-      "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics_trade_record.py"
     ],
     "gpt_trader.features.strategy_tools": [
       "tests/unit/gpt_trader/features/strategy_tools/test_strategy_tools_import.py",
@@ -2432,9 +2404,8 @@
       "gpt_trader.cli.commands.broker_connectivity",
       "gpt_trader.features.brokerages.coinbase.errors"
     ],
-    "tests/unit/gpt_trader/cli/test_commands_account_treasury.py": [
-      "gpt_trader.cli.commands.account",
-      "gpt_trader.cli.commands.treasury"
+    "tests/unit/gpt_trader/cli/test_commands_account.py": [
+      "gpt_trader.cli.commands.account"
     ],
     "tests/unit/gpt_trader/cli/test_commands_coinbase.py": [
       "gpt_trader.cli.commands.coinbase"
@@ -2685,9 +2656,6 @@
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_cfm_endpoints.py": [
       "gpt_trader.features.brokerages.coinbase.errors"
-    ],
-    "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_account_manager_snapshot.py": [
-      "gpt_trader.features.brokerages.coinbase.account_manager"
     ],
     "tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_accounts_balances_and_products.py": [
       "gpt_trader.core",
@@ -3339,15 +3307,6 @@
       "gpt_trader.features.live_trade.indicators",
       "gpt_trader.features.live_trade.stateful_indicators"
     ],
-    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py": [
-      "gpt_trader.features.live_trade.telemetry.account"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_broker_calls.py": [
-      "gpt_trader.features.live_trade.telemetry.account"
-    ],
-    "tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py": [
-      "gpt_trader.features.live_trade.telemetry.account"
-    ],
     "tests/unit/gpt_trader/features/live_trade/test_bot_engine_delegation.py": [
       "gpt_trader.features.live_trade.bot"
     ],
@@ -3554,33 +3513,6 @@
     "tests/unit/gpt_trader/features/strategy_dev/config/test_strategy_profile.py": [
       "gpt_trader.features.strategy_dev.config.diff",
       "gpt_trader.features.strategy_dev.config.strategy_profile"
-    ],
-    "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment.py": [
-      "gpt_trader.features.strategy_dev.lab.experiment"
-    ],
-    "tests/unit/gpt_trader/features/strategy_dev/lab/test_experiment_result.py": [
-      "gpt_trader.features.strategy_dev.lab.experiment"
-    ],
-    "tests/unit/gpt_trader/features/strategy_dev/lab/test_parameter_grid.py": [
-      "gpt_trader.features.strategy_dev.lab.parameter_grid"
-    ],
-    "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts_defaults.py": [
-      "gpt_trader.features.strategy_dev.monitor.alerts"
-    ],
-    "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts_manager.py": [
-      "gpt_trader.features.strategy_dev.monitor.alerts"
-    ],
-    "tests/unit/gpt_trader/features/strategy_dev/monitor/test_alerts_rule.py": [
-      "gpt_trader.features.strategy_dev.monitor.alerts"
-    ],
-    "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics_aggregator.py": [
-      "gpt_trader.features.strategy_dev.monitor.metrics"
-    ],
-    "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics_snapshot.py": [
-      "gpt_trader.features.strategy_dev.monitor.metrics"
-    ],
-    "tests/unit/gpt_trader/features/strategy_dev/monitor/test_metrics_trade_record.py": [
-      "gpt_trader.features.strategy_dev.monitor.metrics"
     ],
     "tests/unit/gpt_trader/features/strategy_tools/test_market_condition_filters_edges.py": [
       "gpt_trader.features.strategy_tools.filters"
@@ -4307,7 +4239,6 @@
     "gpt_trader.cli.commands.orders": "src/gpt_trader/cli/commands/orders.py",
     "gpt_trader.cli.commands.report": "src/gpt_trader/cli/commands/report.py",
     "gpt_trader.cli.commands.run": "src/gpt_trader/cli/commands/run.py",
-    "gpt_trader.cli.commands.treasury": "src/gpt_trader/cli/commands/treasury.py",
     "gpt_trader.cli.options": "src/gpt_trader/cli/options.py",
     "gpt_trader.cli.response": "src/gpt_trader/cli/response.py",
     "gpt_trader.cli.services": "src/gpt_trader/cli/services.py",
@@ -4322,7 +4253,6 @@
     "gpt_trader.errors": "src/gpt_trader/errors/__init__.py",
     "gpt_trader.errors.error_patterns": "src/gpt_trader/errors/error_patterns.py",
     "gpt_trader.errors.handler": "src/gpt_trader/errors/handler.py",
-    "gpt_trader.features.brokerages.coinbase.account_manager": "src/gpt_trader/features/brokerages/coinbase/account_manager.py",
     "gpt_trader.features.brokerages.coinbase.auth": "src/gpt_trader/features/brokerages/coinbase/auth.py",
     "gpt_trader.features.brokerages.coinbase.client": "src/gpt_trader/features/brokerages/coinbase/client/__init__.py",
     "gpt_trader.features.brokerages.coinbase.client.accounts": "src/gpt_trader/features/brokerages/coinbase/client/accounts.py",
@@ -4426,7 +4356,6 @@
     "gpt_trader.features.live_trade.strategies.perps_baseline": "src/gpt_trader/features/live_trade/strategies/perps_baseline/__init__.py",
     "gpt_trader.features.live_trade.strategies.perps_baseline.strategy": "src/gpt_trader/features/live_trade/strategies/perps_baseline/strategy.py",
     "gpt_trader.features.live_trade.strategies.regime_switcher": "src/gpt_trader/features/live_trade/strategies/regime_switcher/__init__.py",
-    "gpt_trader.features.live_trade.telemetry.account": "src/gpt_trader/features/live_trade/telemetry/account.py",
     "gpt_trader.features.optimize.objectives.base": "src/gpt_trader/features/optimize/objectives/base.py",
     "gpt_trader.features.optimize.objectives.composite": "src/gpt_trader/features/optimize/objectives/composite.py",
     "gpt_trader.features.optimize.objectives.constraints": "src/gpt_trader/features/optimize/objectives/constraints.py",
@@ -4442,10 +4371,6 @@
     "gpt_trader.features.strategy_dev.config.diff": "src/gpt_trader/features/strategy_dev/config/diff.py",
     "gpt_trader.features.strategy_dev.config.registry": "src/gpt_trader/features/strategy_dev/config/registry.py",
     "gpt_trader.features.strategy_dev.config.strategy_profile": "src/gpt_trader/features/strategy_dev/config/strategy_profile.py",
-    "gpt_trader.features.strategy_dev.lab.experiment": "src/gpt_trader/features/strategy_dev/lab/experiment.py",
-    "gpt_trader.features.strategy_dev.lab.parameter_grid": "src/gpt_trader/features/strategy_dev/lab/parameter_grid.py",
-    "gpt_trader.features.strategy_dev.monitor.alerts": "src/gpt_trader/features/strategy_dev/monitor/alerts.py",
-    "gpt_trader.features.strategy_dev.monitor.metrics": "src/gpt_trader/features/strategy_dev/monitor/metrics.py",
     "gpt_trader.features.strategy_tools": "src/gpt_trader/features/strategy_tools/__init__.py",
     "gpt_trader.features.strategy_tools.enhancements": "src/gpt_trader/features/strategy_tools/enhancements.py",
     "gpt_trader.features.strategy_tools.filters": "src/gpt_trader/features/strategy_tools/filters.py",

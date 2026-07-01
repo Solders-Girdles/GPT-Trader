@@ -8,16 +8,16 @@
 # Priorities: high | medium | low
 #
 version: 1
-generated_at: '2026-07-01T21:26:43.509607+00:00'
+generated_at: '2026-07-01T21:32:30.386300+00:00'
 summary:
-  total_clusters: 208
+  total_clusters: 207
   by_priority:
     high: 27
     medium: 62
-    low: 119
+    low: 118
   by_decision:
     delete: 0
-    merge: 208
+    merge: 207
     modernize: 0
 clusters:
   453b7344fdd1:
@@ -1636,21 +1636,6 @@ clusters:
     source_modules: []
     decision: merge
     target_location: tests/unit/gpt_trader/features/live_trade/execution/test_state_collection.py
-    expected_file_delta: -2
-    priority: low
-    rationale: Consolidate 3 test files into single parametrized file
-    status: pending
-    added: '2026-07-01'
-  b3ec2e34e25b:
-    type: similar_names
-    description: 3 test files match pattern test_account_telemetry_* in tests/unit/gpt_trader/features/live_trade/telemetry
-    files:
-    - tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py
-    - tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_broker_calls.py
-    - tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry_lifecycle.py
-    source_modules: []
-    decision: merge
-    target_location: tests/unit/gpt_trader/features/live_trade/telemetry/test_account_telemetry.py
     expected_file_delta: -2
     priority: low
     rationale: Consolidate 3 test files into single parametrized file

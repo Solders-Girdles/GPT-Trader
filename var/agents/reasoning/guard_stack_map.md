@@ -17,8 +17,6 @@ Generated: 1970-01-01T00:00:00+00:00
 | trading_engine | TradingEngine | `src/gpt_trader/features/live_trade/engines/strategy.py` |
 | execution_guard_manager | GuardManager (execution) | `src/gpt_trader/features/live_trade/execution/guard_manager.py` |
 | execution_guards | Execution guards | `src/gpt_trader/features/live_trade/execution/guards/` |
-| monitoring_guard_manager | RuntimeGuardManager | `src/gpt_trader/monitoring/guards/manager.py` |
-| monitoring_guards | Monitoring guards | `src/gpt_trader/monitoring/guards/builtins.py` |
 | health_signals | Health signals | `src/gpt_trader/monitoring/health_signals.py` |
 | health_checks | Health checks | `src/gpt_trader/monitoring/health_checks.py` |
 | status_reporter | Status reporter | `src/gpt_trader/monitoring/status_reporter.py` |
@@ -33,9 +31,6 @@ Generated: 1970-01-01T00:00:00+00:00
 | trading_engine | execution_guard_manager | runtime guard sweep |
 | execution_guard_manager | execution_guards | execute runtime guards |
 | trading_engine | execution_guards | pre-trade guard stack |
-| trading_engine | monitoring_guard_manager | emit guard events |
-| monitoring_guard_manager | monitoring_guards | evaluate guards |
-| monitoring_guards | health_signals | emit health signals |
 | health_signals | health_checks | evaluate thresholds |
 | health_checks | status_reporter | report status |
 

@@ -263,3 +263,100 @@ def test_validate_manifest_done_requires_owner_and_pr_url() -> None:
         "Cluster alpha: done cluster missing 'owner'",
         "Cluster alpha: done cluster missing 'pr_url'",
     }
+
+
+def test_validate_cluster_files_empty_manifest_is_ok() -> None:
+    assert check_dedupe_manifest.validate_cluster_files({}) == []
+
+
+def test_validate_cluster_files_pending_missing_file_flagged(tmp_path) -> None:
+    cluster = _base_cluster()
+    cluster["status"] = "pending"
+    manifest = {"clusters": {"alpha": cluster}}
+
+    problems = check_dedupe_manifest.validate_cluster_files(manifest, root=tmp_path)
+
+    assert problems == [
+        "Cluster alpha: pending cluster references missing file(s): "
+        "tests/unit/example_test.py (run 'uv run agent-dedupe' to refresh)"
+    ]
+
+
+def test_validate_cluster_files_status_defaults_to_pending(tmp_path) -> None:
+    cluster = _base_cluster()
+    assert "status" not in cluster
+    manifest = {"clusters": {"alpha": cluster}}
+
+    problems = check_dedupe_manifest.validate_cluster_files(manifest, root=tmp_path)
+
+    assert len(problems) == 1
+    assert "pending cluster references missing file(s)" in problems[0]
+
+
+def test_validate_cluster_files_in_progress_missing_file_flagged(tmp_path) -> None:
+    cluster = _base_cluster()
+    cluster.update({"status": "in_progress", "owner": "alice"})
+    manifest = {"clusters": {"alpha": cluster}}
+
+    problems = check_dedupe_manifest.validate_cluster_files(manifest, root=tmp_path)
+
+    assert problems == [
+        "Cluster alpha: in_progress cluster references missing file(s): "
+        "tests/unit/example_test.py (run 'uv run agent-dedupe' to refresh)"
+    ]
+
+
+def test_validate_cluster_files_existing_files_pass(tmp_path) -> None:
+    test_file = tmp_path / "tests" / "unit" / "example_test.py"
+    test_file.parent.mkdir(parents=True)
+    test_file.write_text("def test_example(): pass\n", encoding="utf-8")
+
+    cluster = _base_cluster()
+    cluster["status"] = "pending"
+    manifest = {"clusters": {"alpha": cluster}}
+
+    problems = check_dedupe_manifest.validate_cluster_files(manifest, root=tmp_path)
+
+    assert problems == []
+
+
+def test_validate_cluster_files_partial_missing_names_only_missing(tmp_path) -> None:
+    test_file = tmp_path / "tests" / "unit" / "example_test.py"
+    test_file.parent.mkdir(parents=True)
+    test_file.write_text("def test_example(): pass\n", encoding="utf-8")
+
+    cluster = _base_cluster()
+    cluster["status"] = "pending"
+    cluster["files"] = ["tests/unit/example_test.py", "tests/unit/deleted_test.py"]
+    manifest = {"clusters": {"alpha": cluster}}
+
+    problems = check_dedupe_manifest.validate_cluster_files(manifest, root=tmp_path)
+
+    assert problems == [
+        "Cluster alpha: pending cluster references missing file(s): "
+        "tests/unit/deleted_test.py (run 'uv run agent-dedupe' to refresh)"
+    ]
+
+
+def test_validate_cluster_files_done_cluster_exempt(tmp_path) -> None:
+    cluster = _base_cluster()
+    cluster.update({"status": "done", "owner": "alice", "pr_url": "https://example.com/pr"})
+    manifest = {"clusters": {"alpha": cluster}}
+
+    problems = check_dedupe_manifest.validate_cluster_files(manifest, root=tmp_path)
+
+    assert problems == []
+
+
+def test_validate_cluster_files_skips_non_mapping_and_non_list_files(tmp_path) -> None:
+    # Shape problems are validate_manifest's job; the file check must not crash.
+    manifest = {
+        "clusters": {
+            "alpha": ["not-a-mapping"],
+            "beta": {"status": "pending", "files": "tests/unit/example_test.py"},
+        }
+    }
+
+    problems = check_dedupe_manifest.validate_cluster_files(manifest, root=tmp_path)
+
+    assert problems == []

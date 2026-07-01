@@ -65,7 +65,6 @@ class BrokerBootstrapArtifacts:
     products: Sequence[object] = ()
     market_data: Any | None = None
     product_catalog: Any | None = None
-    account_manager: Any | None = None
 
 
 @dataclass(frozen=True)

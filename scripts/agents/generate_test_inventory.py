@@ -349,7 +349,6 @@ def generate_test_inventory(
         "performance": ["perf", "performance", "slow", "load", "stress"],
         "environment": [
             "real_api",
-            "uses_mock_broker",
             "requires_db",
             "requires_network",
             "requires_secrets",

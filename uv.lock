@@ -432,6 +432,7 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "requests" },
+    { name = "rich" },
     { name = "urllib3" },
 ]
 
@@ -488,6 +489,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.1,<2.0.0" },
     { name = "pyyaml", specifier = ">=6.0.1,<7.0.0" },
     { name = "requests", specifier = ">=2.32.3,<3.0.0" },
+    { name = "rich", specifier = ">=15.0.0,<16.0.0" },
     { name = "urllib3", specifier = ">=2.6.0,<3.0.0" },
     { name = "websocket-client", marker = "extra == 'live-trade'", specifier = ">=1.8.0,<2.0.0" },
 ]

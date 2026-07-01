@@ -16,6 +16,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -26,6 +27,45 @@ import yaml
 MANIFEST_PATH = Path("tests/_triage/dedupe_candidates.yaml")
 MAX_IN_PROGRESS_DAYS = 14
 
+# A cluster-id key must be quoted if a YAML 1.1 loader (ruamel / the check-yaml
+# pre-commit hook) would resolve it as a non-string: an integer (all-digit SHA
+# prefix), a float (incl. hex ids like "310214e39620" that parse as inf), inf/nan,
+# or a bool/null keyword. yaml.safe_load hides this (it reads them as strings), so
+# we detect unquoted ambiguous keys from the raw text. This predicate is kept
+# byte-for-byte identical to generate_dedupe_candidates._YAML_AMBIGUOUS_SCALAR
+# (which quotes them on write); test_ambiguity_predicate_matches_generator enforces it.
+_YAML_AMBIGUOUS_SCALAR = re.compile(
+    r"""^(?:
+        [-+]?[0-9][0-9_]*                                    # integer
+        |[-+]?(?:[0-9][0-9_]*)?\.[0-9_]*(?:[eE][-+]?[0-9]+)?  # float with a dot
+        |[-+]?[0-9][0-9_]*[eE][-+]?[0-9]+                     # float, exponent, no dot
+        |[-+]?\.?(?:inf|nan)                                 # infinity / nan
+        |true|false|yes|no|on|off|null|~                     # bool / null
+    )$""",
+    re.IGNORECASE | re.VERBOSE,
+)
+_UNQUOTED_CLUSTER_KEY = re.compile(r"^  ([^\s'\"#][^:]*):\s*$")
+
+
+class _UniqueKeyLoader(yaml.SafeLoader):
+    """SafeLoader that rejects duplicate mapping keys instead of silently
+    keeping the last one."""
+
+
+def _construct_mapping_no_duplicates(
+    loader: _UniqueKeyLoader, node: yaml.MappingNode, deep: bool = False
+) -> dict[Any, Any]:
+    mapping: dict[Any, Any] = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in mapping:
+            raise ValueError(f"Duplicate key in dedupe manifest: {key!r}")
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+_UniqueKeyLoader.add_constructor("tag:yaml.org,2002:map", _construct_mapping_no_duplicates)
+
 
 def load_manifest() -> dict[str, Any]:
     """Load and validate basic manifest structure."""
@@ -33,8 +73,23 @@ def load_manifest() -> dict[str, Any]:
         # Manifest is optional until first generation
         return {}
 
-    with open(MANIFEST_PATH) as f:
-        manifest = yaml.safe_load(f)
+    raw = MANIFEST_PATH.read_text(encoding="utf-8")
+
+    ambiguous = sorted(
+        {
+            match.group(1)
+            for line in raw.splitlines()
+            if (match := _UNQUOTED_CLUSTER_KEY.match(line))
+            and _YAML_AMBIGUOUS_SCALAR.match(match.group(1))
+        }
+    )
+    if ambiguous:
+        raise ValueError(
+            f"Unquoted YAML-ambiguous cluster id(s) ({', '.join(ambiguous)}); "
+            "regenerate with 'uv run agent-dedupe'"
+        )
+
+    manifest = yaml.load(raw, _UniqueKeyLoader)
 
     if not manifest:
         raise ValueError("Manifest is empty")

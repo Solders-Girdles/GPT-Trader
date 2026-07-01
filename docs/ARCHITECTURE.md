@@ -51,7 +51,7 @@ src/gpt_trader/features/
 │   └── sizing/          # Kelly criterion position sizing
 ├── live_trade/          # Production trading engine
 ├── optimize/            # Parameter optimisation experiments
-├── strategy_dev/        # Strategy development lab
+├── strategy_dev/        # Strategy config profiles, registry, and config-diff helpers
 ├── strategy_tools/      # Shared helpers for strategy slices
 └── trade_ideas/         # Broker-neutral trade-idea records, workflow, audit log
 ```
@@ -570,7 +570,6 @@ NORMAL → REDUCE_ONLY → PAUSED → HALTED
   exposed via the Prometheus exporter (`scripts/monitoring/export_metrics.py`) which reads events.db first,
   falling back to metrics.json/events.jsonl when needed. The live risk manager emits snapshot events
   consumed by dashboards and the monitoring stack.
-- **Account Snapshots**: periodic telemetry via `CoinbaseAccountManager` with fee/limit tracking.
 - **System Monitoring**: `src/gpt_trader/monitoring/system/` provides resource telemetry collectors used by
   the runtime guard manager and dashboards.
 - **System Footprint**: bot process typically <50 MB RSS with sub-100 ms WebSocket latency in spot

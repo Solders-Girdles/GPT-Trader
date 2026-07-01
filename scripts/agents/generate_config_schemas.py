@@ -203,7 +203,6 @@ def generate_bot_config_schema() -> dict[str, Any]:
         "reduce_only_mode": "Only allow position-reducing orders",
         "time_in_force": "Order time-in-force: GTC, IOC, FOK",
         "enable_order_preview": "Enable order preview before submission",
-        "account_telemetry_interval": "Account snapshot interval in seconds (null to disable)",
         "log_level": "Logging level: DEBUG, INFO, WARNING, ERROR",
         "dry_run": "Simulate trades without execution",
         "mock_broker": "Use mock broker for testing",

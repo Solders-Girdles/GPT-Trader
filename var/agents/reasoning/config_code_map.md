@@ -7,7 +7,6 @@ Scan root: `src/gpt_trader`
 ## BotConfig (top-level)
 | Field | Usage count | Example files |
 |-------|-------------|---------------|
-| account_telemetry_interval | 0 | — |
 | broker_calls_use_dedicated_executor | 0 | — |
 | broker_hint | 0 | — |
 | cfm_enabled | 0 | — |

@@ -120,9 +120,6 @@ def build_config_from_args(args: Namespace, **kwargs: Any) -> BotConfig:
     if getattr(args, "enable_order_preview", False):
         config.enable_order_preview = True
 
-    if getattr(args, "account_telemetry_interval", None):
-        config.account_telemetry_interval = args.account_telemetry_interval
-
     return config
 
 

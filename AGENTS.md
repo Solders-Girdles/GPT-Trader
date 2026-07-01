@@ -60,9 +60,12 @@ uv run local-ci --profile quick         # faster loop (skips readiness + artifac
 - Run `make ci-required` (lint/format, docs audits, type check, agent-artifact
   freshness, TUI CSS, test guardrails, core unit tests). The blocking/advisory
   contract is owned by [docs/DEVELOPMENT_GUIDELINES.md](docs/DEVELOPMENT_GUIDELINES.md).
-- If you touched agent-artifact inputs (`scripts/agents/**` or
-  `config/environments/.env.template`), run `uv run agent-regenerate` and commit
-  the updated `var/agents/**`; confirm with `uv run agent-regenerate --verify`.
+- If your change can affect generated `var/agents/**` context, run
+  `uv run agent-regenerate` and commit the updated artifacts; confirm with
+  `uv run agent-regenerate --verify`. The exact freshness/CI contract (which
+  inputs count and where it blocks vs. warns) lives in
+  [docs/DEVELOPMENT_GUIDELINES.md](docs/DEVELOPMENT_GUIDELINES.md) and the CI
+  classifier.
 - After editing any `.tcss` module, run `python scripts/build_tui_css.py`.
 - Fill out [.github/pull_request_template.md](.github/pull_request_template.md);
   link the issue/finding with `Closes #<n>` when there is one.
@@ -106,7 +109,7 @@ uv python install 3.12
 uv sync --all-extras --dev
 
 test -f .env || cp config/environments/.env.template .env
-uv run python -c "import re; from pathlib import Path; p=Path('.env'); p.write_text(re.sub(r'^MOCK_BROKER=.*$','MOCK_BROKER=1',p.read_text(),flags=re.M))"
+uv run python -c "import re; from pathlib import Path; p=Path('.env'); t=p.read_text(); t=re.sub(r'^MOCK_BROKER=.*$','MOCK_BROKER=1',t,flags=re.M); t=re.sub(r'^DRY_RUN=.*$','DRY_RUN=1',t,flags=re.M); p.write_text(t)"
 
 uv run python scripts/ci/check_tui_css_up_to_date.py
 uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py

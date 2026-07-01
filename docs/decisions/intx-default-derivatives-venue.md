@@ -15,6 +15,14 @@ Accepted (2026-06-30). A.1 landed earlier; the A.2 default-venue decision is now
 resolved in favor of **A2 + enablement alignment** (see [Decision](#decision)).
 INTX is being removed as a selectable venue, not merely demoted as a default.
 
+*Update 2026-07-01: the implementation plan (B0–B4) is fully executed — INTX was
+removed as a selectable venue and the follow-up docs scrub landed. This record is
+the removal authority. The [Authority](#authority), [Problem](#problem), and
+[Current Evidence](#current-evidence) sections below describe the pre-decision
+state (when INTX was merely "frozen") and are retained as the historical packet;
+they no longer describe the current tree. Removals are recorded in
+[Deprecations](../DEPRECATIONS.md).*
+
 This packet recorded an owner decision and now records its resolution. It is not
 a live-operation runbook and does not authorize broker/API calls, canary
 operations, live trading commands, money movement, or order submission.

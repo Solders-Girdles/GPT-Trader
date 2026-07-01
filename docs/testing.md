@@ -245,10 +245,10 @@ uv run pytest -o addopts= -m legacy_modernize --collect-only -q
 
 ## Deduplication
 
-Deduplication manifests live in:
+Deduplication state lives in `tests/_triage/`:
 
-- `tests/_triage/dedupe_candidates.yaml`
-- `tests/_triage/dedupe_triage.yaml`
+- `dedupe_candidates.yaml` — generated on demand by `uv run agent-dedupe` (git-ignored, not committed)
+- `dedupe_triage.yaml` — human triage decisions (tracked)
 
 Stats and overlap summary:
 

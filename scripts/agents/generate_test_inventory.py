@@ -648,9 +648,11 @@ def main() -> int:
         "version": "1.0",
         "description": "Test inventory for AI agent consumption",
         "files": {
-            "test_inventory": "test_inventory.json",
             "markers": "markers.json",
             "source_test_map": "source_test_map.json",
+        },
+        "optional_files": {
+            "test_inventory": "test_inventory.json",
         },
         "summary": inventory["summary"],
         "quick_commands": {

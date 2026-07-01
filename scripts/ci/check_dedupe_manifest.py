@@ -28,13 +28,21 @@ MANIFEST_PATH = Path("tests/_triage/dedupe_candidates.yaml")
 MAX_IN_PROGRESS_DAYS = 14
 
 # A cluster-id key must be quoted if a YAML 1.1 loader (ruamel / the check-yaml
-# pre-commit hook) would resolve it as a non-string. The important case: hex ids
-# like "310214e39620" parse as a float (-> inf), so two of them silently collapse
-# into one duplicate key. yaml.safe_load hides this (it reads them as strings), so
-# we detect it from the raw text. See generate_dedupe_candidates.py.
-_AMBIGUOUS_KEY = re.compile(
-    r"^[-+]?[0-9][0-9_]*(?:\.[0-9_]*)?[eE][-+]?[0-9]+$|^[-+]?\.?(?:inf|nan)$",
-    re.IGNORECASE,
+# pre-commit hook) would resolve it as a non-string: an integer (all-digit SHA
+# prefix), a float (incl. hex ids like "310214e39620" that parse as inf), inf/nan,
+# or a bool/null keyword. yaml.safe_load hides this (it reads them as strings), so
+# we detect unquoted ambiguous keys from the raw text. This predicate is kept
+# byte-for-byte identical to generate_dedupe_candidates._YAML_AMBIGUOUS_SCALAR
+# (which quotes them on write); test_ambiguity_predicate_matches_generator enforces it.
+_YAML_AMBIGUOUS_SCALAR = re.compile(
+    r"""^(?:
+        [-+]?[0-9][0-9_]*                                    # integer
+        |[-+]?(?:[0-9][0-9_]*)?\.[0-9_]*(?:[eE][-+]?[0-9]+)?  # float with a dot
+        |[-+]?[0-9][0-9_]*[eE][-+]?[0-9]+                     # float, exponent, no dot
+        |[-+]?\.?(?:inf|nan)                                 # infinity / nan
+        |true|false|yes|no|on|off|null|~                     # bool / null
+    )$""",
+    re.IGNORECASE | re.VERBOSE,
 )
 _UNQUOTED_CLUSTER_KEY = re.compile(r"^  ([^\s'\"#][^:]*):\s*$")
 
@@ -71,7 +79,8 @@ def load_manifest() -> dict[str, Any]:
         {
             match.group(1)
             for line in raw.splitlines()
-            if (match := _UNQUOTED_CLUSTER_KEY.match(line)) and _AMBIGUOUS_KEY.match(match.group(1))
+            if (match := _UNQUOTED_CLUSTER_KEY.match(line))
+            and _YAML_AMBIGUOUS_SCALAR.match(match.group(1))
         }
     )
     if ambiguous:

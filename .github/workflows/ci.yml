@@ -492,6 +492,8 @@ jobs:
     name: Unit Tests (Core)
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
     env:
       GPT_TRADER_STRICT_CONTAINER: "1"
       PYTHONWARNINGS: default
@@ -536,6 +538,8 @@ jobs:
     name: Integration Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     env:
       GPT_TRADER_STRICT_CONTAINER: "1"
       PYTHONWARNINGS: default

@@ -35,6 +35,7 @@ import yaml
 
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 SOURCE_TEST_MAP_PATH = PROJECT_ROOT / "var" / "agents" / "testing" / "source_test_map.json"
+TESTS_DIR = PROJECT_ROOT / "tests"
 MANIFEST_PATH = PROJECT_ROOT / "tests" / "_triage" / "dedupe_candidates.yaml"
 TRIAGE_PATH = PROJECT_ROOT / "tests" / "_triage" / "dedupe_triage.yaml"
 
@@ -49,12 +50,44 @@ def generate_cluster_id(files: list[str], source_modules: list[str]) -> str:
     return hashlib.sha256(content.encode()).hexdigest()[:12]
 
 
+def _regenerate_source_test_map() -> dict[str, Any] | None:
+    """Rebuild the gitignored source test map in place.
+
+    Runs the same generator functions `uv run agent-regenerate --only testing`
+    uses (imported directly, not shelled out) and writes the result to
+    SOURCE_TEST_MAP_PATH. Returns the map payload, or None if generation fails.
+    """
+    if str(PROJECT_ROOT) not in sys.path:
+        sys.path.insert(0, str(PROJECT_ROOT))
+    try:
+        from scripts.agents import generate_test_inventory
+
+        scan_results = generate_test_inventory.scan_test_files(TESTS_DIR)
+        source_test_map = generate_test_inventory.build_source_test_map(
+            scan_results["imports_by_file"]
+        )
+        SOURCE_TEST_MAP_PATH.parent.mkdir(parents=True, exist_ok=True)
+        with open(SOURCE_TEST_MAP_PATH, "w") as f:
+            json.dump(source_test_map, f, indent=2)
+            f.write("\n")
+    except Exception as exc:
+        print(f"Error: failed to regenerate source test map: {exc}", file=sys.stderr)
+        return None
+    return source_test_map
+
+
 def load_source_test_map() -> dict[str, Any]:
-    """Load the source-to-test mapping."""
+    """Load the source-to-test mapping, regenerating it on demand if missing."""
     if not SOURCE_TEST_MAP_PATH.exists():
-        print(f"Error: Source test map not found: {SOURCE_TEST_MAP_PATH}", file=sys.stderr)
-        print("Run: uv run agent-tests  # to regenerate", file=sys.stderr)
-        sys.exit(1)
+        # source_test_map.json is gitignored (regenerate-on-demand), so a clean
+        # checkout will not have it; build it instead of hard-exiting.
+        print(f"Source test map missing; regenerating {SOURCE_TEST_MAP_PATH.name}...")
+        source_test_map = _regenerate_source_test_map()
+        if source_test_map is None:
+            print(f"Error: Source test map not found: {SOURCE_TEST_MAP_PATH}", file=sys.stderr)
+            print("Run: uv run agent-regenerate --only testing", file=sys.stderr)
+            sys.exit(1)
+        return source_test_map
 
     with open(SOURCE_TEST_MAP_PATH) as f:
         return json.load(f)

@@ -35,6 +35,11 @@ and *where execution happens* — three decisions that must not be blended.
 - **INTX perpetuals:** frozen — no new work or tests; remove INTX-only surfaces
   opportunistically when they block other work. (Remaining default-hygiene item:
   [intx-default-derivatives-venue](intx-default-derivatives-venue.md).)
+  *Update 2026-07-01: overtaken by events — the freeze ended in removal. INTX is
+  no longer a selectable venue per the accepted
+  [intx-default-derivatives-venue](intx-default-derivatives-venue.md) decision
+  (implemented 2026-06-30); removals are recorded in
+  [Deprecations](../DEPRECATIONS.md).*
 - **Credentials:** CDP JWT only; legacy Coinbase credential support is removed.
   The TUI keeps format detection solely to reject legacy keys with guidance.
 - **Internal architecture:** broker-neutral trade-idea / risk / approval / audit

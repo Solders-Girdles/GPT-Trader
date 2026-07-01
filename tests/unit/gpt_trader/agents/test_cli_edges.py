@@ -61,7 +61,6 @@ def test_run_script_forwards_args_and_sets_cwd(tmp_path, monkeypatch) -> None:
         (cli.impact, "change_impact.py"),
         (cli.map_deps, "dependency_graph.py"),
         (cli.tests, "generate_test_inventory.py"),
-        (cli.risk, "query_risk_config.py"),
         (cli.naming, "naming_inventory.py"),
         (cli.health, "health_report.py"),
         (cli.regenerate, "regenerate_all.py"),

@@ -201,16 +201,7 @@ jobs:
         run: uv run black --check .
 
       - name: Guard against orchestration imports (removed in v3.0)
-        run: |
-          # The gpt_trader.orchestration package was removed in v3.0
-          # Fail if ANY file imports gpt_trader.orchestration
-          if grep -rn -E "(from|import)\s+gpt_trader\.orchestration" src tests scripts --include="*.py"; then
-            echo "::error::gpt_trader.orchestration was removed in v3.0"
-            echo "Use canonical paths: app.*, features.live_trade.*, features.brokerages.*"
-            echo "See docs/DEPRECATIONS.md for migration guidance."
-            exit 1
-          fi
-          echo "No orchestration imports found - package was removed in v3.0."
+        run: python scripts/ci/check_orchestration_imports.py
 
       - name: Guard deprecation registry
         run: python scripts/ci/check_deprecation_registry.py

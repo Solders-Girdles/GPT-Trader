@@ -103,6 +103,9 @@ def check_trade_ideas_readiness(checker: PreflightCheck) -> bool:
     except AuditIntegrityError as exc:
         checker.log_error(f"Trade ideas audit integrity failed: {exc}", details=details)
         all_good = False
+    except UnicodeDecodeError as exc:
+        checker.log_error(f"Trade ideas audit unreadable: {exc}", details=details)
+        all_good = False
     except OSError as exc:
         checker.log_error(f"Trade ideas audit unreadable: {exc}", details=details)
         all_good = False

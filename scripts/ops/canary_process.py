@@ -94,14 +94,8 @@ def _is_gpt_trader_run(tokens: list[str]) -> bool:
     return False
 
 
-def _is_tui_or_demo(tokens: list[str]) -> bool:
-    return "--tui" in tokens or "--demo" in tokens
-
-
 def is_canary_command(command: str, profile: str) -> bool:
     tokens = _command_tokens(command)
-    if _is_tui_or_demo(tokens):
-        return False
     if not _is_gpt_trader_run(tokens):
         return False
     return _extract_profile(tokens) == profile

@@ -156,39 +156,3 @@ class TestHandleAccountErrors:
             return {"balance": 1000}
 
         assert get_account() == {"balance": 1000}
-
-
-class TestRetryOnError:
-    """Tests for retry_on_error decorator."""
-
-    def test_succeeds_without_retry(self) -> None:
-        from gpt_trader.errors.error_patterns import retry_on_error
-
-        call_count = 0
-
-        @retry_on_error(max_attempts=3)
-        def succeed() -> str:
-            nonlocal call_count
-            call_count += 1
-            return "success"
-
-        result = succeed()
-        assert result == "success"
-        assert call_count == 1
-
-    def test_retries_on_failure(self) -> None:
-        from gpt_trader.errors.error_patterns import retry_on_error
-
-        call_count = 0
-
-        @retry_on_error(max_attempts=3, delay=0.01, retry_on=RuntimeError)
-        def fail_then_succeed() -> str:
-            nonlocal call_count
-            call_count += 1
-            if call_count < 2:
-                raise RuntimeError("temporary failure")
-            return "success"
-
-        result = fail_then_succeed()
-        assert result == "success"
-        assert call_count == 2

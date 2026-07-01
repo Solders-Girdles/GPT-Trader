@@ -18,7 +18,16 @@ from gpt_trader.features.trade_ideas import (
 )
 from gpt_trader.preflight.checks.trade_ideas import check_trade_ideas_readiness
 from gpt_trader.preflight.core import PreflightCheck
+from gpt_trader.preflight.validation_result import PreflightResultPayload
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
+
+
+def _failed_result(checker: PreflightCheck, message_fragment: str) -> PreflightResultPayload:
+    return next(
+        result
+        for result in checker.results
+        if result["status"] == "fail" and message_fragment in result["message"]
+    )
 
 
 def _seed_budget(ideas_root: Path) -> None:
@@ -82,6 +91,23 @@ def test_trade_ideas_readiness_fails_on_corrupted_audit_jsonl(
     assert any("audit integrity failed" in message for message in checker.errors)
 
 
+def test_trade_ideas_readiness_fails_on_non_utf8_audit_jsonl(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ideas_root = tmp_path / "trade_ideas"
+    _seed_budget(ideas_root)
+    audit_path = ideas_root / "audit.jsonl"
+    audit_path.write_bytes(b"\xff\xfe\x00")
+    monkeypatch.setenv("GPT_TRADER_IDEAS_ROOT", str(ideas_root))
+
+    checker = PreflightCheck(profile="dev")
+
+    assert check_trade_ideas_readiness(checker) is False
+    result = _failed_result(checker, "audit unreadable")
+    assert result["details"]["ideas_root"] == str(ideas_root)
+    assert result["details"]["audit_path"] == str(audit_path)
+
+
 def test_trade_ideas_readiness_fails_when_budget_is_missing(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -111,7 +137,9 @@ def test_trade_ideas_readiness_fails_on_malformed_budget_decimal(
     checker = PreflightCheck(profile="dev")
 
     assert check_trade_ideas_readiness(checker) is False
-    assert any("risk budget unreadable" in message for message in checker.errors)
+    result = _failed_result(checker, "risk budget unreadable")
+    assert result["details"]["ideas_root"] == str(ideas_root)
+    assert result["details"]["budget_path"] == str(budget_path)
 
 
 def test_trade_ideas_readiness_reports_pending_proposed_ideas(

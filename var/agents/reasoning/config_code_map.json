@@ -10,12 +10,6 @@
       "prefix": "config",
       "fields": [
         {
-          "field": "account_telemetry_interval",
-          "usage_count": 0,
-          "files": [],
-          "notes": "No direct usage found"
-        },
-        {
           "field": "broker_calls_use_dedicated_executor",
           "usage_count": 0,
           "files": [],

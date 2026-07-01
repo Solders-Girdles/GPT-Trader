@@ -49,7 +49,10 @@ def _handle_snapshot(args: Namespace) -> CliResponse | int:
         raise
 
     try:
-        telemetry = bot.account_telemetry
+        # No container wiring provides account telemetry today; this command
+        # reports "not available" until a telemetry service is wired in via a
+        # fresh spec (see docs/decisions/remove-unwired-account-manager-and-strategy-lab.md).
+        telemetry = getattr(bot, "account_telemetry", None)
         if telemetry is None or not telemetry.supports_snapshots():
             if output_format == "json":
                 return CliResponse.error_response(

@@ -112,6 +112,26 @@ def test_amount_only_closeout_uses_its_own_equity_snapshot(
     assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
 
 
+def test_no_trade_expiry_closeout_does_not_consume_daily_loss_budget(
+    service: TradeIdeaService,
+) -> None:
+    expired = build_trade_idea(decision_id="trade-20260612-expired-before-fill")
+    service.propose(expired, actor_id="idea-generator-v1")
+    service.expire(expired.decision_id, actor_id="expiry-sweep")
+    service.record_closeout_attribution(
+        expired.decision_id,
+        actor_id="rj",
+        resolution=CloseoutResolution.EXPIRY,
+        realized_profit_loss_unavailable_reason="Expired before any venue fill",
+    )
+    candidate = build_trade_idea(decision_id="trade-20260612-after-no-trade-expiry")
+    service.propose(candidate, actor_id="idea-generator-v1")
+
+    view = service.approve(candidate.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert view.state is TradeIdeaState.APPROVED
+
+
 def test_approval_refused_when_same_day_closeout_loss_is_unavailable(
     service: TradeIdeaService,
 ) -> None:

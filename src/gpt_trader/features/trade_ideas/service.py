@@ -176,6 +176,13 @@ def _closeout_loss_percent(closeout: CloseoutAttribution) -> Decimal | None:
     return _percent_of_amount(abs(realized_amount), closeout_equity_snapshot)
 
 
+def _closeout_has_realized_profit_loss(closeout: CloseoutAttribution) -> bool:
+    return (
+        closeout.realized_profit_loss_amount is not None
+        or closeout.realized_profit_loss_percent is not None
+    )
+
+
 def _absolute_notional(idea: TradeIdea) -> Decimal | None:
     notional = idea.sizing_recommendation.notional
     if notional is None:
@@ -319,7 +326,11 @@ class TradeIdeaService:
                 open_ideas.append(idea)
                 continue
             if closeout is not None and _same_day(closeout.timestamp, evaluation_time):
-                closeouts.append(closeout)
+                if (
+                    event.after_state is TradeIdeaState.FILLED
+                    or _closeout_has_realized_profit_loss(closeout)
+                ):
+                    closeouts.append(closeout)
         account_equity_snapshot = self._account_equity_snapshot(
             candidate=candidate,
             open_ideas=open_ideas,

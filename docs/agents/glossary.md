@@ -73,7 +73,7 @@ response_qty = api_response["qty"]  # naming: allow
 
 Naming standards are enforced via:
 - **Pre-commit hook**: Blocks commits with violations through the `naming-check` hook (use `SKIP=naming-check git commit` to bypass)
-- **Agent command**: Run `uv run agent-naming --strict --quiet` for explicit strict-scan proof, or `make agent-naming` for the default local scan
+- **Agent command**: Run `uv run agent-naming --strict --quiet` for explicit strict-scan proof, or `uv run agent-naming` for the default local scan
 - **Code review**: Reviewers flag deviations
 
 See `docs/naming.md` for complete naming conventions.

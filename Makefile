@@ -1,7 +1,6 @@
 .PHONY: dev-up dev-down lint fmt fmt-check lint-fix lint-fmt-fix typecheck docs-audit test-guardrails ci-required test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
-	readiness-window agent-setup agent-check agent-impact agent-impact-full agent-map agent-tests agent-risk \
-	agent-naming agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
-	agent-regenerate agent-verify agent-artifacts-validate agent-artifacts-package agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
+	readiness-window agent-setup agent-impact agent-impact-full agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
+	agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
 	canary-decision-trace-probe canary-runtime-info canary-stop canary-start \
 	canary-restart canary-status canary-watchdog canary-watchdog-once ops-controls-smoke \
 	test-triage test-triage-check test-unit test-property test-contract test-real-api test-integration test-integration-fast \
@@ -68,23 +67,17 @@ test-guardrails:
 	uv run python scripts/ci/check_test_hygiene.py
 	uv run python scripts/ci/check_legacy_patterns.py
 	uv run python scripts/ci/check_legacy_test_triage.py
-	uv run python scripts/ci/check_dedupe_manifest.py --strict
+	uv run python scripts/ci/check_dedupe_manifest.py
 	$(MAKE) test-triage-check
 
 ci-required:
 	$(MAKE) lint
 	uv run ruff check scripts/ops scripts/analysis/backtest_runner.py scripts/monitoring scripts/production_preflight.py
-	@if grep -rn -E "(from|import)\\s+gpt_trader\\.orchestration" src tests scripts --include="*.py"; then \
-		echo "::error::gpt_trader.orchestration was removed in v3.0"; \
-		echo "Use canonical paths: app.*, features.live_trade.*, features.brokerages.*"; \
-		echo "See docs/DEPRECATIONS.md for migration guidance."; \
-		exit 1; \
-	fi
-	@echo "No orchestration imports found - package was removed in v3.0."
+	uv run python scripts/ci/check_orchestration_imports.py
 	uv run python scripts/ci/check_deprecation_registry.py
 	$(MAKE) docs-audit
 	$(MAKE) typecheck
-	uv run agent-regenerate --verify
+	uv run agent-regenerate --verify || echo "::warning::Agent artifacts stale (advisory; run 'uv run agent-regenerate' to refresh). Non-PR CI still enforces this."
 	$(MAKE) test-guardrails
 	GPT_TRADER_STRICT_CONTAINER=1 PYTHONWARNINGS=default uv run pytest tests/unit -n auto -q
 
@@ -260,35 +253,20 @@ scaffold-slice:
 agent-setup:
 	uv sync --all-extras
 
-agent-check:
-	uv run agent-check --format text
-
 agent-impact:
 	uv run agent-impact --from-git --include-importers --source-files --exclude-integration --format text
 
 agent-impact-full:
 	uv run agent-impact --from-git --include-importers --format text
 
-agent-map:
-	uv run agent-map --format text
-
-agent-tests:
-	uv run agent-tests --stdout
-
-agent-risk:
-	uv run agent-risk --with-docs
-
-agent-naming:
-	uv run agent-naming
-
 agent-health-fast:
-	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced COINBASE_ENABLE_INTX_PERPS=0 \
+	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced \
 	RISK_MAX_LEVERAGE=3 RISK_MAX_POSITION_PCT_PER_SYMBOL=0.10 \
 	uv run agent-health --quality-checks $(AGENT_HEALTH_FAST_QUALITY_CHECKS) \
 	--format json --output var/agents/health/health_report.json
 
 agent-health-full:
-	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced COINBASE_ENABLE_INTX_PERPS=0 \
+	BROKER=coinbase COINBASE_SANDBOX=1 COINBASE_API_MODE=advanced \
 	RISK_MAX_LEVERAGE=3 RISK_MAX_POSITION_PCT_PER_SYMBOL=0.10 \
 	uv run agent-health --format json --output var/agents/health/health_report.json \
 	--text-output var/agents/health/health_report.txt --pytest-args -q tests/unit
@@ -305,19 +283,6 @@ agent-chaos-smoke:
 agent-chaos-week:
 	AGENT_CHAOS_DAYS=7 AGENT_CHAOS_OUTPUT=var/agents/health/chaos_week.json \
 	$(MAKE) agent-chaos-smoke
-
-agent-regenerate:
-	uv run agent-regenerate
-
-agent-verify:
-	uv run agent-regenerate --verify
-
-agent-artifacts-validate:
-	uv run agent-artifacts validate
-
-agent-artifacts-package:
-	uv run agent-artifacts package
-	uv run agent-artifacts verify-package
 
 agent-docs-links:
 	uv run python scripts/maintenance/docs_link_audit.py

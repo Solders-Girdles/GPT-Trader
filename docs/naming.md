@@ -61,7 +61,7 @@ The automated naming scan loads its banned pattern list from
   `config/agents/naming_patterns.yaml`.
 - Use `uv run agent-naming --strict --quiet` for proof that the strict scan is
   clean. The same strict command is wired as the local pre-commit
-  `naming-check` hook in `.pre-commit-config.yaml`; `make agent-naming` provides
-  the non-strict Makefile shortcut.
+  `naming-check` hook in `.pre-commit-config.yaml`; `uv run agent-naming`
+  provides the non-strict local scan.
 - Require code review to flag deviations; reference this document in feedback.
 - Add a Definition of Done item: "Naming complies with standards or documented exception is provided."

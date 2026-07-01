@@ -136,8 +136,9 @@ make ci-required
 It runs lint/format, docs audits, mypy, agent artifacts freshness, test
 guardrails, and core unit tests, stopping on the first failure. Use
 it when you want the local PR-readiness surface without optional suites or local
-readiness evidence. This local command fails on stale agent artifacts; GitHub
-pull_request CI reports stale artifacts as non-blocking instead.
+readiness evidence. Agent artifacts freshness is advisory here: stale artifacts
+warn without stopping the run, while non-PR GitHub CI remains the blocking
+enforcement point.
 
 Run the local CI command when you want the same local PR-readiness set plus
 the repository's optional local profile controls:
@@ -153,9 +154,10 @@ enforcement, especially around readiness evidence.
 
 The command accepts `--profile`/`-p` to select either the default strict/full
 profile or the quick/dev profile. Strict (the default and the `full` alias) runs
-the local PR-readiness validation set, keeps agent artifacts freshness enabled,
-and adds the canary readiness gate as local/live readiness evidence. GitHub
-pull_request CI and `make ci-required` do not enforce that canary readiness gate.
+the local PR-readiness validation set, keeps agent artifacts freshness enabled as
+an advisory warning, and adds the canary readiness gate as local/live readiness
+evidence. GitHub pull_request CI and `make ci-required` do not enforce that
+canary readiness gate.
 The CLI prints the active profile plus the status of the readiness gate and
 agent-artifacts checks before executing any steps. Quick (aliased as `dev`)
 intentionally disables those two checks so you can run local CI without needing
@@ -164,9 +166,9 @@ checks were skipped and why.
 
 | Command | Intended use | Agent artifacts freshness | Readiness gate |
 | --- | --- | --- | --- |
-| `make ci-required` | Local PR-readiness validation surface | Blocking local step | Not run |
+| `make ci-required` | Local PR-readiness validation surface | Advisory, non-blocking | Not run |
 | GitHub `pull_request` CI | GitHub PR validation in Actions | Path-conditional; non-blocking if stale when run | Not run |
-| `uv run local-ci` / strict/full | Local PR-readiness validation plus local/live readiness evidence | Blocking local step | Runs `scripts/ci/check_readiness_gate.py --profile canary --strict` |
+| `uv run local-ci` / strict/full | Local PR-readiness validation plus local/live readiness evidence | Advisory, non-blocking | Runs `scripts/ci/check_readiness_gate.py --profile canary --strict` |
 | `uv run local-ci --profile quick` | Fast development loop | Skipped with an explicit banner reason | Skipped with an explicit banner reason |
 
 Optional suites:
@@ -183,26 +185,26 @@ For quick loops you can explicitly request the dev profile:
 ```bash
 uv run local-ci --profile quick
 uv run local-ci --profile dev
-python scripts/ci/local_ci.py --profile quick
-```
-
-If you prefer calling the script directly, run:
-
-```bash
-python scripts/ci/local_ci.py
 ```
 
 Need help diagnosing `uv run local-ci` failures? See the [Local CI troubleshooting](#local-ci-troubleshooting) steps below.
 
 ### Local CI troubleshooting
 
-Local CI (`make ci-required` / `uv run local-ci`) can report failures before the unit tests run. Two recurring causes are stale agent artifacts and readiness gate inputs. The readiness gate applies to strict/full `uv run local-ci` and direct readiness checks, not to `make ci-required` or GitHub pull_request CI. When you hit one of these failures, follow the sequence below before re-running the command.
+Local CI (`make ci-required` / `uv run local-ci`) can report issues before the
+unit tests run. Stale agent artifacts are advisory in local runs and should be
+regenerated before merge; readiness gate inputs can still fail strict/full
+`uv run local-ci`. The readiness gate applies to strict/full `uv run local-ci`
+and direct readiness checks, not to `make ci-required` or GitHub pull_request CI.
+When you hit one of these findings, follow the sequence below before re-running
+the command.
 
 #### 1. Agent artifacts freshness
 
 1. Run `uv run agent-regenerate` from the repo root to redraw `var/agents/**` from their sources.
-2. Stage the updated artifacts and rerun `uv run agent-regenerate --verify` (or `make agent-verify`).
-3. If the failure persists, compare `git status var/agents` and resolve any upstream conflicts in the source inputs under `scripts/agents/**` or `config/environments/.env.template` before regenerating again.
+2. Stage the updated artifacts and rerun `uv run agent-regenerate --verify`.
+3. If the warning persists, compare `git status var/agents` and resolve any upstream conflicts in the source inputs under `scripts/agents/**` or
+   `config/environments/.env.template` before regenerating again.
 
 #### 2. Readiness gate staleness
 
@@ -216,15 +218,16 @@ Local CI (`make ci-required` / `uv run local-ci`) can report failures before the
 ### Agent Artifacts Freshness
 
 The **Agent Artifacts Freshness** check verifies generated inventories under
-`var/agents/**` are up to date with their sources. It is blocking for
-`make ci-required`, strict/full `uv run local-ci`, and non-PR GitHub CI events.
-On GitHub pull requests it reports stale artifacts as a non-blocking warning so
-ordinary PRs are not stalled by the scheduled refresh lane. If a blocking local
-check fails, regenerate the artifacts and commit the results.
+`var/agents/**` are up to date with their sources. It is blocking for non-PR
+GitHub CI events. Locally (`make ci-required` and strict/full `uv run local-ci`)
+and on GitHub pull requests it reports stale artifacts as a non-blocking advisory
+warning, so ordinary loops and PRs are not stalled by the scheduled refresh lane.
+When you see the advisory warning, regenerate the artifacts and commit the results
+before merge (non-PR CI enforces it).
 
 ```bash
-make agent-regenerate        # or: uv run agent-regenerate
-make agent-verify            # or: uv run agent-regenerate --verify
+uv run agent-regenerate
+uv run agent-regenerate --verify
 ```
 
 Regeneration should update files in `var/agents/**`; stage and commit those
@@ -242,7 +245,7 @@ Recommended flow:
 ```bash
 # 1) Resolve conflicts in the source inputs.
 # 2) Clear conflict markers from generated files (choose a side or delete them).
-uv run agent-regenerate          # or: make agent-regenerate
+uv run agent-regenerate
 uv run agent-regenerate --verify # optional verification
 ```
 

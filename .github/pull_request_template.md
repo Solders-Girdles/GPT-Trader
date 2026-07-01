@@ -31,7 +31,7 @@ Related issue / finding / routed package:
 - [ ] Errors include diagnostic context (symbol, order_id, correlation_id)
 
 ## Agent Artifacts & Config (if touched)
-- [ ] If `var/agents/**` inputs changed (`scripts/agents/**`, `config/environments/.env.template`): ran `uv run agent-regenerate` and committed artifacts (`uv run agent-regenerate --verify` clean)
+- [ ] If your change can affect generated `var/agents/**` context: ran `uv run agent-regenerate` and committed the refreshed artifacts (`uv run agent-regenerate --verify` clean). The exact inputs and freshness/CI contract live in `docs/DEVELOPMENT_GUIDELINES.md` and the CI path classifier
 - [ ] If docs changed: `make agent-docs-links` passes
 
 ## Breaking Changes

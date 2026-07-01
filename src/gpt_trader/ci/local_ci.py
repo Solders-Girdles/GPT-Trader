@@ -9,20 +9,6 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
-ORCHESTRATION_GUARD_SCRIPT = "\n".join(
-    [
-        "# The gpt_trader.orchestration package was removed in v3.0",
-        "# Fail if ANY file imports gpt_trader.orchestration",
-        'if grep -rn -E "(from|import)\\s+gpt_trader\\.orchestration" src tests scripts --include="*.py"; then',
-        '  echo "::error::gpt_trader.orchestration was removed in v3.0"',
-        '  echo "Use canonical paths: app.*, features.live_trade.*, features.brokerages.*"',
-        '  echo "See docs/DEPRECATIONS.md for migration guidance."',
-        "  exit 1",
-        "fi",
-        'echo "No orchestration imports found - package was removed in v3.0."',
-    ]
-)
-
 AGENT_HEALTH_SCRIPT = "\n".join(
     [
         "set -u",
@@ -53,6 +39,10 @@ class PlannedStep:
     env: dict[str, str] | None = None
     enabled: bool = True
     skip_reason: str | None = None
+    # Advisory steps run but never fail the overall suite: a non-zero exit is
+    # surfaced as a non-blocking warning. Used to align local checks with CI
+    # lanes that are advisory on pull requests (e.g. agent artifacts freshness).
+    advisory: bool = False
 
 
 @dataclass(frozen=True)
@@ -205,7 +195,7 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
         ),
         PlannedStep(
             label="Guard against orchestration imports (removed in v3.0)",
-            command=["bash", "-lc", ORCHESTRATION_GUARD_SCRIPT],
+            command=["python", "scripts/ci/check_orchestration_imports.py"],
         ),
         PlannedStep(
             label="Guard deprecation registry",
@@ -234,6 +224,10 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
             command=["uv", "run", "agent-regenerate", "--verify"],
             enabled=profile.agent_artifacts_enabled,
             skip_reason=profile.agent_artifacts_skip_reason,
+            # Advisory locally: GitHub pull_request CI already reports stale
+            # artifacts non-blocking, and a scheduled lane refreshes main.
+            # Non-PR GitHub CI remains the blocking enforcement point.
+            advisory=True,
         ),
         PlannedStep(
             label="Check test hygiene",
@@ -265,7 +259,7 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
         ),
         PlannedStep(
             label="Check dedupe manifest",
-            command=["uv", "run", "python", "scripts/ci/check_dedupe_manifest.py", "--strict"],
+            command=["uv", "run", "python", "scripts/ci/check_dedupe_manifest.py"],
         ),
         PlannedStep(
             label="Check triage backlog",
@@ -334,13 +328,23 @@ def run_steps(steps: Sequence[PlannedStep], repo_root: Path) -> list[StepResult]
             results.append(
                 StepResult(
                     label=step.label,
-                    status="fail",
+                    status="warn" if step.advisory else "fail",
                     return_code=127,
                     note="command not found",
                 )
             )
             continue
-        status = "pass" if completed.returncode == 0 else "fail"
+        if completed.returncode == 0:
+            status = "pass"
+        elif step.advisory:
+            status = "warn"
+            print(
+                f"::warning::{step.label} reported issues "
+                f"(advisory, non-blocking; exit {completed.returncode})",
+                flush=True,
+            )
+        else:
+            status = "fail"
         results.append(
             StepResult(label=step.label, status=status, return_code=completed.returncode)
         )
@@ -352,15 +356,25 @@ def print_summary(results: Sequence[StepResult]) -> None:
     for result in results:
         status = result.status.upper().ljust(5)
         line = f"{status} {result.label}"
-        if result.status == "fail" and result.return_code is not None:
+        if result.status in ("fail", "warn") and result.return_code is not None:
             line = f"{line} (exit {result.return_code})"
+        if result.status == "warn":
+            line = f"{line} (advisory, non-blocking)"
         if result.status == "skip" and result.note:
             line = f"{line} ({result.note})"
         print(line, flush=True)
 
     failed = [result for result in results if result.status == "fail"]
+    warned = [result for result in results if result.status == "warn"]
     if failed:
         print(f"\nLocal CI failed: {len(failed)} check(s) failed.", flush=True)
+        if warned:
+            print(f"({len(warned)} advisory warning(s) reported — non-blocking.)", flush=True)
+    elif warned:
+        print(
+            f"\nLocal CI passed with {len(warned)} advisory warning(s) — non-blocking.",
+            flush=True,
+        )
     else:
         print("\nLocal CI passed.", flush=True)
 

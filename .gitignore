@@ -144,3 +144,7 @@ var/agents/health/health_report.*
 var/agents/health/chaos_smoke.*
 var/agents/health/chaos_week.*
 var/agents/health/agent_regenerate_verify.txt
+# Large (~1.8MB, ~70% of var/agents), high-churn, machine-only test inventory.
+# Regenerated on demand (uv run agent-regenerate) and shipped via the scheduled
+# agent-artifacts refresh package when present; not committed. Not doc-linked.
+var/agents/testing/test_inventory.json

@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -337,10 +338,33 @@ def build_manifest(
     }
 
 
+# Plain scalars a YAML 1.1 loader (ruamel / the check-yaml pre-commit hook) would
+# resolve as a non-string. Most importantly, hex cluster IDs like "310214e39620"
+# match the scientific-notation float pattern and parse to inf, so two of them
+# collapse to a duplicate `inf` key and produce invalid YAML. Such scalars must
+# be quoted so every loader reads them back as strings.
+_YAML_AMBIGUOUS_SCALAR = re.compile(
+    r"""^(?:
+        [-+]?[0-9][0-9_]*                                    # integer
+        |[-+]?(?:[0-9][0-9_]*)?\.[0-9_]*(?:[eE][-+]?[0-9]+)?  # float with a dot
+        |[-+]?[0-9][0-9_]*[eE][-+]?[0-9]+                     # float, exponent, no dot
+        |[-+]?\.?(?:inf|nan)                                 # infinity / nan
+        |true|false|yes|no|on|off|null|~                     # bool / null
+    )$""",
+    re.IGNORECASE | re.VERBOSE,
+)
+
+
 def yaml_representer_str(dumper: yaml.Dumper, data: str) -> yaml.Node:
-    """Custom representer for strings to handle multiline properly."""
+    """Custom representer for strings.
+
+    Uses block style for multiline text, and single-quotes scalars that a YAML
+    loader could otherwise misread as a non-string (e.g. float-like cluster IDs).
+    """
     if "\n" in data:
         return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="|")
+    if _YAML_AMBIGUOUS_SCALAR.match(data):
+        return dumper.represent_scalar("tag:yaml.org,2002:str", data, style="'")
     return dumper.represent_scalar("tag:yaml.org,2002:str", data)
 
 

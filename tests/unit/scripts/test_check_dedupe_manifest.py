@@ -4,6 +4,7 @@ from datetime import datetime as real_datetime
 from pathlib import Path
 
 import pytest
+import scripts.agents.generate_dedupe_candidates as generate_dedupe_candidates
 import scripts.ci.check_dedupe_manifest as check_dedupe_manifest
 
 
@@ -62,6 +63,96 @@ def test_load_manifest_clusters_must_be_mapping(tmp_path, monkeypatch) -> None:
 
     with pytest.raises(ValueError, match="Manifest `clusters` must be a mapping"):
         check_dedupe_manifest.load_manifest()
+
+
+def test_load_manifest_rejects_unquoted_ambiguous_key(tmp_path, monkeypatch) -> None:
+    # A hex cluster id that a YAML 1.1 loader parses as a float (-> inf) must be
+    # quoted; an unquoted one is rejected before it can silently collide.
+    manifest_path = tmp_path / "dedupe.yaml"
+    _write_manifest(
+        manifest_path,
+        "version: 1\nclusters:\n  310214e39620:\n    type: source_fanout\n",
+    )
+    monkeypatch.setattr(check_dedupe_manifest, "MANIFEST_PATH", manifest_path)
+
+    with pytest.raises(ValueError, match="Unquoted YAML-ambiguous cluster id"):
+        check_dedupe_manifest.load_manifest()
+
+
+def test_load_manifest_accepts_quoted_ambiguous_key(tmp_path, monkeypatch) -> None:
+    manifest_path = tmp_path / "dedupe.yaml"
+    _write_manifest(
+        manifest_path,
+        "version: 1\nclusters:\n  '310214e39620':\n    type: source_fanout\n",
+    )
+    monkeypatch.setattr(check_dedupe_manifest, "MANIFEST_PATH", manifest_path)
+
+    manifest = check_dedupe_manifest.load_manifest()
+    assert "310214e39620" in manifest["clusters"]
+
+
+def test_load_manifest_rejects_duplicate_key(tmp_path, monkeypatch) -> None:
+    manifest_path = tmp_path / "dedupe.yaml"
+    _write_manifest(
+        manifest_path,
+        "version: 1\nclusters:\n"
+        "  abc123def456:\n    type: source_fanout\n"
+        "  abc123def456:\n    type: similar_names\n",
+    )
+    monkeypatch.setattr(check_dedupe_manifest, "MANIFEST_PATH", manifest_path)
+
+    with pytest.raises(ValueError, match="Duplicate key"):
+        check_dedupe_manifest.load_manifest()
+
+
+def test_ambiguity_predicate_matches_generator() -> None:
+    # The validator must reject exactly the keys the generator quotes on write.
+    assert (
+        check_dedupe_manifest._YAML_AMBIGUOUS_SCALAR.pattern
+        == generate_dedupe_candidates._YAML_AMBIGUOUS_SCALAR.pattern
+    )
+    assert (
+        check_dedupe_manifest._YAML_AMBIGUOUS_SCALAR.flags
+        == generate_dedupe_candidates._YAML_AMBIGUOUS_SCALAR.flags
+    )
+
+
+@pytest.mark.parametrize(
+    "cluster_id",
+    [
+        "123456789012",  # all-digit SHA prefix -> int
+        "310214e39620",  # exponent -> float inf
+        "016e52388543",  # exponent with leading zero
+        "1e10",  # exponent
+        "true",  # bool
+        "false",
+        "yes",
+        "no",
+        "on",
+        "off",
+        "null",  # null
+        "inf",  # infinity
+        ".inf",
+        "nan",
+        ".nan",
+    ],
+)
+def test_yaml_ambiguous_ids_are_flagged(cluster_id: str) -> None:
+    assert check_dedupe_manifest._YAML_AMBIGUOUS_SCALAR.match(cluster_id)
+
+
+@pytest.mark.parametrize(
+    "cluster_id",
+    [
+        "c526257b38ae",  # normal 12-char hex
+        "abcdef123456",
+        "310214f39620",  # 'f', not 'e' -> not an exponent
+        "0f050387a99b",
+        "deadbeefcafe",
+    ],
+)
+def test_normal_hex_ids_are_valid(cluster_id: str) -> None:
+    assert check_dedupe_manifest._YAML_AMBIGUOUS_SCALAR.match(cluster_id) is None
 
 
 def test_validate_manifest_empty_is_ok() -> None:

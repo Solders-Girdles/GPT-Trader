@@ -2,13 +2,15 @@
   "version": "1.0",
   "description": "Test inventory for AI agent consumption",
   "files": {
-    "test_inventory": "test_inventory.json",
     "markers": "markers.json",
     "source_test_map": "source_test_map.json"
   },
+  "optional_files": {
+    "test_inventory": "test_inventory.json"
+  },
   "summary": {
-    "total_tests": 5895,
-    "total_files": 719,
+    "total_tests": 5913,
+    "total_files": 720,
     "markers_used": 15
   },
   "quick_commands": {

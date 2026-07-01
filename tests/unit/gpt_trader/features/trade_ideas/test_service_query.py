@@ -7,10 +7,12 @@ from pathlib import Path
 import pytest
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
+from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas import (
     Confidence,
     ConfidenceLabel,
     MaxLoss,
+    TimeHorizon,
     TradeDirection,
     TradeIdeaListQuery,
     TradeIdeaListSortKey,
@@ -66,3 +68,67 @@ def test_list_view_result_filters_sorts_and_paginates(service: TradeIdeaService)
     assert result.returned_count == 1
     assert result.has_more is True
     assert [view.idea.decision_id for view in result.views] == ["trade-20260612-btc-high"]
+
+
+def _horizon(expires_at: datetime) -> TimeHorizon:
+    return TimeHorizon(expected_hold="3-10 days", expires_at=expires_at)
+
+
+def test_queue_status_counts_pending_states_and_upcoming_expirations(
+    service: TradeIdeaService,
+) -> None:
+    soon = build_trade_idea(
+        decision_id="trade-20260612-soon",
+        instrument="BTC-USD",
+        time_horizon=_horizon(datetime(2026, 6, 12, 12, 0, tzinfo=UTC)),
+    )
+    change = build_trade_idea(
+        decision_id="trade-20260612-change",
+        instrument="ETH-USD",
+        time_horizon=_horizon(datetime(2026, 6, 12, 14, 0, tzinfo=UTC)),
+    )
+    later = build_trade_idea(
+        decision_id="trade-20260612-later",
+        instrument="SOL-USD",
+        time_horizon=_horizon(datetime(2026, 6, 14, 10, 0, tzinfo=UTC)),
+    )
+    approved = build_trade_idea(
+        decision_id="trade-20260612-approved",
+        instrument="DOGE-USD",
+        time_horizon=_horizon(datetime(2026, 6, 12, 11, 0, tzinfo=UTC)),
+    )
+    service.propose(soon, actor_id="idea-generator-v1")
+    service.propose(change, actor_id="idea-generator-v1")
+    service.request_changes(change.decision_id, actor_id="rj", reason="Tighten risk")
+    service.propose(later, actor_id="idea-generator-v1")
+    service.propose(approved, actor_id="idea-generator-v1")
+    service.approve(approved.decision_id, actor_id="rj", reason="Risk verified")
+
+    status = service.queue_status(warning_window_hours=6)
+
+    assert status.proposed_count == 2
+    assert status.needs_changes_count == 1
+    assert status.pending_total == 3
+    assert [expiration.decision_id for expiration in status.upcoming_expirations] == [
+        "trade-20260612-soon",
+        "trade-20260612-change",
+    ]
+    assert status.upcoming_expirations[0].seconds_until_expiry == 7200
+    assert status.to_dict()["counts"] == {
+        "proposed": 2,
+        "needs_changes": 1,
+        "pending_total": 3,
+        "upcoming_expirations": 2,
+    }
+
+
+def test_queue_status_empty_queue_is_noop(service: TradeIdeaService) -> None:
+    status = service.queue_status()
+
+    assert status.pending_total == 0
+    assert status.upcoming_expirations == ()
+
+
+def test_queue_status_rejects_negative_warning_window(service: TradeIdeaService) -> None:
+    with pytest.raises(ValidationError, match="warning_window_hours must be non-negative"):
+        service.queue_status(warning_window_hours=-1)

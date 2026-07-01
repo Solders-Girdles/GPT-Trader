@@ -12,7 +12,7 @@ import getpass
 import os
 import shutil
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Any, cast
@@ -57,6 +57,8 @@ from gpt_trader.features.trade_ideas.service_models import (
     TradeIdeaListResult,
     TradeIdeaListSortKey,
     TradeIdeaQueryPage,
+    TradeIdeaQueueExpiration,
+    TradeIdeaQueueStatus,
     TradeIdeaView,
     UnknownTradeIdeaError,
     _QueryItem,
@@ -718,6 +720,47 @@ class TradeIdeaService:
             has_more=start + len(page) < total_count,
         )
 
+    def queue_status(self, *, warning_window_hours: int = 24) -> TradeIdeaQueueStatus:
+        """Return read-only approval queue counts and upcoming pending expirations."""
+        if warning_window_hours < 0:
+            raise ValidationError(
+                "Trade idea queue warning_window_hours must be non-negative",
+                field="warning_window_hours",
+                value=warning_window_hours,
+            )
+
+        as_of = self._now()
+        window_end = as_of + timedelta(hours=warning_window_hours)
+        proposed = self.list_view_result(
+            TradeIdeaListQuery(
+                state=TradeIdeaState.PROPOSED,
+                sort_by=TradeIdeaListSortKey.EXPIRES_AT,
+            )
+        ).views
+        needs_changes = self.list_view_result(
+            TradeIdeaListQuery(
+                state=TradeIdeaState.NEEDS_CHANGES,
+                sort_by=TradeIdeaListSortKey.EXPIRES_AT,
+            )
+        ).views
+        upcoming = tuple(
+            sorted(
+                (
+                    _queue_expiration(view, as_of)
+                    for view in (*proposed, *needs_changes)
+                    if _expires_inside_window(view, as_of, window_end)
+                ),
+                key=lambda expiration: (expiration.expires_at, expiration.decision_id),
+            )
+        )
+        return TradeIdeaQueueStatus(
+            as_of=as_of,
+            warning_window_hours=warning_window_hours,
+            proposed_count=len(proposed),
+            needs_changes_count=len(needs_changes),
+            upcoming_expirations=upcoming,
+        )
+
     def list_audit_events(
         self,
         *,
@@ -1156,6 +1199,27 @@ def _list_sort_value(
     if sort_by is TradeIdeaListSortKey.UPDATED_AT:
         return (view.events[-1].timestamp, idea.decision_id)
     return None
+
+
+def _expires_inside_window(
+    view: TradeIdeaView,
+    as_of: datetime,
+    window_end: datetime,
+) -> bool:
+    expires_at = view.idea.time_horizon.expires_at
+    return expires_at is not None and as_of <= expires_at <= window_end
+
+
+def _queue_expiration(view: TradeIdeaView, as_of: datetime) -> TradeIdeaQueueExpiration:
+    expires_at = view.idea.time_horizon.expires_at
+    assert expires_at is not None
+    return TradeIdeaQueueExpiration(
+        decision_id=view.idea.decision_id,
+        state=view.state,
+        instrument=view.idea.instrument,
+        expires_at=expires_at,
+        seconds_until_expiry=max(0, int((expires_at - as_of).total_seconds())),
+    )
 
 
 def create_trade_idea_service(

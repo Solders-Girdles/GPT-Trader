@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 633,
+    "tests_scanned": 634,
     "source_modules": 307,
     "unresolved_modules": 2
   },
@@ -22,6 +22,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_queue_status.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
@@ -520,6 +521,7 @@
       "tests/unit/gpt_trader/features/brokerages/coinbase/rest/test_base_execute_order_payload.py",
       "tests/unit/gpt_trader/features/strategy_tools/test_trade_idea_adapter.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_broker_payloads.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_service_query.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py",
       "tests/unit/gpt_trader/validation/test_base_validator.py",
       "tests/unit/gpt_trader/validation/test_composite_validators.py",
@@ -1328,6 +1330,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_baseline.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_queue_status.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report_windows.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
@@ -2477,6 +2480,10 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py": [
       "gpt_trader",
       "gpt_trader.cli.response",
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_queue_status.py": [
+      "gpt_trader",
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py": [
@@ -3809,6 +3816,7 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service_query.py": [
+      "gpt_trader.errors",
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_service_venue_boundary.py": [

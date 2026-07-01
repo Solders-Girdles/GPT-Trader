@@ -13,8 +13,10 @@ findings -- exactly the gap that lets "green-but-unreviewed" work slip through.
 - Required status checks (from branch protection) and their current state.
 - ``mergeStateStatus`` (CLEAN / BLOCKED / BEHIND / DIRTY / ...).
 - Unresolved review threads, with parsed severity, author, and location.
-- An artifact-freshness advisory when the diff touches files that feed the
-  generated ``var/agents/`` context.
+- Current-head review/reaction signals, including the repo's Codex connector
+  ``+1`` convention.
+- Generated ``var/agents/`` context freshness via ``agent-regenerate --verify``
+  when the diff touches files that feed those artifacts.
 
 It prints a verdict and a markdown receipt suitable for a PR body. By default it
 always exits 0 (report, do not block); pass ``--exit-on-not-ready`` to opt into
@@ -28,7 +30,9 @@ Usage:
     uv run agent-pr-ready --pr 1056
     uv run agent-pr-ready --format markdown    # receipt for the PR body
     uv run agent-pr-ready --format json
-    uv run agent-pr-ready --no-github          # local artifact advisory only
+    uv run agent-pr-ready --no-github          # local artifact freshness only
+    uv run agent-pr-ready --skip-artifact-verify
+    uv run agent-pr-ready --require-current-head-review-signal
     uv run agent-pr-ready --exit-on-not-ready  # opt-in advisory gate
 """
 
@@ -39,6 +43,7 @@ import json
 import re
 import subprocess
 from dataclasses import asdict, dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -74,6 +79,10 @@ _BLOCKING_MERGE_STATES = {
 }
 
 _PASSING_CHECK_STATES = {"SUCCESS", "SKIPPED", "NEUTRAL"}
+_DEFAULT_REVIEW_BOT = "chatgpt-codex-connector[bot]"
+_DEFAULT_ACCEPTANCE_MARKER = "+1"
+_THUMBS_UP_MARKERS = {"+1", "thumbs_up", "thumbsup", "thumbs up"}
+_THUMBS_UP_REACTIONS = {"+1", "THUMBS_UP"}
 
 
 @dataclass(frozen=True)
@@ -90,6 +99,16 @@ class ReviewThread:
     severity: str | None
     path: str | None
     line: int | None
+
+
+@dataclass(frozen=True)
+class ReviewSignal:
+    kind: str  # review / pr_reaction
+    author: str
+    state: str
+    current_head: bool
+    created_at: str | None = None
+    url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -110,6 +129,9 @@ class PullRequestState:
     threads: tuple[ReviewThread, ...]
     protection: BranchProtection
     base_ref_name: str = "main"
+    head_committed_at: str | None = None
+    head_updated_at: str | None = None
+    review_signals: tuple[ReviewSignal, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -118,11 +140,21 @@ class Finding:
     message: str
 
 
+@dataclass(frozen=True)
+class ArtifactFreshness:
+    required: bool
+    checked: bool
+    fresh: bool | None
+    command: str | None
+    summary: str
+
+
 @dataclass
 class ReadinessReport:
     ready: bool
     findings: list[Finding] = field(default_factory=list)
     artifact_advisory: str | None = None
+    artifact_freshness: ArtifactFreshness | None = None
 
 
 # --------------------------------------------------------------------------- #
@@ -175,6 +207,13 @@ def parse_pr_state(
     pr_json: dict[str, Any],
     threads_json: list[dict[str, Any]],
     protection: BranchProtection,
+    reactions_json: list[dict[str, Any]] | None = None,
+    head_update_events_json: list[dict[str, Any]] | None = None,
+    head_pushed_at: str | None = None,
+    head_committed_at_fallback: str | None = None,
+    *,
+    review_bot: str | None = _DEFAULT_REVIEW_BOT,
+    acceptance_marker: str | None = _DEFAULT_ACCEPTANCE_MARKER,
 ) -> PullRequestState:
     """Build PullRequestState from gh payloads + parsed branch protection."""
     required_names = set(protection.required_checks)
@@ -210,19 +249,43 @@ def parse_pr_state(
             )
         )
 
+    head_oid = str(pr_json.get("headRefOid", ""))
+    # gh pr view --json commits truncates at 100, so on large PRs the head commit
+    # may be absent from pr_json; fall back to the directly-queried committed date.
+    head_committed_at = _current_head_committed_at(pr_json, head_oid) or head_committed_at_fallback
+    head_updated_at = _head_updated_at(
+        head_oid, head_committed_at, head_update_events_json or [], head_pushed_at
+    )
+
     return PullRequestState(
         number=int(pr_json.get("number", 0)),
-        head_oid=str(pr_json.get("headRefOid", "")),
+        head_oid=head_oid,
         base_ref_name=str(pr_json.get("baseRefName", "main") or "main"),
         merge_state_status=str(pr_json.get("mergeStateStatus", "UNKNOWN")).upper(),
         review_decision=str(pr_json.get("reviewDecision", "") or ""),
         checks=tuple(checks),
         threads=tuple(threads),
         protection=protection,
+        head_committed_at=head_committed_at,
+        head_updated_at=head_updated_at,
+        review_signals=tuple(
+            _parse_review_signals(
+                pr_json,
+                reactions_json or [],
+                head_oid,
+                head_updated_at,
+                review_bot=review_bot,
+                acceptance_marker=acceptance_marker,
+            )
+        ),
     )
 
 
-def assess_readiness(state: PullRequestState) -> ReadinessReport:
+def assess_readiness(
+    state: PullRequestState,
+    *,
+    require_current_head_review_signal: bool = False,
+) -> ReadinessReport:
     """Reconcile checks + protection + threads into a non-blocking verdict."""
     findings: list[Finding] = []
 
@@ -273,10 +336,203 @@ def assess_readiness(state: PullRequestState) -> ReadinessReport:
             )
         )
 
+    if not _has_current_head_review_signal(state):
+        severity = "blocker" if require_current_head_review_signal else "warning"
+        findings.append(
+            Finding(
+                severity,
+                "No current-head review or acceptance reaction was found. This is visibility "
+                "evidence by default, not a universal PR gate; pass "
+                "`--require-current-head-review-signal` for pipeline routes that require it.",
+            )
+        )
+
     ready = not any(finding.severity == "blocker" for finding in findings)
     if ready and not findings:
-        findings.append(Finding("info", "No blockers detected; PR is mergeable."))
+        findings.append(
+            Finding(
+                "info",
+                "No blocking readiness issues detected; merge still requires explicit route/approval.",
+            )
+        )
     return ReadinessReport(ready=ready, findings=findings)
+
+
+def _parse_review_signals(
+    pr_json: dict[str, Any],
+    reactions_json: list[dict[str, Any]],
+    head_oid: str,
+    reaction_freshness_floor: str | None,
+    *,
+    review_bot: str | None,
+    acceptance_marker: str | None,
+) -> list[ReviewSignal]:
+    signals: list[ReviewSignal] = []
+    for review in pr_json.get("reviews") or []:
+        if not isinstance(review, dict):
+            continue
+        author = _login(review.get("author"))
+        if review_bot and not _author_matches_review_bot(author, review_bot):
+            continue
+        state = str(review.get("state") or "UNKNOWN").upper()
+        commit_oid = _review_commit_oid(review)
+        body = str(review.get("body") or "")
+        current_head = _head_matches(commit_oid, head_oid) or _body_mentions_head(body, head_oid)
+        signals.append(
+            ReviewSignal(
+                kind="review",
+                author=author or "unknown",
+                state=state,
+                current_head=current_head,
+                created_at=review.get("submittedAt") or review.get("createdAt"),
+                url=review.get("url"),
+            )
+        )
+
+    if acceptance_marker:
+        for reaction in reactions_json:
+            if not isinstance(reaction, dict):
+                continue
+            if not _reaction_matches(reaction, acceptance_marker, review_bot):
+                continue
+            created_at = reaction.get("created_at") or reaction.get("createdAt")
+            current_head = _timestamp_at_or_after(created_at, reaction_freshness_floor)
+            signals.append(
+                ReviewSignal(
+                    kind="pr_reaction",
+                    author=_reaction_actor(reaction) or "unknown",
+                    state=str(reaction.get("content") or ""),
+                    current_head=current_head,
+                    created_at=created_at,
+                    url=None,
+                )
+            )
+    return signals
+
+
+def _current_head_committed_at(pr_json: dict[str, Any], head_oid: str) -> str | None:
+    for commit in pr_json.get("commits") or []:
+        if not isinstance(commit, dict):
+            continue
+        if _head_matches(str(commit.get("oid") or ""), head_oid):
+            value = commit.get("committedDate") or commit.get("authoredDate")
+            return str(value) if value else None
+    return None
+
+
+def _head_updated_at(
+    head_oid: str,
+    head_committed_at: str | None,
+    head_update_events_json: list[dict[str, Any]],
+    head_pushed_at: str | None = None,
+) -> str | None:
+    matching_updates: list[str] = []
+    for event in head_update_events_json:
+        after_commit = event.get("afterCommit")
+        if not isinstance(after_commit, dict):
+            continue
+        if not _head_matches(after_commit.get("oid"), head_oid):
+            continue
+        created_at = event.get("createdAt")
+        if _parse_timestamp(created_at) is not None:
+            matching_updates.append(str(created_at))
+    # `head_pushed_at` (Commit.pushedDate) covers ordinary fast-forward pushes,
+    # which emit no HeadRefForcePushedEvent; without it the floor would fall back
+    # to the commit's authored/committed time and wrongly accept a reaction that
+    # predates the push.
+    return _latest_timestamp(head_committed_at, head_pushed_at, *matching_updates)
+
+
+def _review_commit_oid(review: dict[str, Any]) -> str:
+    commit = review.get("commit")
+    if isinstance(commit, dict):
+        return str(commit.get("oid") or "")
+    return str(review.get("commitOID") or review.get("commitOid") or "")
+
+
+def _login(value: Any) -> str:
+    if isinstance(value, dict):
+        return str(value.get("login") or "")
+    return str(value or "")
+
+
+def _canonical_login(login: str | None) -> str:
+    return str(login or "").removeprefix("app/").removesuffix("[bot]").lower()
+
+
+def _author_matches_review_bot(author: str, review_bot: str | None) -> bool:
+    return not review_bot or _canonical_login(author) == _canonical_login(review_bot)
+
+
+def _head_matches(candidate: str | None, head: str) -> bool:
+    candidate = str(candidate or "").strip().lower()
+    head = head.lower()
+    return len(candidate) >= 7 and head.startswith(candidate)
+
+
+def _body_mentions_head(body: str, head: str) -> bool:
+    return any(
+        _head_matches(match.group(0), head) for match in re.finditer(r"\b[0-9a-f]{7,40}\b", body)
+    )
+
+
+def _acceptance_reaction_content(acceptance_marker: str) -> set[str]:
+    marker = acceptance_marker.strip().lower()
+    if marker in _THUMBS_UP_MARKERS:
+        return _THUMBS_UP_REACTIONS
+    return {acceptance_marker, acceptance_marker.upper()}
+
+
+def _reaction_actor(reaction: dict[str, Any]) -> str:
+    user = reaction.get("user")
+    if isinstance(user, dict):
+        return str(user.get("login") or "")
+    return str(reaction.get("user_login") or reaction.get("author") or "")
+
+
+def _reaction_matches(
+    reaction: dict[str, Any],
+    acceptance_marker: str,
+    review_bot: str | None,
+) -> bool:
+    content = str(reaction.get("content") or "")
+    if content not in _acceptance_reaction_content(acceptance_marker):
+        return False
+    return _author_matches_review_bot(_reaction_actor(reaction), review_bot)
+
+
+def _parse_timestamp(value: Any) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _timestamp_at_or_after(value: Any, baseline: Any) -> bool:
+    timestamp = _parse_timestamp(value)
+    baseline_timestamp = _parse_timestamp(baseline)
+    if timestamp is None or baseline_timestamp is None:
+        return False
+    return timestamp >= baseline_timestamp
+
+
+def _latest_timestamp(*values: Any) -> str | None:
+    latest_value: str | None = None
+    latest_timestamp: datetime | None = None
+    for value in values:
+        timestamp = _parse_timestamp(value)
+        if timestamp is None:
+            continue
+        if latest_timestamp is None or timestamp > latest_timestamp:
+            latest_timestamp = timestamp
+            latest_value = str(value)
+    return latest_value
+
+
+def _has_current_head_review_signal(state: PullRequestState) -> bool:
+    return any(signal.current_head for signal in state.review_signals)
 
 
 def _is_passing_check(check: CheckStatus) -> bool:
@@ -318,6 +574,19 @@ def _verdict(report: ReadinessReport) -> str:
 _SEVERITY_GLYPH = {"blocker": "x", "warning": "!", "info": "+"}
 
 
+def _review_signal_summary(state: PullRequestState) -> str:
+    current = [signal for signal in state.review_signals if signal.current_head]
+    reviews = [signal for signal in current if signal.kind == "review"]
+    reactions = [signal for signal in current if signal.kind == "pr_reaction"]
+    total_reviews = sum(1 for signal in state.review_signals if signal.kind == "review")
+    total_reactions = sum(1 for signal in state.review_signals if signal.kind == "pr_reaction")
+    return (
+        f"{len(current)} current-head "
+        f"({len(reviews)} review(s), {len(reactions)} PR reaction(s)); "
+        f"{total_reviews} review(s) and {total_reactions} PR reaction(s) read"
+    )
+
+
 def format_text(state: PullRequestState | None, report: ReadinessReport) -> str:
     lines: list[str] = []
     if state is not None:
@@ -329,8 +598,11 @@ def format_text(state: PullRequestState | None, report: ReadinessReport) -> str:
         lines.append(f"required checks: {passing}/{len(required_names)} passing")
         unresolved = sum(1 for t in state.threads if not t.resolved)
         lines.append(f"review threads: {unresolved} unresolved / {len(state.threads)} total")
+        lines.append(f"current-head review signals: {_review_signal_summary(state)}")
     lines.append(f"verdict: {_verdict(report)}")
-    if report.artifact_advisory:
+    if report.artifact_freshness:
+        lines.append(f"artifacts: {report.artifact_freshness.summary}")
+    elif report.artifact_advisory:
         lines.append(f"artifacts: {report.artifact_advisory}")
     lines.append("findings:")
     for finding in report.findings:
@@ -352,9 +624,12 @@ def format_markdown(state: PullRequestState | None, report: ReadinessReport) -> 
         lines.append(f"- Merge state: `{state.merge_state_status}`")
         lines.append(f"- Required checks: {passing}/{len(required_names)} passing")
         lines.append(f"- Review threads: {unresolved} unresolved / {len(state.threads)} total")
+        lines.append(f"- Current-head review signals: {_review_signal_summary(state)}")
         if state.protection.conversation_resolution:
             lines.append("- Conversation resolution: **required** by branch protection")
-    if report.artifact_advisory:
+    if report.artifact_freshness:
+        lines.append(f"- Artifacts: {report.artifact_freshness.summary}")
+    elif report.artifact_advisory:
         lines.append(f"- Artifacts: {report.artifact_advisory}")
     lines.append("")
     lines.append("### Findings")
@@ -378,10 +653,14 @@ def format_json(state: PullRequestState | None, report: ReadinessReport) -> str:
             "base_ref_name": state.base_ref_name,
             "merge_state_status": state.merge_state_status,
             "review_decision": state.review_decision,
+            "head_committed_at": state.head_committed_at,
             "checks": [asdict(check) for check in state.checks],
             "threads": [asdict(thread) for thread in state.threads],
+            "review_signals": [asdict(signal) for signal in state.review_signals],
             "protection": asdict(state.protection),
         }
+    if report.artifact_freshness is not None:
+        payload["artifact_freshness"] = asdict(report.artifact_freshness)
     return json.dumps(payload, indent=2)
 
 
@@ -466,12 +745,179 @@ def fetch_pr_payload(repo: str, pr: int) -> dict[str, Any]:
             "--repo",
             repo,
             "--json",
-            "number,headRefOid,baseRefName,mergeStateStatus,reviewDecision,statusCheckRollup",
+            "number,headRefOid,baseRefName,mergeStateStatus,reviewDecision,statusCheckRollup,reviews,commits",
         ]
     )
     if not isinstance(payload, dict):
         raise RuntimeError("Unexpected gh pr view payload")
     return payload
+
+
+def fetch_pr_reactions(repo: str, pr: int) -> list[dict[str, Any]]:
+    # `gh api --paginate` emits one JSON array per page; those pages are
+    # concatenated into a stream that `_gh_json`'s single `json.loads` cannot
+    # parse once reactions exceed one page. `--slurp` wraps every page in one
+    # outer array, which we flatten back into a single list of reactions.
+    payload = _gh_json(
+        [
+            "api",
+            "-H",
+            "Accept: application/vnd.github+json",
+            f"repos/{repo}/issues/{pr}/reactions",
+            "--paginate",
+            "--slurp",
+        ]
+    )
+    if not isinstance(payload, list):
+        return []
+    reactions: list[dict[str, Any]] = []
+    for page in payload:
+        if isinstance(page, list):
+            reactions.extend(item for item in page if isinstance(item, dict))
+        elif isinstance(page, dict):
+            reactions.append(page)
+    return reactions
+
+
+def fetch_head_update_events(repo: str, pr: int) -> list[dict[str, Any]]:
+    if repo.count("/") != 1:
+        raise RuntimeError("--repo must use owner/name format")
+    owner, name = repo.split("/", 1)
+    if not owner or not name:
+        raise RuntimeError("--repo must use owner/name format")
+    query = """
+query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      timelineItems(first: 100, after: $cursor, itemTypes: [HEAD_REF_FORCE_PUSHED_EVENT]) {
+        nodes {
+          __typename
+          ... on HeadRefForcePushedEvent {
+            createdAt
+            beforeCommit { oid }
+            afterCommit { oid }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
+"""
+    nodes: list[dict[str, Any]] = []
+    cursor: str | None = None
+    while True:
+        gh_args = [
+            "api",
+            "graphql",
+            "-f",
+            f"query={query}",
+            "-F",
+            f"owner={owner}",
+            "-F",
+            f"name={name}",
+            "-F",
+            f"number={pr}",
+        ]
+        if cursor:
+            gh_args.extend(["-F", f"cursor={cursor}"])
+        data = _gh_json(gh_args)
+        page = (
+            data.get("data", {})
+            .get("repository", {})
+            .get("pullRequest", {})
+            .get("timelineItems", {})
+        )
+        page_nodes = page.get("nodes", [])
+        if isinstance(page_nodes, list):
+            nodes.extend(page_nodes)
+        page_info = page.get("pageInfo") or {}
+        if not page_info.get("hasNextPage"):
+            break
+        next_cursor = page_info.get("endCursor")
+        if not isinstance(next_cursor, str) or not next_cursor:
+            break
+        cursor = next_cursor
+    return nodes
+
+
+def fetch_head_commit_timestamps(repo: str, pr: int) -> tuple[str | None, str | None]:
+    """Return ``(committed_at, pushed_at)`` for the PR head commit, if known.
+
+    ``gh pr view --json commits`` truncates at 100 commits, so on large PRs the
+    head commit -- and thus its committed date -- can be absent from that payload,
+    leaving the reaction-freshness floor unset. This queries ``commits(last: 1)``
+    directly, which returns the head commit regardless of PR size, giving a
+    reliable ``committed_at`` (Commit.committedDate) lower bound for the floor.
+
+    ``pushed_at`` (Commit.pushedDate) would tighten the floor to the actual
+    fast-forward-push time (force-pushes emit a HeadRefForcePushedEvent; ordinary
+    pushes do not). But GitHub deprecated ``pushedDate`` (announced removal
+    2023-07-01) and it now resolves to ``null`` in practice, so it is best-effort:
+    when null the floor falls back to the committed/force-push evidence -- never
+    worse than before. The field is kept (it still resolves without error) so the
+    floor tightens automatically if GitHub exposes a reliable push-time field
+    again; the fast-forward-push edge case is otherwise a documented limitation of
+    this advisory, non-gating tool.
+    """
+    if repo.count("/") != 1:
+        raise RuntimeError("--repo must use owner/name format")
+    owner, name = repo.split("/", 1)
+    if not owner or not name:
+        raise RuntimeError("--repo must use owner/name format")
+    query = """
+query($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      headRefOid
+      commits(last: 1) {
+        nodes {
+          commit {
+            oid
+            committedDate
+            pushedDate
+          }
+        }
+      }
+    }
+  }
+}
+"""
+    data = _gh_json(
+        [
+            "api",
+            "graphql",
+            "-f",
+            f"query={query}",
+            "-F",
+            f"owner={owner}",
+            "-F",
+            f"name={name}",
+            "-F",
+            f"number={pr}",
+        ]
+    )
+    pull_request = data.get("data", {}).get("repository", {}).get("pullRequest", {})
+    if not isinstance(pull_request, dict):
+        return None, None
+    head_oid = str(pull_request.get("headRefOid") or "")
+    nodes = (pull_request.get("commits") or {}).get("nodes") or []
+    for node in nodes:
+        commit = node.get("commit") if isinstance(node, dict) else None
+        if not isinstance(commit, dict):
+            continue
+        if head_oid and not _head_matches(str(commit.get("oid") or ""), head_oid):
+            continue
+        committed = commit.get("committedDate")
+        pushed = commit.get("pushedDate")
+        return (
+            str(committed) if committed else None,
+            str(pushed) if pushed else None,
+        )
+    return None, None
 
 
 def fetch_pr_changed_paths(repo: str, pr: int) -> list[str]:
@@ -588,13 +1034,102 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
 # --------------------------------------------------------------------------- #
 # CLI
 # --------------------------------------------------------------------------- #
-def _artifact_advisory(paths: list[str]) -> str | None:
-    if affects_agent_artifacts(paths):
-        return (
-            "diff touches generated-context sources; run "
-            "`uv run agent-regenerate --verify` (and commit if stale)."
+def _local_head_oid() -> str:
+    result = _run(["git", "rev-parse", "HEAD"])
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
+def check_artifact_freshness(
+    paths: list[str], *, verify: bool = True, head_oid: str | None = None
+) -> ArtifactFreshness:
+    """Verify generated agent artifacts when changed paths can affect them.
+
+    ``agent-regenerate --verify`` inspects the *local* working tree. When a PR is
+    assessed from a different checkout (e.g. ``--pr N`` run from ``main``), that
+    local tree is unrelated to the PR, so pass ``head_oid`` to guard against
+    attributing local freshness/staleness to the PR: if the local HEAD does not
+    match the PR head, the verify is skipped with an explanatory note instead of
+    producing a misleading verified/blocked verdict.
+    """
+    if not affects_agent_artifacts(paths):
+        return ArtifactFreshness(
+            required=False,
+            checked=False,
+            fresh=True,
+            command=None,
+            summary="not required (diff does not touch generated-context sources).",
         )
-    return None
+    command = "uv run agent-regenerate --verify"
+    if not verify:
+        return ArtifactFreshness(
+            required=True,
+            checked=False,
+            fresh=None,
+            command=command,
+            summary=f"not checked; run `{command}` before merge.",
+        )
+    if head_oid:
+        local_head = _local_head_oid()
+        if local_head and not _head_matches(local_head, head_oid):
+            return ArtifactFreshness(
+                required=True,
+                checked=False,
+                fresh=None,
+                command=command,
+                summary=(
+                    f"not checked; local checkout {local_head[:8]} differs from PR head "
+                    f"{head_oid[:8]}. Run `{command}` from the PR branch to verify."
+                ),
+            )
+    result = _run(["uv", "run", "agent-regenerate", "--verify"])
+    if result.returncode == 0:
+        return ArtifactFreshness(
+            required=True,
+            checked=True,
+            fresh=True,
+            command=command,
+            summary=f"verified fresh via `{command}`.",
+        )
+    detail = _process_summary(result)
+    return ArtifactFreshness(
+        required=True,
+        checked=True,
+        fresh=False,
+        command=command,
+        summary=f"stale or unverifiable; `{command}` exited {result.returncode}. {detail}",
+    )
+
+
+def apply_artifact_freshness(
+    report: ReadinessReport,
+    freshness: ArtifactFreshness,
+) -> None:
+    report.artifact_freshness = freshness
+    report.artifact_advisory = freshness.summary if freshness.required else None
+    if freshness.required and freshness.checked and freshness.fresh is False:
+        _remove_clean_mergeable_info(report.findings)
+        report.findings.append(Finding("blocker", freshness.summary))
+    elif freshness.required and not freshness.checked:
+        _remove_clean_mergeable_info(report.findings)
+        report.findings.append(Finding("warning", freshness.summary))
+    report.ready = not any(finding.severity == "blocker" for finding in report.findings)
+
+
+def _process_summary(result: subprocess.CompletedProcess[str]) -> str:
+    text = "\n".join(part for part in (result.stdout, result.stderr) if part)
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if not lines:
+        return ""
+    return " ".join(lines[-3:])
+
+
+def _remove_clean_mergeable_info(findings: list[Finding]) -> None:
+    findings[:] = [
+        finding
+        for finding in findings
+        if finding.message
+        != "No blocking readiness issues detected; merge still requires explicit route/approval."
+    ]
 
 
 def parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -619,7 +1154,33 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--no-github",
         action="store_true",
-        help="Skip gh calls; report only the local artifact-freshness advisory.",
+        help="Skip gh calls; report only the local artifact-freshness status.",
+    )
+    parser.add_argument(
+        "--skip-artifact-verify",
+        action="store_true",
+        help="Do not run agent-regenerate --verify; report artifact freshness as unchecked.",
+    )
+    parser.add_argument(
+        "--review-bot",
+        default=_DEFAULT_REVIEW_BOT,
+        help=(
+            "Bot login required for current-head review/reaction signals "
+            f"(default: {_DEFAULT_REVIEW_BOT}). Use an empty value to accept any reviewer."
+        ),
+    )
+    parser.add_argument(
+        "--acceptance-marker",
+        default=_DEFAULT_ACCEPTANCE_MARKER,
+        help=(
+            "PR-level reaction marker that can satisfy current-head review evidence "
+            f"(default: {_DEFAULT_ACCEPTANCE_MARKER}). Use an empty value to disable reaction matching."
+        ),
+    )
+    parser.add_argument(
+        "--require-current-head-review-signal",
+        action="store_true",
+        help="Treat a missing current-head review/reaction signal as NOT READY.",
     )
     parser.add_argument(
         "--exit-on-not-ready",
@@ -633,14 +1194,17 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
 
     if args.no_github:
-        advisory = _artifact_advisory(changed_paths(args.base or "main"))
+        freshness = check_artifact_freshness(
+            changed_paths(args.base or "main"),
+            verify=not args.skip_artifact_verify,
+        )
         report = ReadinessReport(
             ready=True,
             findings=[Finding("info", "GitHub checks skipped (--no-github).")],
-            artifact_advisory=advisory,
         )
+        apply_artifact_freshness(report, freshness)
         print(_render(args.format, None, report))
-        return 0
+        return 1 if (args.exit_on_not_ready and not report.ready) else 0
 
     try:
         repo = args.repo or detect_repo()
@@ -649,26 +1213,48 @@ def main(argv: list[str] | None = None) -> int:
         return _github_failure(args, f"Could not reach GitHub via gh: {error}")
 
     if pr is None:
-        advisory = _artifact_advisory(changed_paths(args.base or "main"))
+        freshness = check_artifact_freshness(
+            changed_paths(args.base or "main"),
+            verify=not args.skip_artifact_verify,
+        )
         report = ReadinessReport(
             ready=True,
             findings=[Finding("info", "No open PR for the current branch.")],
-            artifact_advisory=advisory,
         )
+        apply_artifact_freshness(report, freshness)
         print(_render(args.format, None, report))
-        return 0
+        return 1 if (args.exit_on_not_ready and not report.ready) else 0
 
     try:
         pr_payload = fetch_pr_payload(repo, pr)
         base_ref_name = str(args.base or pr_payload.get("baseRefName") or "main")
-        advisory = _artifact_advisory(fetch_pr_changed_paths(repo, pr))
+        paths = fetch_pr_changed_paths(repo, pr)
+        freshness = check_artifact_freshness(
+            paths,
+            verify=not args.skip_artifact_verify,
+            head_oid=str(pr_payload.get("headRefOid") or "") or None,
+        )
         protection = parse_branch_protection(fetch_branch_protection(repo, base_ref_name))
-        state = parse_pr_state(pr_payload, fetch_review_threads(repo, pr), protection)
+        head_committed_at, head_pushed_at = fetch_head_commit_timestamps(repo, pr)
+        state = parse_pr_state(
+            pr_payload,
+            fetch_review_threads(repo, pr),
+            protection,
+            fetch_pr_reactions(repo, pr),
+            fetch_head_update_events(repo, pr),
+            head_pushed_at,
+            head_committed_at,
+            review_bot=args.review_bot or None,
+            acceptance_marker=args.acceptance_marker or None,
+        )
     except RuntimeError as error:
         return _github_failure(args, f"Could not load PR #{pr}: {error}")
 
-    report = assess_readiness(state)
-    report.artifact_advisory = advisory
+    report = assess_readiness(
+        state,
+        require_current_head_review_signal=args.require_current_head_review_signal,
+    )
+    apply_artifact_freshness(report, freshness)
     print(_render(args.format, state, report))
     return 1 if (args.exit_on_not_ready and not report.ready) else 0
 
@@ -682,12 +1268,15 @@ def _render(fmt: str, state: PullRequestState | None, report: ReadinessReport) -
 
 
 def _github_failure(args: argparse.Namespace, message: str) -> int:
-    advisory = _artifact_advisory(changed_paths(args.base or "main"))
+    freshness = check_artifact_freshness(
+        changed_paths(args.base or "main"),
+        verify=not args.skip_artifact_verify,
+    )
     report = ReadinessReport(
         ready=False,
         findings=[Finding("blocker", message)],
-        artifact_advisory=advisory,
     )
+    apply_artifact_freshness(report, freshness)
     print(_render(args.format, None, report))
     return 1 if args.exit_on_not_ready else 0
 

@@ -123,7 +123,7 @@ intention:
 |-------|--------|
 | `scripts/maintenance/docs_reachability_check.py` | Every doc is reachable from `docs/README.md` and carries a valid `status`. Orphans and stray homes fail. |
 | `scripts/maintenance/docs_link_audit.py` | No dangling links or repo paths. Catches every reference broken by a retirement. |
-| `scripts/maintenance/docs_currency_scan.py` | Commands, paths, env vars, and modules named in docs still exist in the code. Catches stale prose. |
+| `scripts/maintenance/docs_currency_scan.py --fail-on missing,stale` | Commands, paths, env vars, and modules named in docs still exist in the code. Catches stale prose. Runs in the docs audit; missing/stale references fail the build, uncertain ones stay report-only, and genuine false positives go in the scanner's narrow, self-policing suppression allowlist. |
 | `scripts/maintenance/generate_decision_index.py` | The `docs/decisions/` index is generated from frontmatter, so it cannot drift. |
 | `agent-regenerate --verify` | Generated `var/agents/**` inventories match source truth. |
 

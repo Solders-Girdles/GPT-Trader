@@ -219,6 +219,15 @@ jobs:
           mkdir -p var/ci/docs_audit
           python scripts/maintenance/docs_reachability_check.py 2>&1 | tee var/ci/docs_audit/docs_reachability.log
 
+      - name: Gate docs currency (missing/stale)
+        run: |
+          set -o pipefail
+          mkdir -p var/ci/docs_audit
+          python scripts/maintenance/docs_currency_scan.py \
+            --fail-on missing,stale \
+            --output var/ci/docs_audit/docs_currency_report.md \
+            2>&1 | tee var/ci/docs_audit/docs_currency.log
+
       - name: Docs audit summary
         if: always()
         run: |
@@ -227,7 +236,7 @@ jobs:
               echo "Docs audit OK"
             else
               echo "Docs audit failed."
-              for file in var/ci/docs_audit/docs_link_audit.log var/ci/docs_audit/docs_reachability.log; do
+              for file in var/ci/docs_audit/docs_link_audit.log var/ci/docs_audit/docs_reachability.log var/ci/docs_audit/docs_currency.log; do
                 if [ -f "$file" ]; then
                   echo ""
                   echo "### $(basename "$file") (first 40 lines)"

@@ -38,3 +38,13 @@ def test_scan_docs_on_real_repo_produces_report(tmp_path: Path) -> None:
     out = tmp_path / "report.md"
     out.write_text(report, encoding="utf-8")
     assert out.stat().st_size > 0
+
+
+def test_currency_suppressions_stay_live_and_gate_is_clean() -> None:
+    """Every suppression must match a real finding, and --fail-on missing,stale
+    must be clean on the repo. Uses fetch_help=True so CLI-flag findings resolve
+    to `missing` rather than the `uncertain` fallback used when help is skipped."""
+    repo_root = Path(__file__).resolve().parents[3]
+    _, _, discrepancies = scan.scan_docs(repo_root, fetch_help=True)
+    assert scan.unused_suppressions(discrepancies) == set()
+    assert scan.gating_findings(discrepancies, {"missing", "stale"}) == []

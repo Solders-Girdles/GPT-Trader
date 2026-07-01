@@ -186,6 +186,25 @@ def test_verify_module_source_fallback_resolves_flat_module(tmp_path: Path) -> N
     assert result.method == "source grep"
 
 
+def test_live_replacement_target_in_registry_is_verified_not_exempted(tmp_path: Path) -> None:
+    # A migration-path replacement target that still exists must be verified via
+    # existence, not blanket-exempted just because its doc is a removal registry --
+    # otherwise a later rename/deletion would be silently missed.
+    pkg = tmp_path / "src" / "myproj" / "features"
+    pkg.mkdir(parents=True)
+    (pkg / "symbols.py").write_text("def derive_thing():\n    return 1\n", encoding="utf-8")
+    state = scan.ScanState(repo_root=tmp_path)
+
+    live = scan.verify_module(state, "myproj.features.symbols.derive_thing", "docs/DEPRECATIONS.md")
+    assert live.status == "uncertain"
+    assert live.method == "source grep"  # resolved by existence, not "documented removal"
+
+    # The same-registry name that does NOT resolve is still exempted as a removal.
+    removed = scan.verify_module(state, "myproj.features.gone.helper", "docs/DEPRECATIONS.md")
+    assert removed.status == "ok"
+    assert removed.method == "documented removal"
+
+
 def test_render_report_collapses_newlines_in_notes(tmp_path: Path) -> None:
     ext = scan.ExtractedItem(
         source_doc="docs/x.md",

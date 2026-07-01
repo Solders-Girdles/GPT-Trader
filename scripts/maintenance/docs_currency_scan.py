@@ -369,13 +369,24 @@ def _try_import(state: ScanState, dotted: str) -> VerificationResult:
 
 
 def verify_module(state: ScanState, item: str, source_doc: str) -> VerificationResult:
-    # Honor documented removals unconditionally (matching verify_path/verify_env_var)
-    # so a module listed in a removal/migration doc is not misreported as missing
-    # merely because its name lacks a DEPRECATED_MARKERS substring.
+    # Existence-first (matching verify_path/verify_env_var): resolve the symbol
+    # before honoring removal/migration exemptions, so a migration-path replacement
+    # target named in a removal registry is still verified and a later rename or
+    # deletion is caught rather than blanket-exempted.
+    result = _resolve_module_symbol(state, item)
+    if result.status != "missing":
+        return result
+    # Unresolved: a module named in a removal registry / migration guide is expected
+    # (documented removal) even without a DEPRECATED_MARKERS substring; otherwise a
+    # marker-matched name is stale drift.
     if _is_documented_removal(item, source_doc):
         return VerificationResult("ok", "documented removal", "removal/migration guidance")
     if any(marker in item for marker in DEPRECATED_MARKERS):
         return VerificationResult("stale", "deprecated module", "references removed module")
+    return result
+
+
+def _resolve_module_symbol(state: ScanState, item: str) -> VerificationResult:
     parts = item.split(".")
     if parts[-1][0].islower() and len(parts) >= 3:
         module_path = ".".join(parts[:-1])

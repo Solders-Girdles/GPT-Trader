@@ -15,6 +15,7 @@ Use this folder for AI-focused navigation aids and generated inventories.
 - Scratch logs: [Project regrounding 2026-06-28](scratch_logs/project_regrounding_20260628.md), [runtime architecture refactor 2026-06-29](scratch_logs/runtime_architecture_refactor_20260629.md)
 - [Glossary](glossary.md)
 - [CLI conventions](conventions.md)
+- [Canonical sources: doctrine & generated-artifact scope](canonical_sources.md)
 - [Environment variables](../../var/agents/configuration/environment_variables.md)
 - [Metrics catalog](../../var/agents/observability/metrics_catalog.md)
 - [Naming patterns config](../../config/agents/naming_patterns.yaml)

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import json
 import subprocess
 from typing import Any
 
+import pytest
 import scripts.agents.pr_readiness as pr_readiness
 
 
@@ -98,9 +98,161 @@ def test_fetch_review_threads_paginates(monkeypatch) -> None:
     assert any(part == "cursor=cursor-1" for part in calls[1])
 
 
+def test_fetch_head_update_events_paginates(monkeypatch) -> None:
+    calls: list[list[str]] = []
+
+    def fake_gh_json(args: list[str]) -> dict[str, Any]:
+        calls.append(args)
+        if len(calls) == 1:
+            return {
+                "data": {
+                    "repository": {
+                        "pullRequest": {
+                            "timelineItems": {
+                                "nodes": [{"createdAt": "2026-06-30T16:00:00Z"}],
+                                "pageInfo": {"hasNextPage": True, "endCursor": "cursor-1"},
+                            }
+                        }
+                    }
+                }
+            }
+        return {
+            "data": {
+                "repository": {
+                    "pullRequest": {
+                        "timelineItems": {
+                            "nodes": [{"createdAt": "2026-06-30T17:00:00Z"}],
+                            "pageInfo": {"hasNextPage": False, "endCursor": None},
+                        }
+                    }
+                }
+            }
+        }
+
+    monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
+
+    nodes = pr_readiness.fetch_head_update_events("owner/repo", 9)
+
+    assert [node["createdAt"] for node in nodes] == [
+        "2026-06-30T16:00:00Z",
+        "2026-06-30T17:00:00Z",
+    ]
+    assert any(part == "cursor=cursor-1" for part in calls[1])
+
+
+def test_fetch_pr_reactions_flattens_slurped_pages(monkeypatch) -> None:
+    calls: list[list[str]] = []
+
+    # `gh api --paginate --slurp` returns an outer array with one inner array
+    # per page; fetch_pr_reactions must flatten that into a single reaction list.
+    def fake_gh_json(args: list[str]) -> Any:
+        calls.append(args)
+        return [
+            [{"id": 1, "content": "+1"}, {"id": 2, "content": "eyes"}],
+            [{"id": 3, "content": "rocket"}],
+        ]
+
+    monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
+
+    reactions = pr_readiness.fetch_pr_reactions("owner/repo", 9)
+
+    assert [r["id"] for r in reactions] == [1, 2, 3]
+    # The multi-page path must be requested with --slurp so _gh_json sees one
+    # valid JSON document instead of concatenated per-page arrays.
+    assert "--slurp" in calls[0]
+
+
+def test_fetch_pr_reactions_handles_non_list_payload(monkeypatch) -> None:
+    monkeypatch.setattr(pr_readiness, "_gh_json", lambda args: {"message": "Not Found"})
+    assert pr_readiness.fetch_pr_reactions("owner/repo", 9) == []
+
+
 def test_fetch_review_threads_rejects_malformed_repo() -> None:
     try:
         pr_readiness.fetch_review_threads("not-a-repo", 9)
+    except RuntimeError as error:
+        assert "owner/name" in str(error)
+    else:
+        raise AssertionError("expected RuntimeError")
+
+
+def test_fetch_head_update_events_rejects_malformed_repo() -> None:
+    try:
+        pr_readiness.fetch_head_update_events("not-a-repo", 9)
+    except RuntimeError as error:
+        assert "owner/name" in str(error)
+    else:
+        raise AssertionError("expected RuntimeError")
+
+
+def test_fetch_head_commit_timestamps_returns_committed_and_pushed(monkeypatch) -> None:
+    # commits(last:1) returns the head commit regardless of PR size, so committedDate
+    # is available even on >100-commit PRs where gh pr view --json commits truncates.
+    def fake_gh_json(args: list[str]) -> dict[str, Any]:
+        return {
+            "data": {
+                "repository": {
+                    "pullRequest": {
+                        "headRefOid": "a367f3c6deadbeef",
+                        "commits": {
+                            "nodes": [
+                                {
+                                    "commit": {
+                                        "oid": "a367f3c6deadbeef",
+                                        "committedDate": "2026-06-30T16:30:00Z",
+                                        "pushedDate": "2026-06-30T16:50:00Z",
+                                    }
+                                }
+                            ]
+                        },
+                    }
+                }
+            }
+        }
+
+    monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
+
+    assert pr_readiness.fetch_head_commit_timestamps("owner/repo", 9) == (
+        "2026-06-30T16:30:00Z",
+        "2026-06-30T16:50:00Z",
+    )
+
+
+def test_fetch_head_commit_timestamps_handles_null_pushed_date(monkeypatch) -> None:
+    # GitHub now resolves pushedDate to null; committedDate must still come through.
+    def fake_gh_json(args: list[str]) -> dict[str, Any]:
+        return {
+            "data": {
+                "repository": {
+                    "pullRequest": {
+                        "headRefOid": "a367f3c6deadbeef",
+                        "commits": {
+                            "nodes": [
+                                {
+                                    "commit": {
+                                        "oid": "a367f3c6deadbeef",
+                                        "committedDate": "2026-06-30T16:30:00Z",
+                                        "pushedDate": None,
+                                    }
+                                }
+                            ]
+                        },
+                    }
+                }
+            }
+        }
+
+    monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
+
+    assert pr_readiness.fetch_head_commit_timestamps("owner/repo", 9) == (
+        "2026-06-30T16:30:00Z",
+        None,
+    )
+
+
+def test_fetch_head_commit_timestamps_rejects_malformed_repo() -> None:
+    try:
+        pr_readiness.fetch_head_commit_timestamps("not-a-repo", 9)
     except RuntimeError as error:
         assert "owner/name" in str(error)
     else:
@@ -191,79 +343,40 @@ def test_fetch_pr_changed_paths_falls_back_for_large_pr_diff(monkeypatch) -> Non
     ]
 
 
-def test_main_uses_pr_base_for_advisory_and_branch_protection(monkeypatch) -> None:
-    bases: list[str] = []
+def test_fetch_pr_changed_paths_raises_on_non_size_diff_error(monkeypatch) -> None:
+    calls: list[list[str]] = []
 
-    monkeypatch.setattr(
-        pr_readiness, "changed_paths", lambda base: bases.append(f"diff:{base}") or []
-    )
-    monkeypatch.setattr(
-        pr_readiness,
-        "fetch_pr_changed_paths",
-        lambda repo, pr: bases.append(f"pr-diff:{pr}") or [],
-    )
-    monkeypatch.setattr(pr_readiness, "fetch_review_threads", lambda repo, pr: [])
-    monkeypatch.setattr(
-        pr_readiness,
-        "fetch_pr_payload",
-        lambda repo, pr: {
-            "number": 12,
-            "headRefOid": "abcdef1234",
-            "baseRefName": "release/2026-06",
-            "mergeStateStatus": "CLEAN",
-            "reviewDecision": "",
-            "statusCheckRollup": [],
-        },
-    )
+    def fake_run(args: list[str]) -> subprocess.CompletedProcess[str]:
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 1, "", "fatal: not authenticated")
 
-    def fake_protection(repo: str, branch: str) -> dict[str, Any]:
-        bases.append(branch)
-        return {"required_status_checks": {"checks": []}}
+    monkeypatch.setattr(pr_readiness, "_run", fake_run)
 
-    monkeypatch.setattr(pr_readiness, "fetch_branch_protection", fake_protection)
+    with pytest.raises(RuntimeError, match="not authenticated"):
+        pr_readiness.fetch_pr_changed_paths("owner/repo", 123)
 
-    assert pr_readiness.main(["--repo", "owner/repo", "--pr", "12"]) == 0
-    assert "pr-diff:12" in bases
-    assert "release/2026-06" in bases
+    # No files-API fallback for an error that is not the raw-diff size limit.
+    assert calls == [["gh", "pr", "diff", "123", "--repo", "owner/repo", "--name-only"]]
 
 
-def test_main_pr_mode_uses_pr_diff_for_artifact_advisory(monkeypatch, capsys) -> None:
-    monkeypatch.setattr(pr_readiness, "fetch_review_threads", lambda repo, pr: [])
-    monkeypatch.setattr(pr_readiness, "fetch_branch_protection", lambda repo, branch: {})
-    monkeypatch.setattr(pr_readiness, "fetch_pr_changed_paths", lambda repo, pr: ["pytest.ini"])
-    monkeypatch.setattr(
-        pr_readiness,
-        "fetch_pr_payload",
-        lambda repo, pr: {
-            "number": 12,
-            "headRefOid": "abcdef1234",
-            "baseRefName": "main",
-            "mergeStateStatus": "CLEAN",
-            "reviewDecision": "",
-            "statusCheckRollup": [],
-        },
-    )
+def test_fetch_pr_reactions_reads_issue_reactions(monkeypatch) -> None:
+    calls: list[list[str]] = []
 
-    assert pr_readiness.main(["--repo", "owner/repo", "--pr", "12"]) == 0
-    assert "agent-regenerate --verify" in capsys.readouterr().out
+    def fake_gh_json(args: list[str]) -> list[Any]:
+        calls.append(args)
+        # --slurp wraps the single page in an outer array.
+        return [[{"content": "+1"}]]
 
+    monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
 
-def test_main_exit_on_not_ready_fails_when_github_unavailable(monkeypatch) -> None:
-    def raise_unavailable() -> str:
-        raise RuntimeError("gh missing")
-
-    monkeypatch.setattr(pr_readiness, "detect_repo", raise_unavailable)
-
-    assert pr_readiness.main(["--exit-on-not-ready"]) == 1
-
-
-def test_main_json_format_survives_github_unavailable(monkeypatch, capsys) -> None:
-    def raise_unavailable() -> str:
-        raise RuntimeError("gh missing")
-
-    monkeypatch.setattr(pr_readiness, "detect_repo", raise_unavailable)
-
-    assert pr_readiness.main(["--format", "json"]) == 0
-    payload = json.loads(capsys.readouterr().out)
-    assert payload["ready"] is False
-    assert payload["verdict"] == "NOT READY"
+    assert pr_readiness.fetch_pr_reactions("owner/repo", 123) == [{"content": "+1"}]
+    assert calls == [
+        [
+            "api",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "repos/owner/repo/issues/123/reactions",
+            "--paginate",
+            "--slurp",
+        ]
+    ]

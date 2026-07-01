@@ -22,7 +22,9 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SEARCH_ROOTS: tuple[str, ...] = ("src", "tests", "scripts")
 # Matches "from"/"import" statements that reference the removed subpackage.
-IMPORT_PATTERN = re.compile(r"(?:from|import)\s+gpt_trader\.orchestration")
+IMPORT_PATTERN = re.compile(
+    r"^\s*(?:from\s+gpt_trader\.orchestration\b|import\s+.*\bgpt_trader\.orchestration\b)"
+)
 
 
 def find_violations(project_root: Path) -> list[str]:

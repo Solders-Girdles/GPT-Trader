@@ -42,3 +42,20 @@ def test_detects_plain_import_in_tests_and_scripts(tmp_path: Path) -> None:
     violations = guard.find_violations(repo)
 
     assert len(violations) == 2
+
+
+def test_detects_comma_separated_import(tmp_path: Path) -> None:
+    repo = _make_repo(tmp_path)
+    (repo / "scripts" / "tool.py").write_text(f"import os, {_ORCH}\n", encoding="utf-8")
+
+    violations = guard.find_violations(repo)
+
+    assert len(violations) == 1
+    assert "scripts/tool.py:1" in violations[0]
+
+
+def test_ignores_similarly_named_module(tmp_path: Path) -> None:
+    repo = _make_repo(tmp_path)
+    (repo / "src" / "future.py").write_text(f"import {_ORCH}_v2\n", encoding="utf-8")
+
+    assert guard.find_violations(repo) == []

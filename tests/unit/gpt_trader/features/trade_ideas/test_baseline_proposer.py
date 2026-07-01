@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
 from gpt_trader.core import Candle
-from gpt_trader.features.intelligence.regime import RegimeState, RegimeType
+from gpt_trader.features.intelligence.regime import MarketRegimeDetector, RegimeState, RegimeType
 from gpt_trader.features.intelligence.sizing import PositionSizer, PositionSizingConfig
 from gpt_trader.features.trade_ideas import (
     BaselineProposer,
@@ -87,7 +88,9 @@ def test_idea_records_are_complete_and_pinned() -> None:
     assert idea.time_horizon.expires_at == AS_OF + timedelta(hours=CONFIG.expiry_hours)
     assert idea.data_used[0] == f"coinbase:candles:BTC-USD:1d:as_of={AS_OF.isoformat()}"
     assert any("engine=position-sizer-bridge-v1" in item for item in idea.data_used)
-    assert idea.max_loss.percent_of_account == CONFIG.risk_per_idea_pct
+    assert idea.max_loss.amount == Decimal("1.78")
+    assert idea.max_loss.percent_of_account == Decimal("0.0178")
+    assert any("Risk budget cap remains 2% per idea" in item for item in idea.max_loss.assumptions)
     assert idea.entry_zone.lower is not None
     assert idea.entry_zone.upper is not None
     assert idea.entry_zone.lower < idea.entry_zone.upper
@@ -115,7 +118,7 @@ def test_position_sizer_enriches_sizing_with_regime_kelly_and_budget_cap() -> No
         max_portfolio_heat=2.0,
     )
     sizer = PositionSizer(
-        regime_detector=StaticRegimeDetector(state),
+        regime_detector=cast(MarketRegimeDetector, StaticRegimeDetector(state)),
         config=position_config,
     )
     for index in range(10):

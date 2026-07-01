@@ -58,8 +58,10 @@ from gpt_trader.features.trade_ideas import (
     TradeIdeaListQuery,
     TradeIdeaListResult,
     TradeIdeaListSortKey,
+    TradeIdeaPositionSizingBridge,
     TradeIdeaReplayRunner,
     TradeIdeaService,
+    TradeIdeaSizingConfig,
     TradeIdeaState,
     UnknownTradeIdeaError,
     canonical_granularity,
@@ -1009,16 +1011,20 @@ def _handle_propose(args: Namespace) -> CliResponse:
 
 def _handle_propose_baseline(args: Namespace) -> CliResponse:
     command = "ideas propose-baseline"
-    proposer = BaselineProposer()
     try:
         snapshot = _load_market_snapshot(args.snapshot)
+        service = _service(args)
+        proposer = BaselineProposer(
+            sizing_bridge=TradeIdeaPositionSizingBridge(
+                TradeIdeaSizingConfig(risk_budget=service.current_budget())
+            )
+        )
         ideas = proposer.propose(snapshot)
         if not ideas:
             payload = _baseline_payload(snapshot, proposer.proposer_id, [])
             text = _status_line(command, "OK", "0 proposals")
             return _success(command, args, payload, text, was_noop=True)
 
-        service = _service(args)
         proposal_batch = tuple(ideas)
         service.validate_new_proposals(proposal_batch)
         previews = [service.approval_violations(idea, actor_type=ActorType.HUMAN) for idea in ideas]

@@ -70,6 +70,8 @@ class TradeIdeaSizingOutput:
 
     recommendation: SizingRecommendation
     data_used: str
+    estimated_loss_amount: Decimal
+    estimated_loss_pct: Decimal
 
 
 class TradeIdeaPositionSizingBridge:
@@ -121,6 +123,15 @@ class TradeIdeaPositionSizingBridge:
                 ),
             ),
         )
+        estimated_loss_amount = _estimated_loss_amount(
+            notional,
+            context.stop_loss_distance,
+            context.current_price,
+        ).quantize(self._config.notional_precision)
+        estimated_loss_pct = _estimated_loss_pct(
+            estimated_loss_amount,
+            self._config.equity,
+        ).quantize(Decimal("0.0001"))
         return TradeIdeaSizingOutput(
             recommendation=recommendation,
             data_used=_sizing_data_used(
@@ -131,6 +142,8 @@ class TradeIdeaPositionSizingBridge:
                 budget=self._config.risk_budget,
                 decision_confidence=decision_confidence,
             ),
+            estimated_loss_amount=estimated_loss_amount,
+            estimated_loss_pct=estimated_loss_pct,
         )
 
 
@@ -207,7 +220,23 @@ def _estimated_risk_fraction(
 ) -> float:
     if equity <= 0 or current_price <= 0:
         return 0.0
-    return float((notional / equity) * (stop_loss_distance / current_price))
+    return float(_estimated_loss_pct(notional * stop_loss_distance / current_price, equity) / 100)
+
+
+def _estimated_loss_amount(
+    notional: Decimal,
+    stop_loss_distance: Decimal,
+    current_price: Decimal,
+) -> Decimal:
+    if current_price <= 0:
+        return Decimal("0")
+    return notional * stop_loss_distance / current_price
+
+
+def _estimated_loss_pct(loss_amount: Decimal, equity: Decimal) -> Decimal:
+    if equity <= 0:
+        return Decimal("0")
+    return loss_amount / equity * Decimal("100")
 
 
 def _confidence_score(label: ConfidenceLabel) -> float:

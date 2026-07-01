@@ -162,10 +162,12 @@ class BaselineProposer:
                 f"Take profit near {target} ({config.reward_multiple}R) or exit at expiry"
             ),
             max_loss=MaxLoss(
-                percent_of_account=config.risk_per_idea_pct,
+                amount=sizing.estimated_loss_amount,
+                percent_of_account=sizing.estimated_loss_pct,
                 assumptions=(
-                    f"Position sized so a stop-out at {stop_level} costs "
-                    f"{config.risk_per_idea_pct}% of account equity",
+                    f"PositionSizer notional {sizing.recommendation.notional} implies "
+                    f"an estimated stop-out loss of {sizing.estimated_loss_amount}",
+                    f"Risk budget cap remains {config.risk_per_idea_pct}% per idea",
                     f"Stop distance is {stop_distance_pct}% from the last close",
                 ),
             ),

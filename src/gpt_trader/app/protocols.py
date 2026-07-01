@@ -58,18 +58,6 @@ class EventStoreProtocol(Protocol):
 
 
 @runtime_checkable
-class AccountManagerProtocol(Protocol):
-    """Protocol for account manager implementations.
-
-    Provides account snapshot and treasury operations.
-    """
-
-    def snapshot(self, emit_metric: bool = True) -> dict[str, Any]:
-        """Collect account state snapshot."""
-        ...
-
-
-@runtime_checkable
 class RuntimeStateProtocol(Protocol):
     """
     Protocol for runtime state management.
@@ -136,7 +124,6 @@ class ApplicationContainerProtocol(Protocol):
 
 
 __all__ = [
-    "AccountManagerProtocol",
     "ApplicationContainerProtocol",
     "EventStoreProtocol",
     "RuntimeStateProtocol",

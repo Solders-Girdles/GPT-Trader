@@ -1,7 +1,7 @@
 # GPT-Trader Agent Review Pipeline
 
 ---
-status: draft
+status: current
 ---
 
 This document defines the recurring project-review pipeline for GPT-Trader. The

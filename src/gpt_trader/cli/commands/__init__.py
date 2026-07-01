@@ -10,7 +10,6 @@ from . import (
     report,
     run,
     strategy_profile,
-    treasury,
 )
 
 __all__ = [
@@ -23,5 +22,4 @@ __all__ = [
     "report",
     "run",
     "strategy_profile",
-    "treasury",
 ]

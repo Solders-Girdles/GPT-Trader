@@ -1,6 +1,5 @@
 """Telemetry services for live trading."""
 
-from .account import AccountTelemetryService
 from .execution_telemetry import (
     ExecutionIssue,
     ExecutionMetrics,
@@ -11,7 +10,6 @@ from .execution_telemetry import (
 )
 
 __all__ = [
-    "AccountTelemetryService",
     "ExecutionIssue",
     "ExecutionMetrics",
     "ExecutionTelemetryCollector",

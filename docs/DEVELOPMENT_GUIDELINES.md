@@ -23,7 +23,7 @@ need to review historical practices.
   required; expose overrides through the CLI when appropriate.
 - **Modular refactoring**: Extract large modules (>500 lines) into focused
   subpackages or module-local collaborators with clear separation of concerns.
-  See `features/live_trade/execution/`, `src/gpt_trader/monitoring/guards/`,
+  See `features/live_trade/execution/`,
   `features/live_trade/risk/`, and the `features/live_trade/engines/`
   collaborators (telemetry, equity, order-record mapping) as examples. Decompose
   one reviewable seam at a time:
@@ -255,7 +255,7 @@ as the source changes.
 
 - Update `docs/ARCHITECTURE.md`, `docs/RISK_INTEGRATION_GUIDE.md`, or other
   relevant guides whenever behaviour changes.
-- Note INTX gating whenever derivatives-resident code paths are touched.
+- Note CFM/`us_futures` gating whenever derivatives-resident code paths are touched (INTX perpetuals were removed; see [decision record](decisions/intx-default-derivatives-venue.md)).
 - Keep agent-facing references (`AGENTS.md`, `docs/agents/CODEBASE_MAP.md`, and generated `var/agents/**`) aligned with new workflows.
 
 ## Operational Hygiene

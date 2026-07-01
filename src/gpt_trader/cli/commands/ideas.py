@@ -1764,10 +1764,13 @@ def _handle_reconcile_paper_fills(args: Namespace) -> CliResponse:
 def _handle_budget_show(args: Namespace) -> CliResponse:
     command = "ideas budget show"
     try:
-        budget = _service(args).current_budget()
+        service = _service(args)
+        budget = service.current_budget()
+        budget_headroom = service.budget_headroom()
     except Exception as error:
         return _mapped_error(command, args, error)
     payload = budget.to_dict()
+    payload["headroom"] = budget_headroom
     text = _budget_text(payload)
     return _success(command, args, payload, text)
 

@@ -1,9 +1,21 @@
 #!/usr/bin/env python3
 """Import boundary guard for architecture slices.
 
-Current rules:
-- Feature slices and infrastructure layers must not import entrypoint layers
-  (CLI/preflight) or the DI container.
+Current rule families:
+- Entrypoint guard: feature slices and infrastructure layers must not import
+  entrypoint layers (CLI/preflight) or the DI container.
+- Monitoring/features guard: gpt_trader.monitoring must not import
+  gpt_trader.features at runtime (TYPE_CHECKING-only imports are allowed);
+  the existing debt edges are frozen in an explicit allowlist.
+- trade_ideas dependency freeze: gpt_trader.features.trade_ideas may only
+  import gpt_trader.core, gpt_trader.errors, and itself.
+- Cross-slice ratchet: any gpt_trader.features.<a> -> gpt_trader.features.<b>
+  (a != b) import must be an edge in CROSS_SLICE_ALLOWED_EDGES.
+
+The allowlists encode today's actual topology; they are a ratchet, not an
+endorsement. Shrink them when the underlying coupling is removed. Do not add
+edges without an architecture rationale (see docs/ARCHITECTURE.md, "Import
+boundaries").
 
 Usage:
     python scripts/ci/check_import_boundaries.py [paths...]
@@ -12,7 +24,8 @@ To extend the rule set:
 - For the common case (a package that must not import entrypoint layers), add a
   (package, label) entry to _ENTRYPOINT_GUARDED_PACKAGES.
 - For a custom rule, append an ImportRule to RULES with its own forbidden_prefixes
-  and, optionally, allowlist_files or allowlist_import_prefixes for exceptions.
+  and, optionally, allowlist_files, allowlist_import_prefixes, or allowlist_edges
+  for exceptions.
 """
 
 from __future__ import annotations
@@ -40,6 +53,12 @@ class ImportRule:
     forbidden_prefixes: tuple[str, ...]
     allowlist_files: frozenset[Path] = field(default_factory=frozenset)
     allowlist_import_prefixes: tuple[str, ...] = ()
+    # (repo-relative posix file path, import prefix) pairs: the single file may
+    # import that prefix even though the rule forbids it elsewhere.
+    allowlist_edges: tuple[tuple[str, str], ...] = ()
+    # When True, imports inside `if TYPE_CHECKING:` blocks are exempt (they do
+    # not create runtime coupling).
+    ignore_type_checking_imports: bool = False
 
 
 @dataclass(frozen=True)
@@ -79,8 +98,121 @@ _ENTRYPOINT_GUARDED_PACKAGES: tuple[tuple[str, str], ...] = (
     ("config", "Configuration infrastructure"),
 )
 
-RULES: tuple[ImportRule, ...] = tuple(
-    _entrypoint_guard_rule(package, label) for package, label in _ENTRYPOINT_GUARDED_PACKAGES
+_FEATURES_ROOT = REPO_ROOT / "src" / "gpt_trader" / "features"
+
+# Frozen runtime debt edges from monitoring into feature slices. Each entry is
+# (repo-relative file, import prefix). TYPE_CHECKING-only imports never need an
+# entry here.
+_MONITORING_FEATURES_RUNTIME_ALLOWLIST: tuple[tuple[str, str], ...] = (
+    # DEBT: health checks use TickerFreshnessProvider/Source in isinstance()
+    # checks at runtime, so the import cannot move under TYPE_CHECKING. Remove
+    # this edge when the broker protocols move to gpt_trader.core.
+    (
+        "src/gpt_trader/monitoring/health_checks.py",
+        "gpt_trader.features.brokerages.core.protocols",
+    ),
+)
+
+_MONITORING_FEATURES_RULE = ImportRule(
+    name="monitoring_no_feature_runtime_imports",
+    description=(
+        "Monitoring infrastructure must not import feature slices at runtime "
+        "(TYPE_CHECKING-only imports are allowed). Existing debt edges are frozen in "
+        "_MONITORING_FEATURES_RUNTIME_ALLOWLIST in scripts/ci/check_import_boundaries.py; "
+        "see docs/ARCHITECTURE.md ('Import boundaries') before adding a new edge."
+    ),
+    source_root=REPO_ROOT / "src" / "gpt_trader" / "monitoring",
+    forbidden_prefixes=("gpt_trader.features",),
+    allowlist_edges=_MONITORING_FEATURES_RUNTIME_ALLOWLIST,
+    ignore_type_checking_imports=True,
+)
+
+# The trade_ideas slice is deliberately dependency-light: it may import only
+# core domain primitives and the error hierarchy (plus itself). Verified as the
+# slice's complete gpt_trader import surface on 2026-07-01 — this freezes it.
+TRADE_IDEAS_ALLOWED_IMPORT_PREFIXES: tuple[str, ...] = (
+    "gpt_trader.core",
+    "gpt_trader.errors",
+    "gpt_trader.features.trade_ideas",
+)
+
+_TRADE_IDEAS_RULE = ImportRule(
+    name="trade_ideas_frozen_dependencies",
+    description=(
+        "features/trade_ideas may only import gpt_trader.core, gpt_trader.errors, and "
+        "itself. Extend TRADE_IDEAS_ALLOWED_IMPORT_PREFIXES in "
+        "scripts/ci/check_import_boundaries.py only with an architecture rationale; "
+        "see docs/ARCHITECTURE.md ('Import boundaries')."
+    ),
+    source_root=_FEATURES_ROOT / "trade_ideas",
+    forbidden_prefixes=("gpt_trader",),
+    allowlist_import_prefixes=TRADE_IDEAS_ALLOWED_IMPORT_PREFIXES,
+)
+
+# Frozen record of today's cross-slice topology (verified by AST scan,
+# 2026-07-01). Every (source_slice, target_slice) import edge between feature
+# slices must appear here; anything else fails CI. This is a ratchet: shrink
+# it as couplings are removed, and do not add edges without an architecture
+# rationale (see docs/ARCHITECTURE.md, "Import boundaries").
+CROSS_SLICE_ALLOWED_EDGES: frozenset[tuple[str, str]] = frozenset(
+    {
+        # contracts.py + regime/* reuse live_trade strategy types and indicators.
+        ("intelligence", "live_trade"),
+        # execution guards/validation depend on broker protocols and coinbase specs.
+        ("live_trade", "brokerages"),
+        # factory + regime_switcher strategy use regime detection.
+        ("live_trade", "intelligence"),
+        # engines/strategy.py signal -> trade-idea adapter.
+        ("live_trade", "strategy_tools"),
+        # engines/strategy.py trade-idea proposal workflow service.
+        ("live_trade", "trade_ideas"),
+        # walk_forward/batch_runner reuse strategy protocol and baseline types.
+        ("optimize", "live_trade"),
+        # trade_idea_adapter builds trade-idea records.
+        ("strategy_tools", "trade_ideas"),
+    }
+)
+
+
+def _discover_feature_slices() -> tuple[str, ...]:
+    """Enumerate feature slice packages so new slices are guarded automatically."""
+    if not _FEATURES_ROOT.exists():
+        return ()
+    return tuple(
+        sorted(
+            entry.name
+            for entry in _FEATURES_ROOT.iterdir()
+            if entry.is_dir() and not entry.name.startswith(("_", "."))
+        )
+    )
+
+
+def _cross_slice_rule(slice_name: str) -> ImportRule:
+    """Build the cross-slice ratchet rule for one feature slice."""
+    allowed_targets = sorted(
+        target for source, target in CROSS_SLICE_ALLOWED_EDGES if source == slice_name
+    )
+    return ImportRule(
+        name=f"features_{slice_name}_cross_slice_imports",
+        description=(
+            f"Cross-slice imports from features/{slice_name} are frozen. A new "
+            "slice-to-slice dependency must be added to CROSS_SLICE_ALLOWED_EDGES in "
+            "scripts/ci/check_import_boundaries.py with an architecture rationale; "
+            "see docs/ARCHITECTURE.md ('Import boundaries')."
+        ),
+        source_root=_FEATURES_ROOT / slice_name,
+        forbidden_prefixes=("gpt_trader.features",),
+        allowlist_import_prefixes=tuple(
+            f"gpt_trader.features.{target}" for target in (slice_name, *allowed_targets)
+        ),
+    )
+
+
+RULES: tuple[ImportRule, ...] = (
+    *(_entrypoint_guard_rule(package, label) for package, label in _ENTRYPOINT_GUARDED_PACKAGES),
+    _MONITORING_FEATURES_RULE,
+    _TRADE_IDEAS_RULE,
+    *(_cross_slice_rule(slice_name) for slice_name in _discover_feature_slices()),
 )
 
 
@@ -160,21 +292,41 @@ def _resolve_relative_import(path: Path, node: ast.ImportFrom) -> str | None:
     return ".".join(base) if base else None
 
 
-def _iter_imports(path: Path, tree: ast.AST) -> Iterable[tuple[int, str]]:
-    for node in ast.walk(tree):
+def _is_type_checking_guard(test: ast.expr) -> bool:
+    """Detect `if TYPE_CHECKING:` / `if typing.TYPE_CHECKING:` guards."""
+    if isinstance(test, ast.Name) and test.id == "TYPE_CHECKING":
+        return True
+    return isinstance(test, ast.Attribute) and test.attr == "TYPE_CHECKING"
+
+
+def _iter_imports(path: Path, tree: ast.AST) -> Iterable[tuple[int, str, bool]]:
+    """Yield (line, import_path, type_checking_only) for every import in the tree."""
+
+    def _walk(node: ast.AST, in_type_checking: bool) -> Iterable[tuple[int, str, bool]]:
         if isinstance(node, ast.Import):
             for alias in node.names:
-                yield node.lineno, alias.name
-        elif isinstance(node, ast.ImportFrom):
+                yield node.lineno, alias.name, in_type_checking
+            return
+        if isinstance(node, ast.ImportFrom):
             module = _resolve_relative_import(path, node)
             if not module:
-                continue
-
+                return
             for alias in node.names:
                 if alias.name == "*":
-                    yield node.lineno, module
+                    yield node.lineno, module, in_type_checking
                 else:
-                    yield node.lineno, f"{module}.{alias.name}"
+                    yield node.lineno, f"{module}.{alias.name}", in_type_checking
+            return
+        if isinstance(node, ast.If) and _is_type_checking_guard(node.test):
+            for body_statement in node.body:
+                yield from _walk(body_statement, True)
+            for orelse_statement in node.orelse:
+                yield from _walk(orelse_statement, in_type_checking)
+            return
+        for child in ast.iter_child_nodes(node):
+            yield from _walk(child, in_type_checking)
+
+    yield from _walk(tree, False)
 
 
 def _matches_prefix(import_path: str, prefix: str) -> bool:
@@ -186,6 +338,19 @@ def _is_allowed(import_path: str, rule: ImportRule) -> bool:
         if _matches_prefix(import_path, allowed):
             return True
     return False
+
+
+def _is_allowlisted_edge(path: Path, import_path: str, rule: ImportRule) -> bool:
+    if not rule.allowlist_edges:
+        return False
+    try:
+        relative = path.resolve().relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return False
+    return any(
+        relative == edge_file and _matches_prefix(import_path, edge_prefix)
+        for edge_file, edge_prefix in rule.allowlist_edges
+    )
 
 
 def _scan_rule(rule: ImportRule, explicit_files: list[Path] | None) -> list[ImportViolation]:
@@ -234,8 +399,12 @@ def _scan_rule(rule: ImportRule, explicit_files: list[Path] | None) -> list[Impo
             )
             continue
 
-        for line, import_path in _iter_imports(path, tree):
+        for line, import_path, type_checking_only in _iter_imports(path, tree):
+            if type_checking_only and rule.ignore_type_checking_imports:
+                continue
             if _is_allowed(import_path, rule):
+                continue
+            if _is_allowlisted_edge(path, import_path, rule):
                 continue
             if any(_matches_prefix(import_path, prefix) for prefix in rule.forbidden_prefixes):
                 key = (path, line, import_path, rule.name)

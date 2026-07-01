@@ -110,6 +110,7 @@ class TradeIdeaQueueExpiration:
     state: TradeIdeaState
     instrument: str
     expires_at: datetime
+    deadline_type: str
     seconds_until_expiry: int
 
     def to_dict(self) -> dict[str, object]:
@@ -118,6 +119,7 @@ class TradeIdeaQueueExpiration:
             "state": self.state.value,
             "instrument": self.instrument,
             "expires_at": self.expires_at.isoformat(),
+            "deadline_type": self.deadline_type,
             "seconds_until_expiry": self.seconds_until_expiry,
         }
 

@@ -9,9 +9,12 @@ from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas import (
+    DEFAULT_RISK_BUDGET,
+    ActorType,
     Confidence,
     ConfidenceLabel,
     MaxLoss,
+    RiskBudget,
     TimeHorizon,
     TradeDirection,
     TradeIdeaListQuery,
@@ -113,6 +116,7 @@ def test_queue_status_counts_pending_states_and_upcoming_expirations(
         "trade-20260612-soon",
         "trade-20260612-change",
     ]
+    assert status.upcoming_expirations[0].deadline_type == "time_horizon"
     assert status.upcoming_expirations[0].seconds_until_expiry == 7200
     assert status.to_dict()["counts"] == {
         "proposed": 2,
@@ -120,6 +124,36 @@ def test_queue_status_counts_pending_states_and_upcoming_expirations(
         "pending_total": 3,
         "upcoming_expirations": 2,
     }
+
+
+def test_queue_status_reports_review_latency_deadline(
+    service: TradeIdeaService,
+) -> None:
+    idea = build_trade_idea(
+        decision_id="trade-20260612-review-latency",
+        time_horizon=_horizon(datetime(2035, 6, 19, 16, 0, tzinfo=UTC)),
+    )
+    service.propose(idea, actor_id="idea-generator-v1")
+    service.update_budget(
+        RiskBudget.from_dict(
+            {
+                **DEFAULT_RISK_BUDGET.to_dict(),
+                "version": 2,
+                "max_review_latency_hours": 2,
+            }
+        ),
+        actor_type=ActorType.HUMAN,
+        actor_id="rj",
+    )
+
+    status = service.queue_status(warning_window_hours=3)
+
+    assert status.upcoming_expiration_count == 1
+    expiration = status.upcoming_expirations[0]
+    assert expiration.decision_id == "trade-20260612-review-latency"
+    assert expiration.deadline_type == "review_latency"
+    assert expiration.expires_at == datetime(2026, 6, 12, 12, 0, tzinfo=UTC)
+    assert expiration.seconds_until_expiry == 7200
 
 
 def test_queue_status_empty_queue_is_noop(service: TradeIdeaService) -> None:

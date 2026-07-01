@@ -8,7 +8,13 @@ from typing import Any
 import pytest
 
 from gpt_trader import cli
-from gpt_trader.features.trade_ideas import TimeHorizon, TradeIdeaService
+from gpt_trader.features.trade_ideas import (
+    DEFAULT_RISK_BUDGET,
+    ActorType,
+    RiskBudget,
+    TimeHorizon,
+    TradeIdeaService,
+)
 from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 
 
@@ -101,4 +107,48 @@ def test_queue_status_reports_pending_counts_and_upcoming_expirations(
         "trade-20350612-change",
     ]
     assert data["upcoming_expirations"][0]["state"] == "proposed"
+    assert data["upcoming_expirations"][0]["deadline_type"] == "time_horizon"
     assert data["upcoming_expirations"][1]["state"] == "needs_changes"
+
+
+def test_queue_status_reports_review_latency_deadline(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    idea = build_trade_idea(
+        decision_id="trade-20350612-review-latency",
+        time_horizon=TimeHorizon(
+            expected_hold="3-10 days",
+            expires_at=datetime(2035, 6, 19, 16, 0, tzinfo=UTC),
+        ),
+    )
+    service = TradeIdeaService(root)
+    service.propose(idea, actor_id="idea-generator-v1")
+    service.update_budget(
+        RiskBudget.from_dict(
+            {
+                **DEFAULT_RISK_BUDGET.to_dict(),
+                "version": 2,
+                "max_review_latency_hours": 2,
+            }
+        ),
+        actor_type=ActorType.HUMAN,
+        actor_id="rj",
+    )
+
+    exit_code, response = _run_json(
+        capsys,
+        [
+            "ideas",
+            "queue-status",
+            *_root_args(root),
+            "--warning-window-hours",
+            "3",
+        ],
+    )
+
+    assert exit_code == 0
+    expirations = response["data"]["upcoming_expirations"]
+    assert len(expirations) == 1
+    assert expirations[0]["decision_id"] == "trade-20350612-review-latency"
+    assert expirations[0]["deadline_type"] == "review_latency"

@@ -2330,10 +2330,11 @@ def _queue_status_text(payload: dict[str, Any]) -> str:
         lines.append("UPCOMING_EXPIRATIONS")
         for expiration in expirations:
             lines.append(
-                "{decision_id}  {state}  {instrument}  {expires_at}  {seconds}s".format(
+                "{decision_id}  {state}  {instrument}  {deadline_type}  {expires_at}  {seconds}s".format(
                     decision_id=expiration["decision_id"],
                     state=expiration["state"],
                     instrument=expiration["instrument"],
+                    deadline_type=expiration["deadline_type"],
                     expires_at=expiration["expires_at"],
                     seconds=expiration["seconds_until_expiry"],
                 )

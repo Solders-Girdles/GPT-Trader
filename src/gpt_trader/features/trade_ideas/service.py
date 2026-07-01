@@ -731,6 +731,7 @@ class TradeIdeaService:
 
         as_of = self._now()
         window_end = as_of + timedelta(hours=warning_window_hours)
+        budget = self._budget_log.current() or DEFAULT_RISK_BUDGET
         proposed = self.list_view_result(
             TradeIdeaListQuery(
                 state=TradeIdeaState.PROPOSED,
@@ -743,13 +744,20 @@ class TradeIdeaService:
                 sort_by=TradeIdeaListSortKey.EXPIRES_AT,
             )
         ).views
+        upcoming_expirations: list[TradeIdeaQueueExpiration] = []
+        for view in (*proposed, *needs_changes):
+            expiration = _queue_expiration(
+                view,
+                as_of,
+                window_end,
+                budget,
+                review_started_at=self._review_started_at_from_events(view.events),
+            )
+            if expiration is not None:
+                upcoming_expirations.append(expiration)
         upcoming = tuple(
             sorted(
-                (
-                    _queue_expiration(view, as_of)
-                    for view in (*proposed, *needs_changes)
-                    if _expires_inside_window(view, as_of, window_end)
-                ),
+                upcoming_expirations,
                 key=lambda expiration: (expiration.expires_at, expiration.decision_id),
             )
         )
@@ -1201,23 +1209,37 @@ def _list_sort_value(
     return None
 
 
-def _expires_inside_window(
+def _queue_expiration(
     view: TradeIdeaView,
     as_of: datetime,
     window_end: datetime,
-) -> bool:
-    expires_at = view.idea.time_horizon.expires_at
-    return expires_at is not None and as_of <= expires_at <= window_end
+    budget: RiskBudget,
+    *,
+    review_started_at: datetime | None,
+) -> TradeIdeaQueueExpiration | None:
+    deadlines: list[tuple[str, datetime]] = []
+    horizon_expires_at = view.idea.time_horizon.expires_at
+    if horizon_expires_at is not None:
+        deadlines.append(("time_horizon", horizon_expires_at))
+    if review_started_at is not None:
+        review_deadline = review_started_at + timedelta(hours=budget.max_review_latency_hours)
+        deadlines.append(("review_latency", review_deadline))
 
+    upcoming = [
+        (deadline_type, expires_at)
+        for deadline_type, expires_at in deadlines
+        if as_of <= expires_at <= window_end
+    ]
+    if not upcoming:
+        return None
 
-def _queue_expiration(view: TradeIdeaView, as_of: datetime) -> TradeIdeaQueueExpiration:
-    expires_at = view.idea.time_horizon.expires_at
-    assert expires_at is not None
+    deadline_type, expires_at = min(upcoming, key=lambda item: (item[1], item[0]))
     return TradeIdeaQueueExpiration(
         decision_id=view.idea.decision_id,
         state=view.state,
         instrument=view.idea.instrument,
         expires_at=expires_at,
+        deadline_type=deadline_type,
         seconds_until_expiry=max(0, int((expires_at - as_of).total_seconds())),
     )
 

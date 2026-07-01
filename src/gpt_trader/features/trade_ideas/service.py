@@ -159,10 +159,7 @@ def _equity_from_max_loss_amount_percent(
     return amount * Decimal("100") / percent_of_account
 
 
-def _closeout_loss_percent(
-    closeout: CloseoutAttribution,
-    account_equity_snapshot: Decimal | None,
-) -> Decimal | None:
+def _closeout_loss_percent(closeout: CloseoutAttribution) -> Decimal | None:
     if closeout.realized_profit_loss_percent is not None:
         return abs(min(closeout.realized_profit_loss_percent, Decimal("0")))
     realized_amount = closeout.realized_profit_loss_amount
@@ -170,9 +167,13 @@ def _closeout_loss_percent(
         return None
     if realized_amount >= 0:
         return Decimal("0")
-    if account_equity_snapshot is None or account_equity_snapshot <= 0:
+    closeout_equity_snapshot = _equity_from_max_loss_amount_percent(
+        amount=closeout.max_loss.amount,
+        percent_of_account=closeout.max_loss.percent_of_account,
+    )
+    if closeout_equity_snapshot is None:
         return None
-    return abs(realized_amount) / account_equity_snapshot * Decimal("100")
+    return _percent_of_amount(abs(realized_amount), closeout_equity_snapshot)
 
 
 def _absolute_notional(idea: TradeIdea) -> Decimal | None:
@@ -324,9 +325,7 @@ class TradeIdeaService:
             open_ideas=open_ideas,
             closeouts=closeouts,
         )
-        closeout_loss_pcts = tuple(
-            _closeout_loss_percent(closeout, account_equity_snapshot) for closeout in closeouts
-        )
+        closeout_loss_pcts = tuple(_closeout_loss_percent(closeout) for closeout in closeouts)
         same_day_realized_loss_pct = sum(
             (loss_pct for loss_pct in closeout_loss_pcts if loss_pct is not None),
             Decimal("0"),

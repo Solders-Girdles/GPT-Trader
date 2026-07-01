@@ -82,6 +82,36 @@ def test_approval_refused_when_same_day_loss_budget_is_exhausted(
     assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
 
 
+def test_amount_only_closeout_uses_its_own_equity_snapshot(
+    service: TradeIdeaService,
+) -> None:
+    closed = build_trade_idea(
+        decision_id="trade-20260612-closed-amount-loss",
+        max_loss=MaxLoss(amount=Decimal("100"), percent_of_account=Decimal("1")),
+    )
+    service.propose(closed, actor_id="idea-generator-v1")
+    service.approve(closed.decision_id, actor_id="rj", reason="Risk verified")
+    service.record_submission(closed.decision_id, actor_id="operator", venue="manual")
+    service.record_fill(closed.decision_id, actor_id="operator", venue="manual")
+    service.record_closeout_attribution(
+        closed.decision_id,
+        actor_id="rj",
+        resolution=CloseoutResolution.INVALIDATION,
+        realized_profit_loss_amount=Decimal("-950"),
+    )
+    candidate = build_trade_idea(decision_id="trade-20260612-after-amount-loss")
+    service.propose(candidate, actor_id="idea-generator-v1")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(candidate.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert any(
+        "projected daily loss exposure 11% exceeds limit 10%" in violation
+        for violation in exc_info.value.violations
+    )
+    assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
+
+
 def test_approval_refused_when_same_day_closeout_loss_is_unavailable(
     service: TradeIdeaService,
 ) -> None:

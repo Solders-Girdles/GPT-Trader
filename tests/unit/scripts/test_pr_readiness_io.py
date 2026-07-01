@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import json
 import subprocess
 from typing import Any
 
+import pytest
 import scripts.agents.pr_readiness as pr_readiness
 
 
@@ -158,79 +158,71 @@ def test_fetch_pr_changed_paths_uses_requested_pr_diff(monkeypatch) -> None:
     assert calls == [["gh", "pr", "diff", "123", "--repo", "owner/repo", "--name-only"]]
 
 
-def test_main_uses_pr_base_for_advisory_and_branch_protection(monkeypatch) -> None:
-    bases: list[str] = []
+def test_fetch_pr_changed_paths_falls_back_for_large_pr_diff(monkeypatch) -> None:
+    calls: list[list[str]] = []
 
-    monkeypatch.setattr(
-        pr_readiness, "changed_paths", lambda base: bases.append(f"diff:{base}") or []
-    )
-    monkeypatch.setattr(
-        pr_readiness,
-        "fetch_pr_changed_paths",
-        lambda repo, pr: bases.append(f"pr-diff:{pr}") or [],
-    )
-    monkeypatch.setattr(pr_readiness, "fetch_review_threads", lambda repo, pr: [])
-    monkeypatch.setattr(
-        pr_readiness,
-        "fetch_pr_payload",
-        lambda repo, pr: {
-            "number": 12,
-            "headRefOid": "abcdef1234",
-            "baseRefName": "release/2026-06",
-            "mergeStateStatus": "CLEAN",
-            "reviewDecision": "",
-            "statusCheckRollup": [],
-        },
-    )
+    def fake_run(args: list[str]) -> subprocess.CompletedProcess[str]:
+        calls.append(args)
+        if args[:3] == ["gh", "pr", "diff"]:
+            return subprocess.CompletedProcess(
+                args,
+                1,
+                "",
+                "HTTP 406: Sorry, the diff exceeded the maximum number of files (300).",
+            )
+        return subprocess.CompletedProcess(args, 0, "src/a.py\nsrc/a.py\nsrc/b.py\n", "")
 
-    def fake_protection(repo: str, branch: str) -> dict[str, Any]:
-        bases.append(branch)
-        return {"required_status_checks": {"checks": []}}
+    monkeypatch.setattr(pr_readiness, "_run", fake_run)
 
-    monkeypatch.setattr(pr_readiness, "fetch_branch_protection", fake_protection)
-
-    assert pr_readiness.main(["--repo", "owner/repo", "--pr", "12"]) == 0
-    assert "pr-diff:12" in bases
-    assert "release/2026-06" in bases
+    assert pr_readiness.fetch_pr_changed_paths("owner/repo", 123) == [
+        "src/a.py",
+        "src/b.py",
+    ]
+    assert calls == [
+        ["gh", "pr", "diff", "123", "--repo", "owner/repo", "--name-only"],
+        [
+            "gh",
+            "api",
+            "--paginate",
+            "repos/owner/repo/pulls/123/files",
+            "--jq",
+            ".[].filename",
+        ],
+    ]
 
 
-def test_main_pr_mode_uses_pr_diff_for_artifact_advisory(monkeypatch, capsys) -> None:
-    monkeypatch.setattr(pr_readiness, "fetch_review_threads", lambda repo, pr: [])
-    monkeypatch.setattr(pr_readiness, "fetch_branch_protection", lambda repo, branch: {})
-    monkeypatch.setattr(pr_readiness, "fetch_pr_changed_paths", lambda repo, pr: ["pytest.ini"])
-    monkeypatch.setattr(
-        pr_readiness,
-        "fetch_pr_payload",
-        lambda repo, pr: {
-            "number": 12,
-            "headRefOid": "abcdef1234",
-            "baseRefName": "main",
-            "mergeStateStatus": "CLEAN",
-            "reviewDecision": "",
-            "statusCheckRollup": [],
-        },
-    )
+def test_fetch_pr_changed_paths_raises_on_non_size_diff_error(monkeypatch) -> None:
+    calls: list[list[str]] = []
 
-    assert pr_readiness.main(["--repo", "owner/repo", "--pr", "12"]) == 0
-    assert "agent-regenerate --verify" in capsys.readouterr().out
+    def fake_run(args: list[str]) -> subprocess.CompletedProcess[str]:
+        calls.append(args)
+        return subprocess.CompletedProcess(args, 1, "", "fatal: not authenticated")
+
+    monkeypatch.setattr(pr_readiness, "_run", fake_run)
+
+    with pytest.raises(RuntimeError, match="not authenticated"):
+        pr_readiness.fetch_pr_changed_paths("owner/repo", 123)
+
+    # No files-API fallback for an error that is not the raw-diff size limit.
+    assert calls == [["gh", "pr", "diff", "123", "--repo", "owner/repo", "--name-only"]]
 
 
-def test_main_exit_on_not_ready_fails_when_github_unavailable(monkeypatch) -> None:
-    def raise_unavailable() -> str:
-        raise RuntimeError("gh missing")
+def test_fetch_pr_reactions_reads_issue_reactions(monkeypatch) -> None:
+    calls: list[list[str]] = []
 
-    monkeypatch.setattr(pr_readiness, "detect_repo", raise_unavailable)
+    def fake_gh_json(args: list[str]) -> list[dict[str, Any]]:
+        calls.append(args)
+        return [{"content": "+1"}]
 
-    assert pr_readiness.main(["--exit-on-not-ready"]) == 1
+    monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
 
-
-def test_main_json_format_survives_github_unavailable(monkeypatch, capsys) -> None:
-    def raise_unavailable() -> str:
-        raise RuntimeError("gh missing")
-
-    monkeypatch.setattr(pr_readiness, "detect_repo", raise_unavailable)
-
-    assert pr_readiness.main(["--format", "json"]) == 0
-    payload = json.loads(capsys.readouterr().out)
-    assert payload["ready"] is False
-    assert payload["verdict"] == "NOT READY"
+    assert pr_readiness.fetch_pr_reactions("owner/repo", 123) == [{"content": "+1"}]
+    assert calls == [
+        [
+            "api",
+            "-H",
+            "Accept: application/vnd.github+json",
+            "repos/owner/repo/issues/123/reactions",
+            "--paginate",
+        ]
+    ]

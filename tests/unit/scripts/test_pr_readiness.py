@@ -7,9 +7,13 @@ from scripts.agents.pr_readiness import (
     BranchProtection,
     CheckStatus,
     PullRequestState,
+    ReadinessReport,
+    ReviewSignal,
     ReviewThread,
     affects_agent_artifacts,
+    apply_artifact_freshness,
     assess_readiness,
+    check_artifact_freshness,
     format_json,
     format_markdown,
     parse_branch_protection,
@@ -50,6 +54,36 @@ def test_artifact_advisory_skips_unrelated_changes() -> None:
     assert affects_agent_artifacts(["docs/STATUS.md", "README.md"]) is False
     assert affects_agent_artifacts([""]) is False
     assert affects_agent_artifacts([]) is False
+
+
+def test_artifact_freshness_blocks_when_verify_fails(monkeypatch) -> None:
+    monkeypatch.setattr(
+        pr_readiness,
+        "_run",
+        lambda args: pr_readiness.subprocess.CompletedProcess(
+            args,
+            1,
+            "var/agents/testing/index.json stale\n",
+            "",
+        ),
+    )
+    report = ReadinessReport(ready=True, findings=[])
+
+    freshness = check_artifact_freshness(["tests/unit/x_test.py"])
+    apply_artifact_freshness(report, freshness)
+
+    assert report.ready is False
+    assert freshness.checked is True
+    assert freshness.fresh is False
+    assert any("agent-regenerate --verify" in finding.message for finding in report.findings)
+
+
+def test_artifact_freshness_can_be_marked_unchecked() -> None:
+    freshness = check_artifact_freshness(["tests/unit/x_test.py"], verify=False)
+
+    assert freshness.required is True
+    assert freshness.checked is False
+    assert freshness.fresh is None
 
 
 # --------------------------------------------------------------------------- #
@@ -129,196 +163,63 @@ def test_parse_pr_state_maps_checks_and_threads() -> None:
     assert state.threads[0].author == "coderabbitai"
 
 
-# --------------------------------------------------------------------------- #
-# assess_readiness - the scenario that bit us
-# --------------------------------------------------------------------------- #
-def test_green_checks_but_unresolved_threads_is_not_ready() -> None:
-    """All required checks SUCCESS, but enforced conversation resolution + open
-    threads must still report NOT READY (the PR #1056 situation)."""
-    state = PullRequestState(
-        number=1056,
-        head_oid="c6f5c2c4",
-        merge_state_status="BLOCKED",
-        review_decision="",
-        checks=(CheckStatus("Unit Tests (Core)", "SUCCESS", required=True),),
-        threads=(
-            ReviewThread("chatgpt-codex-connector", False, "medium", "src/x.py", 152),
-            ReviewThread("coderabbitai", False, "high", "src/x.py", 236),
+def test_parse_pr_state_marks_current_head_pr_reaction_signal() -> None:
+    head = "a367f3c6deadbeef"
+    pr_json = {
+        "number": 1056,
+        "headRefOid": head,
+        "baseRefName": "main",
+        "mergeStateStatus": "CLEAN",
+        "reviewDecision": "",
+        "statusCheckRollup": [],
+        "commits": [{"oid": head, "committedDate": "2026-06-30T16:46:28Z"}],
+    }
+    reactions = [
+        {
+            "content": "+1",
+            "created_at": "2026-06-30T16:49:26Z",
+            "user": {"login": "chatgpt-codex-connector[bot]"},
+        }
+    ]
+
+    state = parse_pr_state(pr_json, [], _protection(required_checks=()), reactions)
+
+    assert state.head_committed_at == "2026-06-30T16:46:28Z"
+    assert state.review_signals == (
+        ReviewSignal(
+            kind="pr_reaction",
+            author="chatgpt-codex-connector[bot]",
+            state="+1",
+            current_head=True,
+            created_at="2026-06-30T16:49:26Z",
+            url=None,
         ),
-        protection=_protection(conversation_resolution=True),
     )
-    report = assess_readiness(state)
-
-    assert report.ready is False
-    blockers = [finding for finding in report.findings if finding.severity == "blocker"]
-    assert len(blockers) == 1
-    assert "unresolved review thread" in blockers[0].message
-    assert "block the merge" in blockers[0].message
 
 
-def test_unresolved_threads_without_enforcement_is_warning_not_blocker() -> None:
-    state = PullRequestState(
-        number=1,
-        head_oid="abc",
-        merge_state_status="CLEAN",
-        review_decision="",
-        checks=(CheckStatus("Unit Tests (Core)", "SUCCESS", required=True),),
-        threads=(ReviewThread("coderabbitai", False, "low", "docs/x.md", 1),),
-        protection=_protection(conversation_resolution=False),
-    )
-    report = assess_readiness(state)
+def test_parse_pr_state_rejects_stale_pr_reaction_signal() -> None:
+    head = "a367f3c6deadbeef"
+    pr_json = {
+        "number": 1056,
+        "headRefOid": head,
+        "baseRefName": "main",
+        "mergeStateStatus": "CLEAN",
+        "reviewDecision": "",
+        "statusCheckRollup": [],
+        "commits": [{"oid": head, "committedDate": "2026-06-30T16:46:28Z"}],
+    }
+    reactions = [
+        {
+            "content": "+1",
+            "created_at": "2026-06-30T16:40:00Z",
+            "user": {"login": "chatgpt-codex-connector[bot]"},
+        }
+    ]
 
-    assert report.ready is True
-    assert any(finding.severity == "warning" for finding in report.findings)
+    state = parse_pr_state(pr_json, [], _protection(required_checks=()), reactions)
 
-
-def test_failing_required_check_is_blocker() -> None:
-    state = PullRequestState(
-        number=2,
-        head_oid="abc",
-        merge_state_status="BLOCKED",
-        review_decision="",
-        checks=(
-            CheckStatus("Unit Tests (Core)", "FAILURE", required=True),
-            CheckStatus("CodeRabbit", "SUCCESS", required=False),
-        ),
-        threads=(),
-        protection=_protection(),
-    )
-    report = assess_readiness(state)
-
-    assert report.ready is False
-    assert any("Unit Tests (Core)" in finding.message for finding in report.findings)
-
-
-def test_missing_required_check_is_blocker() -> None:
-    state = PullRequestState(
-        number=20,
-        head_oid="abc",
-        merge_state_status="CLEAN",
-        review_decision="",
-        checks=(),
-        threads=(),
-        protection=_protection(required_checks=("Unit Tests (Core)",)),
-    )
-    report = assess_readiness(state)
-
-    assert report.ready is False
-    assert any("missing" in finding.message for finding in report.findings)
-
-
-def test_skipped_and_neutral_required_checks_are_passing() -> None:
-    state = PullRequestState(
-        number=21,
-        head_oid="abc",
-        merge_state_status="CLEAN",
-        review_decision="",
-        checks=(
-            CheckStatus("Docs Link Audit", "SKIPPED", required=True),
-            CheckStatus("Analyze Python", "NEUTRAL", required=True),
-        ),
-        threads=(),
-        protection=_protection(required_checks=("Docs Link Audit", "Analyze Python")),
-    )
-    report = assess_readiness(state)
-
-    assert report.ready is True
-
-
-def test_blocked_state_without_specific_finding_is_not_ready() -> None:
-    state = PullRequestState(
-        number=22,
-        head_oid="abc",
-        merge_state_status="BLOCKED",
-        review_decision="",
-        checks=(CheckStatus("Unit Tests (Core)", "SUCCESS", required=True),),
-        threads=(ReviewThread("coderabbitai", False, "low", "docs/x.md", 1),),
-        protection=_protection(conversation_resolution=False),
-    )
-    report = assess_readiness(state)
-
-    assert report.ready is False
-    assert any("Branch protection" in finding.message for finding in report.findings)
-
-
-def test_draft_state_is_not_ready() -> None:
-    state = PullRequestState(
-        number=23,
-        head_oid="abc",
-        merge_state_status="DRAFT",
-        review_decision="",
-        checks=(CheckStatus("Unit Tests (Core)", "SUCCESS", required=True),),
-        threads=(),
-        protection=_protection(),
-    )
-    report = assess_readiness(state)
-
-    assert report.ready is False
-    assert any("draft" in finding.message.lower() for finding in report.findings)
-
-
-def test_unknown_merge_state_is_not_ready() -> None:
-    state = PullRequestState(
-        number=24,
-        head_oid="abc",
-        merge_state_status="UNKNOWN",
-        review_decision="",
-        checks=(CheckStatus("Unit Tests (Core)", "SUCCESS", required=True),),
-        threads=(),
-        protection=_protection(),
-    )
-    report = assess_readiness(state)
-
-    assert report.ready is False
-    assert any("mergeability" in finding.message for finding in report.findings)
-
-
-def test_clean_pr_with_no_open_threads_is_ready() -> None:
-    state = PullRequestState(
-        number=3,
-        head_oid="abc",
-        merge_state_status="CLEAN",
-        review_decision="",
-        checks=(CheckStatus("Unit Tests (Core)", "SUCCESS", required=True),),
-        threads=(ReviewThread("coderabbitai", True, "high", "src/x.py", 1),),
-        protection=_protection(conversation_resolution=True),
-    )
-    report = assess_readiness(state)
-
-    assert report.ready is True
-    assert all(finding.severity == "info" for finding in report.findings)
-
-
-def test_behind_base_is_blocker() -> None:
-    state = PullRequestState(
-        number=4,
-        head_oid="abc",
-        merge_state_status="BEHIND",
-        review_decision="",
-        checks=(CheckStatus("Unit Tests (Core)", "SUCCESS", required=True),),
-        threads=(),
-        protection=_protection(),
-    )
-    report = assess_readiness(state)
-
-    assert report.ready is False
-    assert any("behind" in finding.message.lower() for finding in report.findings)
-
-
-def test_required_review_missing_is_blocker() -> None:
-    state = PullRequestState(
-        number=5,
-        head_oid="abc",
-        merge_state_status="BLOCKED",
-        review_decision="REVIEW_REQUIRED",
-        checks=(CheckStatus("Unit Tests (Core)", "SUCCESS", required=True),),
-        threads=(),
-        protection=_protection(required_review_count=1),
-    )
-    report = assess_readiness(state)
-
-    assert report.ready is False
-    assert any("approving review" in finding.message for finding in report.findings)
+    assert len(state.review_signals) == 1
+    assert state.review_signals[0].current_head is False
 
 
 # --------------------------------------------------------------------------- #

@@ -273,6 +273,7 @@ def test_main_fail_on_exits_nonzero_for_unsuppressed_missing(monkeypatch) -> Non
 
 def test_main_fail_on_zero_when_only_suppressed_or_uncertain(monkeypatch) -> None:
     doc, item = next(iter(scan.CURRENCY_SUPPRESSIONS))
+    monkeypatch.setattr(scan, "CURRENCY_SUPPRESSIONS", {(doc, item): "test suppression"})
     _patch_scan(
         monkeypatch,
         [
@@ -281,6 +282,18 @@ def test_main_fail_on_zero_when_only_suppressed_or_uncertain(monkeypatch) -> Non
         ],
     )
     assert scan.main(["--fail-on", "missing,stale", "--skip-help"]) == 0
+
+
+def test_main_fail_on_exits_nonzero_for_unused_suppression(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(
+        scan, "CURRENCY_SUPPRESSIONS", {("docs/x.md", "REMOVED_REFERENCE"): "test suppression"}
+    )
+    _patch_scan(monkeypatch, [])
+
+    assert scan.main(["--fail-on", "missing,stale", "--skip-help"]) == 1
+    output = capsys.readouterr().out
+    assert "unused CURRENCY_SUPPRESSIONS" in output
+    assert "docs/x.md :: `REMOVED_REFERENCE`" in output
 
 
 def test_main_without_fail_on_is_report_only(monkeypatch) -> None:

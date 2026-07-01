@@ -821,6 +821,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if fail_on:
         gating = gating_findings(discrepancies, fail_on)
+        orphaned_suppressions = unused_suppressions(discrepancies)
         if gating:
             print(f"\nFAIL: {len(gating)} unsuppressed {'/'.join(sorted(fail_on))} finding(s):")
             for ext, result in sorted(
@@ -832,6 +833,15 @@ def main(argv: list[str] | None = None) -> int:
                 "add a justified entry to CURRENCY_SUPPRESSIONS in "
                 "scripts/maintenance/docs_currency_scan.py."
             )
+        if orphaned_suppressions:
+            print(f"\nFAIL: {len(orphaned_suppressions)} unused CURRENCY_SUPPRESSIONS entries:")
+            for source_doc, item in sorted(orphaned_suppressions):
+                print(f"  {source_doc} :: `{item}`")
+            print(
+                "Remove stale suppression entries after the underlying docs reference is fixed "
+                "or removed."
+            )
+        if gating or orphaned_suppressions:
             return 1
     return 0
 

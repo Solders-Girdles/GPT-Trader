@@ -58,7 +58,7 @@ _ARTIFACT_SOURCE_FILES = (
     "pytest.ini",
     "config/environments/.env.template",
 )
-_ARTIFACT_SOURCE_SUFFIXES = (".py", ".tcss", ".yaml", ".yml")
+_ARTIFACT_SOURCE_SUFFIXES = (".py", ".yaml", ".yml")
 
 # Severity tokens emitted by review bots (CodeRabbit, Codex) in comment bodies,
 # ordered most-severe first so the highest match wins.

@@ -166,7 +166,7 @@ def configure_failure_tracker(
 
 
 def get_validation_metrics(tracker: ValidationFailureTracker) -> dict[str, Any]:
-    """Get validation failure metrics for TUI display.
+    """Get validation failure metrics for monitoring display.
 
     This function accepts the tracker explicitly for pure DI.
     Business logic should pass the tracker from the container.

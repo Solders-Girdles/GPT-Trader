@@ -23,14 +23,6 @@ This document lists the canonical runtime entrypoints and where they are wired.
   - `src/gpt_trader/app/container.py` (`ApplicationContainer.create_bot`)
   - `src/gpt_trader/features/live_trade/bot.py` (`TradingBot.run`)
 
-## TUI demo
-
-- Standalone demo module: `python -m gpt_trader.tui.demo`
-  - Entry: `src/gpt_trader/tui/demo/__main__.py` (`main`)
-- CLI demo modes (preferred for env/logging setup):
-  - `gpt-trader run --tui --demo` -> `src/gpt_trader/cli/commands/run.py` (`_run_demo_tui`)
-  - `gpt-trader tui --mode demo` -> `src/gpt_trader/cli/commands/tui.py` (`execute`)
-
 ## Preflight CLI
 
 - Script entrypoint: `python scripts/production_preflight.py`

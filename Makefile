@@ -1,12 +1,11 @@
-.PHONY: dev-up dev-down lint fmt fmt-check lint-fix lint-fmt-fix typecheck docs-audit tui-css-check test-guardrails ci-required test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
+.PHONY: dev-up dev-down lint fmt fmt-check lint-fix lint-fmt-fix typecheck docs-audit test-guardrails ci-required test smoke preflight preflight-readiness dash cov clean clean-dry-run scaffold-slice \
 	readiness-window agent-setup agent-impact agent-impact-full agent-health-fast agent-health-full agent-chaos-smoke agent-chaos-week \
 	agent-docs-links canary-liveness canary-liveness-check canary-daily canary-decision-traces \
 	canary-decision-trace-probe canary-runtime-info canary-stop canary-start \
 	canary-restart canary-status canary-watchdog canary-watchdog-once ops-controls-smoke \
 	test-triage test-triage-check test-unit test-property test-contract test-real-api test-integration test-integration-fast \
 	backtest backtest-quick backtest-walk-forward backtest-walk-forward-quick guard-parity \
-	legacy-patterns \
-	test-snapshots
+	legacy-patterns
 
 COMPOSE_DIR=deploy/gpt_trader/docker
 COMPOSE_FILE=$(COMPOSE_DIR)/docker-compose.yaml
@@ -64,9 +63,6 @@ docs-audit:
 	uv run python scripts/maintenance/docs_link_audit.py
 	uv run python scripts/maintenance/docs_reachability_check.py
 
-tui-css-check:
-	uv run python scripts/ci/check_tui_css_up_to_date.py
-
 test-guardrails:
 	uv run python scripts/ci/check_test_hygiene.py
 	uv run python scripts/ci/check_legacy_patterns.py
@@ -82,9 +78,8 @@ ci-required:
 	$(MAKE) docs-audit
 	$(MAKE) typecheck
 	uv run agent-regenerate --verify || echo "::warning::Agent artifacts stale (advisory; run 'uv run agent-regenerate' to refresh). Non-PR CI still enforces this."
-	$(MAKE) tui-css-check
 	$(MAKE) test-guardrails
-	GPT_TRADER_STRICT_CONTAINER=1 PYTHONWARNINGS=default uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py
+	GPT_TRADER_STRICT_CONTAINER=1 PYTHONWARNINGS=default uv run pytest tests/unit -n auto -q
 
 legacy-patterns:
 	uv run python scripts/ci/check_legacy_patterns.py
@@ -115,9 +110,6 @@ test-integration:
 
 test-integration-fast:
 	uv run pytest -q -o addopts= -m "integration and not slow and not real_api" tests/integration
-
-test-snapshots:
-	uv run pytest -q -n 0 tests/unit/gpt_trader/tui/test_snapshots_*.py
 
 backtest:
 	uv run python scripts/analysis/backtest_runner.py \

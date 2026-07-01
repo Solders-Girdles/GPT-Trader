@@ -35,9 +35,6 @@ Use it only for experiments (custom container/broker factory).
 # Paper profile (mock broker + dry run)
 uv run gpt-trader run --profile paper
 
-# TUI paper mode
-uv run gpt-trader tui --mode paper
-
 # Single-cycle smoke test
 uv run gpt-trader run --profile paper --dev-fast
 ```

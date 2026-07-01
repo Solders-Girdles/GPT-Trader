@@ -91,7 +91,7 @@ Config is the shared input surface that defines:
 
 ### Notes
 - `app/config` is used across layers as a shared input surface.
-- Avoid importing `app.container` or CLI/TUI modules from lower layers.
+- Avoid importing `app.container` or CLI modules from lower layers.
 
 ---
 

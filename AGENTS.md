@@ -26,7 +26,6 @@ Two rules keep this repo from sprawling:
 | Apply **naming standards + approved abbreviations** | [docs/naming.md](docs/naming.md), [docs/agents/glossary.md](docs/agents/glossary.md) |
 | Use **dependency injection** (`ApplicationContainer`) | [docs/DI_POLICY.md](docs/DI_POLICY.md) |
 | Write or run **tests** | [docs/testing.md](docs/testing.md) |
-| Touch the **TUI** | [docs/TUI_STYLE_GUIDE.md](docs/TUI_STYLE_GUIDE.md) |
 | Run the **agent review/scout pipeline** or handle review artifacts | [docs/agents/project_review_pipeline.md](docs/agents/project_review_pipeline.md) |
 | Find **generated inventories/maps** (env vars, metrics, flows) | `var/agents/**` + [docs/agents/README.md](docs/agents/README.md) |
 
@@ -58,15 +57,14 @@ uv run local-ci --profile quick         # faster loop (skips readiness + artifac
 ## Before you open a PR
 
 - Run `make ci-required` (lint/format, docs audits, type check, agent-artifact
-  freshness, TUI CSS, test guardrails, core unit tests). The blocking/advisory
-  contract is owned by [docs/DEVELOPMENT_GUIDELINES.md](docs/DEVELOPMENT_GUIDELINES.md).
+  freshness, test guardrails, core unit tests). The blocking/advisory contract is
+  owned by [docs/DEVELOPMENT_GUIDELINES.md](docs/DEVELOPMENT_GUIDELINES.md).
 - If your change can affect generated `var/agents/**` context, run
   `uv run agent-regenerate` and commit the updated artifacts; confirm with
   `uv run agent-regenerate --verify`. The exact freshness/CI contract (which
   inputs count and where it blocks vs. warns) lives in
   [docs/DEVELOPMENT_GUIDELINES.md](docs/DEVELOPMENT_GUIDELINES.md) and the CI
   classifier.
-- After editing any `.tcss` module, run `python scripts/build_tui_css.py`.
 - Fill out [.github/pull_request_template.md](.github/pull_request_template.md);
   link the issue/finding with `Closes #<n>` when there is one.
 
@@ -111,8 +109,7 @@ uv sync --all-extras --dev
 test -f .env || cp config/environments/.env.template .env
 uv run python -c "import re; from pathlib import Path; p=Path('.env'); t=p.read_text(); t=re.sub(r'^MOCK_BROKER=.*$','MOCK_BROKER=1',t,flags=re.M); t=re.sub(r'^DRY_RUN=.*$','DRY_RUN=1',t,flags=re.M); p.write_text(t)"
 
-uv run python scripts/ci/check_tui_css_up_to_date.py
-uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py
+uv run pytest tests/unit -n auto -q
 ```
 
 If you override env via Jules repo settings, use `MOCK_BROKER=1` and `DRY_RUN=1`

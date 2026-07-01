@@ -20,7 +20,7 @@ def test_parse_import_boundary_output() -> None:
         [
             "ERRORS:",
             "  ERROR src/gpt_trader/features/example.py:24: imports "
-            "gpt_trader.tui.widgets.Widget (rule: features_no_entrypoint_imports)",
+            "gpt_trader.cli.widgets.Widget (rule: features_no_entrypoint_imports)",
             "     Feature slices must not import entrypoint layers or the DI container.",
             "",
             "1 violation(s) found.",
@@ -34,7 +34,7 @@ def test_parse_import_boundary_output() -> None:
             "file": "src/gpt_trader/features/example.py",
             "line": 24,
             "message": (
-                "imports gpt_trader.tui.widgets.Widget " "(rule: features_no_entrypoint_imports)"
+                "imports gpt_trader.cli.widgets.Widget " "(rule: features_no_entrypoint_imports)"
             ),
             "severity": "error",
         }

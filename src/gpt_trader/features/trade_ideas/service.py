@@ -2,7 +2,7 @@
 
 Humans, development agents, and (eventually) operating agents all act through
 this service. Every action is identity-stamped, checked against the approval
-policy, and appended to the audit log; interfaces such as CLI, TUI, or MCP
+policy, and appended to the audit log; interfaces such as CLI or MCP
 servers must stay thin adapters over these methods.
 """
 

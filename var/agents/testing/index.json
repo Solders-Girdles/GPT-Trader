@@ -9,9 +9,9 @@
     "test_inventory": "test_inventory.json"
   },
   "summary": {
-    "total_tests": 7087,
-    "total_files": 839,
-    "markers_used": 16
+    "total_tests": 5935,
+    "total_files": 722,
+    "markers_used": 15
   },
   "quick_commands": {
     "run_unit_tests": "pytest -m unit",

@@ -33,7 +33,6 @@ These are kept for external consumer compatibility and are not scheduled for rem
 
 | Item | Location | Owner | Purpose |
 |------|----------|-------|---------|
-| Legacy API key detection | `src/gpt_trader/tui/services/credential_validator.py` | TUI | Coinbase legacy key format support |
 | Legacy order payload builders | `src/gpt_trader/features/brokerages/coinbase/rest/base.py` | Brokerage | `_build_order_payload()`, `_execute_order_payload()` |
 
 ## General Removal Checklist
@@ -69,6 +68,7 @@ Before removing any deprecated item:
 | Data module singletons (`store_data`/`fetch_data` functions) | Unreleased | Use `DataService` and its instance methods. |
 | Yahoo data source stub (`DataSource.YAHOO`, `download_from_yahoo`) | Unreleased | Use `DataSource.COINBASE` and `download_from_coinbase`. |
 | `EventStore.events` list + `EventStore.path` JSONL alias | Unreleased | Use `EventStore.list_events()` for reads and `EventStore.root` for the storage root. |
+| TUI subsystem (`src/gpt_trader/tui/`, `gpt-trader tui` command, `--tui`/`--demo` run flags, `scripts/build_tui_css.py`, TUI CI jobs, `textual` dependency) | Unreleased | Removed; use `gpt-trader run` for the bot and `gpt-trader ideas …` for trade-idea review. See `docs/decisions/remove-tui-subsystem.md`. |
 | TUI legacy preferences fallback (`config/tui_preferences.json`) | Unreleased | Use runtime preferences path or `GPT_TRADER_TUI_PREFERENCES_PATH` |
 | TUI legacy status CSS aliases (`good`/`bad`/`risk-status-*`) | Unreleased | Use `status-ok`, `status-warning`, `status-critical` |
 | TUI validation `ValidationError` alias | Unreleased | Use `FieldValidationError` |

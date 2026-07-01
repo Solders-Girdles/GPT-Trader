@@ -47,7 +47,7 @@ def test_artifact_advisory_triggers_for_source_and_tests() -> None:
     assert affects_agent_artifacts(["pytest.ini"]) is True
     assert affects_agent_artifacts(["config/environments/.env.template"]) is True
     assert affects_agent_artifacts(["config/agents/flows/default.yaml"]) is True
-    assert affects_agent_artifacts(["src/gpt_trader/tui/styles/a.tcss"]) is True
+    assert affects_agent_artifacts(["src/gpt_trader/features/x.yaml"]) is True
 
 
 def test_artifact_advisory_skips_unrelated_changes() -> None:

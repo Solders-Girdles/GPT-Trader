@@ -3,7 +3,7 @@
 
 Current rules:
 - Feature slices and infrastructure layers must not import entrypoint layers
-  (CLI/TUI/preflight) or the DI container.
+  (CLI/preflight) or the DI container.
 
 Usage:
     python scripts/ci/check_import_boundaries.py [paths...]
@@ -29,7 +29,6 @@ ENTRYPOINT_IMPORT_PREFIXES = (
     "gpt_trader.app.container",
     "gpt_trader.cli",
     "gpt_trader.preflight",
-    "gpt_trader.tui",
 )
 
 
@@ -62,7 +61,7 @@ def _entrypoint_guard_rule(package: str, label: str) -> ImportRule:
 
 
 # Lower layers (feature slices + shared infrastructure) must never import the
-# entrypoint layers (CLI/TUI/preflight) or the DI container. Listing each guarded
+# entrypoint layers (CLI/preflight) or the DI container. Listing each guarded
 # package here keeps the architecture's dependency direction enforced in CI.
 # Intentionally excluded: app/ (the composition root, which wires entrypoints),
 # and dev/agent tooling (agents/, ci/) that legitimately drives those layers.

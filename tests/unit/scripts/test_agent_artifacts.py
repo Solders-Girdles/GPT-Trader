@@ -164,6 +164,41 @@ def test_validate_agent_artifacts_reports_missing_indexed_file(tmp_path: Path) -
     assert any("risk_config_schema.json" in error for error in report.errors)
 
 
+def test_validate_agent_artifacts_allows_missing_optional_generated_file(
+    tmp_path: Path,
+) -> None:
+    source = _create_valid_agent_artifacts(tmp_path)
+    root_index_path = source / "index.json"
+    root_index = json.loads(root_index_path.read_text(encoding="utf-8"))
+    testing_resource = root_index["resources"]["testing"]
+    testing_resource["files"].remove("test_inventory.json")
+    testing_resource["optional_files"] = ["test_inventory.json"]
+    _write_json(root_index_path, root_index)
+    (source / "testing" / "test_inventory.json").unlink()
+
+    report, summary = agent_artifacts.validate_agent_artifacts(source, quiet=True)
+
+    assert report.errors == []
+    assert "testing/test_inventory.json" in summary["indexed_files"]
+
+
+def test_validate_agent_artifacts_reports_empty_optional_generated_file(
+    tmp_path: Path,
+) -> None:
+    source = _create_valid_agent_artifacts(tmp_path)
+    root_index_path = source / "index.json"
+    root_index = json.loads(root_index_path.read_text(encoding="utf-8"))
+    testing_resource = root_index["resources"]["testing"]
+    testing_resource["files"].remove("test_inventory.json")
+    testing_resource["optional_files"] = ["test_inventory.json"]
+    _write_json(root_index_path, root_index)
+    (source / "testing" / "test_inventory.json").write_text("", encoding="utf-8")
+
+    report, _ = agent_artifacts.validate_agent_artifacts(source, quiet=True)
+
+    assert any("Optional artifact is empty" in error for error in report.errors)
+
+
 def test_validate_agent_artifacts_ignores_gitignored_residue_but_reports_nonignored(
     tmp_path: Path,
 ) -> None:

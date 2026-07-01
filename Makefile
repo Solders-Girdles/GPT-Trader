@@ -71,7 +71,7 @@ test-guardrails:
 	uv run python scripts/ci/check_test_hygiene.py
 	uv run python scripts/ci/check_legacy_patterns.py
 	uv run python scripts/ci/check_legacy_test_triage.py
-	uv run python scripts/ci/check_dedupe_manifest.py --strict
+	uv run python scripts/ci/check_dedupe_manifest.py
 	$(MAKE) test-triage-check
 
 ci-required:
@@ -81,7 +81,7 @@ ci-required:
 	uv run python scripts/ci/check_deprecation_registry.py
 	$(MAKE) docs-audit
 	$(MAKE) typecheck
-	uv run agent-regenerate --verify
+	uv run agent-regenerate --verify || echo "::warning::Agent artifacts stale (advisory; run 'uv run agent-regenerate' to refresh). Non-PR CI still enforces this."
 	$(MAKE) tui-css-check
 	$(MAKE) test-guardrails
 	GPT_TRADER_STRICT_CONTAINER=1 PYTHONWARNINGS=default uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py

@@ -1228,7 +1228,7 @@ def _queue_expiration(
     upcoming = [
         (deadline_type, expires_at)
         for deadline_type, expires_at in deadlines
-        if as_of <= expires_at <= window_end
+        if expires_at <= window_end
     ]
     if not upcoming:
         return None

@@ -156,6 +156,74 @@ def test_queue_status_reports_review_latency_deadline(
     assert expiration.seconds_until_expiry == 7200
 
 
+def test_queue_status_reports_overdue_review_latency_deadline(tmp_path: Path) -> None:
+    current_time = [datetime(2026, 6, 12, 10, 0, tzinfo=UTC)]
+    service = TradeIdeaService(
+        tmp_path / "trade_ideas",
+        now_factory=lambda: current_time[0],
+    )
+    idea = build_trade_idea(
+        decision_id="trade-20260612-overdue-review",
+        time_horizon=_horizon(datetime(2035, 6, 19, 16, 0, tzinfo=UTC)),
+    )
+    service.propose(idea, actor_id="idea-generator-v1")
+    service.update_budget(
+        RiskBudget.from_dict(
+            {
+                **DEFAULT_RISK_BUDGET.to_dict(),
+                "version": 2,
+                "max_review_latency_hours": 1,
+            }
+        ),
+        actor_type=ActorType.HUMAN,
+        actor_id="rj",
+    )
+    current_time[0] = datetime(2026, 6, 12, 12, 0, tzinfo=UTC)
+
+    status = service.queue_status(warning_window_hours=3)
+
+    assert status.upcoming_expiration_count == 1
+    expiration = status.upcoming_expirations[0]
+    assert expiration.decision_id == "trade-20260612-overdue-review"
+    assert expiration.deadline_type == "review_latency"
+    assert expiration.expires_at == datetime(2026, 6, 12, 11, 0, tzinfo=UTC)
+    assert expiration.seconds_until_expiry == 0
+
+
+def test_queue_status_reports_earlier_overdue_deadline(tmp_path: Path) -> None:
+    current_time = [datetime(2026, 6, 12, 10, 0, tzinfo=UTC)]
+    service = TradeIdeaService(
+        tmp_path / "trade_ideas",
+        now_factory=lambda: current_time[0],
+    )
+    idea = build_trade_idea(
+        decision_id="trade-20260612-overdue-horizon",
+        time_horizon=_horizon(datetime(2026, 6, 12, 11, 0, tzinfo=UTC)),
+    )
+    service.propose(idea, actor_id="idea-generator-v1")
+    service.update_budget(
+        RiskBudget.from_dict(
+            {
+                **DEFAULT_RISK_BUDGET.to_dict(),
+                "version": 2,
+                "max_review_latency_hours": 4,
+            }
+        ),
+        actor_type=ActorType.HUMAN,
+        actor_id="rj",
+    )
+    current_time[0] = datetime(2026, 6, 12, 12, 0, tzinfo=UTC)
+
+    status = service.queue_status(warning_window_hours=6)
+
+    assert status.upcoming_expiration_count == 1
+    expiration = status.upcoming_expirations[0]
+    assert expiration.decision_id == "trade-20260612-overdue-horizon"
+    assert expiration.deadline_type == "time_horizon"
+    assert expiration.expires_at == datetime(2026, 6, 12, 11, 0, tzinfo=UTC)
+    assert expiration.seconds_until_expiry == 0
+
+
 def test_queue_status_empty_queue_is_noop(service: TradeIdeaService) -> None:
     status = service.queue_status()
 

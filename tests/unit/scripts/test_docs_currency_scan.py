@@ -110,6 +110,10 @@ def test_verify_module_or_path_marks_removed_items_stale(item: str, expected_sta
         # there is expected guidance, not drift.
         ("module", "gpt_trader.orchestration", "docs/DEPRECATIONS.md"),
         ("path", "src/gpt_trader/orchestration/", "docs/DEPRECATIONS.md"),
+        # A removed module named in the registry whose name contains no
+        # DEPRECATED_MARKERS substring must still be exempted (regression guard:
+        # verify_module previously only honored removals inside the marker branch).
+        ("module", "gpt_trader.legacy_pipeline.runner", "docs/DEPRECATIONS.md"),
         # ARCHITECTURE.md carries an old->new migration table; marker-matched
         # (known-removed) identifiers there are exempt.
         ("module", "gpt_trader.orchestration.execution.degradation", "docs/ARCHITECTURE.md"),

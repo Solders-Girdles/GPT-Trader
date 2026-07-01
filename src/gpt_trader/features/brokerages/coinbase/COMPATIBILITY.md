@@ -53,15 +53,11 @@ These endpoints are **not available** in exchange mode and will raise `InvalidRe
 - `list_payment_methods()` - Available payment methods
 - `get_payment_method()` - Payment method details
 
-### INTX/Derivatives (Advanced Only)
-- `intx_allocate()` - Allocate collateral
-- `intx_balances()` - INTX balances
-- `intx_portfolio()` - INTX portfolio
-- `intx_positions()` - INTX positions
-- `intx_position()` - Specific position
-- `intx_multi_asset_collateral()` - Multi-asset collateral
-
-> **Note:** INTX endpoints require Advanced Trade mode **and** institutional entitlements on the API key. When unavailable, read methods return empty payloads and `intx_allocate()` raises `InvalidRequestError`.
+### INTX/Derivatives (Removed)
+INTX perpetuals and the associated `intx_*` client methods were removed; see
+[decision record](../../../../../docs/decisions/intx-default-derivatives-venue.md)
+and [Deprecations](../../../../../docs/DEPRECATIONS.md). CFM/`us_futures` is the
+only supported derivatives venue (see below).
 
 ### CFM/Futures (Advanced Only)
 - `cfm_balance_summary()` - CFM balance summary

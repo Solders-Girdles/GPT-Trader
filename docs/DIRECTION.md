@@ -105,10 +105,11 @@ remains gated before any non-manual execution lane opens:
   non-manual Coinbase (or other) execution.
 
 Open questions that gate parts of this are tracked as `proposed` decisions —
-e.g. the derivatives default
-([intx-default-derivatives-venue](decisions/intx-default-derivatives-venue.md))
-and profile meaning
+e.g. profile meaning
 ([prod-canary-profile-meaning](decisions/prod-canary-profile-meaning.md)).
+The derivatives default is resolved: the
+[intx-default-derivatives-venue](decisions/intx-default-derivatives-venue.md)
+decision is accepted.
 
 ## What this direction does not authorize
 

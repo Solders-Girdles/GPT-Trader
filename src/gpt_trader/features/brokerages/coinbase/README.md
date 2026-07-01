@@ -21,7 +21,7 @@ The integration supports both Coinbase API modes:
    - Base URL: `https://api.coinbase.com`
    - Endpoints: `/api/v3/brokerage/*`
    - Auth: JWT (CDP key)
-   - **Full feature set**: Portfolios, order management, INTX, CFM, etc.
+   - **Full feature set**: Portfolios, order management, CFM, etc. (INTX was removed; see [decision record](../../../../../docs/decisions/intx-default-derivatives-venue.md))
 
 2. **Legacy Exchange API** - Sandbox testing with limited features
    - Base URL: `https://api-public.sandbox.exchange.coinbase.com`
@@ -31,10 +31,10 @@ The integration supports both Coinbase API modes:
 
 **Note**: Exchange mode's feature set is intentionally limited. Advanced order management, portfolio operations, and derivatives trading require Advanced Trade API with JWT credentials.
 
-3. Spot-First (Recommended If Not INTX-Eligible)
-   - Default symbols now use spot pairs (e.g., `BTC-USD`).
-   - Perpetuals are blocked unless `COINBASE_ENABLE_INTX_PERPS=1` is set and your account is eligible.
-   - Error messages guide you to switch to spot symbols if a `-PERP` product is used inadvertently.
+3. Spot-First (Default)
+   - Default symbols use spot pairs (e.g., `BTC-USD`).
+   - INTX perpetuals were removed; symbols ending in `-PERP` are coerced to their spot equivalents with a warning (see [Deprecations](../../../../../docs/DEPRECATIONS.md)). Other retired INTX forms (e.g., `BTC-PERP-USDC`) are not coerced: CFM configurations reject them at config validation, while spot configurations pass them through unchanged rather than mapping them to spot.
+   - CFM futures are the only supported derivatives venue; enable via `TRADING_MODES=cfm` + `CFM_ENABLED=1`.
 
 ### Critical Fixes Applied
 
@@ -130,9 +130,9 @@ pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py 
 
 ## Known Limitations
 
-1. **INTX Eligibility for Perps**
-   - Placing orders for Coinbase Perpetuals requires a Coinbase International Exchange (INTX) account and API keys created at international.coinbase.com.
-   - If you are not eligible for INTX, keep `COINBASE_ENABLE_INTX_PERPS=0` and use spot symbols like `BTC-USD`.
+1. **INTX Removed**
+   - INTX perpetuals were removed as a supported venue (see [decision record](../../../../../docs/decisions/intx-default-derivatives-venue.md)); `-PERP`-suffixed symbols are coerced to their spot equivalents.
+   - `COINBASE_ENABLE_INTX_PERPS` is retained only as a deprecated alias: a truthy value warns and substitutes for `CFM_ENABLED=1` only (config validation still requires `TRADING_MODES` to include `cfm`); falsey/unset values are ignored (see [Deprecations](../../../../../docs/DEPRECATIONS.md)). Use spot symbols like `BTC-USD`, or `TRADING_MODES=cfm` + `CFM_ENABLED=1` for CFM futures.
 
 2. **Sandbox Limitations**
    - Advanced Trade API does not have an authenticated sandbox

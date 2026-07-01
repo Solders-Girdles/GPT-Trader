@@ -182,6 +182,25 @@ def test_validate_agent_artifacts_allows_missing_optional_generated_file(
     assert "testing/test_inventory.json" in summary["indexed_files"]
 
 
+def test_validate_agent_artifacts_allows_missing_optional_reasoning_machine_file(
+    tmp_path: Path,
+) -> None:
+    """reasoning/*.json machine forms are optional; validate must pass without them."""
+    source = _create_valid_agent_artifacts(tmp_path)
+    root_index_path = source / "index.json"
+    root_index = json.loads(root_index_path.read_text(encoding="utf-8"))
+    reasoning_resource = root_index["resources"]["reasoning"]
+    reasoning_resource["files"].remove("cli_flow_map.json")
+    reasoning_resource["optional_files"] = ["cli_flow_map.json"]
+    _write_json(root_index_path, root_index)
+    (source / "reasoning" / "cli_flow_map.json").unlink()
+
+    report, summary = agent_artifacts.validate_agent_artifacts(source, quiet=True)
+
+    assert report.errors == []
+    assert "reasoning/cli_flow_map.json" in summary["indexed_files"]
+
+
 def test_validate_agent_artifacts_reports_empty_optional_generated_file(
     tmp_path: Path,
 ) -> None:

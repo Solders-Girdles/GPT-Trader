@@ -43,16 +43,12 @@ class TestTradingBotInitialization:
         mock_container.orders_store = Mock()
         mock_container.notification_service = Mock()
 
-        mock_container.account_manager = Mock()
-        mock_container.account_telemetry = Mock()
         mock_container.runtime_state = Mock()
 
         engine_mock.return_value = Mock()
         bot = TradingBot(config=mock_config, container=mock_container)
 
         assert bot.broker is mock_container.broker
-        assert bot.account_manager is mock_container.account_manager
-        assert bot.account_telemetry is mock_container.account_telemetry
         assert bot.risk_manager is mock_container.risk_manager
         assert bot.runtime_state is mock_container.runtime_state
 
@@ -126,6 +122,4 @@ class TestTradingBotInitialization:
         bot = TradingBot(config=mock_config, container=mock_container)
 
         assert bot.broker is mock_container.broker
-        assert bot.account_manager is None  # Not set in SimpleNamespace
-        assert bot.account_telemetry is None  # Not set in SimpleNamespace
         assert bot.runtime_state is None  # Not set in SimpleNamespace

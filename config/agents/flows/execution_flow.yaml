@@ -23,11 +23,6 @@ nodes:
   type: decision
   path: src/gpt_trader/features/live_trade/strategies/base.py
   cluster: entry
-- id: order_router
-  label: OrderRouter.execute_async (external)
-  type: entrypoint
-  path: src/gpt_trader/features/live_trade/execution/router.py
-  cluster: entry
 - id: engine_submit
   label: TradingEngine.submit_order
   type: entrypoint
@@ -135,9 +130,6 @@ edges:
 - from: strategy_decide
   to: engine_validate
   label: submit decision
-- from: order_router
-  to: engine_submit
-  label: external entry
 - from: engine_submit
   to: engine_validate
   label: delegate to guard stack
@@ -203,6 +195,6 @@ edges:
   label: return status
 notes:
 - TradingEngine._cycle submits strategy decisions directly to the guard stack.
-- OrderRouter routes external decisions to TradingEngine.submit_order.
+- TradingEngine.submit_order is the external submission entrypoint.
 - OrderSubmitter handles broker IO, telemetry, and persistence.
 - Guard rejections emit metrics; stale marks append EventStore events.

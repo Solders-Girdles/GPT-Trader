@@ -14,7 +14,6 @@ from .helpers import (
     wait_for_first,
 )
 from .rate_limit import AsyncRateLimiter, async_rate_limit
-from .retry import AsyncRetry, async_retry
 from .wrappers import (
     AsyncBatchProcessor,
     AsyncToSyncWrapper,
@@ -42,6 +41,4 @@ __all__ = [
     "run_async_if_needed",
     "run_in_thread",
     "wait_for_first",
-    "AsyncRetry",
-    "async_retry",
 ]

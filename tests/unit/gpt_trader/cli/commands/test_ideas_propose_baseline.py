@@ -10,10 +10,14 @@ import pytest
 from gpt_trader import cli
 from gpt_trader.cli.response import CliErrorCode
 from gpt_trader.features.trade_ideas import (
+    DEFAULT_RISK_BUDGET,
+    ActorType,
     BaselineProposer,
     MarketSnapshot,
+    RiskBudget,
     TradeIdea,
     TradeIdeaAuditLog,
+    TradeIdeaService,
 )
 
 AS_OF = datetime(2035, 6, 12, 0, 0, tzinfo=UTC)
@@ -113,6 +117,39 @@ def test_propose_baseline_persists_generated_proposal(
     assert event["actor_type"] == "ai"
     assert event["actor_id"] == "baseline-ma-10-50"
     assert "proposer_id=baseline-ma-10-50" in event["evidence"]
+
+
+def test_propose_baseline_sizes_against_current_budget(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    root = tmp_path / "ideas"
+    service = TradeIdeaService(root)
+    service.update_budget(
+        RiskBudget.from_dict(
+            {
+                **DEFAULT_RISK_BUDGET.to_dict(),
+                "version": 2,
+                "max_open_notional_pct": "0.25",
+            }
+        ),
+        actor_type=ActorType.HUMAN,
+        actor_id="rj",
+    )
+    snapshot_path = _write_snapshot(tmp_path / "snapshot.json", _snapshot_payload())
+
+    exit_code, response = _propose_baseline(capsys, root, snapshot_path)
+
+    assert exit_code == 0
+    proposal = response["data"]["proposed"][0]
+    latest = json.loads(
+        (root / "records" / proposal["decision_id"] / "latest.json").read_text(encoding="utf-8")
+    )
+    assert latest["sizing_recommendation"]["notional"] == "25.00"
+    assert "budget_cap=applied" in latest["sizing_recommendation"]["rationale"]
+    sizing_inputs = next(item for item in latest["data_used"] if item.startswith("sizing:"))
+    assert "risk_budget_version=2" in sizing_inputs
+    assert "budget_cap_applied=true" in sizing_inputs
+    assert latest["max_loss"]["percent_of_account"] != "2"
 
 
 def test_propose_baseline_no_signal_is_noop(

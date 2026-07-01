@@ -30,30 +30,9 @@ Treat existing live profiles and broker-specific paths as implementation assets 
 # Install dependencies
 uv sync
 
-# Launch the Terminal UI (recommended)
-uv run gpt-trader tui
-
-# Or run the trading bot directly
+# Run the trading bot
 uv run gpt-trader run --profile dev
 ```
-
-## Terminal User Interface
-
-The TUI provides real-time monitoring and control with a modern dashboard experience:
-
-```bash
-uv run gpt-trader tui              # Mode selector
-uv run gpt-trader tui --mode demo  # Demo mode (no credentials needed)
-uv run gpt-trader tui --mode paper # Paper trading
-uv run gpt-trader tui --mode live  # Live trading
-```
-
-**Features:**
-- Real-time market data and portfolio display
-- Account, position, and order management
-- Risk monitoring and alerts
-- Demo mode for safe exploration
-- Keyboard-first navigation
 
 ## Configuration
 
@@ -100,7 +79,6 @@ src/gpt_trader/
 ├── monitoring/           # Runtime guards, metrics, telemetry
 ├── persistence/          # Event/order persistence
 ├── security/             # Secrets management, input sanitization
-├── tui/                  # Terminal User Interface (Textual)
 └── validation/           # Declarative validators
 ```
 
@@ -146,9 +124,6 @@ uv run pytest tests/unit --cov=src/gpt_trader -q
 
 # Property-based tests
 uv run pytest tests/property -q
-
-# TUI snapshot tests
-uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -q
 ```
 
 ### Local Validation Profiles
@@ -201,7 +176,6 @@ uv run agent-pr-ready   # Reconcile PR mergeability vs green CI
 | [Monitoring](docs/MONITORING_PLAYBOOK.md) | Metrics, alerting, dashboards |
 | [Live Operations](docs/production.md) | Readiness-gated live operations and rollback |
 | [Contributing](CONTRIBUTING.md) | Development workflow |
-| [TUI Style Guide](docs/TUI_STYLE_GUIDE.md) | Terminal UI conventions |
 
 Full documentation index: [docs/README.md](docs/README.md)
 

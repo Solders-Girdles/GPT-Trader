@@ -158,6 +158,39 @@ def test_fetch_pr_changed_paths_uses_requested_pr_diff(monkeypatch) -> None:
     assert calls == [["gh", "pr", "diff", "123", "--repo", "owner/repo", "--name-only"]]
 
 
+def test_fetch_pr_changed_paths_falls_back_for_large_pr_diff(monkeypatch) -> None:
+    calls: list[list[str]] = []
+
+    def fake_run(args: list[str]) -> subprocess.CompletedProcess[str]:
+        calls.append(args)
+        if args[:3] == ["gh", "pr", "diff"]:
+            return subprocess.CompletedProcess(
+                args,
+                1,
+                "",
+                "HTTP 406: Sorry, the diff exceeded the maximum number of files (300).",
+            )
+        return subprocess.CompletedProcess(args, 0, "src/a.py\nsrc/a.py\nsrc/b.py\n", "")
+
+    monkeypatch.setattr(pr_readiness, "_run", fake_run)
+
+    assert pr_readiness.fetch_pr_changed_paths("owner/repo", 123) == [
+        "src/a.py",
+        "src/b.py",
+    ]
+    assert calls == [
+        ["gh", "pr", "diff", "123", "--repo", "owner/repo", "--name-only"],
+        [
+            "gh",
+            "api",
+            "--paginate",
+            "repos/owner/repo/pulls/123/files",
+            "--jq",
+            ".[].filename",
+        ],
+    ]
+
+
 def test_main_uses_pr_base_for_advisory_and_branch_protection(monkeypatch) -> None:
     bases: list[str] = []
 

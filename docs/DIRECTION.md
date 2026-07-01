@@ -46,7 +46,7 @@ exclusions are recorded in
 - Blast-radius caps always exist — they may be wide, but never absent.
 - Autonomy ratchets **down automatically** on a breach (audited, not silent) and
   **up only by re-earning** the gate plus a recorded human decision.
-- Every operator action is a library call with identity stamping; CLI / TUI / MCP
+- Every operator action is a library call with identity stamping; CLI / MCP
   are thin adapters over it. Tooling serves the owner, developing agents, and
   operating agents equally.
 

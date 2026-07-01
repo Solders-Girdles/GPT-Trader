@@ -293,7 +293,7 @@ class DegradationState:
 
     def get_status(self) -> dict[str, object]:
         """
-        Get current degradation status for monitoring/TUI.
+        Get current degradation status for monitoring.
 
         Returns:
             Dictionary with pause states and failure counts.

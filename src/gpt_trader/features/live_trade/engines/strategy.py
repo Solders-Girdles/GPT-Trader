@@ -2547,7 +2547,7 @@ class TradingEngine(BaseEngine):
     ) -> OrderSubmissionResult:
         """Public entrypoint for order submission through the canonical guard stack.
 
-        This method provides external callers (OrderRouter, TUI actions, etc.) access
+        This method provides external callers (OrderRouter, etc.) access
         to the full pre-trade validation pipeline. All orders should route through
         here to ensure consistent guard enforcement.
 

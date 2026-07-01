@@ -204,14 +204,9 @@ make test
 
 This repo enforces lightweight hygiene checks in CI to keep the suite fast and maintainable:
 
-- `scripts/ci/check_test_hygiene.py`: caps `test_*.py` module size, enforces directory marker conventions, blocks `patch` usage in `tests/`, and flags `time.sleep` without `fake_clock`.
-- `scripts/ci/check_legacy_test_triage.py`: keeps `tests/_triage/legacy_tests.yaml` aligned with `pytest.mark.legacy_delete` / `pytest.mark.legacy_modernize` usage.
-
-## Hygiene checks
-
-- `uv run python scripts/ci/check_test_hygiene.py`
-- `uv run python scripts/ci/check_legacy_test_triage.py`
-- `uv run python scripts/ci/check_dedupe_manifest.py`
+- `uv run python scripts/ci/check_test_hygiene.py`: caps `test_*.py` module size, enforces directory marker conventions, blocks `patch` usage in `tests/`, and flags `time.sleep` without `fake_clock`.
+- `uv run python scripts/ci/check_legacy_test_triage.py`: keeps `tests/_triage/legacy_tests.yaml` aligned with `pytest.mark.legacy_delete` / `pytest.mark.legacy_modernize` usage.
+- `uv run python scripts/ci/check_dedupe_manifest.py`: keeps the test-duplication manifest current.
 
 ## Legacy Test Triage
 

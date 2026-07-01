@@ -178,13 +178,14 @@ The repository follows a standardized organization optimized for both human deve
 - `/src/gpt_trader/` - Active trading system (vertical slice architecture)
 - `/tests/` - Test files organized by component
 - `/config/` - Configuration files, trading profiles, and templates
-- `/scripts/` - Operational scripts organized by domain:
-  - `agents/` - Automation helpers and inventory tooling
-  - `analysis/` - Dependency and repository analysis utilities
-  - `ci/` - Validation and guardrail checks
-  - `maintenance/` - Cleanup and maintenance tasks
-  - `monitoring/` - Monitoring and dashboards
-  - Root `scripts/*.py` - Core runbooks and one-off utilities
+- `/scripts/` - Operational scripts organized by domain (see `scripts/README.md` for the full taxonomy):
+  - `agents/` - AI-agent and generated-inventory helpers
+  - `analysis/` - Offline analysis, demos, backtests, and regression probes
+  - `ci/` - Deterministic checks used by CI and quality gates
+  - `maintenance/` - Repo hygiene, docs audits, and scaffolding tools
+  - `monitoring/` - Monitoring exporters, dashboards, and canary observation harnesses
+  - `ops/` - Operator-facing probes and runbook helpers for live/canary workflows
+  - Root `scripts/*.py` - Reserved for a small set of sanctioned entrypoints (see "Root Exceptions" in `scripts/README.md`); new root scripts should be avoided
 
 #### Documentation Standards
 - `/docs/` - Canonical, low-overhead documentation (prefer flat structure)
@@ -207,7 +208,9 @@ kind of fact lives — read it before adding a doc. In short:
 - **Never**: archive directories or version-suffixed docs — retire by deleting and rely on git history
 
 #### New Scripts
-- **Core Operations**: `/scripts/` (root helpers)
+Place new scripts in the taxonomy directory that matches their purpose (see
+`scripts/README.md`); avoid adding new root-level scripts.
+- **Operator runbooks/probes**: `/scripts/ops/`
 - **Analysis/Benchmarks**: `/scripts/analysis/`
 - **CI/Validation**: `/scripts/ci/`
 - **Monitoring**: `/scripts/monitoring/`

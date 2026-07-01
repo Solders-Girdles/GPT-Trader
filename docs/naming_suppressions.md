@@ -20,7 +20,7 @@ The equivalent first-class agent command is:
 
 - `uv run agent-naming --strict --quiet`
 
-`make agent-naming` runs the default non-strict scan for local review. The
+`uv run agent-naming` runs the default non-strict scan for local review. The
 current GitHub CI workflow does not include a direct naming scan step; use the
 pre-commit hook or the strict `agent-naming` command when a PR needs explicit
 naming-compliance evidence.

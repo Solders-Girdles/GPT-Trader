@@ -10,32 +10,7 @@ Install optional extras for full agent coverage (observability, live-trade, anal
 make agent-setup
 ```
 
-## Makefile Shortcuts
-
-```bash
-make agent-setup        # Install all optional extras
-make agent-check        # Quality gate (text output)
-make agent-impact       # Change impact (from git; file-only, no integration)
-make agent-impact-full  # Change impact (from git; includes integration)
-make agent-map          # Dependency summary
-make agent-tests        # Test inventory to stdout
-make agent-risk         # Risk config docs
-make agent-naming       # Naming scan
-make agent-health-fast  # Quick health report (skips tests; runs preflight/config)
-make agent-health-fast AGENT_HEALTH_FAST_QUALITY_CHECKS=none # CI: skip lint/format/types
-make agent-health-full  # Full health report (explicit envs + JSON/text output)
-make agent-chaos-smoke  # Short chaos stress test (exports JSON, enforces thresholds)
-make agent-chaos-week   # 7-day chaos stress test (exports JSON, enforces thresholds)
-make agent-regenerate   # Regenerate var/agents context
-make agent-artifacts-validate # Validate committed var/agents context
-make agent-artifacts-package  # Build and verify the upload bundle
-make agent-docs-links   # Docs link audit
-```
-
-Chaos smoke defaults cap fees at 4.5% (7-day baseline ~4.34%) and drawdown at 10% to flag churn regressions
-without being overly brittle. Override thresholds via the Makefile variables if needed.
-
-## CLI Commands
+## Canonical CLI Commands
 
 ```bash
 uv run agent-check --format text
@@ -58,6 +33,23 @@ uv run agent-artifacts package
 uv run agent-artifacts verify-package
 uv run agent-pr-ready --format markdown
 ```
+
+## Additive Makefile Shortcuts
+
+```bash
+make agent-setup        # Install all optional extras
+make agent-impact       # Change impact with the default local-review flags
+make agent-impact-full  # Change impact with importers and integration included
+make agent-health-fast  # Quick health report with default env and output paths
+make agent-health-fast AGENT_HEALTH_FAST_QUALITY_CHECKS=none # CI: skip lint/format/types
+make agent-health-full  # Full health report with default env and output paths
+make agent-chaos-smoke  # Short chaos stress test with default thresholds/output
+make agent-chaos-week   # 7-day chaos stress test with default thresholds/output
+make agent-docs-links   # Docs link and reachability audits
+```
+
+Chaos smoke defaults cap fees at 4.5% (7-day baseline ~4.34%) and drawdown at 10% to flag churn regressions
+without being overly brittle. Override thresholds via the Makefile variables if needed.
 
 `agent-naming` dispatches to `scripts/agents/naming_inventory.py`; defaults are
 loaded from `config/agents/naming_patterns.yaml`. Strict naming enforcement is

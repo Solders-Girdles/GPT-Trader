@@ -190,13 +190,6 @@ For quick loops you can explicitly request the dev profile:
 ```bash
 uv run local-ci --profile quick
 uv run local-ci --profile dev
-python scripts/ci/local_ci.py --profile quick
-```
-
-If you prefer calling the script directly, run:
-
-```bash
-python scripts/ci/local_ci.py
 ```
 
 Need help diagnosing `uv run local-ci` failures? See the [Local CI troubleshooting](#local-ci-troubleshooting) steps below.
@@ -208,7 +201,7 @@ Local CI (`make ci-required` / `uv run local-ci`) can report failures before the
 #### 1. Agent artifacts freshness
 
 1. Run `uv run agent-regenerate` from the repo root to redraw `var/agents/**` from their sources.
-2. Stage the updated artifacts and rerun `uv run agent-regenerate --verify` (or `make agent-verify`).
+2. Stage the updated artifacts and rerun `uv run agent-regenerate --verify`.
 3. If the failure persists, compare `git status var/agents` and resolve any upstream conflicts in the source inputs under `scripts/agents/**` or `config/environments/.env.template` before regenerating again.
 
 #### 2. Readiness gate staleness
@@ -230,8 +223,8 @@ ordinary PRs are not stalled by the scheduled refresh lane. If a blocking local
 check fails, regenerate the artifacts and commit the results.
 
 ```bash
-make agent-regenerate        # or: uv run agent-regenerate
-make agent-verify            # or: uv run agent-regenerate --verify
+uv run agent-regenerate
+uv run agent-regenerate --verify
 ```
 
 Regeneration should update files in `var/agents/**`; stage and commit those
@@ -249,7 +242,7 @@ Recommended flow:
 ```bash
 # 1) Resolve conflicts in the source inputs.
 # 2) Clear conflict markers from generated files (choose a side or delete them).
-uv run agent-regenerate          # or: make agent-regenerate
+uv run agent-regenerate
 uv run agent-regenerate --verify # optional verification
 ```
 

@@ -2024,6 +2024,7 @@
         "decision_id",
         "error_message",
         "error_type",
+        "product_type",
         "stage",
         "state",
         "symbol"
@@ -2034,7 +2035,7 @@
         "INFO",
         "WARNING"
       ],
-      "occurrence_count": 4,
+      "occurrence_count": 5,
       "source_files": [
         "features/live_trade/engines/strategy.py"
       ],
@@ -2451,7 +2452,7 @@
     }
   },
   "field_frequency": {
-    "action": 13,
+    "action": 14,
     "attempt": 4,
     "client_ip": 4,
     "client_order_id": 22,
@@ -2479,14 +2480,14 @@
     "secret_ref": 6,
     "service": 9,
     "side": 27,
-    "stage": 155,
-    "symbol": 86
+    "stage": 156,
+    "symbol": 87
   },
   "level_distribution": {
     "CRITICAL": 2,
     "DEBUG": 40,
     "ERROR": 119,
-    "INFO": 90,
+    "INFO": 91,
     "WARNING": 101
   },
   "total_event_types": 132,

@@ -565,6 +565,7 @@ class BotConfig:
                 "time_in_force": schema.execution.time_in_force,
                 "dry_run": schema.execution.dry_run,
                 "mock_broker": schema.execution.mock_broker,
+                "strategy_signal_proposals_enabled": schema.execution.strategy_signal_proposals,
                 "log_level": schema.monitoring.log_level,
                 "status_interval": schema.monitoring.update_interval,
                 "status_enabled": schema.monitoring.status_enabled,

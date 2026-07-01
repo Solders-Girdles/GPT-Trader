@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from gpt_trader.app.config import BotConfig
 from gpt_trader.app.config.profile_loader import DEFAULT_RUNTIME_PROFILE_NAME
 from gpt_trader.cli import services
 from gpt_trader.config.types import Profile
@@ -109,3 +110,11 @@ def test_load_profile_config_accepts_case_insensitive_name() -> None:
     config = services.load_profile_config("OBSERVE")
 
     assert config.profile == Profile.OBSERVE
+
+
+def test_apply_profile_kwargs_maps_strategy_signal_proposals_gate() -> None:
+    config = BotConfig(strategy_signal_proposals_enabled=False)
+
+    services._apply_profile_kwargs(config, {"strategy_signal_proposals_enabled": True})
+
+    assert config.strategy_signal_proposals_enabled is True

@@ -114,7 +114,7 @@ from gpt_trader.features.strategy_tools import (
     StrategySignalToTradeIdeaAdapter,
     StrategySignalToTradeIdeaAdapterConfig,
 )
-from gpt_trader.features.trade_ideas import TradeIdeaService, create_trade_idea_service
+from gpt_trader.features.trade_ideas import ProductType, TradeIdeaService, create_trade_idea_service
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.feature_seeds import build_feature_seed, summarize_seed_reason
 from gpt_trader.monitoring.health_checks import HealthCheckRunner
@@ -1174,7 +1174,12 @@ class TradingEngine(BaseEngine):
             # Proposal-only mode: map the decision into a human-review trade idea
             # and return before any broker interaction. This is the sole action
             # taken while the gate is on — no orders are submitted for any action.
-            self._propose_strategy_decision(symbol=symbol, decision=decision, price=price)
+            self._propose_strategy_decision(
+                symbol=symbol,
+                decision=decision,
+                price=price,
+                position_state=position_state,
+            )
             return
 
         if decision.action in (Action.BUY, Action.SELL):
@@ -1358,6 +1363,7 @@ class TradingEngine(BaseEngine):
         symbol: str,
         decision: Decision,
         price: Decimal,
+        position_state: dict[str, Any] | None,
     ) -> None:
         """Route a live decision into the approval-gated trade-idea workflow.
 
@@ -1370,11 +1376,23 @@ class TradingEngine(BaseEngine):
         """
         assert self._strategy_proposal_adapter is not None
         assert self._trade_idea_service is not None
+        product_type = self._proposal_product_type(symbol, position_state)
+        if product_type is not ProductType.SPOT:
+            logger.info(
+                "Proposal-only mode: product type is not supported for trade ideas",
+                symbol=symbol,
+                action=decision.action.value,
+                product_type=product_type.value,
+                operation="strategy_proposal",
+                stage="skipped",
+            )
+            return
         context = StrategySignalContext(
             symbol=symbol,
             current_mark=price,
             as_of=datetime.now(UTC),
             strategy_name=self._proposal_strategy_name(),
+            product_type=product_type,
             data_source="live-strategy:decision",
         )
         try:
@@ -1416,12 +1434,60 @@ class TradingEngine(BaseEngine):
     def _proposal_strategy_name(self) -> str:
         """Best-effort human-readable strategy name recorded on proposed ideas."""
         active = getattr(self.strategy, "active_strategies", None)
-        if active:
-            return str(active[0])
+        if isinstance(active, (list, tuple)):
+            if active:
+                return str(active[0])
+        elif active:
+            return str(active)
         configured = getattr(self.context.config, "strategy_type", None)
         if configured:
             return str(configured)
         return self.strategy.__class__.__name__
+
+    def _proposal_product_type(
+        self,
+        symbol: str,
+        position_state: dict[str, Any] | None,
+    ) -> ProductType:
+        """Infer the broker-neutral product type before proposing a trade idea.
+
+        The current adapter only supports spot ideas. Returning ``FUTURES`` lets
+        proposal-only mode fail closed for CFM/futures contexts instead of
+        recording a futures signal as a spot idea.
+        """
+        raw_position_type = None
+        if position_state:
+            raw_position_type = position_state.get("product_type")
+        if raw_position_type is not None:
+            normalized = str(getattr(raw_position_type, "value", raw_position_type)).strip().lower()
+            if normalized == ProductType.SPOT.value:
+                return ProductType.SPOT
+            if normalized in {"future", "futures", "perpetual", "perp"}:
+                return ProductType.FUTURES
+            try:
+                return ProductType(normalized)
+            except ValueError:
+                return ProductType.OTHER
+
+        config = self.context.config
+        cfm_symbols = {
+            str(cfm_symbol).strip().upper()
+            for cfm_symbol in getattr(config, "cfm_symbols", [])
+            if str(cfm_symbol).strip()
+        }
+        if symbol.strip().upper() in cfm_symbols:
+            return ProductType.FUTURES
+
+        trading_modes = {
+            str(mode).strip().lower()
+            for mode in getattr(config, "trading_modes", [])
+            if str(mode).strip()
+        }
+        if "cfm" in trading_modes and "spot" not in trading_modes:
+            return ProductType.FUTURES
+        if symbol.strip().upper().endswith("-FUTURES"):
+            return ProductType.FUTURES
+        return ProductType.SPOT
 
     async def _fetch_total_equity(self, positions: dict[str, Position]) -> Decimal | None:
         """Fetch total equity = collateral + unrealized PnL."""

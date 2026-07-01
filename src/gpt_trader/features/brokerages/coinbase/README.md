@@ -132,7 +132,7 @@ pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py 
 
 1. **INTX Removed**
    - INTX perpetuals were removed as a supported venue (see [decision record](../../../../../docs/decisions/intx-default-derivatives-venue.md)); `-PERP` symbols are coerced to their spot equivalents.
-   - `COINBASE_ENABLE_INTX_PERPS` is retained only as a deprecated, warn-only alias that now enables CFM (see [Deprecations](../../../../../docs/DEPRECATIONS.md)). Use spot symbols like `BTC-USD`, or `TRADING_MODES=cfm` + `CFM_ENABLED=1` for CFM futures.
+   - `COINBASE_ENABLE_INTX_PERPS` is retained only as a deprecated alias: a truthy value warns and enables CFM instead; falsey/unset values are ignored (see [Deprecations](../../../../../docs/DEPRECATIONS.md)). Use spot symbols like `BTC-USD`, or `TRADING_MODES=cfm` + `CFM_ENABLED=1` for CFM futures.
 
 2. **Sandbox Limitations**
    - Advanced Trade API does not have an authenticated sandbox

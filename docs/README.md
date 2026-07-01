@@ -126,7 +126,7 @@ an open decision
 - [Environment Variable Inventory](../var/agents/configuration/environment_variables.md) - Full, code-derived reference
 - Default: Spot trading with JWT authentication
 - CFM futures (US) require `TRADING_MODES=cfm` + `CFM_ENABLED=1`
-- INTX perps were removed ([decision record](decisions/intx-default-derivatives-venue.md), [Deprecations](DEPRECATIONS.md)); `COINBASE_ENABLE_INTX_PERPS` is a deprecated, warn-only alias for CFM enablement
+- INTX perps were removed ([decision record](decisions/intx-default-derivatives-venue.md), [Deprecations](DEPRECATIONS.md)); `COINBASE_ENABLE_INTX_PERPS` is a deprecated alias (a truthy value warns and enables CFM instead; falsey/unset values are ignored)
 
 ## Additional Resources
 

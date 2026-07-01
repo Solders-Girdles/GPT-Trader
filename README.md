@@ -21,7 +21,7 @@ Treat existing live profiles and broker-specific paths as implementation assets 
 |------|--------|-------------|
 | **Spot Trading** | Implemented | Coinbase spot paths exist; use only with explicit profile and readiness gates |
 | **CFM Futures** | Implemented/gated | US-regulated futures paths exist; require account, product, and risk-gate verification |
-| **INTX Perpetuals** | Removed | International derivatives paths were removed (see [decision record](docs/decisions/intx-default-derivatives-venue.md)); `COINBASE_ENABLE_INTX_PERPS` remains only as a deprecated, warn-only alias for CFM enablement |
+| **INTX Perpetuals** | Removed | International derivatives paths were removed (see [decision record](docs/decisions/intx-default-derivatives-venue.md)); `COINBASE_ENABLE_INTX_PERPS` remains only as a deprecated alias (a truthy value warns and enables CFM instead; falsey/unset values are ignored) |
 | **AI-assisted execution** | Planning | Human-approved execution first; bounded autonomy is the accepted destination |
 
 ## Quick Start

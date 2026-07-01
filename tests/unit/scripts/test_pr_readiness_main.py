@@ -20,7 +20,7 @@ def test_main_uses_pr_base_for_advisory_and_branch_protection(monkeypatch) -> No
     monkeypatch.setattr(pr_readiness, "fetch_review_threads", lambda repo, pr: [])
     monkeypatch.setattr(pr_readiness, "fetch_pr_reactions", lambda repo, pr: [])
     monkeypatch.setattr(pr_readiness, "fetch_head_update_events", lambda repo, pr: [])
-    monkeypatch.setattr(pr_readiness, "fetch_head_commit_pushed_at", lambda repo, pr: None)
+    monkeypatch.setattr(pr_readiness, "fetch_head_commit_timestamps", lambda repo, pr: (None, None))
     monkeypatch.setattr(
         pr_readiness,
         "check_artifact_freshness",
@@ -60,7 +60,7 @@ def test_main_pr_mode_uses_pr_diff_for_artifact_advisory(monkeypatch, capsys) ->
     monkeypatch.setattr(pr_readiness, "fetch_review_threads", lambda repo, pr: [])
     monkeypatch.setattr(pr_readiness, "fetch_pr_reactions", lambda repo, pr: [])
     monkeypatch.setattr(pr_readiness, "fetch_head_update_events", lambda repo, pr: [])
-    monkeypatch.setattr(pr_readiness, "fetch_head_commit_pushed_at", lambda repo, pr: None)
+    monkeypatch.setattr(pr_readiness, "fetch_head_commit_timestamps", lambda repo, pr: (None, None))
     monkeypatch.setattr(pr_readiness, "fetch_branch_protection", lambda repo, branch: {})
     monkeypatch.setattr(pr_readiness, "fetch_pr_changed_paths", lambda repo, pr: ["pytest.ini"])
     monkeypatch.setattr(
@@ -95,7 +95,7 @@ def test_main_reports_missing_current_head_review_signal_by_default(monkeypatch,
     monkeypatch.setattr(pr_readiness, "fetch_review_threads", lambda repo, pr: [])
     monkeypatch.setattr(pr_readiness, "fetch_pr_reactions", lambda repo, pr: [])
     monkeypatch.setattr(pr_readiness, "fetch_head_update_events", lambda repo, pr: [])
-    monkeypatch.setattr(pr_readiness, "fetch_head_commit_pushed_at", lambda repo, pr: None)
+    monkeypatch.setattr(pr_readiness, "fetch_head_commit_timestamps", lambda repo, pr: (None, None))
     monkeypatch.setattr(pr_readiness, "fetch_branch_protection", lambda repo, branch: {})
     monkeypatch.setattr(pr_readiness, "fetch_pr_changed_paths", lambda repo, pr: [])
     monkeypatch.setattr(
@@ -133,7 +133,7 @@ def test_main_requires_current_head_review_signal_when_requested(monkeypatch, ca
     monkeypatch.setattr(pr_readiness, "fetch_review_threads", lambda repo, pr: [])
     monkeypatch.setattr(pr_readiness, "fetch_pr_reactions", lambda repo, pr: [])
     monkeypatch.setattr(pr_readiness, "fetch_head_update_events", lambda repo, pr: [])
-    monkeypatch.setattr(pr_readiness, "fetch_head_commit_pushed_at", lambda repo, pr: None)
+    monkeypatch.setattr(pr_readiness, "fetch_head_commit_timestamps", lambda repo, pr: (None, None))
     monkeypatch.setattr(pr_readiness, "fetch_branch_protection", lambda repo, branch: {})
     monkeypatch.setattr(pr_readiness, "fetch_pr_changed_paths", lambda repo, pr: [])
     monkeypatch.setattr(

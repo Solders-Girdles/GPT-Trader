@@ -210,6 +210,7 @@ def parse_pr_state(
     reactions_json: list[dict[str, Any]] | None = None,
     head_update_events_json: list[dict[str, Any]] | None = None,
     head_pushed_at: str | None = None,
+    head_committed_at_fallback: str | None = None,
     *,
     review_bot: str | None = _DEFAULT_REVIEW_BOT,
     acceptance_marker: str | None = _DEFAULT_ACCEPTANCE_MARKER,
@@ -249,7 +250,9 @@ def parse_pr_state(
         )
 
     head_oid = str(pr_json.get("headRefOid", ""))
-    head_committed_at = _current_head_committed_at(pr_json, head_oid)
+    # gh pr view --json commits truncates at 100, so on large PRs the head commit
+    # may be absent from pr_json; fall back to the directly-queried committed date.
+    head_committed_at = _current_head_committed_at(pr_json, head_oid) or head_committed_at_fallback
     head_updated_at = _head_updated_at(
         head_oid, head_committed_at, head_update_events_json or [], head_pushed_at
     )
@@ -841,21 +844,24 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
     return nodes
 
 
-def fetch_head_commit_pushed_at(repo: str, pr: int) -> str | None:
-    """Return the ISO timestamp when the PR head commit was pushed, if known.
+def fetch_head_commit_timestamps(repo: str, pr: int) -> tuple[str | None, str | None]:
+    """Return ``(committed_at, pushed_at)`` for the PR head commit, if known.
 
-    Ordinary (fast-forward) pushes do not emit a HeadRefForcePushedEvent, so the
-    force-push timeline alone misses them. ``Commit.pushedDate`` would record when
-    the head commit landed on the PR, tightening the reaction-freshness floor to
-    reject a bot ``+1`` that predates a normal push.
+    ``gh pr view --json commits`` truncates at 100 commits, so on large PRs the
+    head commit -- and thus its committed date -- can be absent from that payload,
+    leaving the reaction-freshness floor unset. This queries ``commits(last: 1)``
+    directly, which returns the head commit regardless of PR size, giving a
+    reliable ``committed_at`` (Commit.committedDate) lower bound for the floor.
 
-    Best-effort only: GitHub deprecated ``Commit.pushedDate`` (announced removal
-    2023-07-01) and it now resolves to ``null`` in practice, so this currently
-    returns None and the floor falls back to the commit/force-push evidence --
-    never worse than before. It is kept (the field still resolves without error)
-    so the floor tightens automatically if GitHub ever exposes a reliable
-    push-time field again; the fast-forward-push edge case is otherwise a
-    documented limitation of this advisory, non-gating tool.
+    ``pushed_at`` (Commit.pushedDate) would tighten the floor to the actual
+    fast-forward-push time (force-pushes emit a HeadRefForcePushedEvent; ordinary
+    pushes do not). But GitHub deprecated ``pushedDate`` (announced removal
+    2023-07-01) and it now resolves to ``null`` in practice, so it is best-effort:
+    when null the floor falls back to the committed/force-push evidence -- never
+    worse than before. The field is kept (it still resolves without error) so the
+    floor tightens automatically if GitHub exposes a reliable push-time field
+    again; the fast-forward-push edge case is otherwise a documented limitation of
+    this advisory, non-gating tool.
     """
     if repo.count("/") != 1:
         raise RuntimeError("--repo must use owner/name format")
@@ -871,6 +877,7 @@ query($owner: String!, $name: String!, $number: Int!) {
         nodes {
           commit {
             oid
+            committedDate
             pushedDate
           }
         }
@@ -895,7 +902,7 @@ query($owner: String!, $name: String!, $number: Int!) {
     )
     pull_request = data.get("data", {}).get("repository", {}).get("pullRequest", {})
     if not isinstance(pull_request, dict):
-        return None
+        return None, None
     head_oid = str(pull_request.get("headRefOid") or "")
     nodes = (pull_request.get("commits") or {}).get("nodes") or []
     for node in nodes:
@@ -904,10 +911,13 @@ query($owner: String!, $name: String!, $number: Int!) {
             continue
         if head_oid and not _head_matches(str(commit.get("oid") or ""), head_oid):
             continue
+        committed = commit.get("committedDate")
         pushed = commit.get("pushedDate")
-        if pushed:
-            return str(pushed)
-    return None
+        return (
+            str(committed) if committed else None,
+            str(pushed) if pushed else None,
+        )
+    return None, None
 
 
 def fetch_pr_changed_paths(repo: str, pr: int) -> list[str]:
@@ -1225,13 +1235,15 @@ def main(argv: list[str] | None = None) -> int:
             head_oid=str(pr_payload.get("headRefOid") or "") or None,
         )
         protection = parse_branch_protection(fetch_branch_protection(repo, base_ref_name))
+        head_committed_at, head_pushed_at = fetch_head_commit_timestamps(repo, pr)
         state = parse_pr_state(
             pr_payload,
             fetch_review_threads(repo, pr),
             protection,
             fetch_pr_reactions(repo, pr),
             fetch_head_update_events(repo, pr),
-            fetch_head_commit_pushed_at(repo, pr),
+            head_pushed_at,
+            head_committed_at,
             review_bot=args.review_bot or None,
             acceptance_marker=args.acceptance_marker or None,
         )

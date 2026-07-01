@@ -304,6 +304,43 @@ def test_parse_pr_state_accepts_reaction_after_fast_forward_push_to_head() -> No
     assert state.review_signals[0].current_head is True
 
 
+def test_parse_pr_state_uses_committed_at_fallback_when_head_absent_from_commits() -> None:
+    # On a >100-commit PR, gh pr view --json commits omits the head, so pr_json has
+    # no matching commit; the directly-queried committed date must supply the floor
+    # rather than leaving it None (which would reject every acceptance reaction).
+    head = "a367f3c6deadbeef"
+    pr_json = {
+        "number": 1056,
+        "headRefOid": head,
+        "baseRefName": "main",
+        "mergeStateStatus": "CLEAN",
+        "reviewDecision": "",
+        "statusCheckRollup": [],
+        "commits": [{"oid": "unrelated0000", "committedDate": "2026-06-30T10:00:00Z"}],
+    }
+    reactions = [
+        {
+            "content": "+1",
+            "created_at": "2026-06-30T16:45:00Z",
+            "user": {"login": "chatgpt-codex-connector[bot]"},
+        }
+    ]
+
+    state = parse_pr_state(
+        pr_json,
+        [],
+        _protection(required_checks=()),
+        reactions,
+        [],
+        None,  # head_pushed_at (pushedDate is null in practice)
+        "2026-06-30T16:30:00Z",  # head_committed_at_fallback from commits(last:1)
+    )
+
+    assert state.head_committed_at == "2026-06-30T16:30:00Z"
+    assert state.head_updated_at == "2026-06-30T16:30:00Z"
+    assert state.review_signals[0].current_head is True
+
+
 # --------------------------------------------------------------------------- #
 # formatting
 # --------------------------------------------------------------------------- #

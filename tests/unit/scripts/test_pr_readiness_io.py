@@ -185,7 +185,9 @@ def test_fetch_head_update_events_rejects_malformed_repo() -> None:
         raise AssertionError("expected RuntimeError")
 
 
-def test_fetch_head_commit_pushed_at_returns_head_push_time(monkeypatch) -> None:
+def test_fetch_head_commit_timestamps_returns_committed_and_pushed(monkeypatch) -> None:
+    # commits(last:1) returns the head commit regardless of PR size, so committedDate
+    # is available even on >100-commit PRs where gh pr view --json commits truncates.
     def fake_gh_json(args: list[str]) -> dict[str, Any]:
         return {
             "data": {
@@ -197,6 +199,7 @@ def test_fetch_head_commit_pushed_at_returns_head_push_time(monkeypatch) -> None
                                 {
                                     "commit": {
                                         "oid": "a367f3c6deadbeef",
+                                        "committedDate": "2026-06-30T16:30:00Z",
                                         "pushedDate": "2026-06-30T16:50:00Z",
                                     }
                                 }
@@ -209,12 +212,14 @@ def test_fetch_head_commit_pushed_at_returns_head_push_time(monkeypatch) -> None
 
     monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
 
-    assert pr_readiness.fetch_head_commit_pushed_at("owner/repo", 9) == "2026-06-30T16:50:00Z"
+    assert pr_readiness.fetch_head_commit_timestamps("owner/repo", 9) == (
+        "2026-06-30T16:30:00Z",
+        "2026-06-30T16:50:00Z",
+    )
 
 
-def test_fetch_head_commit_pushed_at_returns_none_when_absent(monkeypatch) -> None:
-    # GitHub omits pushedDate for older commits; the caller then falls back to
-    # commit/force-push evidence, so None must be returned (not an error).
+def test_fetch_head_commit_timestamps_handles_null_pushed_date(monkeypatch) -> None:
+    # GitHub now resolves pushedDate to null; committedDate must still come through.
     def fake_gh_json(args: list[str]) -> dict[str, Any]:
         return {
             "data": {
@@ -222,7 +227,15 @@ def test_fetch_head_commit_pushed_at_returns_none_when_absent(monkeypatch) -> No
                     "pullRequest": {
                         "headRefOid": "a367f3c6deadbeef",
                         "commits": {
-                            "nodes": [{"commit": {"oid": "a367f3c6deadbeef", "pushedDate": None}}]
+                            "nodes": [
+                                {
+                                    "commit": {
+                                        "oid": "a367f3c6deadbeef",
+                                        "committedDate": "2026-06-30T16:30:00Z",
+                                        "pushedDate": None,
+                                    }
+                                }
+                            ]
                         },
                     }
                 }
@@ -231,12 +244,15 @@ def test_fetch_head_commit_pushed_at_returns_none_when_absent(monkeypatch) -> No
 
     monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
 
-    assert pr_readiness.fetch_head_commit_pushed_at("owner/repo", 9) is None
+    assert pr_readiness.fetch_head_commit_timestamps("owner/repo", 9) == (
+        "2026-06-30T16:30:00Z",
+        None,
+    )
 
 
-def test_fetch_head_commit_pushed_at_rejects_malformed_repo() -> None:
+def test_fetch_head_commit_timestamps_rejects_malformed_repo() -> None:
     try:
-        pr_readiness.fetch_head_commit_pushed_at("not-a-repo", 9)
+        pr_readiness.fetch_head_commit_timestamps("not-a-repo", 9)
     except RuntimeError as error:
         assert "owner/name" in str(error)
     else:

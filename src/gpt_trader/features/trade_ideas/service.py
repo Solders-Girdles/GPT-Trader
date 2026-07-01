@@ -1014,13 +1014,6 @@ class TradeIdeaService:
         open_ideas: list[TradeIdea],
         closeouts: list[CloseoutAttribution],
     ) -> Decimal | None:
-        if candidate is not None:
-            candidate_equity = _equity_from_max_loss_amount_percent(
-                amount=candidate.max_loss.amount,
-                percent_of_account=candidate.max_loss.percent_of_account,
-            )
-            if candidate_equity is not None:
-                return candidate_equity
         for idea in open_ideas:
             equity = _equity_from_max_loss_amount_percent(
                 amount=idea.max_loss.amount,
@@ -1035,6 +1028,13 @@ class TradeIdeaService:
             )
             if equity is not None:
                 return equity
+        if open_ideas or closeouts:
+            return None
+        if candidate is not None:
+            return _equity_from_max_loss_amount_percent(
+                amount=candidate.max_loss.amount,
+                percent_of_account=candidate.max_loss.percent_of_account,
+            )
         return None
 
     def _latest_audit_events_by_decision_id(self) -> dict[str, AuditEvent]:

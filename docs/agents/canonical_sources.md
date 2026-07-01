@@ -42,8 +42,10 @@ the envelope.
 - **Freshness-checked in CI** by the *Agent Artifacts Freshness* job in
   [`ci.yml`](../../.github/workflows/ci.yml) (runs `agent-regenerate --verify`).
   A stale tree **fails the build on `push` to `main`/`develop`**; on pull requests
-  it is **advisory** (a warning that does not block the merge), with the scheduled
-  refresh reconciling `main`.
+  it is **advisory** (a warning that does not block the merge). The scheduled
+  refresh does not commit to `main` — it publishes an
+  `automation/agent-artifacts-refresh` branch that must be opened/merged as a PR to
+  reconcile `main`.
 - **Packaged/published** by the scheduled
   [`agent-artifacts-refresh.yml`](../../.github/workflows/agent-artifacts-refresh.yml).
 

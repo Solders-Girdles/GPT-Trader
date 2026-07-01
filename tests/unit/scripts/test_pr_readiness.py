@@ -289,6 +289,74 @@ def test_parse_pr_state_rejects_reaction_before_force_push_to_head() -> None:
     assert state.review_signals[0].current_head is False
 
 
+def test_parse_pr_state_rejects_reaction_before_fast_forward_push_to_head() -> None:
+    # A fast-forward push emits no HeadRefForcePushedEvent; the head commit's
+    # pushedDate (16:50) is the only evidence it landed after the 16:45 reaction.
+    head = "a367f3c6deadbeef"
+    pr_json = {
+        "number": 1056,
+        "headRefOid": head,
+        "baseRefName": "main",
+        "mergeStateStatus": "CLEAN",
+        "reviewDecision": "",
+        "statusCheckRollup": [],
+        "commits": [{"oid": head, "committedDate": "2026-06-30T16:30:00Z"}],
+    }
+    reactions = [
+        {
+            "content": "+1",
+            "created_at": "2026-06-30T16:45:00Z",
+            "user": {"login": "chatgpt-codex-connector[bot]"},
+        }
+    ]
+
+    state = parse_pr_state(
+        pr_json,
+        [],
+        _protection(required_checks=()),
+        reactions,
+        [],  # no force-push events for an ordinary push
+        "2026-06-30T16:50:00Z",  # head commit pushedDate
+    )
+
+    assert state.head_updated_at == "2026-06-30T16:50:00Z"
+    assert len(state.review_signals) == 1
+    assert state.review_signals[0].current_head is False
+
+
+def test_parse_pr_state_accepts_reaction_after_fast_forward_push_to_head() -> None:
+    # The floor works both ways: a reaction after the push counts as current.
+    head = "a367f3c6deadbeef"
+    pr_json = {
+        "number": 1056,
+        "headRefOid": head,
+        "baseRefName": "main",
+        "mergeStateStatus": "CLEAN",
+        "reviewDecision": "",
+        "statusCheckRollup": [],
+        "commits": [{"oid": head, "committedDate": "2026-06-30T16:30:00Z"}],
+    }
+    reactions = [
+        {
+            "content": "+1",
+            "created_at": "2026-06-30T16:55:00Z",
+            "user": {"login": "chatgpt-codex-connector[bot]"},
+        }
+    ]
+
+    state = parse_pr_state(
+        pr_json,
+        [],
+        _protection(required_checks=()),
+        reactions,
+        [],
+        "2026-06-30T16:50:00Z",
+    )
+
+    assert state.head_updated_at == "2026-06-30T16:50:00Z"
+    assert state.review_signals[0].current_head is True
+
+
 # --------------------------------------------------------------------------- #
 # formatting
 # --------------------------------------------------------------------------- #

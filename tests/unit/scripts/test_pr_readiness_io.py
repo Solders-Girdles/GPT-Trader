@@ -185,6 +185,64 @@ def test_fetch_head_update_events_rejects_malformed_repo() -> None:
         raise AssertionError("expected RuntimeError")
 
 
+def test_fetch_head_commit_pushed_at_returns_head_push_time(monkeypatch) -> None:
+    def fake_gh_json(args: list[str]) -> dict[str, Any]:
+        return {
+            "data": {
+                "repository": {
+                    "pullRequest": {
+                        "headRefOid": "a367f3c6deadbeef",
+                        "commits": {
+                            "nodes": [
+                                {
+                                    "commit": {
+                                        "oid": "a367f3c6deadbeef",
+                                        "pushedDate": "2026-06-30T16:50:00Z",
+                                    }
+                                }
+                            ]
+                        },
+                    }
+                }
+            }
+        }
+
+    monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
+
+    assert pr_readiness.fetch_head_commit_pushed_at("owner/repo", 9) == "2026-06-30T16:50:00Z"
+
+
+def test_fetch_head_commit_pushed_at_returns_none_when_absent(monkeypatch) -> None:
+    # GitHub omits pushedDate for older commits; the caller then falls back to
+    # commit/force-push evidence, so None must be returned (not an error).
+    def fake_gh_json(args: list[str]) -> dict[str, Any]:
+        return {
+            "data": {
+                "repository": {
+                    "pullRequest": {
+                        "headRefOid": "a367f3c6deadbeef",
+                        "commits": {
+                            "nodes": [{"commit": {"oid": "a367f3c6deadbeef", "pushedDate": None}}]
+                        },
+                    }
+                }
+            }
+        }
+
+    monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
+
+    assert pr_readiness.fetch_head_commit_pushed_at("owner/repo", 9) is None
+
+
+def test_fetch_head_commit_pushed_at_rejects_malformed_repo() -> None:
+    try:
+        pr_readiness.fetch_head_commit_pushed_at("not-a-repo", 9)
+    except RuntimeError as error:
+        assert "owner/name" in str(error)
+    else:
+        raise AssertionError("expected RuntimeError")
+
+
 def test_fetch_branch_protection_encodes_branch_segments(monkeypatch) -> None:
     calls: list[list[str]] = []
 

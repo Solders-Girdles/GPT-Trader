@@ -209,6 +209,7 @@ def parse_pr_state(
     protection: BranchProtection,
     reactions_json: list[dict[str, Any]] | None = None,
     head_update_events_json: list[dict[str, Any]] | None = None,
+    head_pushed_at: str | None = None,
     *,
     review_bot: str | None = _DEFAULT_REVIEW_BOT,
     acceptance_marker: str | None = _DEFAULT_ACCEPTANCE_MARKER,
@@ -249,7 +250,9 @@ def parse_pr_state(
 
     head_oid = str(pr_json.get("headRefOid", ""))
     head_committed_at = _current_head_committed_at(pr_json, head_oid)
-    head_updated_at = _head_updated_at(head_oid, head_committed_at, head_update_events_json or [])
+    head_updated_at = _head_updated_at(
+        head_oid, head_committed_at, head_update_events_json or [], head_pushed_at
+    )
 
     return PullRequestState(
         number=int(pr_json.get("number", 0)),
@@ -418,6 +421,7 @@ def _head_updated_at(
     head_oid: str,
     head_committed_at: str | None,
     head_update_events_json: list[dict[str, Any]],
+    head_pushed_at: str | None = None,
 ) -> str | None:
     matching_updates: list[str] = []
     for event in head_update_events_json:
@@ -429,7 +433,11 @@ def _head_updated_at(
         created_at = event.get("createdAt")
         if _parse_timestamp(created_at) is not None:
             matching_updates.append(str(created_at))
-    return _latest_timestamp(head_committed_at, *matching_updates)
+    # `head_pushed_at` (Commit.pushedDate) covers ordinary fast-forward pushes,
+    # which emit no HeadRefForcePushedEvent; without it the floor would fall back
+    # to the commit's authored/committed time and wrongly accept a reaction that
+    # predates the push.
+    return _latest_timestamp(head_committed_at, head_pushed_at, *matching_updates)
 
 
 def _review_commit_oid(review: dict[str, Any]) -> str:
@@ -833,6 +841,69 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
     return nodes
 
 
+def fetch_head_commit_pushed_at(repo: str, pr: int) -> str | None:
+    """Return the ISO timestamp when the PR head commit was pushed, if known.
+
+    Ordinary (fast-forward) pushes do not emit a HeadRefForcePushedEvent, so the
+    force-push timeline alone misses them. ``Commit.pushedDate`` records when the
+    head commit actually landed on the PR, letting the reaction-freshness floor
+    reject a bot ``+1`` that predates a normal push. Returns None when GitHub does
+    not populate ``pushedDate`` (e.g. older commits), in which case callers fall
+    back to the commit/force-push evidence -- never worse than before.
+    """
+    if repo.count("/") != 1:
+        raise RuntimeError("--repo must use owner/name format")
+    owner, name = repo.split("/", 1)
+    if not owner or not name:
+        raise RuntimeError("--repo must use owner/name format")
+    query = """
+query($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      headRefOid
+      commits(last: 1) {
+        nodes {
+          commit {
+            oid
+            pushedDate
+          }
+        }
+      }
+    }
+  }
+}
+"""
+    data = _gh_json(
+        [
+            "api",
+            "graphql",
+            "-f",
+            f"query={query}",
+            "-F",
+            f"owner={owner}",
+            "-F",
+            f"name={name}",
+            "-F",
+            f"number={pr}",
+        ]
+    )
+    pull_request = data.get("data", {}).get("repository", {}).get("pullRequest", {})
+    if not isinstance(pull_request, dict):
+        return None
+    head_oid = str(pull_request.get("headRefOid") or "")
+    nodes = (pull_request.get("commits") or {}).get("nodes") or []
+    for node in nodes:
+        commit = node.get("commit") if isinstance(node, dict) else None
+        if not isinstance(commit, dict):
+            continue
+        if head_oid and not _head_matches(str(commit.get("oid") or ""), head_oid):
+            continue
+        pushed = commit.get("pushedDate")
+        if pushed:
+            return str(pushed)
+    return None
+
+
 def fetch_pr_changed_paths(repo: str, pr: int) -> list[str]:
     result = _run(["gh", "pr", "diff", str(pr), "--repo", repo, "--name-only"])
     if result.returncode != 0:
@@ -1122,6 +1193,7 @@ def main(argv: list[str] | None = None) -> int:
             protection,
             fetch_pr_reactions(repo, pr),
             fetch_head_update_events(repo, pr),
+            fetch_head_commit_pushed_at(repo, pr),
             review_bot=args.review_bot or None,
             acceptance_marker=args.acceptance_marker or None,
         )

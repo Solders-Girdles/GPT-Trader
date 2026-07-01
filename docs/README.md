@@ -126,7 +126,7 @@ an open decision
 - [Environment Variable Inventory](../var/agents/configuration/environment_variables.md) - Full, code-derived reference
 - Default: Spot trading with JWT authentication
 - CFM futures (US) require `TRADING_MODES=cfm` + `CFM_ENABLED=1`
-- INTX perps were removed ([decision record](decisions/intx-default-derivatives-venue.md), [Deprecations](DEPRECATIONS.md)); `COINBASE_ENABLE_INTX_PERPS` is a deprecated alias (a truthy value warns and enables CFM instead; falsey/unset values are ignored)
+- INTX perps were removed ([decision record](decisions/intx-default-derivatives-venue.md), [Deprecations](DEPRECATIONS.md)); `COINBASE_ENABLE_INTX_PERPS` is a deprecated alias (a truthy value warns and substitutes for `CFM_ENABLED=1` only; `TRADING_MODES` must still include `cfm`; falsey/unset values are ignored)
 
 ## Additional Resources
 
@@ -145,7 +145,7 @@ relevant adapter; live execution still requires the gates in
 |------|----------|----------------|------|
 | **Spot (default capability)** | BTC-USD, ETH-USD, etc. | JWT (CDP key) | `TRADING_MODES=spot` |
 | **CFM futures (US)** | US futures contracts (expiry-coded symbols) | JWT (CDP key) | `TRADING_MODES=cfm` + `CFM_ENABLED=1` |
-| **INTX perps** | Removed — `-PERP` symbols coerce to spot | — | Removed; see [decision record](decisions/intx-default-derivatives-venue.md) |
+| **INTX perps** | Removed — `-PERP`-suffixed symbols coerce to spot | — | Removed; see [decision record](decisions/intx-default-derivatives-venue.md) |
 
 **Note:** Sandbox does not support futures/perps. Default capability is spot only.
 

@@ -30,7 +30,7 @@ For broader migration, the canonical planning gate is [Direction](DIRECTION.md).
 |------------|----------|----------------|-------------|-----------|----------|
 | **Spot** | Spot (BTC-USD, ETH-USD, ...) | JWT (CDP key) | Advanced v3 | Real-time | Implemented; requires profile/readiness gate before live use |
 | **CFM** | US Futures (BTC, ETH, SOL, etc.) | CDP (JWT) | Advanced v3 | Real-time | Implemented/gated; verify account and risk constraints |
-| **INTX** | Removed (was: perpetuals, international) | — | — | — | Removed; see [decision record](decisions/intx-default-derivatives-venue.md). `COINBASE_ENABLE_INTX_PERPS` is a deprecated alias (a truthy value warns and enables CFM instead; falsey/unset values are ignored) ([Deprecations](DEPRECATIONS.md)) |
+| **INTX** | Removed (was: perpetuals, international) | — | — | — | Removed; see [decision record](decisions/intx-default-derivatives-venue.md). `COINBASE_ENABLE_INTX_PERPS` is a deprecated alias (a truthy value warns and substitutes for `CFM_ENABLED=1` only; `TRADING_MODES` must still include `cfm`; falsey/unset values are ignored) ([Deprecations](DEPRECATIONS.md)) |
 | **Paper** | All products | — | — | — | Simulated via `PERPS_PAPER=1` |
 
 ### Derivatives Access Summary
@@ -253,7 +253,7 @@ verification and the gates in [Live Operations](production.md).
 
 **CFM Futures** (US-regulated): Adapter available for approved US futures accounts. Enable via `TRADING_MODES=cfm` (or `spot,cfm`) and `CFM_ENABLED=1`; uses CDP authentication and CFM endpoints (`cfm_balance_summary`, `cfm_positions`, etc.). This is the only supported derivatives venue.
 
-**INTX Perpetuals**: Removed; see [decision record](decisions/intx-default-derivatives-venue.md) and [Deprecations](DEPRECATIONS.md). `COINBASE_ENABLE_INTX_PERPS` is retained only as a deprecated alias: a truthy value warns and enables CFM instead; falsey/unset values are ignored. `-PERP` symbols are coerced to their spot equivalents.
+**INTX Perpetuals**: Removed; see [decision record](decisions/intx-default-derivatives-venue.md) and [Deprecations](DEPRECATIONS.md). `COINBASE_ENABLE_INTX_PERPS` is retained only as a deprecated alias: a truthy value warns and substitutes for `CFM_ENABLED=1` only (config validation still requires `TRADING_MODES` to include `cfm`); falsey/unset values are ignored. `-PERP`-suffixed symbols are coerced to their spot equivalents.
 
 ### Feature Slice Reference
 
@@ -279,7 +279,7 @@ verification and the gates in [Live Operations](production.md).
 1. **Slice Isolation**: Production slices limit cross-dependencies; experimental ones stay sandboxed.
 2. **Token Awareness**: Documentation highlights slice entry points so agents can load only what they need.
 3. **Type Safety**: Shared interfaces defined in `features/brokerages/core/protocols.py`.
-4. **Environment Separation**: GPT-Trader normalizes symbols to spot by default; retired `-PERP` (INTX) symbols are coerced to their spot equivalents (see [Deprecations](DEPRECATIONS.md)).
+4. **Environment Separation**: GPT-Trader normalizes symbols to spot by default; retired `-PERP`-suffixed (INTX) symbols are coerced to their spot equivalents (see [Deprecations](DEPRECATIONS.md)).
 
 ### Order Execution Pipeline
 

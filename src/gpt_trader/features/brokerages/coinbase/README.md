@@ -33,7 +33,7 @@ The integration supports both Coinbase API modes:
 
 3. Spot-First (Default)
    - Default symbols use spot pairs (e.g., `BTC-USD`).
-   - INTX perpetuals were removed; `-PERP` symbols are coerced to their spot equivalents with a warning (see [Deprecations](../../../../../docs/DEPRECATIONS.md)).
+   - INTX perpetuals were removed; symbols ending in `-PERP` are coerced to their spot equivalents with a warning (see [Deprecations](../../../../../docs/DEPRECATIONS.md)). Other retired INTX forms (e.g., `BTC-PERP-USDC`) are not coerced: CFM configurations reject them at config validation, while spot configurations pass them through unchanged rather than mapping them to spot.
    - CFM futures are the only supported derivatives venue; enable via `TRADING_MODES=cfm` + `CFM_ENABLED=1`.
 
 ### Critical Fixes Applied
@@ -131,8 +131,8 @@ pytest tests/unit/gpt_trader/features/brokerages/coinbase/test_coinbase_auth.py 
 ## Known Limitations
 
 1. **INTX Removed**
-   - INTX perpetuals were removed as a supported venue (see [decision record](../../../../../docs/decisions/intx-default-derivatives-venue.md)); `-PERP` symbols are coerced to their spot equivalents.
-   - `COINBASE_ENABLE_INTX_PERPS` is retained only as a deprecated alias: a truthy value warns and enables CFM instead; falsey/unset values are ignored (see [Deprecations](../../../../../docs/DEPRECATIONS.md)). Use spot symbols like `BTC-USD`, or `TRADING_MODES=cfm` + `CFM_ENABLED=1` for CFM futures.
+   - INTX perpetuals were removed as a supported venue (see [decision record](../../../../../docs/decisions/intx-default-derivatives-venue.md)); `-PERP`-suffixed symbols are coerced to their spot equivalents.
+   - `COINBASE_ENABLE_INTX_PERPS` is retained only as a deprecated alias: a truthy value warns and substitutes for `CFM_ENABLED=1` only (config validation still requires `TRADING_MODES` to include `cfm`); falsey/unset values are ignored (see [Deprecations](../../../../../docs/DEPRECATIONS.md)). Use spot symbols like `BTC-USD`, or `TRADING_MODES=cfm` + `CFM_ENABLED=1` for CFM futures.
 
 2. **Sandbox Limitations**
    - Advanced Trade API does not have an authenticated sandbox

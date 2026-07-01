@@ -27,7 +27,6 @@
     "load": "Load testing scenarios",
     "stress": "Stress testing scenarios",
     "real_api": "Tests that hit real Coinbase APIs (opt-in)",
-    "uses_mock_broker": "Tests that depend on the deterministic broker (legacy MockBroker path; skipped by default)",
     "requires_db": "Tests requiring database connectivity",
     "requires_network": "Tests requiring network connectivity",
     "requires_secrets": "Tests requiring access to secrets/vault",
@@ -77,7 +76,6 @@
     ],
     "environment": [
       "real_api",
-      "uses_mock_broker",
       "requires_db",
       "requires_network",
       "requires_secrets"
@@ -94,7 +92,7 @@
     ]
   },
   "counts": {
-    "unit": 5795,
+    "unit": 5803,
     "asyncio": 328,
     "parametrize": 169,
     "property": 82,

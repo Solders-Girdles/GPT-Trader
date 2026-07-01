@@ -445,26 +445,6 @@ jobs:
             sed -n '1,40p' var/agents/health/agent_regenerate_verify.txt >> $GITHUB_STEP_SUMMARY
           fi
 
-  tui-css-compat:
-    name: TUI CSS Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: TUI CSS check removed
-        run: |
-          echo "The Textual TUI subsystem and CSS build were removed."
-          echo "This compatibility job preserves the required check context until branch protection is updated."
-
-  tui-snapshots-compat:
-    name: TUI Snapshot Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: TUI snapshot tests removed
-        run: |
-          echo "The Textual TUI subsystem and snapshot tests were removed."
-          echo "This compatibility job preserves the required check context until branch protection is updated."
-
   test-guardrails:
     name: Test Guardrails
     runs-on: ubuntu-latest

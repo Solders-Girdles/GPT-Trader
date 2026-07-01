@@ -169,6 +169,33 @@ def _display_path(path: Path) -> str:
         return path.as_posix()
 
 
+def _resource_file_names(
+    resource_name: str,
+    resource_payload: dict[str, Any],
+    report: ValidationReport,
+    *,
+    key: str,
+    required: bool,
+) -> list[str]:
+    raw_files = resource_payload.get(key)
+    if raw_files is None and not required:
+        return []
+    if not isinstance(raw_files, list) or (required and not raw_files):
+        if required:
+            report.error(f"Resource {resource_name!r} must list generated files")
+        else:
+            report.error(f"Resource {resource_name!r} optional_files must be a list")
+        return []
+
+    files: list[str] = []
+    for file_name in raw_files:
+        if not isinstance(file_name, str) or not file_name.strip():
+            report.error(f"Resource {resource_name!r} contains an invalid {key} entry")
+            continue
+        files.append(file_name)
+    return files
+
+
 def _resource_files(resources: dict[str, Any], report: ValidationReport) -> set[str]:
     indexed_files: set[str] = {"index.json"}
     for resource_name, resource_payload in resources.items():
@@ -176,17 +203,24 @@ def _resource_files(resources: dict[str, Any], report: ValidationReport) -> set[
             report.error(f"Resource {resource_name!r} must be an object in var/agents/index.json")
             continue
         resource_path = resource_payload.get("path")
-        files = resource_payload.get("files")
         if not isinstance(resource_path, str) or not resource_path.strip():
             report.error(f"Resource {resource_name!r} is missing a non-empty path")
             continue
-        if not isinstance(files, list) or not files:
-            report.error(f"Resource {resource_name!r} must list generated files")
-            continue
-        for file_name in files:
-            if not isinstance(file_name, str) or not file_name.strip():
-                report.error(f"Resource {resource_name!r} contains an invalid file entry")
-                continue
+        files = _resource_file_names(
+            resource_name,
+            resource_payload,
+            report,
+            key="files",
+            required=True,
+        )
+        optional_files = _resource_file_names(
+            resource_name,
+            resource_payload,
+            report,
+            key="optional_files",
+            required=False,
+        )
+        for file_name in [*files, *optional_files]:
             indexed_files.add(PurePosixPath(resource_path, file_name).as_posix())
     return indexed_files
 
@@ -201,12 +235,15 @@ def _indexed_files_from_root_index(root_index: dict[str, Any]) -> set[str]:
         if not isinstance(resource_payload, dict):
             continue
         resource_path = resource_payload.get("path")
-        files = resource_payload.get("files")
-        if not isinstance(resource_path, str) or not isinstance(files, list):
+        if not isinstance(resource_path, str):
             continue
-        for file_name in files:
-            if isinstance(file_name, str) and file_name.strip():
-                indexed_files.add(PurePosixPath(resource_path, file_name).as_posix())
+        for key in ("files", "optional_files"):
+            files = resource_payload.get(key)
+            if not isinstance(files, list):
+                continue
+            for file_name in files:
+                if isinstance(file_name, str) and file_name.strip():
+                    indexed_files.add(PurePosixPath(resource_path, file_name).as_posix())
     return indexed_files
 
 
@@ -229,7 +266,6 @@ def _validate_root_index(source_dir: Path, report: ValidationReport) -> dict[str
             continue
 
         resource_path = resource_payload.get("path")
-        files = resource_payload.get("files")
         generator = resource_payload.get("generator")
         if not isinstance(resource_path, str) or not resource_path.strip():
             report.error(f"Resource {resource_name!r} is missing path")
@@ -241,18 +277,30 @@ def _validate_root_index(source_dir: Path, report: ValidationReport) -> dict[str
         elif not any(child.is_file() for child in artifact_dir.rglob("*")):
             report.error(f"Resource {resource_name!r} directory is empty: {artifact_dir}")
 
-        if not isinstance(files, list) or not files:
-            report.error(f"Resource {resource_name!r} has no indexed files")
-        else:
-            for file_name in files:
-                if not isinstance(file_name, str) or not file_name.strip():
-                    report.error(f"Resource {resource_name!r} has an invalid file name")
-                    continue
-                artifact_file = artifact_dir / file_name
-                if not artifact_file.is_file():
-                    report.error(f"Indexed artifact is missing: {_display_path(artifact_file)}")
-                elif artifact_file.stat().st_size == 0:
-                    report.error(f"Indexed artifact is empty: {_display_path(artifact_file)}")
+        required_files = _resource_file_names(
+            resource_name,
+            resource_payload,
+            report,
+            key="files",
+            required=True,
+        )
+        optional_files = _resource_file_names(
+            resource_name,
+            resource_payload,
+            report,
+            key="optional_files",
+            required=False,
+        )
+        for file_name in required_files:
+            artifact_file = artifact_dir / file_name
+            if not artifact_file.is_file():
+                report.error(f"Indexed artifact is missing: {_display_path(artifact_file)}")
+            elif artifact_file.stat().st_size == 0:
+                report.error(f"Indexed artifact is empty: {_display_path(artifact_file)}")
+        for file_name in optional_files:
+            artifact_file = artifact_dir / file_name
+            if artifact_file.is_file() and artifact_file.stat().st_size == 0:
+                report.error(f"Optional artifact is empty: {_display_path(artifact_file)}")
 
         if isinstance(generator, str) and generator:
             generator_path = PROJECT_ROOT / generator

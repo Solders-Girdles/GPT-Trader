@@ -8,7 +8,6 @@ Available commands:
     agent-impact     - Analyze change impact and suggest tests
     agent-map        - Generate dependency graph
     agent-tests      - Generate test inventory
-    agent-risk       - Query risk configuration
     agent-naming     - Check naming standards
     agent-health     - Aggregate lint/types/tests/preflight/config checks
     agent-regenerate - Regenerate all context files

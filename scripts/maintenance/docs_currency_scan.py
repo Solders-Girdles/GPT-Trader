@@ -144,10 +144,6 @@ CURRENCY_SUPPRESSIONS: dict[tuple[str, str], str] = {
     ("docs/DEVELOPMENT_GUIDELINES.md", "--branch"): "git branch flag quoted in prose",
     ("docs/INFORMATION_ARCHITECTURE.md", "--ignored"): "git flag example, not a gpt-trader flag",
     (
-        "docs/READINESS.md",
-        "var/ops/controls_smoke_20260117_123003.json",
-    ): "timestamped runtime artifact shown as an example path",
-    (
         "docs/agents/scratch_logs/project_regrounding_20260628.md",
         "--decorate",
     ): "git log flag quoted in a scratch log",

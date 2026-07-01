@@ -119,22 +119,6 @@ def tests() -> int:
     return _run_script("generate_test_inventory.py")
 
 
-def risk() -> int:
-    """Query risk configuration.
-
-    Entry point: agent-risk
-
-    Queries risk configuration values with documentation.
-
-    Examples:
-        uv run agent-risk                     # Full config JSON
-        uv run agent-risk --with-docs         # Include field docs
-        uv run agent-risk --field max_leverage
-        uv run agent-risk --generate-schema
-    """
-    return _run_script("query_risk_config.py")
-
-
 def naming() -> int:
     """Check naming standards.
 
@@ -226,16 +210,3 @@ def pr_ready() -> int:
         uv run agent-pr-ready --exit-on-not-ready  # opt-in advisory gate
     """
     return _run_script("pr_readiness.py")
-
-
-def dedupe_triage() -> int:
-    """Triage dedupe clusters (accept/reject/defer).
-
-    Entry point: agent-dedupe-triage
-
-    Examples:
-        uv run agent-dedupe-triage --list
-        uv run agent-dedupe-triage --show 72948f9bf0a3
-        uv run agent-dedupe-triage --set 72948f9bf0a3 rejected --owner operator --reason "Not redundant"
-    """
-    return _run_script("dedupe_triage.py")

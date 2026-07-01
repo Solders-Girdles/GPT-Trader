@@ -51,22 +51,28 @@ the envelope.
 
 Because all ten groups are registered resources in `index.json`, none can be
 dropped from the committed tree without also updating the index, the validator
-contract, and the freshness gate. **This PR removes nothing.**
+contract, and the freshness gate.
 
 ### Verdict per resource group
 
 | Resource (generator) | Committed files | Verdict |
 |----------------------|-----------------|---------|
 | `schemas`, `models`, `logging`, `observability`, `configuration`, `validation`, `broker`, `health` | small JSON/MD inventories | **Keep committed.** Derived truth read as agent context and validated/packaged; low churn. |
-| `testing` (`generate_test_inventory.py`) | `testing/index.json`, `testing/markers.json`, `testing/source_test_map.json` | **Keep committed.** These are the testing-scoped inventory (distinct from the global `var/agents/index.json` registry). The large `testing/test_inventory.json` (~1.8 MB) is *already* gitignored (`.gitignore:150`) and regenerated locally — the working template for advisory/generated-only treatment. |
-| `reasoning` (`generate_reasoning_artifacts.py`) | 8 maps × `.md`/`.json`/`.dot` (24 files) | **Keep committed, flagged as the primary churn candidate.** The `.md` summaries are curated in [reasoning_artifacts.md](reasoning_artifacts.md); the `.json`/`.dot` machine forms regenerate on nearly any `src/**` change and dominate diff noise. |
+| `testing` (`generate_test_inventory.py`) | `testing/index.json`, `testing/markers.json` | **Keep committed.** These are the testing-scoped inventory (distinct from the global `var/agents/index.json` registry). The machine-only `testing/test_inventory.json` (~1.8 MB) and `testing/source_test_map.json` are gitignored and regenerated on demand. |
+| `reasoning` (`generate_reasoning_artifacts.py`) | 8 curated `.md` maps | **`.md` committed; `.json`/`.dot` machine forms gitignored.** The `.md` summaries are curated in [reasoning_artifacts.md](reasoning_artifacts.md); the machine forms regenerate on nearly any `src/**` change, so they are regenerate-on-demand `optional_files`. |
 
-### Churn verdict & next step
+### Churn verdict — executed 2026-07-01 (owner-approved)
 
-The `reasoning/*.{json,dot}` machine forms are the clearest candidates for
-future **advisory/generated-only** treatment (gitignore + regenerate/package on
-demand, keeping the curated `.md` committed) — mirroring the `test_inventory.json`
-precedent. Doing so requires updating `index.json`, the `agent_artifacts.py`
-validator expectations, and the freshness gate together, so per the issue's
-out-of-scope note it is **deferred to a separate decision record**, not done
-here.
+The advisory/generated-only treatment deferred by the original audit (#1086)
+was executed with explicit owner approval on 2026-07-01. The
+`reasoning/*.{json,dot}` machine forms and `testing/source_test_map.json` now
+mirror the `test_inventory.json` precedent:
+
+- **gitignored** and regenerated on demand (`uv run agent-regenerate`);
+- registered as `optional_files` in `var/agents/index.json`, so
+  `agent-artifacts validate`/`package` accept their absence in a fresh checkout
+  but still ship them in the refresh package when present;
+- excluded from the freshness gate by rule (`agent-regenerate --verify` drops
+  gitignored outputs from both sides of the diff, per #1072).
+
+The curated `reasoning/*.md` summaries remain committed and freshness-gated.

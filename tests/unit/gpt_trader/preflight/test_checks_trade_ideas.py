@@ -95,6 +95,25 @@ def test_trade_ideas_readiness_fails_when_budget_is_missing(
     assert any("risk budget not seeded" in message for message in checker.errors)
 
 
+def test_trade_ideas_readiness_fails_on_malformed_budget_decimal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ideas_root = tmp_path / "trade_ideas"
+    _seed_budget(ideas_root)
+    budget_path = ideas_root / "risk_budget.jsonl"
+    budget_payload = budget_path.read_text(encoding="utf-8").replace(
+        '"max_loss_per_idea_pct":"5"',
+        '"max_loss_per_idea_pct":"bad"',
+    )
+    budget_path.write_text(budget_payload, encoding="utf-8")
+    monkeypatch.setenv("GPT_TRADER_IDEAS_ROOT", str(ideas_root))
+
+    checker = PreflightCheck(profile="dev")
+
+    assert check_trade_ideas_readiness(checker) is False
+    assert any("risk budget unreadable" in message for message in checker.errors)
+
+
 def test_trade_ideas_readiness_reports_pending_proposed_ideas(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

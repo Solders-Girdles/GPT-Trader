@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from collections import Counter
+from decimal import InvalidOperation
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -121,7 +122,7 @@ def check_trade_ideas_readiness(checker: PreflightCheck) -> bool:
     budget_log = RiskBudgetLog(budget_path)
     try:
         budget_summary = _validate_budget_history(budget_log)
-    except (ValidationError, KeyError, TypeError, ValueError, OSError) as exc:
+    except (ValidationError, InvalidOperation, KeyError, TypeError, ValueError, OSError) as exc:
         checker.log_error(f"Trade ideas risk budget unreadable: {exc}", details=details)
         all_good = False
     else:

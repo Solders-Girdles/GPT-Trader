@@ -40,12 +40,24 @@ _SAFE_SLUG = re.compile(r"[^a-z0-9._-]+")
 
 @runtime_checkable
 class StrategyDecisionSignal(Protocol):
-    """Structural strategy decision shape accepted by the adapter."""
+    """Structural strategy decision shape accepted by the adapter.
 
-    action: Any
-    reason: str
-    confidence: float
-    indicators: Mapping[str, Any]
+    Members are read-only (the adapter only ever reads a decision), which keeps
+    the protocol covariant so a concrete ``Decision`` with a mutable
+    ``dict[str, Any]`` ``indicators`` field satisfies it.
+    """
+
+    @property
+    def action(self) -> Any: ...
+
+    @property
+    def reason(self) -> str: ...
+
+    @property
+    def confidence(self) -> float: ...
+
+    @property
+    def indicators(self) -> Mapping[str, Any]: ...
 
 
 @dataclass(frozen=True, slots=True)

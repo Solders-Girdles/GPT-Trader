@@ -250,6 +250,12 @@
           "notes": "No direct usage found"
         },
         {
+          "field": "strategy_signal_proposals_enabled",
+          "usage_count": 0,
+          "files": [],
+          "notes": "No direct usage found"
+        },
+        {
           "field": "strategy_type",
           "usage_count": 0,
           "files": [],

@@ -82,6 +82,10 @@
       "type": "boolean",
       "default": false
     },
+    "strategy_signal_proposals_enabled": {
+      "type": "boolean",
+      "default": false
+    },
     "market_order_fallback": {
       "type": "boolean",
       "default": true

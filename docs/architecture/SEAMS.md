@@ -33,8 +33,15 @@ The strategy seam is where market state becomes a **decision** (buy/sell/hold, s
 - The approval-path bridge for Stage 1 is
   `src/gpt_trader/features/strategy_tools/trade_idea_adapter.py`: it maps
   supported strategy decisions into proposed trade ideas through
-  `TradeIdeaService.propose()` only. It is default-off and does not wire the
-  live engine cycle or submit orders.
+  `TradeIdeaService.propose()` only, and never submits orders.
+- The live engine wires that bridge behind the default-off
+  `strategy_signal_proposals_enabled` gate. When set, `TradingEngine`
+  (`src/gpt_trader/features/live_trade/engines/strategy.py`,
+  `_handle_decision` → `_propose_strategy_decision`) routes each decision into
+  the proposal path and returns before any broker interaction — proposal-only,
+  no order submission. When unset (the default), decisions flow to direct
+  execution exactly as before. Operator guide:
+  [Trade-Idea Interface Design Notes](../specs/TRADE_IDEA_INTERFACES_DESIGN_NOTES.md#live-strategy-signal-routing-default-off).
 
 ## 2) Execution seam
 

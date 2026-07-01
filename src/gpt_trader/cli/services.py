@@ -187,6 +187,10 @@ def _apply_profile_kwargs(config: BotConfig, profile_kwargs: dict[str, Any]) -> 
         config.mock_broker = profile_kwargs["mock_broker"]
     if "time_in_force" in profile_kwargs:
         config.time_in_force = profile_kwargs["time_in_force"]
+    if "strategy_signal_proposals_enabled" in profile_kwargs:
+        config.strategy_signal_proposals_enabled = profile_kwargs[
+            "strategy_signal_proposals_enabled"
+        ]
 
     if "enable_shorts" in profile_kwargs:
         config.enable_shorts = profile_kwargs["enable_shorts"]

@@ -98,6 +98,9 @@
       "suspicious_activity",
       "vault_init"
     ],
+    "strategy": [
+      "strategy_proposal"
+    ],
     "system": [
       "get_cfm_sweeps_schedule",
       "schedule_coroutine",
@@ -1188,6 +1191,7 @@
     "order_audit": {
       "common_fields": [
         "open_order_count",
+        "reason",
         "stage"
       ],
       "components": null,
@@ -2015,6 +2019,29 @@
       ],
       "statuses": null
     },
+    "strategy_proposal": {
+      "common_fields": [
+        "action",
+        "decision_id",
+        "error_message",
+        "error_type",
+        "product_type",
+        "stage",
+        "state",
+        "symbol"
+      ],
+      "components": null,
+      "levels": [
+        "ERROR",
+        "INFO",
+        "WARNING"
+      ],
+      "occurrence_count": 5,
+      "source_files": [
+        "features/live_trade/engines/strategy.py"
+      ],
+      "statuses": null
+    },
     "streaming": {
       "common_fields": [
         "stage"
@@ -2426,7 +2453,7 @@
     }
   },
   "field_frequency": {
-    "action": 10,
+    "action": 14,
     "attempt": 4,
     "client_ip": 4,
     "client_order_id": 22,
@@ -2434,8 +2461,8 @@
     "details": 5,
     "environment": 12,
     "error": 60,
-    "error_message": 88,
-    "error_type": 86,
+    "error_message": 89,
+    "error_type": 87,
     "event_type": 7,
     "flatten_operation_id": 9,
     "granularity": 6,
@@ -2450,20 +2477,20 @@
     "path": 12,
     "price": 5,
     "quantity": 11,
-    "reason": 28,
+    "reason": 29,
     "secret_ref": 6,
     "service": 9,
     "side": 27,
-    "stage": 151,
-    "symbol": 83
+    "stage": 156,
+    "symbol": 87
   },
   "level_distribution": {
     "CRITICAL": 2,
     "DEBUG": 40,
-    "ERROR": 118,
-    "INFO": 88,
-    "WARNING": 100
+    "ERROR": 119,
+    "INFO": 91,
+    "WARNING": 101
   },
-  "total_event_types": 131,
+  "total_event_types": 132,
   "version": "1.0"
 }

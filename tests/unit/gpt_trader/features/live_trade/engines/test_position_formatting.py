@@ -27,6 +27,7 @@ class _Pos:
     side: str
     unrealized_pnl: Decimal = Decimal("0")
     realized_pnl: Decimal = Decimal("0")
+    product_type: str = "SPOT"
 
 
 def _pos(**kw: object) -> _Pos:
@@ -47,6 +48,16 @@ class TestBuildPositionState:
             "quantity": Decimal("2"),
             "entry_price": Decimal("50"),
             "side": "long",
+            "product_type": "SPOT",
+        }
+
+    def test_preserves_product_type(self) -> None:
+        positions = {"BTC-USD": _pos(product_type="FUTURE")}
+        assert build_position_state("BTC-USD", positions) == {
+            "quantity": Decimal("1"),
+            "entry_price": Decimal("100"),
+            "side": "long",
+            "product_type": "FUTURE",
         }
 
     def test_missing_symbol_returns_none(self) -> None:

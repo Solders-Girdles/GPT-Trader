@@ -178,6 +178,17 @@ class TestFromDictLegacyProfileMapping:
 
         assert config.symbols
 
+    def test_profile_style_maps_strategy_signal_proposals_gate(self) -> None:
+        with pytest.warns(DeprecationWarning, match=r"Legacy profile-style YAML mapping"):
+            config = BotConfig.from_dict(
+                {
+                    "profile_name": "proposal-profile",
+                    "execution": {"strategy_signal_proposals": True},
+                }
+            )
+
+        assert config.strategy_signal_proposals_enabled is True
+
 
 class TestHealthThresholdsConfig:
     """Tests for health threshold model conversion."""

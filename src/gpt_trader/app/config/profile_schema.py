@@ -68,6 +68,9 @@ class ExecutionConfig:
     mock_fills: bool = False
     use_limit_orders: bool = False
     market_order_fallback: bool = True
+    # Stage 1 human-approved loop (default OFF): route live strategy decisions
+    # into the approval-gated trade-idea workflow instead of submitting orders.
+    strategy_signal_proposals: bool = False
 
 
 @dataclass
@@ -185,6 +188,7 @@ class ProfileSchema:
             mock_fills=execution_data.get("mock_fills", False),
             use_limit_orders=execution_data.get("use_limit_orders", False),
             market_order_fallback=execution_data.get("market_order_fallback", True),
+            strategy_signal_proposals=execution_data.get("strategy_signal_proposals", False),
         )
 
         # Parse session config

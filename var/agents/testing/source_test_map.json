@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 632,
-    "source_modules": 306,
+    "tests_scanned": 633,
+    "source_modules": 307,
     "unresolved_modules": 2
   },
   "source_to_tests": {
@@ -62,6 +62,7 @@
       "tests/unit/gpt_trader/backtesting/test_guarded_backtest_flow.py",
       "tests/unit/gpt_trader/backtesting/validation/test_guarded_execution.py",
       "tests/unit/gpt_trader/cli/test_services.py",
+      "tests/unit/gpt_trader/cli/test_services_build_config.py",
       "tests/unit/gpt_trader/features/brokerages/test_brokerage_factory_paper_fills.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
       "tests/unit/gpt_trader/features/live_trade/execution/test_get_validation_metrics.py",
@@ -462,6 +463,7 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_position_formatting.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_proposals.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_sizing.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
@@ -868,6 +870,9 @@
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py"
     ],
+    "gpt_trader.features.live_trade.engines.cycle_runner": [
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_proposals.py"
+    ],
     "gpt_trader.features.live_trade.engines.equity_calculator": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py"
     ],
@@ -891,6 +896,7 @@
       "tests/integration/test_validation_escalation_flow.py",
       "tests/integration/test_validation_escalation_metrics.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_proposals.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py",
       "tests/unit/gpt_trader/features/live_trade/test_trading_engine.py"
@@ -1178,6 +1184,7 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_chaos.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_health.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_orders.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_proposals.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_sizing.py",
       "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_state.py",
       "tests/unit/gpt_trader/features/live_trade/strategies/mean_reversion/test_strategy_exit_logic_and_cooldown.py",
@@ -1327,6 +1334,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_snapshot_build.py",
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_proposals.py",
       "tests/unit/gpt_trader/features/strategy_tools/test_trade_idea_adapter.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_audit.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
@@ -2574,6 +2582,7 @@
       "gpt_trader.config.types"
     ],
     "tests/unit/gpt_trader/cli/test_services_build_config.py": [
+      "gpt_trader.app.config",
       "gpt_trader.app.config.profile_loader",
       "gpt_trader.cli",
       "gpt_trader.config.types"
@@ -3104,6 +3113,13 @@
       "gpt_trader.features.live_trade.strategies.perps_baseline",
       "gpt_trader.monitoring.metrics_collector",
       "gpt_trader.security.validate"
+    ],
+    "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_proposals.py": [
+      "gpt_trader.core",
+      "gpt_trader.features.live_trade.engines.cycle_runner",
+      "gpt_trader.features.live_trade.engines.strategy",
+      "gpt_trader.features.live_trade.strategies.perps_baseline",
+      "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_reconciliation.py": [
       "gpt_trader.core",
@@ -4544,6 +4560,7 @@
     "gpt_trader.features.live_trade.degradation": "src/gpt_trader/features/live_trade/degradation.py",
     "gpt_trader.features.live_trade.engines": "src/gpt_trader/features/live_trade/engines/__init__.py",
     "gpt_trader.features.live_trade.engines.base": "src/gpt_trader/features/live_trade/engines/base.py",
+    "gpt_trader.features.live_trade.engines.cycle_runner": "src/gpt_trader/features/live_trade/engines/cycle_runner.py",
     "gpt_trader.features.live_trade.engines.equity_calculator": "src/gpt_trader/features/live_trade/engines/equity_calculator.py",
     "gpt_trader.features.live_trade.engines.order_record_mapping": "src/gpt_trader/features/live_trade/engines/order_record_mapping.py",
     "gpt_trader.features.live_trade.engines.position_formatting": "src/gpt_trader/features/live_trade/engines/position_formatting.py",

@@ -17,7 +17,7 @@ import sys
 import threading
 import time
 from collections import deque
-from datetime import datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from importlib import metadata
 from typing import Any
@@ -109,6 +109,12 @@ from gpt_trader.features.live_trade.strategies.perps_baseline import (
     Action,
     Decision,
 )
+from gpt_trader.features.strategy_tools import (
+    StrategySignalContext,
+    StrategySignalToTradeIdeaAdapter,
+    StrategySignalToTradeIdeaAdapterConfig,
+)
+from gpt_trader.features.trade_ideas import ProductType, TradeIdeaService, create_trade_idea_service
 from gpt_trader.monitoring.alert_types import AlertSeverity
 from gpt_trader.monitoring.feature_seeds import build_feature_seed, summarize_seed_reason
 from gpt_trader.monitoring.health_checks import HealthCheckRunner
@@ -274,6 +280,35 @@ class TradingEngine(BaseEngine):
                 "runtime_shutdown_timeout_seconds",
                 5.0,
             ),
+        )
+
+        # Stage 1 human-approved loop: default-off bridge that routes live
+        # strategy decisions into the approval-gated trade-idea workflow instead
+        # of the broker. Built only when the gate is on so the disabled path has
+        # zero overhead and no filesystem side effects.
+        self._trade_idea_service: TradeIdeaService | None = None
+        self._strategy_proposal_adapter: StrategySignalToTradeIdeaAdapter | None = None
+        self._init_strategy_proposal_bridge()
+
+    def _init_strategy_proposal_bridge(self) -> None:
+        """Wire the default-off strategy-signal-to-trade-idea proposal bridge.
+
+        When ``strategy_signal_proposals_enabled`` is set, live decisions are
+        proposed for human review through ``TradeIdeaService.propose()`` and the
+        engine never submits orders (proposal-only mode). When unset, both
+        collaborators stay ``None`` and execution behaves exactly as before.
+        """
+        if not getattr(self.context.config, "strategy_signal_proposals_enabled", False):
+            return
+        self._trade_idea_service = create_trade_idea_service()
+        self._strategy_proposal_adapter = StrategySignalToTradeIdeaAdapter(
+            StrategySignalToTradeIdeaAdapterConfig(enabled=True)
+        )
+        logger.warning(
+            "Strategy-signal proposal mode ENABLED: live decisions route to the "
+            "approval-gated trade-idea workflow; the engine will not submit orders",
+            operation="strategy_proposal",
+            stage="enabled",
         )
 
     def preserve_broker_calls_on_shutdown(self) -> None:
@@ -1135,6 +1170,18 @@ class TradingEngine(BaseEngine):
         equity: Decimal,
         position_state: dict[str, Any] | None,
     ) -> None:
+        if self._strategy_proposal_adapter is not None:
+            # Proposal-only mode: map the decision into a human-review trade idea
+            # and return before any broker interaction. This is the sole action
+            # taken while the gate is on — no orders are submitted for any action.
+            self._propose_strategy_decision(
+                symbol=symbol,
+                decision=decision,
+                price=price,
+                position_state=position_state,
+            )
+            return
+
         if decision.action in (Action.BUY, Action.SELL):
             logger.info(
                 "Executing order",
@@ -1309,6 +1356,138 @@ class TradingEngine(BaseEngine):
                         "error": str(e),
                     },
                 )
+
+    def _propose_strategy_decision(
+        self,
+        *,
+        symbol: str,
+        decision: Decision,
+        price: Decimal,
+        position_state: dict[str, Any] | None,
+    ) -> None:
+        """Route a live decision into the approval-gated trade-idea workflow.
+
+        Proposal-only: this creates an auditable ``proposed`` trade idea through
+        ``TradeIdeaService.propose()`` and never calls the broker, approves an
+        idea, or submits an order. Only supported buy shapes map to an idea;
+        other actions (sell/close/hold) are recorded as skipped. Any mapping or
+        persistence failure is logged and swallowed so a broken proposal never
+        falls through to direct execution while the gate is on.
+        """
+        assert self._strategy_proposal_adapter is not None
+        assert self._trade_idea_service is not None
+        product_type = self._proposal_product_type(symbol, position_state)
+        if product_type is not ProductType.SPOT:
+            logger.info(
+                "Proposal-only mode: product type is not supported for trade ideas",
+                symbol=symbol,
+                action=decision.action.value,
+                product_type=product_type.value,
+                operation="strategy_proposal",
+                stage="skipped",
+            )
+            return
+        context = StrategySignalContext(
+            symbol=symbol,
+            current_mark=price,
+            as_of=datetime.now(UTC),
+            strategy_name=self._proposal_strategy_name(),
+            product_type=product_type,
+            data_source="live-strategy:decision",
+        )
+        try:
+            view = self._strategy_proposal_adapter.propose_decision(
+                decision, context, self._trade_idea_service
+            )
+        except Exception as exc:
+            logger.error(
+                "Strategy-signal proposal failed",
+                symbol=symbol,
+                action=decision.action.value,
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                operation="strategy_proposal",
+                stage="failed",
+            )
+            return
+
+        if view is None:
+            logger.info(
+                "Proposal-only mode: decision not eligible for a trade idea",
+                symbol=symbol,
+                action=decision.action.value,
+                operation="strategy_proposal",
+                stage="skipped",
+            )
+            return
+
+        logger.info(
+            "Strategy decision proposed for human review",
+            symbol=symbol,
+            action=decision.action.value,
+            decision_id=view.idea.decision_id,
+            state=view.state.value,
+            operation="strategy_proposal",
+            stage="proposed",
+        )
+
+    def _proposal_strategy_name(self) -> str:
+        """Best-effort human-readable strategy name recorded on proposed ideas."""
+        active = getattr(self.strategy, "active_strategies", None)
+        if isinstance(active, (list, tuple)):
+            if active:
+                return str(active[0])
+        elif active:
+            return str(active)
+        configured = getattr(self.context.config, "strategy_type", None)
+        if configured:
+            return str(configured)
+        return self.strategy.__class__.__name__
+
+    def _proposal_product_type(
+        self,
+        symbol: str,
+        position_state: dict[str, Any] | None,
+    ) -> ProductType:
+        """Infer the broker-neutral product type before proposing a trade idea.
+
+        The current adapter only supports spot ideas. Returning ``FUTURES`` lets
+        proposal-only mode fail closed for CFM/futures contexts instead of
+        recording a futures signal as a spot idea.
+        """
+        raw_position_type = None
+        if position_state:
+            raw_position_type = position_state.get("product_type")
+        if raw_position_type is not None:
+            normalized = str(getattr(raw_position_type, "value", raw_position_type)).strip().lower()
+            if normalized == ProductType.SPOT.value:
+                return ProductType.SPOT
+            if normalized in {"future", "futures", "perpetual", "perp"}:
+                return ProductType.FUTURES
+            try:
+                return ProductType(normalized)
+            except ValueError:
+                return ProductType.OTHER
+
+        config = self.context.config
+        cfm_symbols = {
+            str(cfm_symbol).strip().upper()
+            for cfm_symbol in getattr(config, "cfm_symbols", [])
+            if str(cfm_symbol).strip()
+        }
+        if symbol.strip().upper() in cfm_symbols:
+            return ProductType.FUTURES
+
+        trading_modes = {
+            str(mode).strip().lower()
+            for mode in getattr(config, "trading_modes", [])
+            if str(mode).strip()
+        }
+        if "cfm" in trading_modes and "spot" not in trading_modes:
+            return ProductType.FUTURES
+        if symbol.strip().upper().endswith("-FUTURES"):
+            return ProductType.FUTURES
+        return ProductType.SPOT
 
     async def _fetch_total_equity(self, positions: dict[str, Position]) -> Decimal | None:
         """Fetch total equity = collateral + unrealized PnL."""

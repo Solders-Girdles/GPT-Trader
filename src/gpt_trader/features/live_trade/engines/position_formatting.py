@@ -23,6 +23,7 @@ def build_position_state(symbol: str, positions: dict[str, Position]) -> dict[st
         "quantity": pos.quantity,
         "entry_price": pos.entry_price,
         "side": pos.side,
+        "product_type": getattr(pos, "product_type", "SPOT"),
     }
 
 

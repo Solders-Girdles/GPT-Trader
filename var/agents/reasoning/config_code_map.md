@@ -47,6 +47,7 @@ Scan root: `src/gpt_trader`
 | status_enabled | 0 | — |
 | status_file | 0 | — |
 | status_interval | 0 | — |
+| strategy_signal_proposals_enabled | 0 | — |
 | strategy_type | 0 | — |
 | symbols | 0 | — |
 | time_in_force | 0 | — |

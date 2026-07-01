@@ -179,6 +179,57 @@ class ReplayReport:
         return sum(1 for idea in self.ideas if idea.outcome is outcome)
 
 
+@dataclass(frozen=True, slots=True)
+class ReplayTournamentRanking:
+    """One ranked proposer row in a replay tournament."""
+
+    rank: int
+    proposer_id: str
+    ideas_proposed: int
+    resolved_ideas: int
+    target_hit_rate: Decimal
+    stop_hit_rate: Decimal
+    average_return_r: Decimal | None
+    eligibility_pass_rate: Decimal
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "rank": self.rank,
+            "proposer_id": self.proposer_id,
+            "ideas_proposed": self.ideas_proposed,
+            "resolved_ideas": self.resolved_ideas,
+            "target_hit_rate": str(self.target_hit_rate),
+            "stop_hit_rate": str(self.stop_hit_rate),
+            "average_return_r": (
+                str(self.average_return_r) if self.average_return_r is not None else None
+            ),
+            "eligibility_pass_rate": str(self.eligibility_pass_rate),
+        }
+
+
+@dataclass(frozen=True, slots=True)
+class ReplayTournamentReport:
+    """Head-to-head replay comparison over one shared candle window."""
+
+    symbol: str
+    granularity: str
+    source: str
+    snapshots_evaluated: int
+    reports: tuple[ReplayReport, ...]
+    rankings: tuple[ReplayTournamentRanking, ...]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "symbol": self.symbol,
+            "granularity": self.granularity,
+            "source": self.source,
+            "snapshots_evaluated": self.snapshots_evaluated,
+            "proposer_count": len(self.reports),
+            "rankings": [ranking.to_dict() for ranking in self.rankings],
+            "reports": [report.to_dict() for report in self.reports],
+        }
+
+
 LevelExtractor = Callable[[TradeIdea], ScoringLevels]
 
 _NUMBER_RE = re.compile(r"(?<![\w.])-?\d[\d,]*(?:\.\d+)?")
@@ -408,6 +459,89 @@ class TradeIdeaReplayRunner:
             snapshots_evaluated=snapshots_evaluated,
             ideas=tuple(results),
         )
+
+
+class TradeIdeaReplayTournamentRunner:
+    """Replay multiple proposers over identical point-in-time snapshots."""
+
+    def __init__(
+        self,
+        proposers: Sequence[Proposer],
+        *,
+        config: ReplayRunnerConfig | None = None,
+        level_extractor: LevelExtractor = extract_numeric_scoring_levels,
+    ) -> None:
+        if not proposers:
+            raise ReplayScoringError(
+                "Replay tournament needs at least one proposer",
+                field="proposers",
+            )
+        proposer_ids = [proposer.proposer_id for proposer in proposers]
+        duplicates = sorted(
+            proposer_id for proposer_id in set(proposer_ids) if proposer_ids.count(proposer_id) > 1
+        )
+        if duplicates:
+            raise ReplayScoringError(
+                f"Replay tournament proposer ids must be unique: {', '.join(duplicates)}",
+                field="proposers",
+            )
+        self._proposers = tuple(proposers)
+        self._config = config or ReplayRunnerConfig()
+        self._level_extractor = level_extractor
+
+    def run_series(
+        self,
+        *,
+        symbol: str,
+        granularity: str,
+        candles: Sequence[Candle],
+    ) -> ReplayTournamentReport:
+        reports = tuple(
+            TradeIdeaReplayRunner(
+                proposer,
+                config=self._config,
+                level_extractor=self._level_extractor,
+            ).run_series(symbol=symbol, granularity=granularity, candles=candles)
+            for proposer in self._proposers
+        )
+        snapshots = reports[0].snapshots_evaluated
+        return ReplayTournamentReport(
+            symbol=symbol,
+            granularity=granularity,
+            source=self._config.source,
+            snapshots_evaluated=snapshots,
+            reports=reports,
+            rankings=_rank_tournament_reports(reports),
+        )
+
+
+def _rank_tournament_reports(
+    reports: Sequence[ReplayReport],
+) -> tuple[ReplayTournamentRanking, ...]:
+    ordered = sorted(
+        reports,
+        key=lambda report: (
+            report.average_return_r if report.average_return_r is not None else Decimal("-999"),
+            report.target_hit_rate,
+            -report.stop_hit_rate,
+            report.ideas_proposed,
+            report.proposer_id,
+        ),
+        reverse=True,
+    )
+    return tuple(
+        ReplayTournamentRanking(
+            rank=index,
+            proposer_id=report.proposer_id,
+            ideas_proposed=report.ideas_proposed,
+            resolved_ideas=report.resolved_ideas,
+            target_hit_rate=report.target_hit_rate,
+            stop_hit_rate=report.stop_hit_rate,
+            average_return_r=report.average_return_r,
+            eligibility_pass_rate=Decimal("1"),
+        )
+        for index, report in enumerate(ordered, start=1)
+    )
 
 
 def _extract_stop_level(

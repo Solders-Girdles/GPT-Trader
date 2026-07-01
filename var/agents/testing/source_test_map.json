@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 633,
+    "tests_scanned": 634,
     "source_modules": 307,
     "unresolved_modules": 2
   },
@@ -23,6 +23,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_replay_tournament.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
@@ -365,6 +366,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_replay_tournament.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_short_budget.py",
@@ -2482,6 +2484,10 @@
     "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py": [
       "gpt_trader",
       "gpt_trader.cli.commands.ideas",
+      "gpt_trader.cli.response"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_replay_tournament.py": [
+      "gpt_trader",
       "gpt_trader.cli.response"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_report.py": [

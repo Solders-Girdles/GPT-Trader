@@ -43,10 +43,8 @@ uv run pytest tests/unit/gpt_trader/config/test_bot_config.py::TestBotConfigEnvA
 # Run tests matching a pattern
 uv run pytest -k "test_error"
 
-# Run in parallel (faster). Exclude TUI snapshot tests: they are flaky under
-# xdist and run serially in their own suite (see `make test-snapshots`). This
-# matches what `make test-unit` and CI run.
-uv run pytest tests/unit -n auto --ignore-glob='tests/unit/gpt_trader/tui/test_snapshots_*.py'
+# Run in parallel (faster). This matches what `make test-unit` and CI run.
+uv run pytest tests/unit -n auto
 
 # Run with verbose output
 uv run pytest -xvs tests/unit/gpt_trader/features/live_trade/

@@ -85,13 +85,13 @@ class StatusReporter:
     - Health summary with issue detection
 
     The reporter uses two intervals:
-    - observer_interval (default 2s): How often to update in-memory status and notify observers (TUI)
+    - observer_interval (default 2s): How often to update in-memory status and notify observers
     - file_write_interval (default 60s): How often to write status to disk
 
     Usage:
         reporter = StatusReporter(
             status_file="/var/run/gpt-trader/status.json",
-            observer_interval=2,      # Fast updates for TUI
+            observer_interval=2,      # Fast updates for observers
             file_write_interval=60,   # Slow disk writes
         )
         reporter.add_observer(my_callback)
@@ -103,7 +103,7 @@ class StatusReporter:
     """
 
     status_file: str = "status.json"
-    observer_interval: float = 2.0  # seconds - fast loop for TUI observers
+    observer_interval: float = 2.0  # seconds - fast loop for observers
     file_write_interval: float = 60.0  # seconds - slow loop for disk writes
     bot_id: str = ""
     enabled: bool = True
@@ -723,7 +723,7 @@ class StatusReporter:
             self._status.strategy.backtest_performance = backtest
 
     def update_strategy_parameters(self, parameters: dict[str, Any] | None) -> None:
-        """Update strategy indicator parameters for TUI display.
+        """Update strategy indicator parameters for status consumers.
 
         Args:
             parameters: Dict with indicator config values, e.g.:

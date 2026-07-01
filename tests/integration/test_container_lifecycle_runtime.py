@@ -37,36 +37,6 @@ def mock_config() -> BotConfig:
     )
 
 
-class TestContainerLifecycleTUI:
-    """Test container lifecycle through TUI entrypoint."""
-
-    @pytest.mark.asyncio
-    async def test_tui_unmount_clears_container(self, mock_config: BotConfig) -> None:
-        container = ApplicationContainer(mock_config)
-        set_application_container(container)
-
-        assert get_application_container() is not None
-
-        clear_application_container()
-
-        assert get_application_container() is None
-
-    @pytest.mark.asyncio
-    async def test_tui_lifecycle_integration(self, mock_config: BotConfig) -> None:
-        from gpt_trader.cli.services import instantiate_bot
-
-        _bot = instantiate_bot(mock_config)  # noqa: F841
-
-        container = get_application_container()
-        assert container is not None
-
-        assert get_application_container() is container
-
-        clear_application_container()
-
-        assert get_application_container() is None
-
-
 class TestContainerLifecycleMultipleCycles:
     """Test container lifecycle across multiple start/stop cycles."""
 

@@ -61,7 +61,7 @@ def positions_to_risk_format(positions: dict[str, Position]) -> dict[str, dict[s
 
 
 def positions_to_status_format(positions: dict[str, Position]) -> dict[str, dict[str, Any]]:
-    """Convert ``Position`` objects to the dict format for ``StatusReporter`` (full TUI data)."""
+    """Convert ``Position`` objects to the dict format for ``StatusReporter``."""
     return {
         symbol: {
             "quantity": str(pos.quantity),

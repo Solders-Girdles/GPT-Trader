@@ -154,8 +154,6 @@ def suggest_sections(path: Path, available_sections: set[str]) -> list[str]:
         candidates.extend(["Quick Links", "Getting Help"])
     if "/architecture/" in rel or "architecture" in rel:
         candidates.append("Core Documentation > Architecture & Design")
-    if "tui" in rel:
-        candidates.append("Core Documentation > TUI")
     if any(
         keyword in rel
         for keyword in (

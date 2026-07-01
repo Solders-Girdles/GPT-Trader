@@ -78,7 +78,6 @@ uv run python scripts/production_preflight.py --profile prod --warn-only
 uv run gpt-trader run --profile dev --dev-fast
 
 # Operator surface
-uv run gpt-trader tui
 uv run gpt-trader account snapshot --profile observe
 ```
 
@@ -89,7 +88,6 @@ uv run gpt-trader account snapshot --profile observe
 Use `observe` when you need real data and account visibility without execution.
 
 ```bash
-uv run gpt-trader tui --mode read_only
 uv run gpt-trader account snapshot --profile observe
 ```
 

@@ -1,9 +1,9 @@
 {
   "env_template_path": "config/environments/.env.template",
   "summary": {
-    "code_only": 125,
+    "code_only": 123,
     "template_only": 0,
-    "total": 176
+    "total": 174
   },
   "variables": [
     {
@@ -227,18 +227,12 @@
     },
     {
       "code_paths": [
-        "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-        "src/gpt_trader/tui/services/credential_validator.py"
+        "src/gpt_trader/features/brokerages/coinbase/credentials.py"
       ],
       "code_references": [
         {
           "line": 63,
           "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 299,
-          "path": "src/gpt_trader/tui/services/credential_validator.py",
           "reader": "os.getenv"
         }
       ],
@@ -256,18 +250,12 @@
     },
     {
       "code_paths": [
-        "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-        "src/gpt_trader/tui/services/credential_validator.py"
+        "src/gpt_trader/features/brokerages/coinbase/credentials.py"
       ],
       "code_references": [
         {
           "line": 67,
           "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 303,
-          "path": "src/gpt_trader/tui/services/credential_validator.py",
           "reader": "os.getenv"
         }
       ],
@@ -418,18 +406,12 @@
     },
     {
       "code_paths": [
-        "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-        "src/gpt_trader/tui/services/credential_validator.py"
+        "src/gpt_trader/features/brokerages/coinbase/credentials.py"
       ],
       "code_references": [
         {
           "line": 62,
           "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 299,
-          "path": "src/gpt_trader/tui/services/credential_validator.py",
           "reader": "os.getenv"
         }
       ],
@@ -447,18 +429,12 @@
     },
     {
       "code_paths": [
-        "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-        "src/gpt_trader/tui/services/credential_validator.py"
+        "src/gpt_trader/features/brokerages/coinbase/credentials.py"
       ],
       "code_references": [
         {
           "line": 66,
           "path": "src/gpt_trader/features/brokerages/coinbase/credentials.py",
-          "reader": "os.getenv"
-        },
-        {
-          "line": 302,
-          "path": "src/gpt_trader/tui/services/credential_validator.py",
           "reader": "os.getenv"
         }
       ],
@@ -509,7 +485,7 @@
       ],
       "code_references": [
         {
-          "line": 91,
+          "line": 84,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_lookup"
         }
@@ -525,7 +501,7 @@
       ],
       "code_references": [
         {
-          "line": 87,
+          "line": 80,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_lookup"
         }
@@ -542,12 +518,12 @@
       ],
       "code_references": [
         {
-          "line": 232,
+          "line": 229,
           "path": "src/gpt_trader/cli/__init__.py",
           "reader": "_env_flag"
         },
         {
-          "line": 157,
+          "line": 150,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_flag"
         }
@@ -570,7 +546,7 @@
       ],
       "code_references": [
         {
-          "line": 84,
+          "line": 77,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_lookup"
         }
@@ -592,7 +568,7 @@
           "reader": "os.getenv"
         },
         {
-          "line": 49,
+          "line": 44,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_lookup"
         }
@@ -608,7 +584,7 @@
       ],
       "code_references": [
         {
-          "line": 81,
+          "line": 74,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_lookup"
         }
@@ -1103,7 +1079,7 @@
       ],
       "code_references": [
         {
-          "line": 187,
+          "line": 95,
           "path": "src/gpt_trader/cli/commands/run.py",
           "reader": "_env_int"
         }
@@ -1142,7 +1118,7 @@
       ],
       "code_references": [
         {
-          "line": 177,
+          "line": 85,
           "path": "src/gpt_trader/cli/commands/run.py",
           "reader": "_env_flag"
         }
@@ -1633,22 +1609,6 @@
       ],
       "in_env_template": false,
       "name": "GPT_TRADER_THROTTLE_TARGET",
-      "template_default": "",
-      "template_references": []
-    },
-    {
-      "code_paths": [
-        "src/gpt_trader/tui/preferences_paths.py"
-      ],
-      "code_references": [
-        {
-          "line": 29,
-          "path": "src/gpt_trader/tui/preferences_paths.py",
-          "reader": "os.getenv"
-        }
-      ],
-      "in_env_template": false,
-      "name": "GPT_TRADER_TUI_PREFERENCES_PATH",
       "template_default": "",
       "template_references": []
     },
@@ -2278,7 +2238,7 @@
       ],
       "code_references": [
         {
-          "line": 91,
+          "line": 84,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_lookup"
         }
@@ -2294,7 +2254,7 @@
       ],
       "code_references": [
         {
-          "line": 87,
+          "line": 80,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_lookup"
         }
@@ -2311,12 +2271,12 @@
       ],
       "code_references": [
         {
-          "line": 232,
+          "line": 229,
           "path": "src/gpt_trader/cli/__init__.py",
           "reader": "_env_flag"
         },
         {
-          "line": 157,
+          "line": 150,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_flag"
         }
@@ -2348,7 +2308,7 @@
       ],
       "code_references": [
         {
-          "line": 84,
+          "line": 77,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_lookup"
         }
@@ -2364,7 +2324,7 @@
       ],
       "code_references": [
         {
-          "line": 49,
+          "line": 44,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_lookup"
         }
@@ -2380,7 +2340,7 @@
       ],
       "code_references": [
         {
-          "line": 81,
+          "line": 74,
           "path": "src/gpt_trader/logging/setup.py",
           "reader": "_env_lookup"
         }
@@ -3277,22 +3237,6 @@
           "line": 34
         }
       ]
-    },
-    {
-      "code_paths": [
-        "src/gpt_trader/tui/services/performance_service.py"
-      ],
-      "code_references": [
-        {
-          "line": 35,
-          "path": "src/gpt_trader/tui/services/performance_service.py",
-          "reader": "os.environ.get"
-        }
-      ],
-      "in_env_template": false,
-      "name": "TUI_PERF_TRACE",
-      "template_default": "",
-      "template_references": []
     },
     {
       "code_paths": [

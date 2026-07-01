@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+import gpt_trader.preflight.checks.trade_ideas as trade_ideas_check_module
 from gpt_trader.features.trade_ideas import (
     DEFAULT_RISK_BUDGET,
     ActorType,
@@ -13,6 +14,7 @@ from gpt_trader.features.trade_ideas import (
     BudgetLogEntry,
     RiskBudgetLog,
     TradeIdeaAuditLog,
+    TradeIdeaService,
     TradeIdeaState,
     new_event_id,
 )
@@ -43,20 +45,7 @@ def _seed_budget(ideas_root: Path) -> None:
 
 def _append_proposed_event(ideas_root: Path) -> None:
     idea = build_trade_idea()
-    TradeIdeaAuditLog(ideas_root / "audit.jsonl").append(
-        AuditEvent(
-            event_id=new_event_id(),
-            timestamp=datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
-            decision_id=idea.decision_id,
-            actor_type=ActorType.AI,
-            actor_id="idea-generator-v1",
-            action=AuditAction.PROPOSED,
-            before_state=None,
-            after_state=TradeIdeaState.PROPOSED,
-            reason="test proposal",
-            record_hash=idea.record_hash(),
-        )
-    )
+    TradeIdeaService(ideas_root).propose(idea, actor_id="idea-generator-v1")
 
 
 def test_trade_ideas_readiness_passes_with_seeded_budget_and_empty_audit(
@@ -127,18 +116,51 @@ def test_trade_ideas_readiness_fails_when_existing_log_is_not_appendable(
     audit_path = ideas_root / "audit.jsonl"
     audit_path.write_text("", encoding="utf-8")
     readonly_path = ideas_root / log_name
-    readonly_path.chmod(0o400)
+
+    def fake_access(path: str | Path, mode: int) -> bool:
+        if Path(path) == readonly_path and mode & trade_ideas_check_module.os.W_OK:
+            return False
+        return True
+
+    monkeypatch.setattr(trade_ideas_check_module.os, "access", fake_access)
     monkeypatch.setenv("GPT_TRADER_IDEAS_ROOT", str(ideas_root))
 
     checker = PreflightCheck(profile="dev")
 
-    try:
-        assert check_trade_ideas_readiness(checker) is False
-    finally:
-        readonly_path.chmod(0o600)
+    assert check_trade_ideas_readiness(checker) is False
     result = _failed_result(checker, message_fragment)
     assert result["details"]["ideas_root"] == str(ideas_root)
     assert result["details"][detail_key] == str(readonly_path)
+
+
+def test_trade_ideas_readiness_fails_when_audit_record_is_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    ideas_root = tmp_path / "trade_ideas"
+    _seed_budget(ideas_root)
+    idea = build_trade_idea(decision_id="trade-20260612-missing-record")
+    TradeIdeaAuditLog(ideas_root / "audit.jsonl").append(
+        AuditEvent(
+            event_id=new_event_id(),
+            timestamp=datetime(2026, 6, 12, 10, 0, tzinfo=UTC),
+            decision_id=idea.decision_id,
+            actor_type=ActorType.AI,
+            actor_id="idea-generator-v1",
+            action=AuditAction.PROPOSED,
+            before_state=None,
+            after_state=TradeIdeaState.PROPOSED,
+            reason="test proposal without stored record",
+            record_hash=idea.record_hash(),
+        )
+    )
+    monkeypatch.setenv("GPT_TRADER_IDEAS_ROOT", str(ideas_root))
+
+    checker = PreflightCheck(profile="dev")
+
+    assert check_trade_ideas_readiness(checker) is False
+    result = _failed_result(checker, "audit record integrity failed")
+    assert result["details"]["ideas_root"] == str(ideas_root)
+    assert result["details"]["audit_path"] == str(ideas_root / "audit.jsonl")
 
 
 def test_trade_ideas_readiness_fails_when_budget_is_missing(

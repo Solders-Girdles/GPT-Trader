@@ -72,6 +72,14 @@ def _validate_budget_history(budget_log: RiskBudgetLog) -> tuple[int, int] | Non
     return len(entries), entries[-1].budget.version
 
 
+def _validate_audit_record_references(
+    service: TradeIdeaService,
+    events: list[AuditEvent],
+) -> None:
+    for event in events:
+        service.load_record_version(event.decision_id, event.record_hash)
+
+
 def _check_cli_surface(checker: PreflightCheck, details: dict[str, str]) -> bool:
     try:
         from gpt_trader.cli.commands.ideas import register as register_ideas_cli
@@ -128,17 +136,26 @@ def check_trade_ideas_readiness(checker: PreflightCheck) -> bool:
         checker.log_error(f"Trade ideas audit unreadable: {exc}", details=details)
         all_good = False
     else:
-        event_details = {**details, "event_count": len(events)}
-        checker.log_success(
-            f"Trade ideas audit verified at {audit_path}: {len(events)} event(s)",
-            details=event_details,
-        )
-        pending_proposed = _latest_state_counts(events)[TradeIdeaState.PROPOSED]
-        if pending_proposed:
-            checker.log_warning(
-                f"Trade ideas pending review: {pending_proposed} proposed idea(s)",
-                details={**event_details, "pending_proposed_count": pending_proposed},
+        try:
+            _validate_audit_record_references(service, events)
+        except AuditIntegrityError as exc:
+            checker.log_error(f"Trade ideas audit record integrity failed: {exc}", details=details)
+            all_good = False
+        except OSError as exc:
+            checker.log_error(f"Trade ideas audit records unreadable: {exc}", details=details)
+            all_good = False
+        else:
+            event_details = {**details, "event_count": len(events)}
+            checker.log_success(
+                f"Trade ideas audit verified at {audit_path}: {len(events)} event(s)",
+                details=event_details,
             )
+            pending_proposed = _latest_state_counts(events)[TradeIdeaState.PROPOSED]
+            if pending_proposed:
+                checker.log_warning(
+                    f"Trade ideas pending review: {pending_proposed} proposed idea(s)",
+                    details={**event_details, "pending_proposed_count": pending_proposed},
+                )
 
     budget_log = RiskBudgetLog(budget_path)
     try:

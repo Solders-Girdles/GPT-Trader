@@ -38,7 +38,7 @@ That's it! Now, every time you run `git commit`, the pre-commit hooks will run a
 ### Pre-PR Verification Checklist
 1. Review `docs/README.md` and prefer code + `var/agents/**` generated inventories for anything that drifts.
 2. Refresh dependencies: `uv sync`.
-3. Snapshot test discovery: `uv run pytest --collect-only`.
+3. Collect tests: `uv run pytest --collect-only`.
 4. Run the full unit suite: `uv run pytest tests/unit -q`.
 5. Execute slice-specific suites relevant to your change set (examples below).
 6. Validate docs links: `make agent-docs-links` (runs `scripts/maintenance/docs_link_audit.py`).
@@ -65,13 +65,6 @@ To run the spot trading bot for development, use the `gpt-trader` command (spot 
 
 ```bash
 uv run gpt-trader run --profile dev --dev-fast
-```
-
-Launch the TUI via the CLI entry point to keep uv-locked deps and env/logging setup consistent:
-
-```bash
-uv run gpt-trader tui               # Mode selector
-uv run gpt-trader tui --mode demo   # Skip selector for demos
 ```
 
 ## Development Workflow
@@ -104,8 +97,10 @@ Before branching, make sure to:
 Issue labels drive repository issue routing for agents and humans. Keep them consistent and machine-friendly:
 
 - **Type label (required):** one of `bug`, `enhancement`, `architecture`, `chore`, `documentation`, `tests`, `ci`, or `security`.
-- **Area label(s) (required, 1–2):** one or two labels from the domain set, e.g. `trade-ideas`, `live-trade`, `cli`, `tui`, `mcp`, `reporting`, `runtime`, `monitoring`, `audit`, `closeout`.
-- **Optional detail labels:** use tags like `persistence`, `broker-neutral`, `reliability`, `packaging`, `deploy`, etc. as needed.
+- **Area label(s) (required, 1–2):** one or two labels from the active domain set, e.g. `trade-ideas`, `live-trade`, `cli`, `mcp`, `reporting`, `runtime`, `monitoring`, `audit`, `closeout`, `broker-neutral`, `trading-safety`, or `coinbase`.
+- **Optional detail labels:** use tags like `persistence`, `reliability`, `packaging`, `deploy`, `developer-experience`, `tech-debt`, etc. as needed.
+- **Agent routing labels:** `agent-review`, `agent-ready`, `decision-needed`, `codex-review-feedback`, and `claw-candidate` are routing signals. Their detailed workflow lives in [the agent review pipeline](docs/agents/project_review_pipeline.md#stage-4-queue).
+- **Triage labels:** use `triage:build-now`, `triage:build-next`, `triage:blocked`, or `triage:defer` after an issue has been sorted into the current queue shape.
 - **`codex` label:** routing signal for the agent-review / Codex workflow. Issues in this lane (e.g. the `agent-review-finding` template) are **exempt** from the Type/Area requirements above — `codex` alone is sufficient.
 
 For this repository, status/priority labels are intentionally deferred until they solve a real need. The default issue templates should already include the intended label shape so no extra manual steps are needed at issue creation.
@@ -125,7 +120,7 @@ For this repository, status/priority labels are intentionally deferred until the
 - One assertion per test when possible
 - Use fixtures for shared setup
 - Use pytest `monkeypatch` for mocks; patch-style helpers are blocked in `tests/`
-- Keep test modules <= 240 lines unless allowlisted by `scripts/ci/check_test_hygiene.py`
+- Keep test modules <= 400 lines unless allowlisted by `scripts/ci/check_test_hygiene.py`
 - Avoid `time.sleep`; prefer deterministic `fake_clock`
 - Match marker conventions to folder (integration/contract/real_api)
 
@@ -275,32 +270,6 @@ uv run pytest tests/unit/gpt_trader/features/live_trade/execution/test_order_sub
 uv run pytest tests/unit --cov=src/gpt_trader --cov-report=term-missing
 ```
 
-### TUI CSS Regeneration
-
-The TUI uses concatenated CSS modules. After editing any `.tcss` file in `src/gpt_trader/tui/styles/`:
-
-```bash
-# Regenerate main.tcss from source modules
-python scripts/build_tui_css.py
-
-# Verify the TUI renders correctly
-uv run gpt-trader tui --mode demo
-```
-
-**Important**: Never edit `styles/main.tcss` directly - it's auto-generated.
-
-### TUI Snapshot Tests
-
-Snapshot tests verify TUI rendering consistency:
-
-```bash
-# Run snapshot tests
-uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -q
-
-# Update snapshots after intentional UI changes
-uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py --snapshot-update
-```
-
 ### Naming Standards Check
 
 ```bash
@@ -315,8 +284,6 @@ uv run agent-naming
 | `black --check` | Formatting | Run `uv run black .` |
 | `ruff check` | Linting violations | Run `uv run ruff check --fix .` |
 | `mypy` errors | Type issues | Fix type annotations (pre-existing shim errors can be ignored) |
-| Snapshot mismatch | TUI changed | Review changes, run `--snapshot-update` if intentional |
-| CSS out of sync | Edited `.tcss` module | Run `python scripts/build_tui_css.py` |
 | Import error | Wrong module path | Use canonical paths (see `docs/DEPRECATIONS.md`) |
 | Test using deprecated path | Patch targets shim | Update to patch canonical module directly |
 
@@ -330,7 +297,7 @@ make ci-required
 
 For quick iteration the commands below cover the most common failures, but they
 are **not** a full substitute for `make ci-required` (which also runs docs
-audits, `agent-regenerate --verify`, TUI CSS, and test-guardrails):
+audits, `agent-regenerate --verify`, and test guardrails):
 
 ```bash
 uv run ruff check .
@@ -340,31 +307,15 @@ uv run pytest tests/unit -n auto -q
 pre-commit run --all-files
 ```
 
-## CI Lanes
+## CI Contract
 
-The CI workflow (`.github/workflows/ci.yml`) runs checks in parallel lanes for
-faster feedback and isolated failures. The compact blocking/advisory contract
-lives in
-[`docs/DEVELOPMENT_GUIDELINES.md`](docs/DEVELOPMENT_GUIDELINES.md#continuous-integration);
-keep this section as a local command quick-reference, not a second source of
-truth for branch protection.
+The compact blocking/advisory CI contract lives in
+[`docs/DEVELOPMENT_GUIDELINES.md`](docs/DEVELOPMENT_GUIDELINES.md#continuous-integration).
+Use that section for branch-protection context names, blocking status, and
+workflow semantics. Keep this section as a local command quick-reference, not a
+second CI-lane table.
 
-### Lane Overview
-
-| Lane | Job Name | Command | Purpose |
-|------|----------|---------|---------|
-| **Lint** | `lint` | `uv run ruff check . && uv run black --check .` | Code style |
-| **Docs Audit** | `docs-audit` | `uv run python scripts/maintenance/docs_link_audit.py && uv run python scripts/maintenance/docs_reachability_check.py` | Docs links and reachability |
-| **Type Check** | `typecheck` | `uv run mypy src` | Static typing |
-| **Agent Freshness** | `agent-freshness` | `uv run agent-regenerate --verify` | Generated agent inventories |
-| **TUI CSS** | `tui-css` | `python scripts/ci/check_tui_css_up_to_date.py` | Generated CSS in sync |
-| **Test Guardrails** | `test-guardrails` | `uv run python scripts/ci/check_test_hygiene.py` | Test hygiene and boundary checks |
-| **Unit (Core)** | `unit-tests` | `uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py` | Fast unit tests |
-| **TUI Snapshots** | `tui-snapshots` | `uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -v` | Visual regression |
-| **Property** | `property-tests` | `uv run pytest tests/property -v` | Property-based tests |
-| **Contract** | `contract-tests` | `uv run pytest tests/contract -v` | API contracts |
-
-### Running Lanes Locally
+### Local Command Quick Reference
 
 Makefile shortcuts:
 - `make lint` (ruff check + black --check)
@@ -380,14 +331,11 @@ uv run ruff check . && uv run black --check .
 # Type check lane
 uv run mypy src
 
-# TUI CSS lane
-python scripts/ci/check_tui_css_up_to_date.py
+# Test guardrails
+uv run python scripts/ci/check_test_hygiene.py
 
-# Unit tests (core, excluding TUI snapshots)
-uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py
-
-# TUI snapshot tests
-uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -v
+# Unit tests
+uv run pytest tests/unit -n auto -q
 
 # Property tests
 uv run pytest tests/property -v

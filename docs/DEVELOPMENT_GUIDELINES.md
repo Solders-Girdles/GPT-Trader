@@ -59,7 +59,6 @@ need to review historical practices.
 | Modify degradation behavior | `src/gpt_trader/features/live_trade/degradation.py` |
 | Add/modify a health check | `src/gpt_trader/monitoring/health_checks.py` |
 | Add a Coinbase REST/WS endpoint | `src/gpt_trader/features/brokerages/coinbase/client/` + `src/gpt_trader/features/brokerages/coinbase/endpoints.py` |
-| Update TUI screens/widgets | `src/gpt_trader/tui/screens/` or `src/gpt_trader/tui/widgets/` |
 
 ## Intentional Guard-Stack Bypasses
 
@@ -112,7 +111,7 @@ those check names stable.
 
 | Check / workflow job | Tier | Trigger | Blocking status | Why it exists |
 | --- | --- | --- | --- | --- |
-| `CI` / `Lint & Format`, `Docs Link Audit`, `Type Check`, `TUI CSS Check`, `Test Guardrails`, `Unit Tests (Core)`, `TUI Snapshot Tests`, `Property Tests`, `Contract Tests` | Required merge safety | `pull_request`, `merge_group`, push to `main`/`develop`, manual | Required by `main` branch protection | Fast repo integrity, docs reachability, type checks, generated TUI CSS, and core test coverage |
+| `CI` / `Lint & Format`, `Docs Link Audit`, `Type Check`, `Test Guardrails`, `Unit Tests (Core)`, `Property Tests`, `Contract Tests` | Required merge safety | `pull_request`, `merge_group`, push to `main`/`develop`, manual | Required by `main` branch protection | Fast repo integrity, docs reachability, type checks, and core test coverage |
 | `CI` / `Agent Health` | Advisory PR health | Same as `CI` | Not branch-protection required | Publishes an agent-health report without defining merge eligibility |
 | `CI` / `Agent Artifacts Freshness` | Generated artifact advisory on PR; blocking outside PR | Same as `CI` | Not branch-protection required; exits successfully with a warning on `pull_request`, fails on non-PR events when stale | Shows when `var/agents/**` needs regeneration without stalling ordinary PRs |
 | `CI` / `Windows Unit Tests (Portability)` and `Dependency Review` | Event/compatibility advisory | Windows follows `CI`; dependency review is `pull_request` only | Not branch-protection required | Covers Windows-sensitive units and high-severity dependency changes |
@@ -123,10 +122,8 @@ those check names stable.
 
 The default PR workflow keeps required merge-safety check names stable for branch
 protection, but several context-specific lanes now self-skip when their inputs
-do not change. `TUI CSS Check` runs for TUI style/CSS generator inputs, `TUI
-Snapshot Tests` runs for TUI code/snapshot/dependency inputs, `Agent Artifacts
-Freshness` runs for agent artifact source or output inputs, and `Dependency
-Review` runs for dependency manifest changes.
+do not change. `Agent Artifacts Freshness` runs for agent artifact source or
+output inputs, and `Dependency Review` runs for dependency manifest changes.
 
 ### Local CI Command
 
@@ -136,8 +133,8 @@ For a fail-fast entrypoint that matches the local PR-readiness command set, run:
 make ci-required
 ```
 
-It runs lint/format, docs audits, mypy, agent artifacts freshness, the TUI CSS
-check, test guardrails, and core unit tests, stopping on the first failure. Use
+It runs lint/format, docs audits, mypy, agent artifacts freshness, test
+guardrails, and core unit tests, stopping on the first failure. Use
 it when you want the local PR-readiness surface without optional suites or local
 readiness evidence. This local command fails on stale agent artifacts; GitHub
 pull_request CI reports stale artifacts as non-blocking instead.
@@ -150,13 +147,9 @@ uv run local-ci
 ```
 
 This covers the same core validation categories used around PRs: lint + format,
-docs audits, mypy, agent artifacts freshness, TUI CSS check, test guardrails,
-and core unit tests. The mypy pass includes the first TUI ratchet modules under
-`src/gpt_trader/tui/types.py`, `src/gpt_trader/tui/thresholds.py`, and
-`src/gpt_trader/tui/state_management/validators.py`; the broader dynamic
-Textual surface remains excluded until later ratchet steps. Profile-specific
-local checks can still differ from GitHub pull_request enforcement, especially
-around readiness evidence.
+docs audits, mypy, agent artifacts freshness, test guardrails, and core unit
+tests. Profile-specific local checks can still differ from GitHub pull_request
+enforcement, especially around readiness evidence.
 
 The command accepts `--profile`/`-p` to select either the default strict/full
 profile or the quick/dev profile. Strict (the default and the `full` alias) runs

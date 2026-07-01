@@ -34,7 +34,6 @@ Any abbreviation not listed here should be spelled out in full.
 | `CI` | Continuous Integration | Development | Industry standard |
 | `CD` | Continuous Deployment | Development | Industry standard |
 | `E2E` | End-to-End | Testing | Industry standard |
-| `TUI` | Terminal User Interface | UI | Textual-based interface |
 | `qty` | Quantity | Trading domain | Standard trading term for order/position size |
 
 ## Banned Abbreviations

@@ -25,25 +25,26 @@ already exists and is complete at the domain level:
 | `features/trade_ideas/baseline.py`, `replay.py` | Baseline proposer and replay scoring |
 | `features/strategy_tools/trade_idea_adapter.py` | Default-off strategy decision → `TradeIdeaService.propose()` bridge |
 
-**Current interface state:** the CLI and TUI review surfaces now exist.
+**Current interface state:** the CLI review surface exists.
 `gpt-trader ideas` constructs `TradeIdeaService` through the trade-ideas factory
 and exposes the agent-facing approval workflow: propose, list, show, approve,
 reject, request-changes, expire, resubmit, mark-submitted, mark-filled, budget,
 audit, and report. It also exposes the read-only Stage 1 baseline calibration
 surface, `gpt-trader ideas replay baseline`, which parses a local candle fixture
 and formats `TradeIdeaReplayRunner` / `ReplayReport` output without using
-`TradeIdeaService` storage. `ideas list` and the TUI review queue share
+`TradeIdeaService` storage. `ideas list` exposes
 `TradeIdeaService.list_view_result(TradeIdeaListQuery(...))` for filters,
-sorting, and pagination metadata. The TUI `IdeasReviewScreen` is the
-implemented human review surface: it lists proposed ideas, applies state and
-instrument filters, renders record details, previews policy violations, and
-records approve, reject, request-changes, and expire decisions through
-`TradeIdeaService`. MCP or other remote surfaces remain future work. The service
-docstring still states the adapter boundary explicitly: *"interfaces such as
-CLI, TUI, or MCP servers must stay thin adapters over these methods."*
+sorting, and pagination metadata, so `gpt-trader ideas` is the implemented human
+review surface for proposing, filtering, and recording approve, reject,
+request-changes, and expire decisions through `TradeIdeaService`. MCP or other
+remote surfaces remain future work. The service docstring states the adapter
+boundary explicitly: *"interfaces such as CLI or MCP servers must stay thin
+adapters over these methods."*
 
-These notes preserve the interface decisions that shaped the implemented CLI and
-TUI surfaces. They are not a request to re-promote the TUI review workstream.
+A Textual TUI review screen was also implemented but has since been removed (see
+`docs/decisions/remove-tui-subsystem.md` and `docs/DEPRECATIONS.md`). These notes
+preserve the interface decisions that shaped the implemented CLI surface; they
+are not a request to re-promote a TUI review workstream.
 
 The Stage 1 strategy-signal bridge starts as a library adapter, not runtime
 engine wiring. `StrategySignalToTradeIdeaAdapter` accepts an existing strategy
@@ -57,7 +58,7 @@ cancel, or reconcile orders, and it does not call broker/account APIs.
 
 1. **Thin adapters only.** Interfaces parse input, resolve actor identity,
    call one `TradeIdeaService` method, and render the result. No workflow,
-   policy, or budget logic in CLI/TUI code. If an interface needs a new
+   policy, or budget logic in CLI code. If an interface needs a new
    behavior, it goes into the service first. The read-only replay baseline
    calibration command is the explicit exception: it is not a workflow mutation
    or storage adapter, so it may call `TradeIdeaReplayRunner` directly and
@@ -85,8 +86,8 @@ cancel, or reconcile orders, and it does not call broker/account APIs.
 
 ## Shared Decisions (Workstream 0 — implemented)
 
-The CLI implements these decisions today. The TUI should reuse them instead of
-creating a parallel service or storage contract.
+The CLI implements these decisions today. Any future interface should reuse them
+instead of creating a parallel service or storage contract.
 
 ### Storage root
 
@@ -147,14 +148,14 @@ Implemented in `CliErrorCode` in `cli/response.py`:
 |---|------|-----------|------|
 | 0 | Shared wiring (this doc, "Shared Decisions") | — | Implemented |
 | 1 | [`TRADE_IDEA_CLI_SPEC.md`](TRADE_IDEA_CLI_SPEC.md) — `gpt-trader ideas` command group | 0 | Implemented |
-| 2 | [`TRADE_IDEA_TUI_REVIEW_SPEC.md`](TRADE_IDEA_TUI_REVIEW_SPEC.md) — Ideas review screen | 0 (not 1) | Implemented |
+| 2 | Ideas review screen (Textual TUI) | 0 (not 1) | Removed |
 
-Workstreams 1 and 2 were independently mergeable and have both shipped.
 Workstreams 0+1 provide the agent-facing CLI surface and unblock the
-AI-propose -> human-approve loop end to end. Workstream 2 provides the
-keyboard-driven human review surface without reimplementing CLI or service
-behavior. Future interface work should start from these shipped adapters and
-must not treat the TUI review screen as an open backlog item.
+AI-propose -> human-approve loop end to end. Workstream 2 shipped a
+keyboard-driven Textual review screen, but the TUI subsystem was later removed
+(see `docs/decisions/remove-tui-subsystem.md`); the `gpt-trader ideas` CLI is the
+implemented human review surface. Future interface work should start from the
+shipped CLI adapters.
 
 ## Non-Goals (all workstreams)
 
@@ -178,8 +179,5 @@ must not treat the TUI review screen as an open backlog item.
   `tests/unit/gpt_trader/...` mirroring source paths.
 - Quality gate before PR: `uv run agent-check`, plus
   `uv run ruff check . --fix`, `uv run black .`, `uv run mypy src/gpt_trader`.
-- TUI CSS: edit modules under `src/gpt_trader/tui/styles/`, then run
-  `python scripts/build_tui_css.py`; never edit `styles/main.tcss` directly.
-  `DEFAULT_CSS` blocks use hardcoded hex with `/* $variable */` comments.
 - Import boundaries: `scripts/ci/check_import_boundaries.py` runs in CI —
   keep interface code free of cross-slice imports it would flag.

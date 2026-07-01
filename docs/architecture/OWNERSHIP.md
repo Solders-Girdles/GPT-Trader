@@ -28,12 +28,6 @@ It exists to make changes safer and to help agents route work to the right place
 - **When you touch this:** run unit tests (CLI + core)
   - `uv run pytest tests/unit -q`
 
-### TUI
-- **Dirs:** `src/gpt_trader/tui/`
-- **What lives here:** Textual UI, widgets, operator UX
-- **When you touch this:** run TUI snapshot tests
-  - `uv run pytest tests/unit/gpt_trader/tui -q`
-
 ### Live trading engine
 - **Dirs:** `src/gpt_trader/features/live_trade/`
 - **What lives here:** live loop, engines, execution pipeline, risk, reconciliation
@@ -101,4 +95,3 @@ It exists to make changes safer and to help agents route work to the right place
 | config schema / env var docs | `uv run agent-regenerate --verify` |
 | execution / order placement | `uv run pytest tests/unit/gpt_trader/features/live_trade/execution -q` |
 | broker adapters | `uv run pytest tests/unit/gpt_trader/features/brokerages -q` |
-| TUI widgets | `uv run pytest tests/unit/gpt_trader/tui -q` |

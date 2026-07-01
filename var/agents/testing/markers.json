@@ -37,7 +37,6 @@
     "flaky": "Known flaky tests that may need retries",
     "manual": "Tests requiring manual intervention/verification",
     "deprecated": "Tests for deprecated functionality",
-    "uses_real_preferences": "Tests that read or write real TUI preferences",
     "legacy_delete": "Tests slated for deletion (see tests/_triage/legacy_tests.yaml)",
     "legacy_modernize": "Tests to modernize/refactor (see tests/_triage/legacy_tests.yaml)"
   },
@@ -95,11 +94,11 @@
     ]
   },
   "counts": {
-    "unit": 6879,
-    "asyncio": 442,
-    "parametrize": 203,
+    "unit": 5730,
+    "asyncio": 320,
+    "parametrize": 164,
     "property": 82,
-    "integration": 81,
+    "integration": 79,
     "endpoints": 69,
     "usefixtures": 17,
     "skipif": 9,
@@ -109,8 +108,7 @@
     "perps": 3,
     "real_api": 1,
     "requires_network": 1,
-    "requires_secrets": 1,
-    "uses_real_preferences": 1
+    "requires_secrets": 1
   },
   "usage": {
     "run_by_marker": "pytest -m <marker>",

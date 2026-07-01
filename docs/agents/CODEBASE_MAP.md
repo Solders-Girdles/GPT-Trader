@@ -21,8 +21,6 @@ Use this as a “where do I start?” index when you already know what you’re 
 | Modify live execution (guarded engine) | `src/gpt_trader/features/live_trade/engines/strategy.py` | Live loop uses `TradingEngine._validate_and_place_order()`; `submit_order()` is external entrypoint |
 | Change risk rules | `src/gpt_trader/features/live_trade/risk/manager/__init__.py` | Also see runtime guards in `src/gpt_trader/features/live_trade/execution/guards/` |
 | Add monitoring / alerts | `src/gpt_trader/monitoring/` | Heartbeat/status wiring in `src/gpt_trader/features/live_trade/engines/strategy.py` |
-| Add a TUI widget/screen | `src/gpt_trader/tui/widgets/` | Screens in `src/gpt_trader/tui/screens/`; style guide: `docs/TUI_STYLE_GUIDE.md` |
-| Change TUI styles | `src/gpt_trader/tui/styles/` | Edit modules under `styles/{theme,layout,components,widgets,screens}/` then run `scripts/build_tui_css.py` |
 | Backtesting / simulation | `src/gpt_trader/backtesting/` | Entrypoints vary; start with `var/agents/reasoning/backtest_entrypoints_map.md` |
 | Security & secrets | `src/gpt_trader/security/` | Reference: `docs/SECURITY.md` |
 

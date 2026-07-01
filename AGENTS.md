@@ -21,8 +21,7 @@ test -f .env || cp config/environments/.env.template .env
 
 uv run python -c "import re; from pathlib import Path; p=Path('.env'); p.write_text(re.sub(r'^MOCK_BROKER=.*$','MOCK_BROKER=1',p.read_text(),flags=re.M))"
 
-uv run python scripts/ci/check_tui_css_up_to_date.py
-uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py
+uv run pytest tests/unit -n auto -q
 ```
 
 ### Environment Variables (Optional)
@@ -79,8 +78,8 @@ For testing without real API access, set `MOCK_BROKER=1` in `.env`.
 ### Local CI
 
 Run `make ci-required` when you want the local PR-readiness command set. It runs
-lint/format, docs audits, type checks, agent artifact freshness, TUI CSS checks,
-test guardrails, and core unit tests, stopping on the first local failure.
+lint/format, docs audits, type checks, agent artifact freshness, test guardrails,
+and core unit tests, stopping on the first local failure.
 GitHub pull_request CI runs a related agent-freshness job, but stale artifacts
 are reported as non-blocking on pull requests. GitHub pull_request CI also does
 not run the canary readiness gate.
@@ -122,13 +121,6 @@ If you touch `var/agents/**` or any agent-artifact inputs (notably `scripts/agen
 | `uv run agent-check` | Full quality gate (JSON output) |
 | `uv run agent-naming` | Check naming conventions |
 
-### TUI Development
-
-After editing `.tcss` files, rebuild CSS:
-```bash
-python scripts/build_tui_css.py
-```
-
 ### Agent Review Artifacts
 
 Review and analysis artifacts that should be durable project records belong in
@@ -144,7 +136,6 @@ large datasets or secrets.
 |------|---------|
 | `src/gpt_trader/app/` | Composition root - `ApplicationContainer`, config, bootstrap |
 | `src/gpt_trader/features/` | Vertical slices (brokerages, live_trade, data, intelligence) |
-| `src/gpt_trader/tui/` | Terminal UI (Textual-based) |
 | `src/gpt_trader/monitoring/` | Runtime guards, metrics |
 | `src/gpt_trader/validation/` | Declarative validators |
 | `src/gpt_trader/errors/` | Centralized error hierarchy |
@@ -211,8 +202,6 @@ uv run pytest -m "integration" tests/      # Integration tests (opt-in)
 |-------|-----|
 | `black --check` fails | Run `uv run black .` |
 | `ruff check` fails | Run `uv run ruff check --fix .` |
-| CSS out of sync | Run `python scripts/build_tui_css.py` |
-| Snapshot mismatch | Review changes, run `--snapshot-update` if intentional |
 
 ## Key Documentation
 
@@ -221,7 +210,6 @@ uv run pytest -m "integration" tests/      # Integration tests (opt-in)
 | `docs/ARCHITECTURE.md` | System design, order execution pipeline |
 | `docs/DI_POLICY.md` | Dependency injection patterns |
 | `docs/naming.md` | Naming conventions |
-| `docs/TUI_STYLE_GUIDE.md` | TUI development guide |
 | `CONTRIBUTING.md` | Full contribution workflow |
 
 ### Review Artifacts Convention (run goal-pipeline-20260626-001-gpt-trader-clean-discovery-scout)

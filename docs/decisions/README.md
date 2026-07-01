@@ -68,9 +68,10 @@ markers. Regenerating cannot drift from the files.
 <!-- BEGIN GENERATED DECISION INDEX -->
 | Date | Decision | Status |
 |------|----------|--------|
+| 2026-06-30 | [Remove the TUI subsystem](remove-tui-subsystem.md) | accepted |
 | 2026-06-28 | [Adopt a measured-outcome operating rubric](adopt-measured-outcome-rubric.md) | proposed |
 | 2026-06-28 | [Event JSONL: accepted fallback or import-only historical data](event-jsonl-compatibility.md) | proposed |
-| 2026-06-28 | [INTX default derivatives venue](intx-default-derivatives-venue.md) | proposed |
+| 2026-06-28 | [INTX default derivatives venue](intx-default-derivatives-venue.md) | accepted |
 | 2026-06-28 | [Meaning of the prod and canary profiles under the approval ladder](prod-canary-profile-meaning.md) | proposed |
 | 2026-06-27 | [Stabilize and reconcile before closing the Stage 1 loop](stabilize-before-closing-the-loop.md) | accepted |
 | 2026-06-22 | [Trade-ideas CLI is the active discovery lane](trade-ideas-cli-discovery-lane.md) | accepted |

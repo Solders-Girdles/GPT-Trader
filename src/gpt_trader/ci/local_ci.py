@@ -119,11 +119,6 @@ def parse_args(argv: Sequence[str] | None) -> argparse.Namespace:
         )
     )
     parser.add_argument(
-        "--include-snapshots",
-        action="store_true",
-        help="Include TUI snapshot tests (CI: tui-snapshots).",
-    )
-    parser.add_argument(
         "--include-property-tests",
         action="store_true",
         help="Include property tests (CI: property-tests).",
@@ -184,7 +179,6 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
         "GPT_TRADER_STRICT_CONTAINER": "1",
         "PYTHONWARNINGS": "default",
     }
-    snapshot_test_paths = _snapshot_test_paths()
 
     steps = [
         PlannedStep(
@@ -242,10 +236,6 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
             skip_reason=profile.agent_artifacts_skip_reason,
         ),
         PlannedStep(
-            label="TUI CSS check",
-            command=["python", "scripts/ci/check_tui_css_up_to_date.py"],
-        ),
-        PlannedStep(
             label="Check test hygiene",
             command=["uv", "run", "python", "scripts/ci/check_test_hygiene.py"],
         ),
@@ -291,22 +281,8 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
                 "-n",
                 "auto",
                 "-q",
-                "--ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py",
             ],
             env=test_env,
-        ),
-        PlannedStep(
-            label="TUI snapshot tests",
-            command=[
-                "uv",
-                "run",
-                "pytest",
-                *snapshot_test_paths,
-                "-v",
-            ],
-            env=test_env,
-            enabled=args.include_snapshots,
-            skip_reason="use --include-snapshots",
         ),
         PlannedStep(
             label="Property tests",
@@ -324,12 +300,6 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
         ),
     ]
     return steps
-
-
-def _snapshot_test_paths() -> list[str]:
-    return [
-        str(path) for path in sorted(Path("tests/unit/gpt_trader/tui").glob("test_snapshots_*.py"))
-    ]
 
 
 def format_command(command: Sequence[str]) -> str:

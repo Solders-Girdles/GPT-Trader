@@ -81,7 +81,6 @@ def test_docs_link_audit_skips_review_artifact_tmp_markdown(tmp_path: Path) -> N
     ("path", "expected"),
     [
         (Path("docs/architecture/system.md"), ["Core Documentation > Architecture & Design"]),
-        (Path("docs/tui/overview.md"), ["Core Documentation > TUI"]),
         (Path("docs/agents/oncall.md"), ["Quick Links", "Getting Help"]),
         (Path("docs/misc/notes.md"), ["Quick Links", "Additional Resources"]),
     ],
@@ -91,7 +90,6 @@ def test_suggest_sections_for_representative_paths(path: Path, expected: list[st
         "Quick Links",
         "Getting Help",
         "Core Documentation > Architecture & Design",
-        "Core Documentation > TUI",
         "Core Documentation > Trading Operations",
         "Core Documentation > Coinbase Integration",
         "Core Documentation > Development",

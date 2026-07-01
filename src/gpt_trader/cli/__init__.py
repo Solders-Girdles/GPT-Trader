@@ -19,7 +19,7 @@ from gpt_trader.utilities.logging_patterns import get_logger
 load_dotenv()
 
 # Configure logging (rotating files + console)
-configure_logging(tui_mode=False)  # CLI mode: enable console output
+configure_logging()  # CLI mode: enable console output
 logger = get_logger(__name__, component="cli")
 
 # fmt: off
@@ -36,7 +36,6 @@ from gpt_trader.cli.commands import (  # noqa: E402
     run,
     strategy_profile,
     treasury,
-    tui,
 )
 
 # fmt: on
@@ -55,7 +54,6 @@ COMMAND_NAMES = {
     "report",
     "optimize",
     "strategy",
-    "tui",
     "preflight",
 }
 __all__ = ["main"]
@@ -193,7 +191,6 @@ def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Coinbase Trading Bot")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    tui.register(subparsers)
     run.register(subparsers)
     account.register(subparsers)
     coinbase.register(subparsers)

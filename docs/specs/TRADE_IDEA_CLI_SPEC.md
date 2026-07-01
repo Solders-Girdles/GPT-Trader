@@ -290,7 +290,7 @@ already exist (`IDEA_NOT_FOUND` otherwise). Service/audit layer enforces the
 
 ### `ideas list`
 
-- Calls `service.list_view_result(TradeIdeaListQuery(...))` so CLI and TUI
+- Calls `service.list_view_result(TradeIdeaListQuery(...))` so CLI commands
   share filter, sort, and pagination semantics through the service.
 - Filters:
   - `--state` choices = `TradeIdeaState` values.

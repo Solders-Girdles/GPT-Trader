@@ -7,9 +7,9 @@
     "source_test_map": "source_test_map.json"
   },
   "summary": {
-    "total_tests": 7046,
-    "total_files": 836,
-    "markers_used": 16
+    "total_tests": 5895,
+    "total_files": 719,
+    "markers_used": 15
   },
   "quick_commands": {
     "run_unit_tests": "pytest -m unit",

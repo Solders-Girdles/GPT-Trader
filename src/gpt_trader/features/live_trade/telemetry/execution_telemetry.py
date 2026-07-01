@@ -2,7 +2,7 @@
 Execution telemetry collection for live trade order submissions.
 
 Tracks order submission latency, success rates, rejection reasons, and retry activity.
-Designed for lightweight in-memory aggregation consumed by runtime monitoring and the TUI.
+Designed for lightweight in-memory aggregation consumed by runtime monitoring.
 """
 
 from __future__ import annotations

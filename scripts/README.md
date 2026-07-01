@@ -15,7 +15,7 @@ script already wraps them.
 | `scripts/ops/` | Operator-facing probes and runbook helpers for live or canary workflows. These may inspect runtime state or exercise guarded operator flows. | liveness checks, canary process control, product catalog probes, readiness-window reports |
 | `scripts/analysis/` | Offline analysis, demos, backtests, benchmarks, and regression probes. These should not submit live orders. | backtest runner, paper stress test, guard parity regression |
 | `scripts/monitoring/` | Monitoring exporters, dashboards, and canary observation harnesses. These should read runtime data or emit metrics, not own core execution. | Prometheus exporter, perps dashboard, reduce-only canary probe |
-| `scripts/ci/` | Deterministic checks used by CI, local CI, pre-commit hooks, or Makefile quality gates. | legacy-pattern checks, TUI CSS checks, deprecation registry checks |
+| `scripts/ci/` | Deterministic checks used by CI, local CI, pre-commit hooks, or Makefile quality gates. | legacy-pattern checks, deprecation registry checks |
 | `scripts/maintenance/` | Repo hygiene, docs audits, scaffolding, and workspace cleanup tools. These are maintainer utilities, not trading-system runtime paths. | docs link audit, docs reachability check, feature-slice scaffold |
 | `scripts/agents/` | AI-agent and generated-inventory helpers. Changes here can affect `var/agents/**`; run `uv run agent-regenerate --verify` after edits. | test inventory, schema exports, agent health reports |
 
@@ -26,7 +26,6 @@ Root-level scripts are exceptions, not the default:
 | Path | Why It Stays Root |
 |------|-------------------|
 | `scripts/production_preflight.py` | Stable operator preflight entrypoint used by docs, Makefile targets, and readiness workflows. |
-| `scripts/build_tui_css.py` | Stable TUI asset generator referenced by TUI docs and CSS freshness checks. |
 | `scripts/__init__.py` | Package marker for importable script modules in tests and helper code. It is not a command entrypoint. |
 
 New root scripts should be avoided. Add them under the appropriate taxonomy

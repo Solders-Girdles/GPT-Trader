@@ -15,7 +15,6 @@ dependencies = [
     "cryptography>=48.0.1,<49.0.0",
     "pyjwt>=2.9.0,<3.0.0",
     "pandas>=2.3.3,<3.0.0",
-    "textual>=7.0.0,<8.0.0",
     # Transitive security fixes (pin minimum versions for CVE patches)
     "urllib3>=2.6.0,<3.0.0",   # GHSA-gm62-xv2j-4w53, GHSA-2xpw-w6gg-jr37
     "filelock>=3.20.3,<4.0.0", # GHSA-w853-jp5j-5j7f
@@ -77,7 +76,6 @@ dev = [
     "pytest-asyncio>=0.23.0,<2.0.0",
     "pytest-cov>=4.0.0,<8.0.0",
     "pytest-xdist>=3.0.0,<4.0.0",
-    "pytest-textual-snapshot>=1.0.0,<2.0.0",
     "freezegun>=1.2.0,<2.0.0",
     "hypothesis>=6.144.0,<7.0.0",
     "coverage>=7.0.0,<8.0.0",
@@ -131,24 +129,8 @@ strict_optional = true
 ignore_missing_imports = true
 explicit_package_bases = true
 mypy_path = "src"
-# Keep most of the dynamic Textual surface out of the default mypy pass while
-# ratcheting small state/type modules into normal CI coverage.
-exclude = "(^|.*/)src/gpt_trader/tui/(?!(types|thresholds)\\.py$)(?!state_management/(?:__init__|validators)\\.py$).*\\.py$"
 files = [
     "src/gpt_trader",
 ]
-
-[[tool.mypy.overrides]]
-module = [
-    "gpt_trader.tui.types",
-    "gpt_trader.tui.thresholds",
-    "gpt_trader.tui.state_management",
-    "gpt_trader.tui.state_management.validators",
-]
-ignore_errors = false
-
-[[tool.mypy.overrides]]
-module = "gpt_trader.tui.*"
-ignore_errors = true
 
 # Pytest configuration moved to pytest.ini for better organization

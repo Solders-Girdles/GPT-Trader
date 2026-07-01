@@ -4,7 +4,7 @@ Pure data contracts describing a point-in-time snapshot of the trading bot's
 state, plus the small serialization helpers they depend on. The behavior that
 populates these models and writes them to disk lives in
 ``gpt_trader.monitoring.status_reporter``; keeping the contracts here lets
-consumers (TUI, telemetry) import the data shapes without pulling in the
+consumers import the data shapes without pulling in the
 reporter machinery.
 """
 
@@ -245,7 +245,7 @@ class BotStatus:
     # Execution health signals summary
     execution_signals: dict[str, Any] | None = None
 
-    # Reporter interval for TUI connection health tracking
+    # Reporter interval for observer connection health tracking
     observer_interval: float = 2.0
 
     def __post_init__(self) -> None:

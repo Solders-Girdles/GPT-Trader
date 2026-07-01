@@ -98,6 +98,33 @@ def test_fetch_review_threads_paginates(monkeypatch) -> None:
     assert any(part == "cursor=cursor-1" for part in calls[1])
 
 
+def test_fetch_pr_reactions_flattens_slurped_pages(monkeypatch) -> None:
+    calls: list[list[str]] = []
+
+    # `gh api --paginate --slurp` returns an outer array with one inner array
+    # per page; fetch_pr_reactions must flatten that into a single reaction list.
+    def fake_gh_json(args: list[str]) -> Any:
+        calls.append(args)
+        return [
+            [{"id": 1, "content": "+1"}, {"id": 2, "content": "eyes"}],
+            [{"id": 3, "content": "rocket"}],
+        ]
+
+    monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
+
+    reactions = pr_readiness.fetch_pr_reactions("owner/repo", 9)
+
+    assert [r["id"] for r in reactions] == [1, 2, 3]
+    # The multi-page path must be requested with --slurp so _gh_json sees one
+    # valid JSON document instead of concatenated per-page arrays.
+    assert "--slurp" in calls[0]
+
+
+def test_fetch_pr_reactions_handles_non_list_payload(monkeypatch) -> None:
+    monkeypatch.setattr(pr_readiness, "_gh_json", lambda args: {"message": "Not Found"})
+    assert pr_readiness.fetch_pr_reactions("owner/repo", 9) == []
+
+
 def test_fetch_review_threads_rejects_malformed_repo() -> None:
     try:
         pr_readiness.fetch_review_threads("not-a-repo", 9)
@@ -210,9 +237,10 @@ def test_fetch_pr_changed_paths_raises_on_non_size_diff_error(monkeypatch) -> No
 def test_fetch_pr_reactions_reads_issue_reactions(monkeypatch) -> None:
     calls: list[list[str]] = []
 
-    def fake_gh_json(args: list[str]) -> list[dict[str, Any]]:
+    def fake_gh_json(args: list[str]) -> list[Any]:
         calls.append(args)
-        return [{"content": "+1"}]
+        # --slurp wraps the single page in an outer array.
+        return [[{"content": "+1"}]]
 
     monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
 
@@ -224,5 +252,6 @@ def test_fetch_pr_reactions_reads_issue_reactions(monkeypatch) -> None:
             "Accept: application/vnd.github+json",
             "repos/owner/repo/issues/123/reactions",
             "--paginate",
+            "--slurp",
         ]
     ]

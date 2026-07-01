@@ -708,6 +708,10 @@ def fetch_pr_payload(repo: str, pr: int) -> dict[str, Any]:
 
 
 def fetch_pr_reactions(repo: str, pr: int) -> list[dict[str, Any]]:
+    # `gh api --paginate` emits one JSON array per page; those pages are
+    # concatenated into a stream that `_gh_json`'s single `json.loads` cannot
+    # parse once reactions exceed one page. `--slurp` wraps every page in one
+    # outer array, which we flatten back into a single list of reactions.
     payload = _gh_json(
         [
             "api",
@@ -715,9 +719,18 @@ def fetch_pr_reactions(repo: str, pr: int) -> list[dict[str, Any]]:
             "Accept: application/vnd.github+json",
             f"repos/{repo}/issues/{pr}/reactions",
             "--paginate",
+            "--slurp",
         ]
     )
-    return payload if isinstance(payload, list) else []
+    if not isinstance(payload, list):
+        return []
+    reactions: list[dict[str, Any]] = []
+    for page in payload:
+        if isinstance(page, list):
+            reactions.extend(item for item in page if isinstance(item, dict))
+        elif isinstance(page, dict):
+            reactions.append(page)
+    return reactions
 
 
 def fetch_pr_changed_paths(repo: str, pr: int) -> list[str]:

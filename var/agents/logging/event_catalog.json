@@ -1191,6 +1191,7 @@
     "order_audit": {
       "common_fields": [
         "open_order_count",
+        "reason",
         "stage"
       ],
       "components": null,
@@ -2476,7 +2477,7 @@
     "path": 12,
     "price": 5,
     "quantity": 11,
-    "reason": 28,
+    "reason": 29,
     "secret_ref": 6,
     "service": 9,
     "side": 27,

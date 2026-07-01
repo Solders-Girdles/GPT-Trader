@@ -66,11 +66,14 @@ default-off gate. This is the runtime half of the Stage 1 human-approved loop in
 
 **What the gate does.** When enabled, `TradingEngine._handle_decision`
 (`features/live_trade/engines/strategy.py`) routes every strategy decision into
-`TradeIdeaService.propose()` through the adapter and returns before any broker
-interaction — the engine submits no orders while the gate is on. Supported buy
-shapes become `proposed` trade ideas; hold, sell, and close shapes are logged and
-produce no idea. With the gate off (the default) decisions flow to direct
-execution exactly as before.
+`TradeIdeaService.propose()` through the adapter and returns before submitting an
+order. Supported buy shapes become `proposed` trade ideas; hold, sell, and close
+shapes are logged and produce no idea. The per-cycle order audit — which
+reconciles broker state and can cancel drifted orders — is also skipped while the
+gate is on (`cycle_runner._fetch_positions_and_audit`), so proposal-only mode
+never mutates broker state: it reads market data but places and cancels nothing.
+With the gate off (the default) decisions flow to direct execution exactly as
+before.
 
 **How to enable it.** The gate is off by default and must be set explicitly:
 

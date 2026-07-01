@@ -2,7 +2,7 @@
   "version": "1.0",
   "summary": {
     "tests_scanned": 633,
-    "source_modules": 306,
+    "source_modules": 307,
     "unresolved_modules": 2
   },
   "source_to_tests": {
@@ -869,6 +869,9 @@
       "tests/unit/gpt_trader/features/live_trade/engines/test_runtime_start_event.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery.py",
       "tests/unit/gpt_trader/features/live_trade/test_state_recovery_rehydration.py"
+    ],
+    "gpt_trader.features.live_trade.engines.cycle_runner": [
+      "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_proposals.py"
     ],
     "gpt_trader.features.live_trade.engines.equity_calculator": [
       "tests/unit/gpt_trader/features/live_trade/engines/test_equity_calculator.py"
@@ -3113,6 +3116,7 @@
     ],
     "tests/unit/gpt_trader/features/live_trade/engines/test_strategy_engine_proposals.py": [
       "gpt_trader.core",
+      "gpt_trader.features.live_trade.engines.cycle_runner",
       "gpt_trader.features.live_trade.engines.strategy",
       "gpt_trader.features.live_trade.strategies.perps_baseline",
       "gpt_trader.features.trade_ideas"
@@ -4556,6 +4560,7 @@
     "gpt_trader.features.live_trade.degradation": "src/gpt_trader/features/live_trade/degradation.py",
     "gpt_trader.features.live_trade.engines": "src/gpt_trader/features/live_trade/engines/__init__.py",
     "gpt_trader.features.live_trade.engines.base": "src/gpt_trader/features/live_trade/engines/base.py",
+    "gpt_trader.features.live_trade.engines.cycle_runner": "src/gpt_trader/features/live_trade/engines/cycle_runner.py",
     "gpt_trader.features.live_trade.engines.equity_calculator": "src/gpt_trader/features/live_trade/engines/equity_calculator.py",
     "gpt_trader.features.live_trade.engines.order_record_mapping": "src/gpt_trader/features/live_trade/engines/order_record_mapping.py",
     "gpt_trader.features.live_trade.engines.position_formatting": "src/gpt_trader/features/live_trade/engines/position_formatting.py",

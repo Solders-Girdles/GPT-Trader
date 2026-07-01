@@ -113,11 +113,18 @@ async def _fetch_positions_and_audit(
 ) -> tuple[dict[str, Position], asyncio.Task[None]]:
     logger.info("Step 1: Fetching positions and auditing orders (parallel)...")
     positions_task = asyncio.create_task(engine._fetch_positions())
-    if getattr(engine.context.config, "dry_run", False):
+    # Order audit reconciles broker state and can cancel drifted orders
+    # (order_reconciliation escalation). Skip it whenever the engine must not
+    # mutate the broker: dry-run, or proposal-only mode where decisions are
+    # routed to trade-idea proposals instead of the broker.
+    dry_run = getattr(engine.context.config, "dry_run", False)
+    proposal_only = getattr(engine.context.config, "strategy_signal_proposals_enabled", False)
+    if dry_run or proposal_only:
         logger.info(
-            "Dry-run enabled; skipping order audit",
+            "Skipping order audit (no broker mutation in this mode)",
             operation="order_audit",
             stage="skip",
+            reason="dry_run" if dry_run else "proposal_only",
         )
         audit_task = asyncio.create_task(asyncio.sleep(0))
     else:

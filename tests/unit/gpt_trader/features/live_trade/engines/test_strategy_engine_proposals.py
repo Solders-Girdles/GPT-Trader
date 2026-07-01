@@ -18,6 +18,7 @@ from unittest.mock import AsyncMock
 import pytest
 
 from gpt_trader.core import Position
+from gpt_trader.features.live_trade.engines.cycle_runner import _fetch_positions_and_audit
 from gpt_trader.features.live_trade.engines.strategy import TradingEngine
 from gpt_trader.features.live_trade.strategies.perps_baseline import Action, Decision
 from gpt_trader.features.trade_ideas import (
@@ -233,3 +234,40 @@ async def test_enabled_gate_never_submits_or_proposes_for_non_buy(
     mock_broker.place_order.assert_not_called()
     # The adapter only maps buys, so no idea is proposed for these shapes.
     assert create_trade_idea_service().list_views(state=TradeIdeaState.PROPOSED) == []
+
+
+@pytest.mark.asyncio
+async def test_proposal_mode_skips_order_audit_on_live_profile(
+    engine, tmp_path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Order audit can cancel drifted broker orders; proposal-only mode must not
+    # mutate broker state even on a live (non dry-run) profile.
+    _enable_proposals(engine, tmp_path, monkeypatch)
+    engine.context.config.dry_run = False
+
+    audit = AsyncMock()
+    monkeypatch.setattr(engine, "_audit_orders", audit)
+    monkeypatch.setattr(engine, "_fetch_positions", AsyncMock(return_value={}))
+
+    positions, audit_task = await _fetch_positions_and_audit(engine)
+    await audit_task
+
+    audit.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_direct_mode_still_audits_orders_on_live_profile(
+    engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Regression guard: with the gate off, the live profile still reconciles.
+    assert engine.context.config.strategy_signal_proposals_enabled is False
+    engine.context.config.dry_run = False
+
+    audit = AsyncMock()
+    monkeypatch.setattr(engine, "_audit_orders", audit)
+    monkeypatch.setattr(engine, "_fetch_positions", AsyncMock(return_value={}))
+
+    positions, audit_task = await _fetch_positions_and_audit(engine)
+    await audit_task
+
+    audit.assert_called_once()

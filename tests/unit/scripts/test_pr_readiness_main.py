@@ -24,7 +24,7 @@ def test_main_uses_pr_base_for_advisory_and_branch_protection(monkeypatch) -> No
     monkeypatch.setattr(
         pr_readiness,
         "check_artifact_freshness",
-        lambda paths, verify=True: pr_readiness.ArtifactFreshness(
+        lambda paths, verify=True, head_oid=None: pr_readiness.ArtifactFreshness(
             required=False,
             checked=False,
             fresh=True,
@@ -66,7 +66,7 @@ def test_main_pr_mode_uses_pr_diff_for_artifact_advisory(monkeypatch, capsys) ->
     monkeypatch.setattr(
         pr_readiness,
         "check_artifact_freshness",
-        lambda paths, verify=True: pr_readiness.ArtifactFreshness(
+        lambda paths, verify=True, head_oid=None: pr_readiness.ArtifactFreshness(
             required=True,
             checked=True,
             fresh=True,
@@ -101,7 +101,7 @@ def test_main_reports_missing_current_head_review_signal_by_default(monkeypatch,
     monkeypatch.setattr(
         pr_readiness,
         "check_artifact_freshness",
-        lambda paths, verify=True: pr_readiness.ArtifactFreshness(
+        lambda paths, verify=True, head_oid=None: pr_readiness.ArtifactFreshness(
             required=False,
             checked=False,
             fresh=True,
@@ -139,7 +139,7 @@ def test_main_requires_current_head_review_signal_when_requested(monkeypatch, ca
     monkeypatch.setattr(
         pr_readiness,
         "check_artifact_freshness",
-        lambda paths, verify=True: pr_readiness.ArtifactFreshness(
+        lambda paths, verify=True, head_oid=None: pr_readiness.ArtifactFreshness(
             required=False,
             checked=False,
             fresh=True,
@@ -179,7 +179,7 @@ def test_main_exit_on_not_ready_fails_when_github_unavailable(monkeypatch) -> No
     monkeypatch.setattr(
         pr_readiness,
         "check_artifact_freshness",
-        lambda paths, verify=True: pr_readiness.ArtifactFreshness(
+        lambda paths, verify=True, head_oid=None: pr_readiness.ArtifactFreshness(
             required=False,
             checked=False,
             fresh=True,
@@ -199,7 +199,7 @@ def test_main_json_format_survives_github_unavailable(monkeypatch, capsys) -> No
     monkeypatch.setattr(
         pr_readiness,
         "check_artifact_freshness",
-        lambda paths, verify=True: pr_readiness.ArtifactFreshness(
+        lambda paths, verify=True, head_oid=None: pr_readiness.ArtifactFreshness(
             required=False,
             checked=False,
             fresh=True,

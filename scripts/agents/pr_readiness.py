@@ -845,11 +845,17 @@ def fetch_head_commit_pushed_at(repo: str, pr: int) -> str | None:
     """Return the ISO timestamp when the PR head commit was pushed, if known.
 
     Ordinary (fast-forward) pushes do not emit a HeadRefForcePushedEvent, so the
-    force-push timeline alone misses them. ``Commit.pushedDate`` records when the
-    head commit actually landed on the PR, letting the reaction-freshness floor
-    reject a bot ``+1`` that predates a normal push. Returns None when GitHub does
-    not populate ``pushedDate`` (e.g. older commits), in which case callers fall
-    back to the commit/force-push evidence -- never worse than before.
+    force-push timeline alone misses them. ``Commit.pushedDate`` would record when
+    the head commit landed on the PR, tightening the reaction-freshness floor to
+    reject a bot ``+1`` that predates a normal push.
+
+    Best-effort only: GitHub deprecated ``Commit.pushedDate`` (announced removal
+    2023-07-01) and it now resolves to ``null`` in practice, so this currently
+    returns None and the floor falls back to the commit/force-push evidence --
+    never worse than before. It is kept (the field still resolves without error)
+    so the floor tightens automatically if GitHub ever exposes a reliable
+    push-time field again; the fast-forward-push edge case is otherwise a
+    documented limitation of this advisory, non-gating tool.
     """
     if repo.count("/") != 1:
         raise RuntimeError("--repo must use owner/name format")
@@ -1018,8 +1024,23 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
 # --------------------------------------------------------------------------- #
 # CLI
 # --------------------------------------------------------------------------- #
-def check_artifact_freshness(paths: list[str], *, verify: bool = True) -> ArtifactFreshness:
-    """Verify generated agent artifacts when changed paths can affect them."""
+def _local_head_oid() -> str:
+    result = _run(["git", "rev-parse", "HEAD"])
+    return result.stdout.strip() if result.returncode == 0 else ""
+
+
+def check_artifact_freshness(
+    paths: list[str], *, verify: bool = True, head_oid: str | None = None
+) -> ArtifactFreshness:
+    """Verify generated agent artifacts when changed paths can affect them.
+
+    ``agent-regenerate --verify`` inspects the *local* working tree. When a PR is
+    assessed from a different checkout (e.g. ``--pr N`` run from ``main``), that
+    local tree is unrelated to the PR, so pass ``head_oid`` to guard against
+    attributing local freshness/staleness to the PR: if the local HEAD does not
+    match the PR head, the verify is skipped with an explanatory note instead of
+    producing a misleading verified/blocked verdict.
+    """
     if not affects_agent_artifacts(paths):
         return ArtifactFreshness(
             required=False,
@@ -1037,6 +1058,19 @@ def check_artifact_freshness(paths: list[str], *, verify: bool = True) -> Artifa
             command=command,
             summary=f"not checked; run `{command}` before merge.",
         )
+    if head_oid:
+        local_head = _local_head_oid()
+        if local_head and not _head_matches(local_head, head_oid):
+            return ArtifactFreshness(
+                required=True,
+                checked=False,
+                fresh=None,
+                command=command,
+                summary=(
+                    f"not checked; local checkout {local_head[:8]} differs from PR head "
+                    f"{head_oid[:8]}. Run `{command}` from the PR branch to verify."
+                ),
+            )
     result = _run(["uv", "run", "agent-regenerate", "--verify"])
     if result.returncode == 0:
         return ArtifactFreshness(
@@ -1185,7 +1219,11 @@ def main(argv: list[str] | None = None) -> int:
         pr_payload = fetch_pr_payload(repo, pr)
         base_ref_name = str(args.base or pr_payload.get("baseRefName") or "main")
         paths = fetch_pr_changed_paths(repo, pr)
-        freshness = check_artifact_freshness(paths, verify=not args.skip_artifact_verify)
+        freshness = check_artifact_freshness(
+            paths,
+            verify=not args.skip_artifact_verify,
+            head_oid=str(pr_payload.get("headRefOid") or "") or None,
+        )
         protection = parse_branch_protection(fetch_branch_protection(repo, base_ref_name))
         state = parse_pr_state(
             pr_payload,

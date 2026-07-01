@@ -7,13 +7,9 @@ from scripts.agents.pr_readiness import (
     BranchProtection,
     CheckStatus,
     PullRequestState,
-    ReadinessReport,
     ReviewSignal,
     ReviewThread,
-    affects_agent_artifacts,
-    apply_artifact_freshness,
     assess_readiness,
-    check_artifact_freshness,
     format_json,
     format_markdown,
     parse_branch_protection,
@@ -35,55 +31,6 @@ def _protection(
         required_review_count=required_review_count,
         required_checks=required_checks,
     )
-
-
-# --------------------------------------------------------------------------- #
-# affects_agent_artifacts
-# --------------------------------------------------------------------------- #
-def test_artifact_advisory_triggers_for_source_and_tests() -> None:
-    assert affects_agent_artifacts(["src/gpt_trader/features/x.py"]) is True
-    assert affects_agent_artifacts(["tests/unit/x_test.py"]) is True
-    assert affects_agent_artifacts(["pyproject.toml"]) is True
-    assert affects_agent_artifacts(["pytest.ini"]) is True
-    assert affects_agent_artifacts(["config/environments/.env.template"]) is True
-    assert affects_agent_artifacts(["config/agents/flows/default.yaml"]) is True
-    assert affects_agent_artifacts(["src/gpt_trader/features/x.yaml"]) is True
-
-
-def test_artifact_advisory_skips_unrelated_changes() -> None:
-    assert affects_agent_artifacts(["docs/STATUS.md", "README.md"]) is False
-    assert affects_agent_artifacts([""]) is False
-    assert affects_agent_artifacts([]) is False
-
-
-def test_artifact_freshness_blocks_when_verify_fails(monkeypatch) -> None:
-    monkeypatch.setattr(
-        pr_readiness,
-        "_run",
-        lambda args: pr_readiness.subprocess.CompletedProcess(
-            args,
-            1,
-            "var/agents/testing/index.json stale\n",
-            "",
-        ),
-    )
-    report = ReadinessReport(ready=True, findings=[])
-
-    freshness = check_artifact_freshness(["tests/unit/x_test.py"])
-    apply_artifact_freshness(report, freshness)
-
-    assert report.ready is False
-    assert freshness.checked is True
-    assert freshness.fresh is False
-    assert any("agent-regenerate --verify" in finding.message for finding in report.findings)
-
-
-def test_artifact_freshness_can_be_marked_unchecked() -> None:
-    freshness = check_artifact_freshness(["tests/unit/x_test.py"], verify=False)
-
-    assert freshness.required is True
-    assert freshness.checked is False
-    assert freshness.fresh is None
 
 
 # --------------------------------------------------------------------------- #

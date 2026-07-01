@@ -116,3 +116,56 @@ def test_optimize_candidates_replay_as_ranked_baseline_configs(
     assert payload["candidate_count"] == 2
     assert payload["rankings"][0]["candidate_id"] == "slow"
     assert payload["rankings"][0]["report"]["ideas"][0]["outcome"] == "target_hit"
+
+
+def test_load_optimize_candidates_accepts_best_only_parameters_export(
+    tmp_path: Path,
+) -> None:
+    study_path = _write_json(
+        tmp_path / "best-only.json",
+        {
+            "parameters": {
+                "short_ma_period": 2,
+                "long_ma_period": 4,
+                "crossover_lookback": 1,
+            },
+            "objective_value": 0.42,
+        },
+    )
+
+    candidates = load_optimize_baseline_candidates(
+        study_path,
+        base_config=BaselineProposerConfig(),
+    )
+
+    assert len(candidates) == 1
+    assert candidates[0].candidate_id == "candidate-1"
+    assert candidates[0].config.short_window == 2
+    assert candidates[0].config.long_window == 4
+    assert candidates[0].optimize_objective_value == Decimal("0.42")
+
+
+def test_load_optimize_candidates_preserves_zero_trial_number(
+    tmp_path: Path,
+) -> None:
+    study_path = _write_json(
+        tmp_path / "trials.json",
+        {
+            "trials": [
+                {
+                    "trial_number": 0,
+                    "parameters": {
+                        "short_ma_period": 2,
+                        "long_ma_period": 4,
+                    },
+                }
+            ]
+        },
+    )
+
+    candidates = load_optimize_baseline_candidates(
+        study_path,
+        base_config=BaselineProposerConfig(),
+    )
+
+    assert [candidate.candidate_id for candidate in candidates] == ["0"]

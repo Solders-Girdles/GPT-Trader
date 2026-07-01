@@ -203,6 +203,8 @@ def _raw_candidates(payload: Any) -> list[dict[str, Any]]:
         ]
     if isinstance(payload.get("best_parameters"), dict):
         return [payload]
+    if isinstance(payload.get("parameters"), dict):
+        return [payload]
     return []
 
 
@@ -213,13 +215,8 @@ def _candidate_from_payload(
     base_config: BaselineProposerConfig,
 ) -> OptimizeBaselineCandidate:
     parameters = _parameters_from_candidate(item)
-    candidate_id = str(
-        item.get("candidate_id")
-        or item.get("id")
-        or item.get("trial_number")
-        or item.get("window_id")
-        or f"candidate-{index}"
-    )
+    raw_candidate_id = _first_present(item, ("candidate_id", "id", "trial_number", "window_id"))
+    candidate_id = str(raw_candidate_id) if raw_candidate_id is not None else f"candidate-{index}"
     objective_value = item.get("objective_value", item.get("best_objective_value"))
     return OptimizeBaselineCandidate(
         candidate_id=candidate_id,
@@ -232,10 +229,20 @@ def _candidate_from_payload(
 
 
 def _parameters_from_candidate(item: dict[str, Any]) -> dict[str, Any]:
-    parameters = item.get("parameters") or item.get("best_parameters") or item
+    parameters = _first_present(item, ("parameters", "best_parameters"))
+    if parameters is None:
+        parameters = item
     if not isinstance(parameters, dict):
         raise ValidationError("Optimize candidate parameters must be an object", field="study")
     return dict(parameters)
+
+
+def _first_present(item: dict[str, Any], names: tuple[str, ...]) -> Any:
+    for name in names:
+        value = item.get(name)
+        if value is not None:
+            return value
+    return None
 
 
 def _baseline_config_from_parameters(

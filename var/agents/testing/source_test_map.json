@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 591,
+    "tests_scanned": 593,
     "source_modules": 290,
     "unresolved_modules": 2
   },
@@ -23,6 +23,7 @@
       "tests/unit/gpt_trader/cli/commands/test_ideas_propose_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_queries.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_replay_baseline.py",
+      "tests/unit/gpt_trader/cli/commands/test_ideas_replay_optimize.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_report.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_resubmit_integrity.py",
       "tests/unit/gpt_trader/cli/commands/test_ideas_review_latency.py",
@@ -490,6 +491,7 @@
       "tests/unit/gpt_trader/features/live_trade/test_risk.py",
       "tests/unit/gpt_trader/features/live_trade/test_risk_time_windows.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_baseline_proposer.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_optimize_bridge.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_level_extraction.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_replay_runner.py",
@@ -1283,6 +1285,7 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_budget.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_eligibility.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_models.py",
+      "tests/unit/gpt_trader/features/trade_ideas/test_optimize_bridge.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation_conflicts.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_policy.py",
@@ -2363,6 +2366,9 @@
       "gpt_trader",
       "gpt_trader.cli.commands.ideas",
       "gpt_trader.cli.response"
+    ],
+    "tests/unit/gpt_trader/cli/commands/test_ideas_replay_optimize.py": [
+      "gpt_trader"
     ],
     "tests/unit/gpt_trader/cli/commands/test_ideas_report.py": [
       "gpt_trader",
@@ -3550,6 +3556,10 @@
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_models.py": [
+      "gpt_trader.features.trade_ideas"
+    ],
+    "tests/unit/gpt_trader/features/trade_ideas/test_optimize_bridge.py": [
+      "gpt_trader.core",
       "gpt_trader.features.trade_ideas"
     ],
     "tests/unit/gpt_trader/features/trade_ideas/test_paper_reconciliation.py": [

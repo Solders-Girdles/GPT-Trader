@@ -9,8 +9,8 @@
     "test_inventory": "test_inventory.json"
   },
   "summary": {
-    "total_tests": 5722,
-    "total_files": 682,
+    "total_tests": 5725,
+    "total_files": 684,
     "markers_used": 15
   },
   "quick_commands": {

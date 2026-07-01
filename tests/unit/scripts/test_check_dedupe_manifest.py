@@ -64,6 +64,46 @@ def test_load_manifest_clusters_must_be_mapping(tmp_path, monkeypatch) -> None:
         check_dedupe_manifest.load_manifest()
 
 
+def test_load_manifest_rejects_unquoted_ambiguous_key(tmp_path, monkeypatch) -> None:
+    # A hex cluster id that a YAML 1.1 loader parses as a float (-> inf) must be
+    # quoted; an unquoted one is rejected before it can silently collide.
+    manifest_path = tmp_path / "dedupe.yaml"
+    _write_manifest(
+        manifest_path,
+        "version: 1\nclusters:\n  310214e39620:\n    type: source_fanout\n",
+    )
+    monkeypatch.setattr(check_dedupe_manifest, "MANIFEST_PATH", manifest_path)
+
+    with pytest.raises(ValueError, match="Unquoted YAML-ambiguous cluster id"):
+        check_dedupe_manifest.load_manifest()
+
+
+def test_load_manifest_accepts_quoted_ambiguous_key(tmp_path, monkeypatch) -> None:
+    manifest_path = tmp_path / "dedupe.yaml"
+    _write_manifest(
+        manifest_path,
+        "version: 1\nclusters:\n  '310214e39620':\n    type: source_fanout\n",
+    )
+    monkeypatch.setattr(check_dedupe_manifest, "MANIFEST_PATH", manifest_path)
+
+    manifest = check_dedupe_manifest.load_manifest()
+    assert "310214e39620" in manifest["clusters"]
+
+
+def test_load_manifest_rejects_duplicate_key(tmp_path, monkeypatch) -> None:
+    manifest_path = tmp_path / "dedupe.yaml"
+    _write_manifest(
+        manifest_path,
+        "version: 1\nclusters:\n"
+        "  abc123def456:\n    type: source_fanout\n"
+        "  abc123def456:\n    type: similar_names\n",
+    )
+    monkeypatch.setattr(check_dedupe_manifest, "MANIFEST_PATH", manifest_path)
+
+    with pytest.raises(ValueError, match="Duplicate key"):
+        check_dedupe_manifest.load_manifest()
+
+
 def test_validate_manifest_empty_is_ok() -> None:
     assert check_dedupe_manifest.validate_manifest({}) == []
 

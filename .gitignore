@@ -148,6 +148,3 @@ var/agents/health/agent_regenerate_verify.txt
 # Regenerated on demand (uv run agent-regenerate) and shipped via the scheduled
 # agent-artifacts refresh package when present; not committed. Not doc-linked.
 var/agents/testing/test_inventory.json
-# Large, generated-on-demand test dedupe candidates (uv run agent-dedupe);
-# regenerate locally rather than committing a stale snapshot.
-tests/_triage/dedupe_candidates.yaml

@@ -24,7 +24,7 @@ class TestOptimizationFailures:
     """Tests for optimization error handling."""
 
     @pytest.mark.asyncio
-    async def test_trial_handles_strategy_error_gracefully(self) -> None:
+    async def test_trial_handles_strategy_error_gracefully(self, optuna) -> None:
         """Test that a failing strategy doesn't crash the optimization."""
 
         def failing_strategy_factory(params: dict) -> BaselinePerpsStrategy:

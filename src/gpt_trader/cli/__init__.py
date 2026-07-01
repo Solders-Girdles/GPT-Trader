@@ -35,7 +35,6 @@ from gpt_trader.cli.commands import (  # noqa: E402
     report,
     run,
     strategy_profile,
-    treasury,
 )
 
 # fmt: on
@@ -50,7 +49,6 @@ COMMAND_NAMES = {
     "controls",
     "ideas",
     "orders",
-    "treasury",
     "report",
     "optimize",
     "strategy",
@@ -197,7 +195,6 @@ def _build_parser() -> argparse.ArgumentParser:
     controls.register(subparsers)
     ideas.register(subparsers)
     orders.register(subparsers)
-    treasury.register(subparsers)
     report.register(subparsers)
     strategy_profile.register(subparsers)
     optimize.register(subparsers)

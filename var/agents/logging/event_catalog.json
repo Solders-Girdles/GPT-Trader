@@ -20,7 +20,6 @@
       "write_to_cache"
     ],
     "monitoring": [
-      "account_telemetry",
       "api_health_guard",
       "health_assessment",
       "health_check",
@@ -30,8 +29,6 @@
       "health_server_start",
       "health_server_stop",
       "health_signals",
-      "liquidation_monitor",
-      "margin_monitor",
       "run_stream_loop",
       "stop_streaming",
       "streaming",
@@ -44,7 +41,6 @@
       "bot_bootstrap",
       "checksum_verify",
       "collateral_update",
-      "collect_snapshot",
       "cycle",
       "daily_tracking",
       "data_quality_check",
@@ -84,8 +80,6 @@
     ],
     "risk": [
       "get_cfm_margin_window",
-      "guard_alert",
-      "guard_manager",
       "rate_limit"
     ],
     "security": [
@@ -131,7 +125,6 @@
       "order_reconciliation",
       "order_recovery",
       "order_rejected",
-      "order_route",
       "order_status",
       "order_submit",
       "order_suppressed",
@@ -153,23 +146,6 @@
   },
   "description": "Catalog of structured log events in GPT-Trader",
   "events": {
-    "account_telemetry": {
-      "common_fields": [
-        "stage"
-      ],
-      "components": null,
-      "levels": [
-        "DEBUG",
-        "INFO"
-      ],
-      "occurrence_count": 4,
-      "source_files": [
-        "features/live_trade/telemetry/account.py"
-      ],
-      "statuses": [
-        "disabled"
-      ]
-    },
     "add_rule": {
       "common_fields": [
         "invalid_value",
@@ -328,22 +304,6 @@
       "occurrence_count": 3,
       "source_files": [
         "features/live_trade/execution/guard_manager.py"
-      ],
-      "statuses": null
-    },
-    "collect_snapshot": {
-      "common_fields": [
-        "error_message",
-        "error_type",
-        "stage"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR"
-      ],
-      "occurrence_count": 1,
-      "source_files": [
-        "features/live_trade/telemetry/account.py"
       ],
       "statuses": null
     },
@@ -766,46 +726,6 @@
       ],
       "statuses": null
     },
-    "guard_alert": {
-      "common_fields": [
-        "error",
-        "guard_name",
-        "payload",
-        "severity",
-        "stage"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR",
-        "INFO"
-      ],
-      "occurrence_count": 3,
-      "source_files": [
-        "monitoring/guards/manager.py"
-      ],
-      "statuses": null
-    },
-    "guard_manager": {
-      "common_fields": [
-        "alert_message",
-        "error",
-        "guard_name",
-        "handler",
-        "severity",
-        "stage"
-      ],
-      "components": null,
-      "levels": [
-        "CRITICAL",
-        "ERROR",
-        "INFO"
-      ],
-      "occurrence_count": 5,
-      "source_files": [
-        "monitoring/guards/manager.py"
-      ],
-      "statuses": null
-    },
     "handle_order_failure": {
       "common_fields": [
         "error_message",
@@ -980,35 +900,6 @@
       ],
       "statuses": null
     },
-    "liquidation_monitor": {
-      "common_fields": [
-        "current_price",
-        "distance_bps",
-        "distance_pct",
-        "entry_price",
-        "error",
-        "leverage",
-        "liquidation_price",
-        "position_count",
-        "position_side",
-        "position_size",
-        "reason",
-        "risk_level",
-        "stage",
-        "symbol"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR",
-        "INFO",
-        "WARNING"
-      ],
-      "occurrence_count": 6,
-      "source_files": [
-        "monitoring/domain/perps/liquidation.py"
-      ],
-      "statuses": null
-    },
     "list_balances": {
       "common_fields": [
         "account_id",
@@ -1168,26 +1059,6 @@
       ],
       "statuses": null
     },
-    "margin_monitor": {
-      "common_fields": [
-        "alert_threshold",
-        "alert_type",
-        "client_provided",
-        "error",
-        "liquidation_buffer",
-        "stage"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR",
-        "INFO"
-      ],
-      "occurrence_count": 3,
-      "source_files": [
-        "monitoring/domain/perps/margin.py"
-      ],
-      "statuses": null
-    },
     "order_audit": {
       "common_fields": [
         "open_order_count",
@@ -1339,28 +1210,6 @@
       "occurrence_count": 1,
       "source_files": [
         "features/live_trade/execution/order_event_recorder.py"
-      ],
-      "statuses": null
-    },
-    "order_route": {
-      "common_fields": [
-        "error_message",
-        "mode",
-        "quantity",
-        "reason",
-        "side",
-        "stage",
-        "symbol"
-      ],
-      "components": null,
-      "levels": [
-        "ERROR",
-        "INFO",
-        "WARNING"
-      ],
-      "occurrence_count": 4,
-      "source_files": [
-        "features/live_trade/execution/router.py"
       ],
       "statuses": null
     },
@@ -2460,37 +2309,37 @@
     "consecutive_failures": 6,
     "details": 5,
     "environment": 12,
-    "error": 60,
-    "error_message": 89,
-    "error_type": 87,
+    "error": 54,
+    "error_message": 86,
+    "error_type": 86,
     "event_type": 7,
     "flatten_operation_id": 9,
     "granularity": 6,
-    "guard_name": 9,
     "issue_type": 4,
     "latency_seconds": 5,
     "max_attempts": 4,
-    "mode": 4,
     "order_id": 30,
     "order_type": 4,
     "outcome": 5,
     "path": 12,
     "price": 5,
-    "quantity": 11,
-    "reason": 29,
+    "profile": 4,
+    "quantity": 9,
+    "reason": 27,
     "secret_ref": 6,
     "service": 9,
-    "side": 27,
-    "stage": 156,
-    "symbol": 87
+    "side": 25,
+    "stage": 130,
+    "symbol": 79,
+    "timestamp": 4
   },
   "level_distribution": {
-    "CRITICAL": 2,
-    "DEBUG": 40,
-    "ERROR": 119,
-    "INFO": 91,
-    "WARNING": 101
+    "CRITICAL": 1,
+    "DEBUG": 37,
+    "ERROR": 110,
+    "INFO": 81,
+    "WARNING": 98
   },
-  "total_event_types": 132,
+  "total_event_types": 125,
   "version": "1.0"
 }

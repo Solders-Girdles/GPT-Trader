@@ -8,6 +8,8 @@ Rules:
 - Version must be 1
 - No `status: in_progress` clusters older than 14 days without `pr_url`
 - `expected_file_delta` must be present for all clusters
+- `pending`/`in_progress` clusters must reference files that exist on disk
+  (done clusters legitimately reference deleted files)
 
 Usage:
     python scripts/ci/check_dedupe_manifest.py
@@ -187,6 +189,46 @@ def validate_manifest(manifest: dict[str, Any]) -> list[str]:
     return problems
 
 
+def validate_cluster_files(manifest: dict[str, Any], root: Path | None = None) -> list[str]:
+    """Check that unfinished clusters reference files that still exist.
+
+    Pending and in_progress clusters describe work yet to happen, so every file
+    they list must exist on disk. Done clusters are exempt: the dedupe work
+    legitimately deleted their files, and the manifest keeps them as a durable
+    audit trail.
+    """
+    if not manifest:
+        return []
+
+    base = root if root is not None else Path(".")
+    problems: list[str] = []
+
+    for cluster_id, cluster in manifest.get("clusters", {}).items():
+        if not isinstance(cluster, dict):
+            continue
+
+        status = cluster.get("status", "pending")
+        if status not in {"pending", "in_progress"}:
+            continue
+
+        files = cluster.get("files")
+        if not isinstance(files, list):
+            continue  # Shape problem already reported by validate_manifest
+
+        missing = [
+            file_path
+            for file_path in files
+            if isinstance(file_path, str) and not (base / file_path).exists()
+        ]
+        if missing:
+            problems.append(
+                f"Cluster {cluster_id}: {status} cluster references missing file(s): "
+                f"{', '.join(missing)} (run 'uv run agent-dedupe' to refresh)"
+            )
+
+    return problems
+
+
 def main(argv: list[str] | None = None) -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Validate test deduplication manifest.")
@@ -215,6 +257,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     problems = validate_manifest(manifest)
+    problems.extend(validate_cluster_files(manifest))
 
     if problems:
         print("Dedupe manifest validation issues:\n", file=sys.stderr)

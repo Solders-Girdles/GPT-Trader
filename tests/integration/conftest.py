@@ -35,12 +35,26 @@ def _integration_env(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 @pytest.fixture
+def optuna():
+    """Provide the optuna module, skipping only the tests that need a real import.
+
+    optuna is an optional extra (gpt-trader[optimize]). Optimization tests that
+    drive real optuna studies request this fixture so they skip cleanly when the
+    extra is absent instead of erroring inside OptimizationStudyManager.
+    Mirrors the fixture-scoped importorskip pattern from the optimize unit tests.
+    """
+    return pytest.importorskip("optuna")
+
+
+@pytest.fixture
 def integration_config() -> BotConfig:
     """Create BotConfig for integration tests with deterministic broker.
 
     Settings optimized for fast, deterministic tests:
-    - mock_broker=True: Use DeterministicBroker
-    - dry_run=True: Don't actually trade
+    - mock_broker=True: Use DeterministicBroker (no network, isolated fills)
+    - dry_run=False: dry-run wraps the broker in ReadOnlyBroker, which
+      suppresses place_order and returns REJECTED orders; the mock broker
+      already provides isolation, and order-flow tests need real fills
     - enable_order_preview=False: Skip preview calls
     - Small interval for fast execution
     """
@@ -48,7 +62,7 @@ def integration_config() -> BotConfig:
         symbols=["BTC-USD"],
         interval=1,  # Fast interval
         mock_broker=True,
-        dry_run=True,
+        dry_run=False,
         enable_order_preview=False,
         perps_enable_streaming=False,
         perps_position_fraction=0.04,  # 4% position sizing

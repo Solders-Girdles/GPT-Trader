@@ -54,7 +54,6 @@ RUNTIME_CONFIG_KEYS = {
     "reduce_only_mode",
     "time_in_force",
     "enable_order_preview",
-    "account_telemetry_interval",
 }
 
 
@@ -107,12 +106,6 @@ def add_runtime_options(parser: ArgumentParser) -> None:
         dest="enable_order_preview",
         action="store_true",
         help="Enable order preview before placement",
-    )
-    parser.add_argument(
-        "--account-interval",
-        dest="account_telemetry_interval",
-        type=int,
-        help="Account telemetry interval in seconds",
     )
 
 
@@ -185,7 +178,3 @@ def add_order_arguments(parser: ArgumentParser) -> None:
         action="store_true",
         help="Set reduce-only flag",
     )
-
-
-def add_treasury_arguments(parser: ArgumentParser) -> None:
-    parser.add_argument("--amount", required=True, help="Amount to convert or transfer")

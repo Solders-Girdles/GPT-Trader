@@ -5,7 +5,6 @@ digraph ExecutionFlow {
     style=rounded;
     "trading_engine_cycle" [shape=box, label="TradingEngine._cycle\nsrc/gpt_trader/features/live_trade/engines/strategy.py"];
     "strategy_decide" [shape=box, label="Strategy.decide\nsrc/gpt_trader/features/live_trade/strategies/base.py"];
-    "order_router" [shape=box, label="OrderRouter.execute_async (external)\nsrc/gpt_trader/features/live_trade/execution/router.py"];
     "engine_submit" [shape=box, label="TradingEngine.submit_order\nsrc/gpt_trader/features/live_trade/engines/strategy.py"];
   }
   subgraph cluster_guards {
@@ -45,7 +44,6 @@ digraph ExecutionFlow {
   }
   "trading_engine_cycle" -> "strategy_decide" [label="produce decision"];
   "strategy_decide" -> "engine_validate" [label="submit decision"];
-  "order_router" -> "engine_submit" [label="external entry"];
   "engine_submit" -> "engine_validate" [label="delegate to guard stack"];
   "engine_validate" -> "decision_trace" [label="record outcomes"];
   "engine_validate" -> "degradation_gate" [label="pause/allow"];

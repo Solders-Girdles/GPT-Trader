@@ -17,7 +17,6 @@
       "other"
     ],
     "top_operations": [
-      "account_telemetry",
       "add_rule",
       "api_health_guard",
       "bot_bootstrap",
@@ -26,9 +25,10 @@
       "check_ip",
       "checksum_verify",
       "cleanup_orders",
-      "collateral_update"
+      "collateral_update",
+      "collect_runtime_guard_state"
     ],
-    "total_events": 132
+    "total_events": 125
   },
   "usage": {
     "correlation": "Use correlation_id field to trace requests across logs",

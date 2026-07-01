@@ -20,7 +20,7 @@ class TestOptimizationResultsAndParameters:
     """Tests for optimization result objects and parameter spaces."""
 
     @pytest.mark.asyncio
-    async def test_trial_result_contains_metrics(self) -> None:
+    async def test_trial_result_contains_metrics(self, optuna) -> None:
         """Test that trial results include risk metrics and trade statistics."""
         parameter_space = ParameterSpace(
             strategy_parameters=[
@@ -59,7 +59,7 @@ class TestOptimizationResultsAndParameters:
         assert result.error_message is None
 
     @pytest.mark.asyncio
-    async def test_parameter_space_with_multiple_types(self) -> None:
+    async def test_parameter_space_with_multiple_types(self, optuna) -> None:
         """Test optimization with integer and float parameters."""
         parameter_space = ParameterSpace(
             strategy_parameters=[

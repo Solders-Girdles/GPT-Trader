@@ -73,9 +73,17 @@ src/gpt_trader/
 └── validation/          # Declarative validators and decorators
 ```
 
-These lower layers must never import the entrypoint layers (CLI/preflight)
-or the DI container; the dependency direction is enforced in CI by
-`scripts/ci/check_import_boundaries.py`.
+Import boundaries are enforced in CI (Test Guardrails, required) by
+`scripts/ci/check_import_boundaries.py`, which checks three rule families:
+lower layers must never import the entrypoint layers (CLI/preflight) or the
+DI container; `gpt_trader.monitoring` must not import feature slices at
+runtime (TYPE_CHECKING-only imports allowed; the existing debt edges are
+frozen in an allowlist); and slice-to-slice imports inside
+`gpt_trader.features` — including the frozen dependency set of
+`features/trade_ideas` (core + errors only) — are ratcheted to an explicit
+allowlist (`CROSS_SLICE_ALLOWED_EDGES`) that records today's actual topology.
+New edges require an architecture rationale; shrinking the allowlists is
+always welcome.
 
 > **Note:** `src/gpt_trader/backtesting/` is the canonical backtesting framework.
 

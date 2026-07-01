@@ -7,7 +7,6 @@ Generated: 1970-01-01T00:00:00+00:00
 |----|-------|------|
 | trading_engine_cycle | TradingEngine._cycle | `src/gpt_trader/features/live_trade/engines/strategy.py` |
 | strategy_decide | Strategy.decide | `src/gpt_trader/features/live_trade/strategies/base.py` |
-| order_router | OrderRouter.execute_async (external) | `src/gpt_trader/features/live_trade/execution/router.py` |
 | engine_submit | TradingEngine.submit_order | `src/gpt_trader/features/live_trade/engines/strategy.py` |
 
 ## Guard + Validation
@@ -50,7 +49,6 @@ Generated: 1970-01-01T00:00:00+00:00
 |------|----|-------------|
 | trading_engine_cycle | strategy_decide | produce decision |
 | strategy_decide | engine_validate | submit decision |
-| order_router | engine_submit | external entry |
 | engine_submit | engine_validate | delegate to guard stack |
 | engine_validate | decision_trace | record outcomes |
 | engine_validate | degradation_gate | pause/allow |
@@ -75,6 +73,6 @@ Generated: 1970-01-01T00:00:00+00:00
 
 ## Notes
 - TradingEngine._cycle submits strategy decisions directly to the guard stack.
-- OrderRouter routes external decisions to TradingEngine.submit_order.
+- TradingEngine.submit_order is the external submission entrypoint.
 - OrderSubmitter handles broker IO, telemetry, and persistence.
 - Guard rejections emit metrics; stale marks append EventStore events.

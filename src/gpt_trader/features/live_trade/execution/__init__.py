@@ -1,7 +1,7 @@
 """Order execution components for live trading.
 
-This module provides order routing, validation, guard management,
-and execution services for multi-venue trading.
+This module provides order validation, guard management,
+and execution services for live trading.
 """
 
 from .broker_executor import BrokerExecutor
@@ -10,7 +10,6 @@ from .guard_manager import GuardManager
 from .guards import RuntimeGuardState
 from .order_event_recorder import OrderEventRecorder
 from .order_submission import OrderSubmitter
-from .router import OrderResult, OrderRouter
 from .state_collection import StateCollector
 from .submission_result import OrderSubmissionResult, OrderSubmissionStatus
 from .validation import (
@@ -22,9 +21,6 @@ from .validation import (
 )
 
 __all__ = [
-    # Routing
-    "OrderRouter",
-    "OrderResult",
     "OrderDecisionTrace",
     # Submission
     "BrokerExecutor",

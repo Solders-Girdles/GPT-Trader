@@ -216,11 +216,12 @@ Local CI (`make ci-required` / `uv run local-ci`) can report failures before the
 ### Agent Artifacts Freshness
 
 The **Agent Artifacts Freshness** check verifies generated inventories under
-`var/agents/**` are up to date with their sources. It is blocking for
-`make ci-required`, strict/full `uv run local-ci`, and non-PR GitHub CI events.
-On GitHub pull requests it reports stale artifacts as a non-blocking warning so
-ordinary PRs are not stalled by the scheduled refresh lane. If a blocking local
-check fails, regenerate the artifacts and commit the results.
+`var/agents/**` are up to date with their sources. It is blocking for non-PR
+GitHub CI events. Locally (`make ci-required` and strict/full `uv run local-ci`)
+and on GitHub pull requests it reports stale artifacts as a non-blocking advisory
+warning, so ordinary loops and PRs are not stalled by the scheduled refresh lane.
+When you see the advisory warning, regenerate the artifacts and commit the results
+before merge (non-PR CI enforces it).
 
 ```bash
 uv run agent-regenerate

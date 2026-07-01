@@ -219,3 +219,83 @@ def test_render_report_collapses_newlines_in_notes(tmp_path: Path) -> None:
     rows = [line for line in report.splitlines() if "**missing**" in line]
     assert len(rows) == 1
     assert "Traceback: Line1 Line2" in rows[0]
+
+
+def _discrepancy(source_doc: str, category: str, item: str, status: str) -> scan.Discrepancy:
+    ext = scan.ExtractedItem(source_doc, category, item, "assignment")
+    return ext, scan.VerificationResult(status, "test", status)
+
+
+def test_parse_fail_on_parses_and_rejects_unknown() -> None:
+    assert scan._parse_fail_on("missing,stale") == {"missing", "stale"}
+    assert scan._parse_fail_on(" missing , stale ") == {"missing", "stale"}
+    assert scan._parse_fail_on("") == set()
+    with pytest.raises(SystemExit):
+        scan._parse_fail_on("bogus")
+
+
+def test_is_suppressed_matches_only_exact_pairs() -> None:
+    doc, item = next(iter(scan.CURRENCY_SUPPRESSIONS))
+    assert scan.is_suppressed(doc, item) is True
+    assert scan.is_suppressed(doc, "--definitely-not-suppressed") is False
+    assert scan.is_suppressed("docs/not-a-real-doc.md", item) is False
+
+
+def test_gating_findings_excludes_suppressed_and_non_gated_statuses() -> None:
+    doc, item = next(iter(scan.CURRENCY_SUPPRESSIONS))
+    discrepancies = [
+        _discrepancy("docs/x.md", "module", "gpt_trader.does_not_exist", "missing"),
+        _discrepancy(doc, "cli_flag", item, "missing"),  # suppressed
+        _discrepancy("docs/y.md", "cli_flag", "--maybe", "uncertain"),  # not gated
+    ]
+    gating = scan.gating_findings(discrepancies, {"missing", "stale"})
+    assert [ext.item for ext, _ in gating] == ["gpt_trader.does_not_exist"]
+
+
+def test_unused_suppressions_reports_orphans() -> None:
+    # An empty scan orphans every suppression entry.
+    assert scan.unused_suppressions([]) == set(scan.CURRENCY_SUPPRESSIONS)
+    # A live finding for one entry removes it from the orphan set.
+    doc, item = next(iter(scan.CURRENCY_SUPPRESSIONS))
+    disc = [_discrepancy(doc, "cli_flag", item, "missing")]
+    assert (doc, item) not in scan.unused_suppressions(disc)
+
+
+def _patch_scan(monkeypatch, discrepancies: list[scan.Discrepancy]) -> None:
+    monkeypatch.setattr(scan, "scan_docs", lambda *a, **k: ([], [], discrepancies))
+    monkeypatch.setattr(scan, "render_report", lambda **k: "")
+
+
+def test_main_fail_on_exits_nonzero_for_unsuppressed_missing(monkeypatch) -> None:
+    _patch_scan(monkeypatch, [_discrepancy("docs/x.md", "module", "gpt_trader.gone", "missing")])
+    assert scan.main(["--fail-on", "missing,stale", "--skip-help"]) == 1
+
+
+def test_main_fail_on_zero_when_only_suppressed_or_uncertain(monkeypatch) -> None:
+    doc, item = next(iter(scan.CURRENCY_SUPPRESSIONS))
+    monkeypatch.setattr(scan, "CURRENCY_SUPPRESSIONS", {(doc, item): "test suppression"})
+    _patch_scan(
+        monkeypatch,
+        [
+            _discrepancy(doc, "cli_flag", item, "missing"),  # suppressed
+            _discrepancy("docs/y.md", "path", "some/uncertain/path", "uncertain"),
+        ],
+    )
+    assert scan.main(["--fail-on", "missing,stale", "--skip-help"]) == 0
+
+
+def test_main_fail_on_exits_nonzero_for_unused_suppression(monkeypatch, capsys) -> None:
+    monkeypatch.setattr(
+        scan, "CURRENCY_SUPPRESSIONS", {("docs/x.md", "REMOVED_REFERENCE"): "test suppression"}
+    )
+    _patch_scan(monkeypatch, [])
+
+    assert scan.main(["--fail-on", "missing,stale", "--skip-help"]) == 1
+    output = capsys.readouterr().out
+    assert "unused CURRENCY_SUPPRESSIONS" in output
+    assert "docs/x.md :: `REMOVED_REFERENCE`" in output
+
+
+def test_main_without_fail_on_is_report_only(monkeypatch) -> None:
+    _patch_scan(monkeypatch, [_discrepancy("docs/x.md", "module", "gpt_trader.gone", "missing")])
+    assert scan.main(["--skip-help"]) == 0

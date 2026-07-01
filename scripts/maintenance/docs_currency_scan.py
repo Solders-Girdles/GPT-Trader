@@ -134,7 +134,62 @@ REMOVAL_REGISTRY_DOCS = ("DEPRECATIONS.md",)
 # references matching a DEPRECATED_MARKER are exempted here, so unrelated drift in
 # these docs is still reported.
 MIGRATION_GUIDANCE_DOCS = ("ARCHITECTURE.md",)
+# Narrow suppressions for known false-positive missing/stale findings the scanner
+# cannot classify from context alone: git/tool flags quoted in prose, placeholder
+# example identifiers, and identifiers named only in historical decision records.
+# Keyed by (source_doc, item). Self-policing: the scanner tests fail if an entry
+# no longer matches a missing/stale finding, so suppressions cannot rot silently.
+# Add an entry ONLY for a genuine false positive, with a one-line reason.
+CURRENCY_SUPPRESSIONS: dict[tuple[str, str], str] = {
+    ("docs/DEVELOPMENT_GUIDELINES.md", "--branch"): "git branch flag quoted in prose",
+    ("docs/INFORMATION_ARCHITECTURE.md", "--ignored"): "git flag example, not a gpt-trader flag",
+    (
+        "docs/READINESS.md",
+        "var/ops/controls_smoke_20260117_123003.json",
+    ): "timestamped runtime artifact shown as an example path",
+    (
+        "docs/agents/scratch_logs/project_regrounding_20260628.md",
+        "--decorate",
+    ): "git log flag quoted in a scratch log",
+    (
+        "docs/agents/scratch_logs/project_regrounding_20260628.md",
+        "--oneline",
+    ): "git log flag quoted in a scratch log",
+    (
+        "docs/decisions/intx-default-derivatives-venue.md",
+        "--hidden",
+    ): "example flag quoted in a decision record",
+    (
+        "docs/decisions/intx-default-derivatives-venue.md",
+        "PERPS_ALLOWLIST",
+    ): "removed INTX env var cited as history in a decision record",
+    (
+        "docs/decisions/remove-tui-subsystem.md",
+        "scripts/build_tui_css.py",
+    ): "removed TUI build script cited as history in a decision record",
+    (
+        "docs/decisions/remove-tui-subsystem.md",
+        "src/gpt_trader/tui/",
+    ): "removed TUI package cited as history in a decision record",
+    ("docs/naming.md", "--kebab-case"): "naming-style example, not a CLI flag",
+    ("docs/testing.md", "gpt_trader.api"): "placeholder module name in a prose example",
+    ("docs/testing.md", "gpt_trader.module"): "placeholder module name in a prose example",
+}
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+# Repo files that enumerate documented identifiers as data (this scanner's own
+# suppression/marker tables and its test fixtures) rather than using them, so
+# grep-based verification must ignore them.
+_GREP_EXCLUDE_FILES = (
+    "scripts/maintenance/docs_currency_scan.py",
+    "tests/unit/scripts/test_docs_currency_scan.py",
+    "tests/integration/scripts/test_docs_currency_scan.py",
+)
+
+
+def is_suppressed(source_doc: str, item: str) -> bool:
+    return (source_doc, item) in CURRENCY_SUPPRESSIONS
 
 
 def _is_removal_registry_doc(source_doc: str) -> bool:
@@ -305,6 +360,11 @@ def _grep_repo(state: ScanState, needle: str, *, suffixes: tuple[str, ...] = (".
             if path.suffix not in suffixes:
                 continue
             rel = str(path.relative_to(state.repo_root))
+            # The scanner and its tests list documented identifiers (suppressions,
+            # markers, fixtures) as data, not as real usages; counting them would
+            # let a suppression entry silently reclassify its own finding.
+            if rel in _GREP_EXCLUDE_FILES:
+                continue
             cached = state.source_cache.get(rel)
             if cached is None:
                 try:
@@ -678,13 +738,57 @@ def render_report(
     return "\n".join(lines) + "\n"
 
 
+Discrepancy = tuple[ExtractedItem, VerificationResult]
+
+
+def _parse_fail_on(value: str) -> set[Status]:
+    """Parse a comma-separated ``--fail-on`` list into a set of statuses."""
+    valid: set[str] = {"ok", "missing", "stale", "uncertain"}
+    statuses = {token.strip() for token in value.split(",") if token.strip()}
+    unknown = statuses - valid
+    if unknown:
+        raise SystemExit(f"--fail-on: unknown status(es): {', '.join(sorted(unknown))}")
+    return statuses  # type: ignore[return-value]
+
+
+def gating_findings(discrepancies: list[Discrepancy], fail_on: set[Status]) -> list[Discrepancy]:
+    """Findings whose status is in ``fail_on`` and are not suppressed."""
+    return [
+        (ext, result)
+        for ext, result in discrepancies
+        if result.status in fail_on and not is_suppressed(ext.source_doc, ext.item)
+    ]
+
+
+def unused_suppressions(discrepancies: list[Discrepancy]) -> set[tuple[str, str]]:
+    """Suppression keys that no longer match any non-``ok`` finding.
+
+    Used by the scanner tests to keep ``CURRENCY_SUPPRESSIONS`` honest: once a
+    suppressed reference is fixed or removed from its doc, its entry must be
+    dropped. Any non-``ok`` status counts as live so a suppression does not flap
+    stale purely because ``--help`` availability shifts a finding between
+    ``missing`` and ``uncertain``.
+    """
+    live = {(ext.source_doc, ext.item) for ext, _ in discrepancies}
+    return set(CURRENCY_SUPPRESSIONS) - live
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Scan docs/ references against repository state.")
     parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
-    parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--output", type=Path, help="Optional path to write the full report.")
     parser.add_argument("--raw-extracts", type=Path)
     parser.add_argument("--skip-help", action="store_true")
+    parser.add_argument(
+        "--fail-on",
+        default="",
+        help=(
+            "Comma-separated statuses that cause a nonzero exit (e.g. 'missing,stale'). "
+            "Suppressed findings (CURRENCY_SUPPRESSIONS) never gate; omit to report only."
+        ),
+    )
     args = parser.parse_args(argv)
+    fail_on = _parse_fail_on(args.fail_on)
 
     repo_root = args.repo_root.resolve()
     doc_files, extracted, discrepancies = scan_docs(repo_root, fetch_help=not args.skip_help)
@@ -694,8 +798,9 @@ def main(argv: list[str] | None = None) -> int:
         discrepancies=discrepancies,
         repo_root=repo_root,
     )
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    args.output.write_text(report, encoding="utf-8")
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(report, encoding="utf-8")
 
     if args.raw_extracts:
         args.raw_extracts.parent.mkdir(parents=True, exist_ok=True)
@@ -710,11 +815,42 @@ def main(argv: list[str] | None = None) -> int:
             chunks.append("")
         args.raw_extracts.write_text("\n".join(chunks), encoding="utf-8")
 
-    print(f"Report written to {args.output}")
+    if args.output:
+        print(f"Report written to {args.output}")
+    suppressed = sum(
+        1
+        for ext, result in discrepancies
+        if result.status in {"missing", "stale"} and is_suppressed(ext.source_doc, ext.item)
+    )
     print(
         f"Docs: {len(doc_files)}, Extracted: {len(extracted)}, "
-        f"Discrepancies: {len(discrepancies)}"
+        f"Discrepancies: {len(discrepancies)} (suppressed missing/stale: {suppressed})"
     )
+
+    if fail_on:
+        gating = gating_findings(discrepancies, fail_on)
+        orphaned_suppressions = unused_suppressions(discrepancies)
+        if gating:
+            print(f"\nFAIL: {len(gating)} unsuppressed {'/'.join(sorted(fail_on))} finding(s):")
+            for ext, result in sorted(
+                gating, key=lambda row: (row[1].status, row[0].source_doc, row[0].item)
+            ):
+                print(f"  [{result.status}] {ext.source_doc} :: `{ext.item}` — {result.notes}")
+            print(
+                "Fix the reference in the owning doc, or — if it is a genuine false positive — "
+                "add a justified entry to CURRENCY_SUPPRESSIONS in "
+                "scripts/maintenance/docs_currency_scan.py."
+            )
+        if orphaned_suppressions:
+            print(f"\nFAIL: {len(orphaned_suppressions)} unused CURRENCY_SUPPRESSIONS entries:")
+            for source_doc, item in sorted(orphaned_suppressions):
+                print(f"  {source_doc} :: `{item}`")
+            print(
+                "Remove stale suppression entries after the underlying docs reference is fixed "
+                "or removed."
+            )
+        if gating or orphaned_suppressions:
+            return 1
     return 0
 
 

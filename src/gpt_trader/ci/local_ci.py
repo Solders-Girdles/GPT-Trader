@@ -210,6 +210,15 @@ def build_steps(profile: LocalCIProfile, args: argparse.Namespace) -> list[Plann
             command=["python", "scripts/maintenance/docs_reachability_check.py"],
         ),
         PlannedStep(
+            label="Docs currency gate (missing/stale)",
+            command=[
+                "python",
+                "scripts/maintenance/docs_currency_scan.py",
+                "--fail-on",
+                "missing,stale",
+            ],
+        ),
+        PlannedStep(
             label="Type Check (MyPy)",
             command=["uv", "run", "mypy", "src"],
         ),

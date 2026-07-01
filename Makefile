@@ -62,6 +62,7 @@ typecheck:
 docs-audit:
 	uv run python scripts/maintenance/docs_link_audit.py
 	uv run python scripts/maintenance/docs_reachability_check.py
+	uv run python scripts/maintenance/docs_currency_scan.py --fail-on missing,stale
 
 test-guardrails:
 	uv run python scripts/ci/check_test_hygiene.py
@@ -287,3 +288,4 @@ agent-chaos-week:
 agent-docs-links:
 	uv run python scripts/maintenance/docs_link_audit.py
 	uv run python scripts/maintenance/docs_reachability_check.py
+	uv run python scripts/maintenance/docs_currency_scan.py --fail-on missing,stale

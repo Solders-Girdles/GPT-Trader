@@ -22,7 +22,6 @@ uv run agent-map --format text
 uv run agent-tests --stdout
 uv run agent-tests --source gpt_trader.cli
 uv run agent-tests --source gpt_trader.cli --source-files
-uv run agent-risk --with-docs
 uv run agent-naming
 uv run agent-naming --strict --quiet
 uv run agent-health

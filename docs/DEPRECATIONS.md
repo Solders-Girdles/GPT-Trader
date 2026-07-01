@@ -50,6 +50,16 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| `agent-risk` CLI (`scripts/agents/query_risk_config.py`) | Unreleased | Removed as a dead agent tool (owner-approved 2026-07-01). Read risk configuration via `var/agents/schemas/risk_config_schema.json` (`uv run agent-regenerate --only schemas`) or `gpt-trader` config commands. |
+| `agent-dedupe-triage` CLI (`scripts/agents/dedupe_triage.py`) | Unreleased | Removed as a dead agent tool (owner-approved 2026-07-01). Edit `tests/_triage/dedupe_triage.yaml` directly; it remains the hand-editable triage record consumed by `uv run agent-dedupe`. |
+| Hybrid strategy framework (`features/live_trade/strategies/hybrid/`: `HybridStrategyBase`, `HybridStrategyConfig`, `HybridDecision`, hybrid `Action` enum) | Unreleased | Dead parallel surface — never reachable from `factory.py`/config. Use the strategy registry in `features/live_trade/factory.py`. |
+| `OrderRouter` / `OrderResult` (`features/live_trade/execution/router.py`) | Unreleased | Never instantiated in production. External submissions go through `TradingEngine.submit_order()`. |
+| `monitoring/guards/` package (`RuntimeGuardManager`, builtin guards, alert handlers) | Unreleased | Dead parallel of the canonical runtime guard stack in `features/live_trade/execution/guards/` (managed by `execution/guard_manager.py`). |
+| `monitoring/domain/perps/` margin/liquidation math (`MarginStateMonitor`, `LiquidationMonitor`) | Unreleased | Test-only surface. Live liquidation protection is `features/live_trade/execution/guards/liquidation_buffer.py`. |
+| `StatefulStrategy` ABC (`strategies/stateful.py`) | Unreleased | Test-only. Use `StatefulStrategyBase` in `strategies/base.py`. |
+| `StatefulBaselineStrategy` / `StatefulPerpsStrategy` (`strategies/perps_baseline/stateful.py`) | Unreleased | Test-only; never wired into `factory.py`. Use `BaselinePerpsStrategy`. |
+| `AsyncRetry` / `async_retry` (`utilities/async_tools/retry.py`) | Unreleased | Zero non-test users. Broker IO retry lives in `execution/broker_executor.py` (`RetryPolicy`, `execute_with_retry`). |
+| `retry_on_error` decorator (`errors/error_patterns.py`) | Unreleased | Zero production callers. Call `ErrorHandler.with_retry` directly if retry-with-recovery is needed. |
 | Legacy credential env vars (`COINBASE_API_KEY_NAME` / `COINBASE_PRIVATE_KEY`) | Unreleased | Use `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY` or `COINBASE_CREDENTIALS_FILE`. |
 | `get_auth()` env-based auth factory | Unreleased | Use `resolve_coinbase_credentials()` + `SimpleAuth`. |
 | `BotConfig` flat compat accessors (`short_ma`, `long_ma`, etc.) | Unreleased | Use nested config: `config.strategy.*` and `config.risk.*`. |
@@ -69,6 +79,10 @@ Before removing any deprecated item:
 | Yahoo data source stub (`DataSource.YAHOO`, `download_from_yahoo`) | Unreleased | Use `DataSource.COINBASE` and `download_from_coinbase`. |
 | `EventStore.events` list + `EventStore.path` JSONL alias | Unreleased | Use `EventStore.list_events()` for reads and `EventStore.root` for the storage root. |
 | TUI subsystem (`src/gpt_trader/tui/`, `gpt-trader tui` command, `--tui`/`--demo` run flags, `scripts/build_tui_css.py`, TUI CI jobs, `textual` dependency) | Unreleased | Removed; use `gpt-trader run` for the bot and `gpt-trader ideas …` for trade-idea review. See `docs/decisions/remove-tui-subsystem.md`. |
+| `gpt-trader treasury convert\|move` CLI command group (`cli/commands/treasury.py`) | Unreleased | Removed; it was never functional (no `account_manager` was ever wired, so every invocation failed). No migration path. See `docs/decisions/remove-unwired-account-manager-and-strategy-lab.md`. |
+| `CoinbaseAccountManager` (`features/brokerages/coinbase/account_manager.py`) | Unreleased | Removed as never-constructed dead code. Wire a new account-snapshot service from a fresh spec if needed. See `docs/decisions/remove-unwired-account-manager-and-strategy-lab.md`. |
+| `AccountTelemetryService` (`features/live_trade/telemetry/account.py`) + `AccountManagerProtocol` + `TradingBot.account_manager`/`account_telemetry` attributes | Unreleased | Removed as unreachable (container never provided the services). `gpt-trader account snapshot` still reports telemetry unavailable, unchanged. See `docs/decisions/remove-unwired-account-manager-and-strategy-lab.md`. |
+| `features/strategy_dev/lab/` + `features/strategy_dev/monitor/` subpackages (`Experiment*`, `ParameterGrid`, `PerformanceMonitor`, `MetricsAggregator`, `AlertManager`, …) | Unreleased | Removed as unwired dead code; `strategy_dev/config/` (used by `gpt-trader strategy`) remains. See `docs/decisions/remove-unwired-account-manager-and-strategy-lab.md`. |
 | TUI legacy preferences fallback (`config/tui_preferences.json`) | Unreleased | Use runtime preferences path or `GPT_TRADER_TUI_PREFERENCES_PATH` |
 | TUI legacy status CSS aliases (`good`/`bad`/`risk-status-*`) | Unreleased | Use `status-ok`, `status-warning`, `status-critical` |
 | TUI validation `ValidationError` alias | Unreleased | Use `FieldValidationError` |
@@ -83,7 +97,7 @@ Before removing any deprecated item:
 | `PERPS_FORCE_MOCK` env var | v4.0 | Use `MOCK_BROKER` |
 | `SYMBOLS` env var | v4.0 | Use `TRADING_SYMBOLS` |
 | `POSITION_FRACTION` env var | v4.0 | Use `RISK_MAX_POSITION_PCT_PER_SYMBOL` |
-| `OrderRouter.execute()` | v4.0 | Use `OrderRouter.execute_async()` |
+| `OrderRouter.execute()` | v4.0 | `OrderRouter` has since been removed entirely; use `TradingEngine.submit_order()` |
 | `gpt_trader.orchestration` package | DI migration | Use canonical paths: `app.*`, `features.live_trade.*` |
 | `orchestration.configuration.bot_config` | DI migration | `gpt_trader.app.config.BotConfig` |
 | `orchestration.configuration.risk.model` | DI migration | `gpt_trader.features.live_trade.risk.config.RiskConfig` |

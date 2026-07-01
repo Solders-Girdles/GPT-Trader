@@ -11,7 +11,7 @@ A Coinbase-oriented trading system under active cleanup and migration planning.
 
 GPT-Trader is a Coinbase-oriented trading system featuring a Terminal User Interface, vertical slice architecture, and risk management. The name reflects how AI assistants collaborate in developing this codebase; current trading strategies use technical analysis and rule-based decisioning, not LLM inference.
 
-**Direction:** the long-term goal is an autonomous trading entity — a bot that observes markets, does its own research, and manages funds inside machine-enforced limits. The accepted path runs through staged autonomy: AI-produced trade-idea records with human approval first, then bounded autonomy per strategy envelope once the risk, audit, and kill-switch rails have a track record. Scope is Coinbase only (spot + CFM futures); INTX perpetuals code is frozen. See [Direction](docs/DIRECTION.md) for the accepted decision record.
+**Direction:** the long-term goal is an autonomous trading entity — a bot that observes markets, does its own research, and manages funds inside machine-enforced limits. The accepted path runs through staged autonomy: AI-produced trade-idea records with human approval first, then bounded autonomy per strategy envelope once the risk, audit, and kill-switch rails have a track record. Scope is Coinbase only (spot + CFM futures); INTX perpetuals were removed, not frozen (see the [removal decision](docs/decisions/intx-default-derivatives-venue.md) and [Deprecations](docs/DEPRECATIONS.md)). See [Direction](docs/DIRECTION.md) for the accepted staged-autonomy direction.
 
 Treat existing live profiles and broker-specific paths as implementation assets that need explicit readiness, venue-capability, approval, and audit gates before expansion.
 
@@ -21,7 +21,7 @@ Treat existing live profiles and broker-specific paths as implementation assets 
 |------|--------|-------------|
 | **Spot Trading** | Implemented | Coinbase spot paths exist; use only with explicit profile and readiness gates |
 | **CFM Futures** | Implemented/gated | US-regulated futures paths exist; require account, product, and risk-gate verification |
-| **INTX Perpetuals** | Frozen | International derivatives paths exist but receive no new work; removed opportunistically |
+| **INTX Perpetuals** | Removed | International derivatives paths were removed (see [decision record](docs/decisions/intx-default-derivatives-venue.md)); `COINBASE_ENABLE_INTX_PERPS` remains only as a deprecated alias (a truthy value warns and substitutes for `CFM_ENABLED=1` only; `TRADING_MODES` must still include `cfm`; falsey/unset values are ignored) |
 | **AI-assisted execution** | Planning | Human-approved execution first; bounded autonomy is the accepted destination |
 
 ## Quick Start
@@ -155,14 +155,14 @@ uv run agent-regenerate --only testing
 
 ### Agent Tools
 
-Commands for AI-assisted development:
+Commands for AI-assisted development. The canonical local quality gate is
+`make ci-required`; these helpers are optional conveniences on top of it:
 
 ```bash
-uv run agent-check      # Quality gate with JSON output
+uv run agent-check      # Optional JSON summary of lint/format/types/tests
 uv run agent-impact     # Analyze change impact
 uv run agent-map        # Generate dependency graph
 uv run agent-naming     # Check naming conventions
-uv run agent-risk       # Query risk configuration
 uv run agent-pr-ready   # Reconcile PR mergeability vs green CI
 ```
 

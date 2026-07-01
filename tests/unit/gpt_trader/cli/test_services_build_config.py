@@ -23,7 +23,6 @@ def _make_args(**overrides: object) -> Namespace:
         "reduce_only_mode": False,
         "time_in_force": None,
         "enable_order_preview": False,
-        "account_telemetry_interval": None,
     }
     profile_value = overrides.pop("profile", None)
     defaults.update(overrides)

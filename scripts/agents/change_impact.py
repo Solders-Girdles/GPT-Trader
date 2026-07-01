@@ -146,13 +146,36 @@ def build_pytest_command(paths: list[str], markers: list[str]) -> str:
 
 
 def load_source_test_map() -> dict[str, Any] | None:
-    """Load the source/test map if available."""
-    if not SOURCE_TEST_MAP_PATH.exists():
-        return None
+    """Regenerate and load the source/test map.
+
+    The map is gitignored (regenerate-on-demand): an on-disk copy can be
+    missing or silently stale, so rebuild it from the current test tree
+    (sub-second scan) before use. Falls back to an existing on-disk copy with
+    a loud warning if regeneration fails; returns None only when neither
+    works, in which case import-map test suggestions are skipped.
+    """
+    if str(PROJECT_ROOT) not in sys.path:
+        sys.path.insert(0, str(PROJECT_ROOT))
     try:
-        return json.loads(SOURCE_TEST_MAP_PATH.read_text())
-    except Exception:
-        return None
+        from scripts.agents import generate_test_inventory
+
+        return generate_test_inventory.regenerate_source_test_map(SOURCE_TEST_MAP_PATH)
+    except Exception as exc:
+        print(f"Warning: failed to regenerate source test map: {exc}", file=sys.stderr)
+    if SOURCE_TEST_MAP_PATH.exists():
+        print(
+            f"Warning: using possibly stale source test map from disk: {SOURCE_TEST_MAP_PATH}",
+            file=sys.stderr,
+        )
+        try:
+            return json.loads(SOURCE_TEST_MAP_PATH.read_text())
+        except Exception:
+            return None
+    print(
+        "Warning: no source test map available; import-map test suggestions skipped",
+        file=sys.stderr,
+    )
+    return None
 
 
 def find_test_file(source_file: str) -> str | None:

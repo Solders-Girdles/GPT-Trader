@@ -202,7 +202,6 @@ class BotConfig:
     market_order_fallback: bool = True
     # Enabled by default for resiliency; disable only for controlled troubleshooting.
     order_submission_retries_enabled: bool = True
-    account_telemetry_interval: int | None = None
     broker_calls_use_dedicated_executor: bool = True
 
     # System

@@ -1,27 +1,18 @@
 """
-Strategy Development Toolkit.
+Strategy development configuration surface.
 
-A comprehensive suite for evolving and improving trading strategies:
+The remaining slice provides YAML strategy profiles, a strategy registry, and
+the config-diff helpers behind the ``gpt-trader strategy`` CLI command:
 
-- **Strategy Lab**: Experiment tracking, A/B testing, parameter optimization
-- **Performance Monitor**: Real-time metrics, alerts, regime-specific analytics
-- **Config Manager**: YAML profiles, strategy registry, hot-reload configuration
-
-Usage:
     from gpt_trader.features.strategy_dev import (
-        # Lab
-        Experiment,
-        ExperimentTracker,
-        ParameterGrid,
-        # Monitor
-        PerformanceMonitor,
-        MetricsAggregator,
-        AlertManager,
-        # Config
         ConfigManager,
-        StrategyRegistry,
         StrategyProfile,
+        StrategyRegistry,
     )
+
+The former experiment-lab (``lab/``) and performance-monitor (``monitor/``)
+subpackages were removed as unwired code; see
+``docs/decisions/remove-unwired-account-manager-and-strategy-lab.md``.
 """
 
 from gpt_trader.features.strategy_dev.config import (
@@ -29,33 +20,8 @@ from gpt_trader.features.strategy_dev.config import (
     StrategyProfile,
     StrategyRegistry,
 )
-from gpt_trader.features.strategy_dev.lab import (
-    Experiment,
-    ExperimentResult,
-    ExperimentTracker,
-    ParameterGrid,
-)
-from gpt_trader.features.strategy_dev.monitor import (
-    AlertManager,
-    AlertRule,
-    MetricsAggregator,
-    PerformanceMonitor,
-    PerformanceSnapshot,
-)
 
 __all__ = [
-    # Lab
-    "Experiment",
-    "ExperimentResult",
-    "ExperimentTracker",
-    "ParameterGrid",
-    # Monitor
-    "AlertManager",
-    "AlertRule",
-    "MetricsAggregator",
-    "PerformanceMonitor",
-    "PerformanceSnapshot",
-    # Config
     "ConfigManager",
     "StrategyProfile",
     "StrategyRegistry",

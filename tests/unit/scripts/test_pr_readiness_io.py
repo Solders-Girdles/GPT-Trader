@@ -98,6 +98,48 @@ def test_fetch_review_threads_paginates(monkeypatch) -> None:
     assert any(part == "cursor=cursor-1" for part in calls[1])
 
 
+def test_fetch_head_update_events_paginates(monkeypatch) -> None:
+    calls: list[list[str]] = []
+
+    def fake_gh_json(args: list[str]) -> dict[str, Any]:
+        calls.append(args)
+        if len(calls) == 1:
+            return {
+                "data": {
+                    "repository": {
+                        "pullRequest": {
+                            "timelineItems": {
+                                "nodes": [{"createdAt": "2026-06-30T16:00:00Z"}],
+                                "pageInfo": {"hasNextPage": True, "endCursor": "cursor-1"},
+                            }
+                        }
+                    }
+                }
+            }
+        return {
+            "data": {
+                "repository": {
+                    "pullRequest": {
+                        "timelineItems": {
+                            "nodes": [{"createdAt": "2026-06-30T17:00:00Z"}],
+                            "pageInfo": {"hasNextPage": False, "endCursor": None},
+                        }
+                    }
+                }
+            }
+        }
+
+    monkeypatch.setattr(pr_readiness, "_gh_json", fake_gh_json)
+
+    nodes = pr_readiness.fetch_head_update_events("owner/repo", 9)
+
+    assert [node["createdAt"] for node in nodes] == [
+        "2026-06-30T16:00:00Z",
+        "2026-06-30T17:00:00Z",
+    ]
+    assert any(part == "cursor=cursor-1" for part in calls[1])
+
+
 def test_fetch_pr_reactions_flattens_slurped_pages(monkeypatch) -> None:
     calls: list[list[str]] = []
 
@@ -128,6 +170,15 @@ def test_fetch_pr_reactions_handles_non_list_payload(monkeypatch) -> None:
 def test_fetch_review_threads_rejects_malformed_repo() -> None:
     try:
         pr_readiness.fetch_review_threads("not-a-repo", 9)
+    except RuntimeError as error:
+        assert "owner/name" in str(error)
+    else:
+        raise AssertionError("expected RuntimeError")
+
+
+def test_fetch_head_update_events_rejects_malformed_repo() -> None:
+    try:
+        pr_readiness.fetch_head_update_events("not-a-repo", 9)
     except RuntimeError as error:
         assert "owner/name" in str(error)
     else:

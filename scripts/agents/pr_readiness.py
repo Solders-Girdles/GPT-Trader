@@ -130,7 +130,7 @@ class PullRequestState:
     protection: BranchProtection
     base_ref_name: str = "main"
     head_committed_at: str | None = None
-    reaction_freshness_floor: str | None = None
+    head_updated_at: str | None = None
     review_signals: tuple[ReviewSignal, ...] = ()
 
 
@@ -208,6 +208,7 @@ def parse_pr_state(
     threads_json: list[dict[str, Any]],
     protection: BranchProtection,
     reactions_json: list[dict[str, Any]] | None = None,
+    head_update_events_json: list[dict[str, Any]] | None = None,
     *,
     review_bot: str | None = _DEFAULT_REVIEW_BOT,
     acceptance_marker: str | None = _DEFAULT_ACCEPTANCE_MARKER,
@@ -248,7 +249,7 @@ def parse_pr_state(
 
     head_oid = str(pr_json.get("headRefOid", ""))
     head_committed_at = _current_head_committed_at(pr_json, head_oid)
-    reaction_freshness_floor = _latest_timestamp(head_committed_at, pr_json.get("updatedAt"))
+    head_updated_at = _head_updated_at(head_oid, head_committed_at, head_update_events_json or [])
 
     return PullRequestState(
         number=int(pr_json.get("number", 0)),
@@ -260,13 +261,13 @@ def parse_pr_state(
         threads=tuple(threads),
         protection=protection,
         head_committed_at=head_committed_at,
-        reaction_freshness_floor=reaction_freshness_floor,
+        head_updated_at=head_updated_at,
         review_signals=tuple(
             _parse_review_signals(
                 pr_json,
                 reactions_json or [],
                 head_oid,
-                reaction_freshness_floor,
+                head_updated_at,
                 review_bot=review_bot,
                 acceptance_marker=acceptance_marker,
             )
@@ -411,6 +412,24 @@ def _current_head_committed_at(pr_json: dict[str, Any], head_oid: str) -> str | 
             value = commit.get("committedDate") or commit.get("authoredDate")
             return str(value) if value else None
     return None
+
+
+def _head_updated_at(
+    head_oid: str,
+    head_committed_at: str | None,
+    head_update_events_json: list[dict[str, Any]],
+) -> str | None:
+    matching_updates: list[str] = []
+    for event in head_update_events_json:
+        after_commit = event.get("afterCommit")
+        if not isinstance(after_commit, dict):
+            continue
+        if not _head_matches(after_commit.get("oid"), head_oid):
+            continue
+        created_at = event.get("createdAt")
+        if _parse_timestamp(created_at) is not None:
+            matching_updates.append(str(created_at))
+    return _latest_timestamp(head_committed_at, *matching_updates)
 
 
 def _review_commit_oid(review: dict[str, Any]) -> str:
@@ -715,7 +734,7 @@ def fetch_pr_payload(repo: str, pr: int) -> dict[str, Any]:
             "--repo",
             repo,
             "--json",
-            "number,headRefOid,baseRefName,mergeStateStatus,reviewDecision,statusCheckRollup,reviews,commits,updatedAt",
+            "number,headRefOid,baseRefName,mergeStateStatus,reviewDecision,statusCheckRollup,reviews,commits",
         ]
     )
     if not isinstance(payload, dict):
@@ -747,6 +766,71 @@ def fetch_pr_reactions(repo: str, pr: int) -> list[dict[str, Any]]:
         elif isinstance(page, dict):
             reactions.append(page)
     return reactions
+
+
+def fetch_head_update_events(repo: str, pr: int) -> list[dict[str, Any]]:
+    if repo.count("/") != 1:
+        raise RuntimeError("--repo must use owner/name format")
+    owner, name = repo.split("/", 1)
+    if not owner or not name:
+        raise RuntimeError("--repo must use owner/name format")
+    query = """
+query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      timelineItems(first: 100, after: $cursor, itemTypes: [HEAD_REF_FORCE_PUSHED_EVENT]) {
+        nodes {
+          __typename
+          ... on HeadRefForcePushedEvent {
+            createdAt
+            beforeCommit { oid }
+            afterCommit { oid }
+          }
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+}
+"""
+    nodes: list[dict[str, Any]] = []
+    cursor: str | None = None
+    while True:
+        gh_args = [
+            "api",
+            "graphql",
+            "-f",
+            f"query={query}",
+            "-F",
+            f"owner={owner}",
+            "-F",
+            f"name={name}",
+            "-F",
+            f"number={pr}",
+        ]
+        if cursor:
+            gh_args.extend(["-F", f"cursor={cursor}"])
+        data = _gh_json(gh_args)
+        page = (
+            data.get("data", {})
+            .get("repository", {})
+            .get("pullRequest", {})
+            .get("timelineItems", {})
+        )
+        page_nodes = page.get("nodes", [])
+        if isinstance(page_nodes, list):
+            nodes.extend(page_nodes)
+        page_info = page.get("pageInfo") or {}
+        if not page_info.get("hasNextPage"):
+            break
+        next_cursor = page_info.get("endCursor")
+        if not isinstance(next_cursor, str) or not next_cursor:
+            break
+        cursor = next_cursor
+    return nodes
 
 
 def fetch_pr_changed_paths(repo: str, pr: int) -> list[str]:
@@ -1037,6 +1121,7 @@ def main(argv: list[str] | None = None) -> int:
             fetch_review_threads(repo, pr),
             protection,
             fetch_pr_reactions(repo, pr),
+            fetch_head_update_events(repo, pr),
             review_bot=args.review_bot or None,
             acceptance_marker=args.acceptance_marker or None,
         )

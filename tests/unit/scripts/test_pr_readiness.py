@@ -173,7 +173,6 @@ def test_parse_pr_state_marks_current_head_pr_reaction_signal() -> None:
         "reviewDecision": "",
         "statusCheckRollup": [],
         "commits": [{"oid": head, "committedDate": "2026-06-30T16:46:28Z"}],
-        "updatedAt": "2026-06-30T16:48:00Z",
     }
     reactions = [
         {
@@ -186,7 +185,7 @@ def test_parse_pr_state_marks_current_head_pr_reaction_signal() -> None:
     state = parse_pr_state(pr_json, [], _protection(required_checks=()), reactions)
 
     assert state.head_committed_at == "2026-06-30T16:46:28Z"
-    assert state.reaction_freshness_floor == "2026-06-30T16:48:00Z"
+    assert state.head_updated_at == "2026-06-30T16:46:28Z"
     assert state.review_signals == (
         ReviewSignal(
             kind="pr_reaction",
@@ -224,7 +223,7 @@ def test_parse_pr_state_rejects_stale_pr_reaction_signal() -> None:
     assert state.review_signals[0].current_head is False
 
 
-def test_parse_pr_state_rejects_reaction_before_pr_update() -> None:
+def test_parse_pr_state_ignores_generic_pr_update_for_reaction_freshness() -> None:
     head = "a367f3c6deadbeef"
     pr_json = {
         "number": 1056,
@@ -234,7 +233,7 @@ def test_parse_pr_state_rejects_reaction_before_pr_update() -> None:
         "reviewDecision": "",
         "statusCheckRollup": [],
         "commits": [{"oid": head, "committedDate": "2026-06-30T16:30:00Z"}],
-        "updatedAt": "2026-06-30T16:50:00Z",
+        "updatedAt": "2026-06-30T17:00:00Z",
     }
     reactions = [
         {
@@ -246,7 +245,46 @@ def test_parse_pr_state_rejects_reaction_before_pr_update() -> None:
 
     state = parse_pr_state(pr_json, [], _protection(required_checks=()), reactions)
 
-    assert state.reaction_freshness_floor == "2026-06-30T16:50:00Z"
+    assert state.head_updated_at == "2026-06-30T16:30:00Z"
+    assert len(state.review_signals) == 1
+    assert state.review_signals[0].current_head is True
+
+
+def test_parse_pr_state_rejects_reaction_before_force_push_to_head() -> None:
+    head = "a367f3c6deadbeef"
+    pr_json = {
+        "number": 1056,
+        "headRefOid": head,
+        "baseRefName": "main",
+        "mergeStateStatus": "CLEAN",
+        "reviewDecision": "",
+        "statusCheckRollup": [],
+        "commits": [{"oid": head, "committedDate": "2026-06-30T16:30:00Z"}],
+    }
+    force_push_events = [
+        {
+            "createdAt": "2026-06-30T16:50:00Z",
+            "afterCommit": {"oid": head},
+            "beforeCommit": {"oid": "oldhead"},
+        }
+    ]
+    reactions = [
+        {
+            "content": "+1",
+            "created_at": "2026-06-30T16:45:00Z",
+            "user": {"login": "chatgpt-codex-connector[bot]"},
+        }
+    ]
+
+    state = parse_pr_state(
+        pr_json,
+        [],
+        _protection(required_checks=()),
+        reactions,
+        force_push_events,
+    )
+
+    assert state.head_updated_at == "2026-06-30T16:50:00Z"
     assert len(state.review_signals) == 1
     assert state.review_signals[0].current_head is False
 

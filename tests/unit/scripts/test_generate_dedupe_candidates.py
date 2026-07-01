@@ -7,6 +7,8 @@ import pytest
 import scripts.agents.generate_dedupe_candidates as generate_dedupe_candidates
 import scripts.agents.generate_test_inventory as generate_test_inventory
 
+FRESH_MAP_ENTRY = {"gpt_trader.sample_module": ["tests/unit/test_sample.py"]}
+
 
 def _point_at_tmp_repo(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     """Route the dedupe script's map path and test scan at a tmp repo layout."""
@@ -39,28 +41,30 @@ def test_load_source_test_map_regenerates_when_missing(
     source_test_map = generate_dedupe_candidates.load_source_test_map()
 
     assert map_path.exists()
-    assert source_test_map["source_to_tests"] == {
-        "gpt_trader.sample_module": ["tests/unit/test_sample.py"]
-    }
+    assert source_test_map["source_to_tests"] == FRESH_MAP_ENTRY
     on_disk = json.loads(map_path.read_text(encoding="utf-8"))
     assert on_disk == source_test_map
-    assert "regenerating" in capsys.readouterr().out
+    assert "Regenerating" in capsys.readouterr().out
 
 
-def test_load_source_test_map_reads_existing_without_regenerating(
+def test_load_source_test_map_refreshes_stale_existing_map(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
+    """The map is gitignored, so a stale on-disk copy must never feed dedupe."""
     map_path = _point_at_tmp_repo(monkeypatch, tmp_path)
-    payload = {"source_to_tests": {"gpt_trader.existing": ["tests/unit/test_existing.py"]}}
+    stale_payload = {"source_to_tests": {"gpt_trader.deleted_module": ["tests/unit/test_gone.py"]}}
     map_path.parent.mkdir(parents=True)
-    map_path.write_text(json.dumps(payload), encoding="utf-8")
+    map_path.write_text(json.dumps(stale_payload), encoding="utf-8")
 
     source_test_map = generate_dedupe_candidates.load_source_test_map()
 
-    assert source_test_map == payload
-    assert "regenerating" not in capsys.readouterr().out
+    assert source_test_map["source_to_tests"] == FRESH_MAP_ENTRY
+    on_disk = json.loads(map_path.read_text(encoding="utf-8"))
+    assert on_disk == source_test_map
+    assert "deleted_module" not in json.dumps(on_disk)
+    assert "Regenerating" in capsys.readouterr().out
 
 
 def test_load_source_test_map_exits_when_regeneration_fails(

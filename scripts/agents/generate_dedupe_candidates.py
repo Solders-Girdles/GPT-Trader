@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import json
 import re
 import sys
 from collections import defaultdict
@@ -53,7 +52,7 @@ def generate_cluster_id(files: list[str], source_modules: list[str]) -> str:
 def _regenerate_source_test_map() -> dict[str, Any] | None:
     """Rebuild the gitignored source test map in place.
 
-    Runs the same generator functions `uv run agent-regenerate --only testing`
+    Delegates to the same generator `uv run agent-regenerate --only testing`
     uses (imported directly, not shelled out) and writes the result to
     SOURCE_TEST_MAP_PATH. Returns the map payload, or None if generation fails.
     """
@@ -62,35 +61,28 @@ def _regenerate_source_test_map() -> dict[str, Any] | None:
     try:
         from scripts.agents import generate_test_inventory
 
-        scan_results = generate_test_inventory.scan_test_files(TESTS_DIR)
-        source_test_map = generate_test_inventory.build_source_test_map(
-            scan_results["imports_by_file"]
+        return generate_test_inventory.regenerate_source_test_map(
+            SOURCE_TEST_MAP_PATH, tests_dir=TESTS_DIR
         )
-        SOURCE_TEST_MAP_PATH.parent.mkdir(parents=True, exist_ok=True)
-        with open(SOURCE_TEST_MAP_PATH, "w") as f:
-            json.dump(source_test_map, f, indent=2)
-            f.write("\n")
     except Exception as exc:
         print(f"Error: failed to regenerate source test map: {exc}", file=sys.stderr)
         return None
-    return source_test_map
 
 
 def load_source_test_map() -> dict[str, Any]:
-    """Load the source-to-test mapping, regenerating it on demand if missing."""
-    if not SOURCE_TEST_MAP_PATH.exists():
-        # source_test_map.json is gitignored (regenerate-on-demand), so a clean
-        # checkout will not have it; build it instead of hard-exiting.
-        print(f"Source test map missing; regenerating {SOURCE_TEST_MAP_PATH.name}...")
-        source_test_map = _regenerate_source_test_map()
-        if source_test_map is None:
-            print(f"Error: Source test map not found: {SOURCE_TEST_MAP_PATH}", file=sys.stderr)
-            print("Run: uv run agent-regenerate --only testing", file=sys.stderr)
-            sys.exit(1)
-        return source_test_map
+    """Regenerate and load the source-to-test mapping.
 
-    with open(SOURCE_TEST_MAP_PATH) as f:
-        return json.load(f)
+    The map is gitignored (regenerate-on-demand): an on-disk copy can be
+    missing or silently stale, so candidate generation always rebuilds it from
+    the current test tree (sub-second scan) before use.
+    """
+    print(f"Regenerating {SOURCE_TEST_MAP_PATH.name} from the current test tree...")
+    source_test_map = _regenerate_source_test_map()
+    if source_test_map is None:
+        print(f"Error: could not rebuild source test map: {SOURCE_TEST_MAP_PATH}", file=sys.stderr)
+        print("Run: uv run agent-regenerate --only testing", file=sys.stderr)
+        sys.exit(1)
+    return source_test_map
 
 
 def load_existing_manifest() -> dict[str, Any]:

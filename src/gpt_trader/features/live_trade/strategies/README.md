@@ -11,7 +11,6 @@ strategies/
 ├── perps_baseline/     # Perpetuals baseline strategy
 ├── mean_reversion/     # Mean reversion strategy
 ├── regime_switcher/    # Regime switching strategy
-├── hybrid/             # Hybrid spot/CFM strategies
 ├── ensemble.py         # Signal ensemble strategy
 └── base.py             # StrategyProtocol + MarketDataContext
 ```

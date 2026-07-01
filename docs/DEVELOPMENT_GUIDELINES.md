@@ -23,7 +23,7 @@ need to review historical practices.
   required; expose overrides through the CLI when appropriate.
 - **Modular refactoring**: Extract large modules (>500 lines) into focused
   subpackages or module-local collaborators with clear separation of concerns.
-  See `features/live_trade/execution/`, `src/gpt_trader/monitoring/guards/`,
+  See `features/live_trade/execution/`,
   `features/live_trade/risk/`, and the `features/live_trade/engines/`
   collaborators (telemetry, equity, order-record mapping) as examples. Decompose
   one reviewable seam at a time:

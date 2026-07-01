@@ -50,6 +50,14 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| Hybrid strategy framework (`features/live_trade/strategies/hybrid/`: `HybridStrategyBase`, `HybridStrategyConfig`, `HybridDecision`, hybrid `Action` enum) | Unreleased | Dead parallel surface — never reachable from `factory.py`/config. Use the strategy registry in `features/live_trade/factory.py`. |
+| `OrderRouter` / `OrderResult` (`features/live_trade/execution/router.py`) | Unreleased | Never instantiated in production. External submissions go through `TradingEngine.submit_order()`. |
+| `monitoring/guards/` package (`RuntimeGuardManager`, builtin guards, alert handlers) | Unreleased | Dead parallel of the canonical runtime guard stack in `features/live_trade/execution/guards/` (managed by `execution/guard_manager.py`). |
+| `monitoring/domain/perps/` margin/liquidation math (`MarginStateMonitor`, `LiquidationMonitor`) | Unreleased | Test-only surface. Live liquidation protection is `features/live_trade/execution/guards/liquidation_buffer.py`. |
+| `StatefulStrategy` ABC (`strategies/stateful.py`) | Unreleased | Test-only. Use `StatefulStrategyBase` in `strategies/base.py`. |
+| `StatefulBaselineStrategy` / `StatefulPerpsStrategy` (`strategies/perps_baseline/stateful.py`) | Unreleased | Test-only; never wired into `factory.py`. Use `BaselinePerpsStrategy`. |
+| `AsyncRetry` / `async_retry` (`utilities/async_tools/retry.py`) | Unreleased | Zero non-test users. Broker IO retry lives in `execution/broker_executor.py` (`RetryPolicy`, `execute_with_retry`). |
+| `retry_on_error` decorator (`errors/error_patterns.py`) | Unreleased | Zero production callers. Call `ErrorHandler.with_retry` directly if retry-with-recovery is needed. |
 | Legacy credential env vars (`COINBASE_API_KEY_NAME` / `COINBASE_PRIVATE_KEY`) | Unreleased | Use `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY` or `COINBASE_CREDENTIALS_FILE`. |
 | `get_auth()` env-based auth factory | Unreleased | Use `resolve_coinbase_credentials()` + `SimpleAuth`. |
 | `BotConfig` flat compat accessors (`short_ma`, `long_ma`, etc.) | Unreleased | Use nested config: `config.strategy.*` and `config.risk.*`. |
@@ -80,7 +88,7 @@ Before removing any deprecated item:
 | `PERPS_FORCE_MOCK` env var | v4.0 | Use `MOCK_BROKER` |
 | `SYMBOLS` env var | v4.0 | Use `TRADING_SYMBOLS` |
 | `POSITION_FRACTION` env var | v4.0 | Use `RISK_MAX_POSITION_PCT_PER_SYMBOL` |
-| `OrderRouter.execute()` | v4.0 | Use `OrderRouter.execute_async()` |
+| `OrderRouter.execute()` | v4.0 | `OrderRouter` has since been removed entirely; use `TradingEngine.submit_order()` |
 | `gpt_trader.orchestration` package | DI migration | Use canonical paths: `app.*`, `features.live_trade.*` |
 | `orchestration.configuration.bot_config` | DI migration | `gpt_trader.app.config.BotConfig` |
 | `orchestration.configuration.risk.model` | DI migration | `gpt_trader.features.live_trade.risk.config.RiskConfig` |

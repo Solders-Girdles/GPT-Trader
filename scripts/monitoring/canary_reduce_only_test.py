@@ -6,12 +6,22 @@ Places a reduce-only limit order far from mark, verifies ACK and then cancels.
 Defaults to PREVIEW mode (no live order). Live placement requires both --live
 and --confirm-human-approved-live-order.
 
+Reduce-only semantics apply to derivatives positions, so --symbol must name a
+derivatives product and is required (no default): CFM contract symbols carry
+expiries and roll (see CFM_SYMBOL_MAPPING in
+src/gpt_trader/features/live_trade/symbols.py for the active contracts), so
+pass the current contract explicitly. A spot symbol (e.g. BTC-USD) would be
+rejected or give false confidence that the reduce-only path was exercised.
+Retired INTX -PERP symbols are coerced to spot elsewhere in the stack and must
+not be used here.
+
 Usage:
-  # Dry-run preview (safe)
-  uv run python scripts/monitoring/canary_reduce_only_test.py --symbol BTC-PERP --price 10 --quantity 0.001
+  # Dry-run preview (safe); BTC-20DEC30-CDE is an example CFM contract —
+  # substitute the currently active contract from CFM_SYMBOL_MAPPING
+  uv run python scripts/monitoring/canary_reduce_only_test.py --symbol BTC-20DEC30-CDE --price 10 --quantity 0.001
 
   # Live (requires human-approved execution confirmation)
-  uv run python scripts/monitoring/canary_reduce_only_test.py --live --confirm-human-approved-live-order --symbol BTC-PERP --price 10 --quantity 0.001
+  uv run python scripts/monitoring/canary_reduce_only_test.py --live --confirm-human-approved-live-order --symbol BTC-20DEC30-CDE --price 10 --quantity 0.001
 """
 
 from __future__ import annotations
@@ -33,7 +43,14 @@ from gpt_trader.features.brokerages.coinbase.credentials import (
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Reduce-Only Canary Smoke Test")
-    parser.add_argument("--symbol", default="BTC-PERP", help="Perpetual symbol, e.g., BTC-PERP")
+    parser.add_argument(
+        "--symbol",
+        required=True,
+        help=(
+            "Derivatives product id (reduce-only requires a derivatives symbol; "
+            "see CFM_SYMBOL_MAPPING for the active CFM contract, e.g. BTC-20DEC30-CDE)"
+        ),
+    )
     parser.add_argument("--price", type=float, default=10.0, help="Limit price (far from market)")
     parser.add_argument("--quantity", type=float, default=0.001, help="Order quantity")
     parser.add_argument("--live", action="store_true", help="Place live order (otherwise preview)")

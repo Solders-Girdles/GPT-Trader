@@ -1,8 +1,8 @@
 {
   "version": "1.0",
   "summary": {
-    "tests_scanned": 633,
-    "source_modules": 307,
+    "tests_scanned": 634,
+    "source_modules": 308,
     "unresolved_modules": 2
   },
   "source_to_tests": {
@@ -1360,7 +1360,8 @@
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_snapshot_builder.py",
       "tests/unit/gpt_trader/features/trade_ideas/test_store.py",
-      "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py"
+      "tests/unit/gpt_trader/features/trade_ideas/test_workflow.py",
+      "tests/unit/gpt_trader/preflight/test_checks_trade_ideas.py"
     ],
     "gpt_trader.features.trade_ideas.artifacts": [
       "tests/unit/gpt_trader/cli/commands/test_ideas_evidence_exports.py"
@@ -1684,6 +1685,9 @@
     "gpt_trader.preflight.checks.test_suite": [
       "tests/unit/gpt_trader/preflight/test_checks_validation.py"
     ],
+    "gpt_trader.preflight.checks.trade_ideas": [
+      "tests/unit/gpt_trader/preflight/test_checks_trade_ideas.py"
+    ],
     "gpt_trader.preflight.cli": [
       "tests/unit/gpt_trader/preflight/test_cli.py"
     ],
@@ -1707,6 +1711,7 @@
       "tests/unit/gpt_trader/preflight/test_checks_simulation.py",
       "tests/unit/gpt_trader/preflight/test_checks_startup.py",
       "tests/unit/gpt_trader/preflight/test_checks_system.py",
+      "tests/unit/gpt_trader/preflight/test_checks_trade_ideas.py",
       "tests/unit/gpt_trader/preflight/test_checks_validation.py",
       "tests/unit/gpt_trader/preflight/test_core.py",
       "tests/unit/gpt_trader/preflight/test_report.py"
@@ -4189,6 +4194,11 @@
       "gpt_trader.preflight.checks.system",
       "gpt_trader.preflight.core"
     ],
+    "tests/unit/gpt_trader/preflight/test_checks_trade_ideas.py": [
+      "gpt_trader.features.trade_ideas",
+      "gpt_trader.preflight.checks.trade_ideas",
+      "gpt_trader.preflight.core"
+    ],
     "tests/unit/gpt_trader/preflight/test_checks_validation.py": [
       "gpt_trader.preflight.checks.event_store",
       "gpt_trader.preflight.checks.test_suite",
@@ -4706,6 +4716,7 @@
     "gpt_trader.preflight.checks.simulation": "src/gpt_trader/preflight/checks/simulation.py",
     "gpt_trader.preflight.checks.system": "src/gpt_trader/preflight/checks/system.py",
     "gpt_trader.preflight.checks.test_suite": "src/gpt_trader/preflight/checks/test_suite.py",
+    "gpt_trader.preflight.checks.trade_ideas": "src/gpt_trader/preflight/checks/trade_ideas.py",
     "gpt_trader.preflight.cli": "src/gpt_trader/preflight/cli.py",
     "gpt_trader.preflight.cli_args": "src/gpt_trader/preflight/cli_args.py",
     "gpt_trader.preflight.context": "src/gpt_trader/preflight/context.py",

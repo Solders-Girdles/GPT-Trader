@@ -50,6 +50,8 @@ Before removing any deprecated item:
 
 | Item | Removed In | Migration Path |
 |------|------------|----------------|
+| `agent-risk` CLI (`scripts/agents/query_risk_config.py`) | Unreleased | Removed as a dead agent tool (owner-approved 2026-07-01). Read risk configuration via `var/agents/schemas/risk_config_schema.json` (`uv run agent-regenerate --only schemas`) or `gpt-trader` config commands. |
+| `agent-dedupe-triage` CLI (`scripts/agents/dedupe_triage.py`) | Unreleased | Removed as a dead agent tool (owner-approved 2026-07-01). Edit `tests/_triage/dedupe_triage.yaml` directly; it remains the hand-editable triage record consumed by `uv run agent-dedupe`. |
 | Legacy credential env vars (`COINBASE_API_KEY_NAME` / `COINBASE_PRIVATE_KEY`) | Unreleased | Use `COINBASE_CDP_API_KEY` + `COINBASE_CDP_PRIVATE_KEY` or `COINBASE_CREDENTIALS_FILE`. |
 | `get_auth()` env-based auth factory | Unreleased | Use `resolve_coinbase_credentials()` + `SimpleAuth`. |
 | `BotConfig` flat compat accessors (`short_ma`, `long_ma`, etc.) | Unreleased | Use nested config: `config.strategy.*` and `config.risk.*`. |

@@ -32,17 +32,12 @@ def _env_lookup(*keys: str, default: str | None = None) -> str | None:
     return default
 
 
-def configure_logging(config: Any = None, tui_mode: bool = False) -> None:
+def configure_logging(config: Any = None) -> None:
     """
     Configure rotating file logging and debug levels.
 
     Args:
         config: Optional configuration object (unused, kept for backward compatibility)
-        tui_mode: If True, suppress console StreamHandler to avoid corrupting TUI display.
-                  Logs will still be written to files. Callers launching the TUI are
-                  responsible for attaching the TUI log handler themselves via
-                  ``gpt_trader.tui.log_manager.attach_tui_log_handler`` so this
-                  infrastructure layer stays decoupled from the TUI entrypoint.
     """
 
     ensure_directories((LOG_DIR,))
@@ -59,23 +54,21 @@ def configure_logging(config: Any = None, tui_mode: bool = False) -> None:
         if hasattr(handler, "baseFilename")
     }
 
-    # Only add StreamHandler if NOT in TUI mode (prevents corrupting Textual display)
-    if not tui_mode:
-        # Check for console StreamHandlers (exclude file handlers and test fixtures)
-        console_handlers = [
-            h
-            for h in root.handlers
-            if isinstance(h, logging.StreamHandler)
-            and not isinstance(h, logging.handlers.RotatingFileHandler)
-            and type(h).__name__ not in {"LogCaptureHandler", "LogCaptureFixture"}
-        ]
-        if not console_handlers:
-            console = logging.StreamHandler()
-            console.setLevel(logging.INFO)
-            console.setFormatter(
-                logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-            )
-            root.addHandler(console)
+    # Check for console StreamHandlers (exclude file handlers and test fixtures)
+    console_handlers = [
+        h
+        for h in root.handlers
+        if isinstance(h, logging.StreamHandler)
+        and not isinstance(h, logging.handlers.RotatingFileHandler)
+        and type(h).__name__ not in {"LogCaptureHandler", "LogCaptureFixture"}
+    ]
+    if not console_handlers:
+        console = logging.StreamHandler()
+        console.setLevel(logging.INFO)
+        console.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
+        root.addHandler(console)
 
     general_max_bytes = int(
         _env_lookup("COINBASE_TRADER_LOG_MAX_BYTES", "PERPS_LOG_MAX_BYTES") or str(50 * 1024 * 1024)

@@ -64,7 +64,7 @@ paper runs with no stale-mark guards firing.
 
 Evidence:
 - Daily report health section
-- TUI staleness banner or `/health`
+- `/health` endpoint
 - Metrics `gpt_trader_ws_gap_count` (Prometheus)
 
 Thresholds (default targets):
@@ -162,7 +162,7 @@ explainable from logs.
 Evidence:
 - `order_decision_trace` events in event store
 - Structured logs with `decision_id`
-- TUI decision panel and alerts
+- Decision alerts
 
 Thresholds:
 - 100% of live orders trace to a `decision_id`
@@ -175,10 +175,10 @@ Checklist:
 
 ### 7) Operational controls
 
-What good looks like: pause, kill switch, reduce-only, and safe shutdown verified via CLI/TUI.
+What good looks like: pause, kill switch, reduce-only, and safe shutdown verified via CLI.
 
 Evidence:
-- TUI/CLI screenshots or run log
+- CLI screenshots or run log
 - Manual test steps in `docs/production.md`
 
 Thresholds:

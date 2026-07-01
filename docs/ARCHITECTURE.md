@@ -69,12 +69,11 @@ src/gpt_trader/
 ├── persistence/         # Event/order stores and persistence utilities
 ├── preflight/           # Production preflight verification and startup checks
 ├── security/            # Security primitives: input sanitization, secrets management
-├── tui/                 # Terminal User Interface (Textual-based)
 ├── utilities/           # Shared helpers (async, datetime, quantization, logging facade)
 └── validation/          # Declarative validators and decorators
 ```
 
-These lower layers must never import the entrypoint layers (CLI/TUI/preflight)
+These lower layers must never import the entrypoint layers (CLI/preflight)
 or the DI container; the dependency direction is enforced in CI by
 `scripts/ci/check_import_boundaries.py`.
 
@@ -155,7 +154,6 @@ The `gpt_trader.orchestration` package was removed during the DI migration. Use 
 | `gpt_trader/features/brokerages/coinbase/rest/` | REST service layer: orders, portfolio, products, P&L calculation |
 | `gpt_trader/features/intelligence/sizing` | Kelly-style sizing with regime awareness |
 | `gpt_trader/monitoring` | Runtime guard orchestration, alert dispatch, system metrics |
-| `gpt_trader/tui` | Terminal User Interface for monitoring and control |
 | `gpt_trader/validation` | Predicate-based validators and input decorators |
 
 #### Engine Context Pattern (Current)
@@ -238,98 +236,6 @@ The system now uses a **Signal Ensemble** approach to combine multiple trading s
     - `Voter`: Logic to combine signal outputs into a final decision.
 - **Location**: `src/gpt_trader/features/live_trade/strategies/ensemble.py`
 - **Status**: Implemented and wired via the strategy factory + `TradingEngine`.
-
-#### TUI Architecture (`gpt_trader/tui/`)
-
-The Terminal User Interface is built on [Textual](https://textual.textualize.io/) and uses a modular CSS system.
-
-**CSS System**
-
-The TUI uses a concatenated CSS approach due to Textual not supporting `@import`:
-
-- **Source modules**: `styles/theme/`, `styles/layout/`, `styles/components/`, `styles/widgets/`, `styles/screens/`
-- **Build script**: `scripts/build_tui_css.py` concatenates modules in dependency order
-- **Generated file**: `styles/main.tcss` (~2,200 lines) - DO NOT EDIT DIRECTLY
-
-**Critical Design Constraints**
-
-1. **Single Grid Definition**: The main layout grid (`#bento-grid`) must be defined in exactly one place (`layout/workspace.tcss`). Multiple grid definitions cause unpredictable tile spanning behavior.
-
-2. **DEFAULT_CSS Cannot Use Variables**: Widget-level `DEFAULT_CSS` strings in Python files do NOT have access to TCSS variables (`$bg-primary`, `$accent`, etc.). Use hardcoded hex values with comments referencing the variable name:
-   ```python
-   DEFAULT_CSS = """
-   MyWidget {
-       background: #3B4252;  /* $bg-secondary */
-       color: #ECEFF4;       /* $text-primary */
-   }
-   """
-   ```
-
-3. **Namespaced Class Names**: Use widget-specific class names to prevent style bleed:
-   - `.widget-header` for widget headers (defined in `headers.tcss`)
-   - `.screen-header` for screen-level headers
-   - Avoid generic names like `.header`, `.value`, `.row`
-
-4. **SCOPED_CSS Pattern**: Widgets that need global style access set `SCOPED_CSS = False`. Document the reason:
-   ```python
-   SCOPED_CSS = False  # Uses global styles from dashboard.tcss
-   ```
-
-**State Management**
-
-- `StateRegistry` broadcasts `TuiState` to registered widgets via `on_state_updated()`
-- Widgets implement `StateObserver` protocol for automatic state updates
-- Delta tracking (`_changed_fields`) identifies which state components changed
-
-**Services Layer**
-
-The TUI services layer (`tui/services/`) provides:
-
-- `AlertManager` - Threshold-based alert rules with cooldown, history, and notification integration
-- `ExecutionTelemetryCollector` - Thread-safe order submission metrics (success rate, latency percentiles, retry tracking)
-- `OnboardingService` - First-run wizard state management
-- `FocusManager` - Keyboard navigation and focus ring management
-
-**App Organization (Mixin Pattern)**
-
-The main `TraderApp` class uses mixins to organize functionality into focused modules:
-
-- `app_mode_flow.py` - Mode selection, credential validation, mode switching
-- `app_lifecycle.py` - Mount/unmount lifecycle, initialization, cleanup
-- `tui/app_bootstrap.py` - Bootstrap snapshot, read-only data feed startup
-- `app_status.py` - Status updates, observer connections, state sync
-- `app_actions.py` - Action methods and event handlers
-
-Import `TraderApp` from `gpt_trader.tui.app`; mixins are internal implementation details.
-
-**Data Freshness & Resilience UX**
-
-The `staleness_helpers.py` module provides unified data trust signals:
-
-- **Thresholds**: Fresh (<10s), Stale (10-30s), Critical (>30s or connection unhealthy)
-- **Execution Health**: Circuit breaker status, success rate warnings (<95%), critical alerts (<80%)
-- **Banner Priority**: Reconnecting → Degraded mode → Execution health → Data staleness
-- **Empty States**: Standardized configurations for stopped, connecting, and error states
-
-**Alert System**
-
-Built-in alert rules with configurable cooldowns:
-
-| Category | Rules |
-|----------|-------|
-| SYSTEM | `connection_lost`, `rate_limit_high`, `bot_stopped`, `circuit_breaker_open`, `execution_critical`, `execution_degraded`, `execution_p95_spike`, `execution_retry_high` |
-| RISK | `reduce_only_active`, `daily_loss_warning` |
-| POSITION | `large_unrealized_loss` |
-| TRADE | `stale_open_orders`, `failed_orders`, `expired_orders` |
-
-Recovery hints are provided via `notification_helpers.py` for actionable guidance.
-
-**Rebuilding CSS**
-
-After editing any `.tcss` module file:
-```bash
-python scripts/build_tui_css.py
-```
 
 ### Derivatives Capability Gates
 
@@ -688,7 +594,6 @@ NORMAL → REDUCE_ONLY → PAUSED → HALTED
 ### Key Libraries
 - `requests` + `pyjwt` - Coinbase REST client + ES256 JWT auth
 - `pandas` - Data manipulation
-- `textual` - Terminal UI
 - `websocket-client` - Real-time data (optional; live-trade extra)
 - `aiohttp` - Webhook notifications + async utilities (optional; live-trade extra)
 - `pydantic` - Data validation

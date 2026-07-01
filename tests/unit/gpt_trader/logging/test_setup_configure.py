@@ -158,25 +158,18 @@ class TestConfigureLoggingModesAndIdempotency:
         assert len(root_targets) == len(set(root_targets))
         assert len(json_targets) == len(set(json_targets))
 
-    def test_configure_logging_tui_mode_suppresses_stream_handler(self, log_dir: Path) -> None:
-        configure_logging(tui_mode=True)
-
-        console_handlers = _console_handlers()
-
-        assert len(console_handlers) == 0
-
-    def test_configure_logging_cli_mode_creates_stream_handler(self, log_dir: Path) -> None:
-        configure_logging(tui_mode=False)
+    def test_configure_logging_creates_stream_handler(self, log_dir: Path) -> None:
+        configure_logging()
 
         console_handlers = _console_handlers()
 
         assert len(console_handlers) >= 1
 
-    def test_configure_logging_file_handlers_present_in_both_modes(self, log_dir: Path) -> None:
+    def test_configure_logging_file_handlers_present(self, log_dir: Path) -> None:
         expected_root = {"coinbase_trader.log", "critical_events.log"}
         expected_json = {"coinbase_trader.jsonl", "critical_events.jsonl"}
 
-        configure_logging(tui_mode=True)
+        configure_logging()
 
         root_targets = {Path(target).name for target in _file_targets(logging.getLogger())}
         json_targets = {
@@ -184,16 +177,3 @@ class TestConfigureLoggingModesAndIdempotency:
         }
         assert expected_root.issubset(root_targets)
         assert expected_json.issubset(json_targets)
-
-        _clear_handlers()
-
-        configure_logging(tui_mode=False)
-
-        cli_root_targets = {Path(target).name for target in _file_targets(logging.getLogger())}
-        cli_json_targets = {
-            Path(target).name for target in _file_targets(logging.getLogger("gpt_trader.json"))
-        }
-        assert expected_root.issubset(cli_root_targets)
-        assert expected_json.issubset(cli_json_targets)
-        assert root_targets == cli_root_targets
-        assert json_targets == cli_json_targets

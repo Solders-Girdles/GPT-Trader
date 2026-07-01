@@ -17,13 +17,13 @@ campaign. It is descriptive of the codebase as it exists today (not an aspiratio
 | Feature slices (business logic) | `src/gpt_trader/features/` (live_trade, intelligence, data, optimize, strategy_dev, strategy_tools, trade_ideas) | Trading logic, strategies, guard stack, optimization workflows, trade-idea records. |
 | Shared engines | `src/gpt_trader/backtesting/` | Canonical backtesting engine used by optimization slices. |
 | Adapters + infrastructure | `src/gpt_trader/features/brokerages/`, `src/gpt_trader/persistence/`, `src/gpt_trader/monitoring/`, `src/gpt_trader/security/` | External integrations, IO, stores, telemetry (metrics/health/tracing), secrets. `features/brokerages` is an adapter slice. |
-| App/runtime + entrypoints | `src/gpt_trader/app/`, `src/gpt_trader/cli/`, `src/gpt_trader/tui/`, `src/gpt_trader/preflight/`, `scripts/production_preflight.py` | Composition root, config loading, runtime lifecycle, and operator entrypoints. |
+| App/runtime + entrypoints | `src/gpt_trader/app/`, `src/gpt_trader/cli/`, `src/gpt_trader/preflight/`, `scripts/production_preflight.py` | Composition root, config loading, runtime lifecycle, and operator entrypoints. |
 
 ### Configuration note
 
 `BotConfig` and profile loading live in `src/gpt_trader/app/config/` and are imported by
 features and adapters (for example broker factories and REST services). Treat config types as
-shared inputs, but avoid importing the container or CLI/TUI layers from lower-level modules.
+shared inputs, but avoid importing the container or CLI layers from lower-level modules.
 
 ## Allowed dependency directions (imports)
 
@@ -33,7 +33,7 @@ shared inputs, but avoid importing the container or CLI/TUI layers from lower-le
   Cross-slice imports should be rare; prefer `features/strategy_tools/` or `features/data/`
   for shared helpers.
 - Adapters/infrastructure may import domain/shared foundations, interfaces, and shared config types.
-  Avoid importing CLI/TUI/preflight or `app.container` from adapter code.
+  Avoid importing CLI/preflight or `app.container` from adapter code.
 - App/runtime and entrypoints may import from all lower layers to wire dependencies.
 
 ## Public surfaces (stable import points)
@@ -65,7 +65,7 @@ layering drift visible in CI. Current rules are intentionally small but cover th
 directional hazards:
 
 - Feature slices (`src/gpt_trader/features/`) must not import entrypoint layers
-  (`gpt_trader.cli`, `gpt_trader.tui`, `gpt_trader.preflight`) or `gpt_trader.app.container`.
+  (`gpt_trader.cli`, `gpt_trader.preflight`) or `gpt_trader.app.container`.
 - Infrastructure layers (`src/gpt_trader/monitoring/`, `src/gpt_trader/persistence/`,
   `src/gpt_trader/security/`) must not import those same entrypoint/container layers.
 
@@ -85,7 +85,7 @@ To extend the rule set:
   `src/gpt_trader/features/brokerages/`, `src/gpt_trader/persistence/`,
   `src/gpt_trader/monitoring/`, or `src/gpt_trader/security/`.
 - New operator workflow or wiring? Use `src/gpt_trader/app/` for wiring and config, and
-  `src/gpt_trader/cli/`, `src/gpt_trader/tui/`, or `src/gpt_trader/preflight/` for entrypoints.
+  `src/gpt_trader/cli/` or `src/gpt_trader/preflight/` for entrypoints.
 - New shared type, math, or helper used across slices? Prefer `src/gpt_trader/core/`,
   `src/gpt_trader/errors/`, `src/gpt_trader/validation/`, or `src/gpt_trader/utilities/`.
 - Need a new contract for DI/testing? Add a protocol in `src/gpt_trader/app/protocols.py`

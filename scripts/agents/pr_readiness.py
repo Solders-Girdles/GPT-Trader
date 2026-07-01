@@ -53,7 +53,7 @@ _ARTIFACT_SOURCE_FILES = (
     "pytest.ini",
     "config/environments/.env.template",
 )
-_ARTIFACT_SOURCE_SUFFIXES = (".py", ".tcss", ".yaml", ".yml")
+_ARTIFACT_SOURCE_SUFFIXES = (".py", ".yaml", ".yml")
 
 # Severity tokens emitted by review bots (CodeRabbit, Codex) in comment bodies,
 # ordered most-severe first so the highest match wins.
@@ -477,9 +477,40 @@ def fetch_pr_payload(repo: str, pr: int) -> dict[str, Any]:
 def fetch_pr_changed_paths(repo: str, pr: int) -> list[str]:
     result = _run(["gh", "pr", "diff", str(pr), "--repo", repo, "--name-only"])
     if result.returncode != 0:
-        raise RuntimeError(result.stderr.strip() or f"Could not load PR #{pr} diff")
+        message = result.stderr.strip() or f"Could not load PR #{pr} diff"
+        if _is_pr_diff_too_large(message):
+            return fetch_pr_changed_paths_from_files_api(repo, pr)
+        raise RuntimeError(message)
+    return _unique_lines(result.stdout)
+
+
+def _is_pr_diff_too_large(message: str) -> bool:
+    normalized = message.lower()
+    return "http 406" in normalized and "diff exceeded" in normalized
+
+
+def fetch_pr_changed_paths_from_files_api(repo: str, pr: int) -> list[str]:
+    """Changed files for large PRs where GitHub refuses the raw diff endpoint."""
+    if repo.count("/") != 1:
+        raise RuntimeError("--repo must use owner/name format")
+    result = _run(
+        [
+            "gh",
+            "api",
+            "--paginate",
+            f"repos/{repo}/pulls/{pr}/files",
+            "--jq",
+            ".[].filename",
+        ]
+    )
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr.strip() or f"Could not load PR #{pr} files")
+    return _unique_lines(result.stdout)
+
+
+def _unique_lines(output: str) -> list[str]:
     seen: list[str] = []
-    for line in result.stdout.splitlines():
+    for line in output.splitlines():
         path = line.strip()
         if path and path not in seen:
             seen.append(path)

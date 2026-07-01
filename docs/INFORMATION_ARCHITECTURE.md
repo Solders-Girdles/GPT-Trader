@@ -92,7 +92,7 @@ copying a fact into a second home.
 | A per-task plan, audit, or scout finding | `work/` (gitignored); promote only the **decision or issue** it produces | Anywhere under `docs/` |
 | A validated scout finding packet | JSON packet using `gpt-trader.agent-finding.v1`, then a GitHub issue after promotion | STATUS, roadmap docs, review spreadsheets |
 | A review CSV/XLSX handoff | Root-level `review_artifacts/*.csv` or `review_artifacts/*.xlsx` | `review_artifacts/tmp/`, `data/`, `runtime_data/`, broad CSV unignore rules |
-| Standards (naming, testing, security, TUI) | Their existing single home under `docs/` | A second "guidelines" doc |
+| Standards (naming, testing, security) | Their existing single home under `docs/` | A second "guidelines" doc |
 
 ## Anti-bloat rules
 

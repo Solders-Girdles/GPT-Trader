@@ -89,7 +89,7 @@ def _record_execution_telemetry(
     quantity: float = 0.0,
     price: float = 0.0,
 ) -> None:
-    """Record execution telemetry if TUI service is available.
+    """Record execution telemetry for the order submission.
 
     This is a best-effort operation - failures are silently ignored
     to avoid impacting order execution.

@@ -31,14 +31,14 @@ def test_absolute_import_violation(tmp_path, monkeypatch, capsys) -> None:
     _write_file(
         tmp_path,
         "src/gpt_trader/features/alpha/absolute_violation.py",
-        "from gpt_trader.tui.widgets import Widget\n",
+        "from gpt_trader.cli.widgets import Widget\n",
     )
 
     result = check_import_boundaries.scan([str(features_root)])
     captured = capsys.readouterr()
 
     assert result == 1
-    assert "imports gpt_trader.tui.widgets.Widget" in captured.out
+    assert "imports gpt_trader.cli.widgets.Widget" in captured.out
     assert "violation(s) found" in captured.out
 
 
@@ -47,14 +47,14 @@ def test_relative_import_violation(tmp_path, monkeypatch, capsys) -> None:
     _write_file(
         tmp_path,
         "src/gpt_trader/features/alpha/relative_violation.py",
-        "from ...tui.widgets import Widget\n",
+        "from ...cli.widgets import Widget\n",
     )
 
     result = check_import_boundaries.scan([str(features_root)])
     captured = capsys.readouterr()
 
     assert result == 1
-    assert "imports gpt_trader.tui.widgets.Widget" in captured.out
+    assert "imports gpt_trader.cli.widgets.Widget" in captured.out
     assert "violation(s) found" in captured.out
 
 

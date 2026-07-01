@@ -19,7 +19,6 @@ def test_cli_root_help_shows_command_list(capsys):
     output = capsys.readouterr().out
     assert "Coinbase Trading Bot" in output
     for command_name in (
-        "tui",
         "run",
         "account",
         "coinbase",

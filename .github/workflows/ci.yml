@@ -19,8 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 2
     outputs:
-      tui_css: ${{ steps.classify.outputs.tui_css }}
-      tui_snapshots: ${{ steps.classify.outputs.tui_snapshots }}
       agent_artifacts: ${{ steps.classify.outputs.agent_artifacts }}
       dependencies: ${{ steps.classify.outputs.dependencies }}
     steps:
@@ -38,15 +36,13 @@ jobs:
 
           emit_outputs() {
             {
-              echo "tui_css=$1"
-              echo "tui_snapshots=$2"
-              echo "agent_artifacts=$3"
-              echo "dependencies=$4"
+              echo "agent_artifacts=$1"
+              echo "dependencies=$2"
             } >> "$GITHUB_OUTPUT"
           }
 
           emit_all_true() {
-            emit_outputs true true true true
+            emit_outputs true true
           }
 
           EVENT_NAME="${{ github.event_name }}"
@@ -101,8 +97,6 @@ jobs:
             exit 0
           fi
 
-          tui_css=false
-          tui_snapshots=false
           agent_artifacts=false
           dependencies=false
 
@@ -110,8 +104,6 @@ jobs:
             [ -n "$path" ] || continue
             case "$path" in
               .github/workflows/ci.yml)
-                tui_css=true
-                tui_snapshots=true
                 agent_artifacts=true
                 dependencies=true
                 ;;
@@ -125,21 +117,7 @@ jobs:
 
             case "$path" in
               pyproject.toml|uv.lock)
-                tui_snapshots=true
                 agent_artifacts=true
-                ;;
-              conftest.py|pytest.ini|tests/conftest.py|tests/unit/conftest.py|tests/unit/gpt_trader/conftest.py)
-                tui_snapshots=true
-                ;;
-              src/gpt_trader/tui/*.tcss|src/gpt_trader/tui/styles/*|scripts/build_tui_css.py|scripts/ci/check_tui_css_up_to_date.py)
-                tui_css=true
-                tui_snapshots=true
-                ;;
-              src/gpt_trader/tui/*|tests/unit/gpt_trader/tui/*)
-                tui_snapshots=true
-                ;;
-              src/gpt_trader/features/trade_ideas/*|tests/unit/gpt_trader/features/trade_ideas/conftest.py|src/gpt_trader/features/live_trade/telemetry/*|src/gpt_trader/monitoring/status_reporter.py)
-                tui_snapshots=true
                 ;;
             esac
 
@@ -150,13 +128,11 @@ jobs:
             esac
           done <<< "$changed_files"
 
-          emit_outputs "$tui_css" "$tui_snapshots" "$agent_artifacts" "$dependencies"
+          emit_outputs "$agent_artifacts" "$dependencies"
 
           {
             echo "## CI Change Classifier"
             echo ""
-            echo "- TUI CSS: $tui_css"
-            echo "- TUI snapshots: $tui_snapshots"
             echo "- Agent artifacts freshness: $agent_artifacts"
             echo "- Dependency review: $dependencies"
             echo ""
@@ -460,55 +436,25 @@ jobs:
             sed -n '1,40p' var/agents/health/agent_regenerate_verify.txt >> $GITHUB_STEP_SUMMARY
           fi
 
-  tui-css:
+  tui-css-compat:
     name: TUI CSS Check
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    needs: changes
-    if: always()
+    timeout-minutes: 2
     steps:
-      - name: Fail when change classifier did not succeed
-        if: needs.changes.result != 'success'
+      - name: TUI CSS check removed
         run: |
-          echo "::error::CI Change Classifier ended with result '${{ needs.changes.result }}'; failing closed."
-          exit 1
+          echo "The Textual TUI subsystem and CSS build were removed."
+          echo "This compatibility job preserves the required check context until branch protection is updated."
 
-      - name: Skip TUI CSS check
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css != 'true'
+  tui-snapshots-compat:
+    name: TUI Snapshot Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: TUI snapshot tests removed
         run: |
-          echo "TUI CSS inputs did not change; skipping CSS freshness verification."
-          {
-            echo "## TUI CSS Check"
-            echo "Status: SKIPPED (no TUI CSS inputs changed)"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      # actions/checkout@v7
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css == 'true'
-        with:
-          persist-credentials: false
-
-      - name: Install uv
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css == 'true'
-        # astral-sh/setup-uv@v7
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
-        with:
-          enable-cache: true
-
-      - name: Set up Python
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css == 'true'
-        # actions/setup-python@v5
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
-        with:
-          python-version-file: ".python-version"
-
-      - name: Install dependencies
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css == 'true'
-        run: uv sync --all-extras --dev
-
-      - name: Check TUI CSS is up to date
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_css == 'true'
-        run: python scripts/ci/check_tui_css_up_to_date.py
+          echo "The Textual TUI subsystem and snapshot tests were removed."
+          echo "This compatibility job preserves the required check context until branch protection is updated."
 
   test-guardrails:
     name: Test Guardrails
@@ -581,8 +527,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
-      - name: Run unit tests (excluding TUI snapshots)
-        run: uv run pytest tests/unit -n auto -q --ignore-glob=tests/unit/gpt_trader/tui/test_snapshots_*.py
+      - name: Run unit tests
+        run: uv run pytest tests/unit -n auto -q
 
   windows-unit-tests:
     name: Windows Unit Tests (Portability)
@@ -616,59 +562,6 @@ jobs:
 
       - name: Run Windows-sensitive unit tests
         run: uv run pytest tests/unit/gpt_trader/persistence tests/unit/gpt_trader/monitoring tests/unit/scripts -q
-
-  tui-snapshots:
-    name: TUI Snapshot Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    needs: changes
-    if: always()
-    env:
-      GPT_TRADER_STRICT_CONTAINER: "1"
-      PYTHONWARNINGS: default
-    steps:
-      - name: Fail when change classifier did not succeed
-        if: needs.changes.result != 'success'
-        run: |
-          echo "::error::CI Change Classifier ended with result '${{ needs.changes.result }}'; failing closed."
-          exit 1
-
-      - name: Skip TUI snapshot tests
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots != 'true'
-        run: |
-          echo "TUI snapshot inputs did not change; skipping snapshot tests."
-          {
-            echo "## TUI Snapshot Tests"
-            echo "Status: SKIPPED (no TUI snapshot inputs changed)"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      # actions/checkout@v7
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots == 'true'
-        with:
-          persist-credentials: false
-
-      - name: Install uv
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots == 'true'
-        # astral-sh/setup-uv@v7
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39
-        with:
-          enable-cache: true
-
-      - name: Set up Python
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots == 'true'
-        # actions/setup-python@v5
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
-        with:
-          python-version-file: ".python-version"
-
-      - name: Install dependencies
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots == 'true'
-        run: uv sync --all-extras --dev
-
-      - name: Run TUI snapshot tests
-        if: needs.changes.result == 'success' && needs.changes.outputs.tui_snapshots == 'true'
-        run: uv run pytest tests/unit/gpt_trader/tui/test_snapshots_*.py -v
 
   property-tests:
     name: Property Tests

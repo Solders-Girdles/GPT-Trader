@@ -11,7 +11,6 @@ from . import (
     run,
     strategy_profile,
     treasury,
-    tui,
 )
 
 __all__ = [
@@ -25,5 +24,4 @@ __all__ = [
     "run",
     "strategy_profile",
     "treasury",
-    "tui",
 ]

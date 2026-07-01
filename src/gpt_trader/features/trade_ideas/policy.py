@@ -136,9 +136,9 @@ class ApprovalPolicy:
                     f"candidate_max_loss_pct={_format_decimal(percent)}%)"
                 )
 
-        candidate_notional = idea.sizing_recommendation.notional or Decimal("0")
+        candidate_notional = abs(idea.sizing_recommendation.notional or Decimal("0"))
         if has_budget_context:
-            projected_notional = budget_context.open_notional + candidate_notional
+            projected_notional = abs(budget_context.open_notional) + candidate_notional
             account_equity = budget_context.account_equity_snapshot
             if projected_notional > 0:
                 if account_equity is None:

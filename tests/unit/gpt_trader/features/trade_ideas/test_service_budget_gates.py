@@ -109,6 +109,64 @@ def test_approval_refused_when_open_notional_budget_would_be_exceeded(
     assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
 
 
+def test_filled_idea_without_closeout_still_consumes_open_budget_exposure(
+    service: TradeIdeaService,
+) -> None:
+    filled = build_trade_idea(decision_id="trade-20260612-filled-open")
+    service.propose(filled, actor_id="idea-generator-v1")
+    service.approve(filled.decision_id, actor_id="rj", reason="Risk verified")
+    service.record_submission(filled.decision_id, actor_id="operator", venue="manual")
+    service.record_fill(filled.decision_id, actor_id="operator", venue="manual")
+    strict_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 2,
+            "max_open_notional_pct": "50",
+        }
+    )
+    service.update_budget(strict_budget, actor_type=ActorType.HUMAN, actor_id="rj")
+    candidate = build_trade_idea(decision_id="trade-20260612-after-fill")
+    service.propose(candidate, actor_id="idea-generator-v1")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(candidate.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert service.get(filled.decision_id).closeout_attribution is None
+    assert any("max_open_notional_pct" in violation for violation in exc_info.value.violations)
+    assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
+
+
+def test_open_notional_budget_uses_absolute_signed_notional(
+    service: TradeIdeaService,
+) -> None:
+    signed_open = build_trade_idea(
+        decision_id="trade-20260612-signed-open",
+        sizing_recommendation=SizingRecommendation(
+            quantity=Decimal("-0.1"),
+            notional=Decimal("-6075"),
+            rationale="Signed fixture notional still consumes exposure",
+        ),
+    )
+    service.propose(signed_open, actor_id="idea-generator-v1")
+    service.approve(signed_open.decision_id, actor_id="rj", reason="Risk verified")
+    strict_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 2,
+            "max_open_notional_pct": "50",
+        }
+    )
+    service.update_budget(strict_budget, actor_type=ActorType.HUMAN, actor_id="rj")
+    candidate = build_trade_idea(decision_id="trade-20260612-signed-candidate")
+    service.propose(candidate, actor_id="idea-generator-v1")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(candidate.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert any("max_open_notional_pct" in violation for violation in exc_info.value.violations)
+    assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
+
+
 def test_approval_refused_when_notional_budget_has_zero_equity_snapshot(
     service: TradeIdeaService,
 ) -> None:

@@ -14,6 +14,7 @@ from gpt_trader.features.trade_ideas import (
     MaxLoss,
     ProductType,
     RiskBudget,
+    SizingRecommendation,
     TradeDirection,
     TradeIdea,
 )
@@ -222,6 +223,40 @@ def test_open_notional_budget_context_is_enforced(trade_idea: TradeIdea) -> None
     )
 
     assert any("max_open_notional_pct" in violation for violation in found)
+    assert any(
+        "projected open notional 100.75% exceeds limit 50%" in violation for violation in found
+    )
+
+
+def test_open_notional_budget_uses_absolute_notional_exposure() -> None:
+    idea = build_trade_idea(
+        sizing_recommendation=SizingRecommendation(
+            quantity=Decimal("-0.1"),
+            notional=Decimal("-6075"),
+            rationale="Signed fixture notional still consumes exposure",
+        )
+    )
+    policy = ApprovalPolicy()
+    strict_budget = RiskBudget.from_dict(
+        {
+            **DEFAULT_RISK_BUDGET.to_dict(),
+            "version": 2,
+            "max_open_notional_pct": "50",
+        }
+    )
+
+    found = policy.approval_violations(
+        idea,
+        actor_type=ActorType.HUMAN,
+        budget=strict_budget,
+        open_approved_count=0,
+        now=NOW,
+        budget_context=ApprovalBudgetContext(
+            open_notional=Decimal("-4000"),
+            account_equity_snapshot=Decimal("10000"),
+        ),
+    )
+
     assert any(
         "projected open notional 100.75% exceeds limit 50%" in violation for violation in found
     )

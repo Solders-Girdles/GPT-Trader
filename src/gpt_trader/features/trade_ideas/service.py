@@ -176,6 +176,13 @@ def _closeout_loss_percent(
     return abs(realized_amount) / account_equity_snapshot * Decimal("100")
 
 
+def _absolute_notional(idea: TradeIdea) -> Decimal | None:
+    notional = idea.sizing_recommendation.notional
+    if notional is None:
+        return None
+    return abs(notional)
+
+
 def _same_day(timestamp: datetime, now: datetime) -> bool:
     if now.tzinfo is None or now.utcoffset() is None:
         return timestamp.date() == now.date()
@@ -304,6 +311,13 @@ class TradeIdeaService:
             events = tuple(self._audit.read_events(decision_id))
             idea = self.load_record_version(decision_id, event.record_hash)
             closeout = self._validated_closeout_attribution(idea, events)
+            if (
+                event.after_state is TradeIdeaState.FILLED
+                and closeout is None
+                and decision_id != exclude_decision_id
+            ):
+                open_ideas.append(idea)
+                continue
             if closeout is not None and _same_day(closeout.timestamp, evaluation_time):
                 closeouts.append(closeout)
         account_equity_snapshot = self._account_equity_snapshot(
@@ -324,11 +338,7 @@ class TradeIdeaService:
             Decimal("0"),
         )
         open_notional = sum(
-            (
-                idea.sizing_recommendation.notional
-                for idea in open_ideas
-                if idea.sizing_recommendation.notional is not None
-            ),
+            (notional for idea in open_ideas if (notional := _absolute_notional(idea)) is not None),
             Decimal("0"),
         )
         return ApprovalBudgetContext(

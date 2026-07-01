@@ -1,7 +1,7 @@
 {
   "env_template_path": "config/environments/.env.template",
   "summary": {
-    "code_only": 135,
+    "code_only": 123,
     "template_only": 0,
     "total": 174
   },
@@ -767,7 +767,7 @@
           "comment": "Optional override; if unset, uses GPT_TRADER_RUNTIME_ROOT",
           "commented_out": true,
           "default": "",
-          "line": 76
+          "line": 94
         }
       ]
     },
@@ -822,7 +822,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 94
+          "line": 112
         }
       ]
     },
@@ -1005,7 +1005,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 88
+          "line": 106
         }
       ]
     },
@@ -1092,7 +1092,7 @@
           "comment": "",
           "commented_out": false,
           "default": "8080",
-          "line": 82
+          "line": 100
         }
       ]
     },
@@ -1131,7 +1131,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 81
+          "line": 99
         }
       ]
     },
@@ -1266,7 +1266,7 @@
           "comment": "",
           "commented_out": false,
           "default": "0",
-          "line": 83
+          "line": 101
         }
       ]
     },
@@ -1576,7 +1576,7 @@
           "comment": "",
           "commented_out": false,
           "default": ".",
-          "line": 75
+          "line": 93
         }
       ]
     },
@@ -2448,10 +2448,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_API_ERROR_RATE_THRESHOLD",
-      "template_default": "",
-      "template_references": []
+      "template_default": "0.2",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "0.2",
+          "line": 77
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2464,10 +2471,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_API_HEALTH_COOLDOWN_SECONDS",
-      "template_default": "",
-      "template_references": []
+      "template_default": "300",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "300",
+          "line": 78
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2480,10 +2494,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_API_RATE_LIMIT_USAGE_THRESHOLD",
-      "template_default": "",
-      "template_references": []
+      "template_default": "0.9",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "0.9",
+          "line": 79
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2496,10 +2517,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_BROKER_OUTAGE_COOLDOWN_SECONDS",
-      "template_default": "",
-      "template_references": []
+      "template_default": "120",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "120",
+          "line": 80
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2512,10 +2540,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_BROKER_OUTAGE_MAX_FAILURES",
-      "template_default": "",
-      "template_references": []
+      "template_default": "3",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "3",
+          "line": 81
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2596,10 +2631,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_MARK_STALENESS_ALLOW_REDUCE_ONLY",
-      "template_default": "",
-      "template_references": []
+      "template_default": "1",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "1",
+          "line": 82
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2612,10 +2654,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_MARK_STALENESS_COOLDOWN_SECONDS",
-      "template_default": "",
-      "template_references": []
+      "template_default": "120",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "120",
+          "line": 83
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2628,10 +2677,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_MARK_STALENESS_THRESHOLD_SECONDS",
-      "template_default": "",
-      "template_references": []
+      "template_default": "30",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "30",
+          "line": 84
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2757,10 +2813,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_PREVIEW_FAILURE_DISABLE_AFTER",
-      "template_default": "",
-      "template_references": []
+      "template_default": "5",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "5",
+          "line": 85
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2802,10 +2865,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_SLIPPAGE_FAILURE_PAUSE_AFTER",
-      "template_default": "",
-      "template_references": []
+      "template_default": "3",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "3",
+          "line": 86
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2834,10 +2904,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_SLIPPAGE_PAUSE_SECONDS",
-      "template_default": "",
-      "template_references": []
+      "template_default": "60",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "60",
+          "line": 87
+        }
+      ]
     },
     {
       "code_paths": [
@@ -2920,10 +2997,17 @@
           "reader": "_get_env"
         }
       ],
-      "in_env_template": false,
+      "in_env_template": true,
       "name": "RISK_VALIDATION_FAILURE_COOLDOWN_SECONDS",
-      "template_default": "",
-      "template_references": []
+      "template_default": "180",
+      "template_references": [
+        {
+          "comment": "",
+          "commented_out": false,
+          "default": "180",
+          "line": 88
+        }
+      ]
     },
     {
       "code_paths": [
@@ -3173,7 +3257,7 @@
           "comment": "",
           "commented_out": false,
           "default": "http://localhost:8200",
-          "line": 92
+          "line": 110
         }
       ]
     },
@@ -3196,7 +3280,7 @@
           "comment": "",
           "commented_out": false,
           "default": "",
-          "line": 93
+          "line": 111
         }
       ]
     },

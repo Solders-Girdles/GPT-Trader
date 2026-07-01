@@ -94,11 +94,54 @@ def test_scan_docs_on_fixture_repo_produces_report(tmp_path: Path) -> None:
 def test_verify_module_or_path_marks_removed_items_stale(item: str, expected_status: str) -> None:
     repo_root = Path(__file__).resolve().parents[3]
     state = scan.load_state(repo_root, fetch_help=False)
+    # A doc that is neither a removal registry nor a migration guide: a removed
+    # identifier here is genuine drift.
     if item.startswith("scripts/"):
-        result = scan.verify_path(state, item)
+        result = scan.verify_path(state, item, "docs/SOME_GUIDE.md")
     else:
-        result = scan.verify_module(state, item, "docs/DEPRECATIONS.md")
+        result = scan.verify_module(state, item, "docs/SOME_GUIDE.md")
     assert result.status == expected_status
+
+
+@pytest.mark.parametrize(
+    ("category", "item", "source_doc"),
+    [
+        # DEPRECATIONS.md is a removal registry: any removed module/path named
+        # there is expected guidance, not drift.
+        ("module", "gpt_trader.orchestration", "docs/DEPRECATIONS.md"),
+        ("path", "src/gpt_trader/orchestration/", "docs/DEPRECATIONS.md"),
+        # A removed module named in the registry whose name contains no
+        # DEPRECATED_MARKERS substring must still be exempted (regression guard:
+        # verify_module previously only honored removals inside the marker branch).
+        ("module", "gpt_trader.legacy_pipeline.runner", "docs/DEPRECATIONS.md"),
+        # ARCHITECTURE.md carries an old->new migration table; marker-matched
+        # (known-removed) identifiers there are exempt.
+        ("module", "gpt_trader.orchestration.execution.degradation", "docs/ARCHITECTURE.md"),
+    ],
+)
+def test_documented_removals_are_not_flagged(category: str, item: str, source_doc: str) -> None:
+    repo_root = Path(__file__).resolve().parents[3]
+    state = scan.load_state(repo_root, fetch_help=False)
+    if category == "module":
+        result = scan.verify_module(state, item, source_doc)
+    else:
+        result = scan.verify_path(state, item, source_doc)
+    assert result.status == "ok"
+
+
+def test_removed_env_var_in_registry_doc_is_ok(tmp_path: Path, monkeypatch) -> None:
+    # An env var absent from template and source, named in the removal registry,
+    # is expected guidance (not "missing"). Force "absent from source" so the
+    # test does not depend on the literal appearing elsewhere in the repo.
+    repo_root = Path(__file__).resolve().parents[3]
+    state = scan.load_state(repo_root, fetch_help=False)
+    monkeypatch.setattr(scan, "_grep_repo", lambda *args, **kwargs: [])
+
+    missing = scan.verify_env_var(state, "SOME_REMOVED_ENV_VAR", "docs/OTHER.md")
+    assert missing.status == "missing"
+
+    registry = scan.verify_env_var(state, "SOME_REMOVED_ENV_VAR", "docs/DEPRECATIONS.md")
+    assert registry.status == "ok"
 
 
 def test_short_cli_flags_are_extracted(tmp_path: Path) -> None:
@@ -141,6 +184,25 @@ def test_verify_module_source_fallback_resolves_flat_module(tmp_path: Path) -> N
     result = scan.verify_module(state, "myproj.features.symbols.derive_thing", "docs/x.md")
     assert result.status == "uncertain"
     assert result.method == "source grep"
+
+
+def test_live_replacement_target_in_registry_is_verified_not_exempted(tmp_path: Path) -> None:
+    # A migration-path replacement target that still exists must be verified via
+    # existence, not blanket-exempted just because its doc is a removal registry --
+    # otherwise a later rename/deletion would be silently missed.
+    pkg = tmp_path / "src" / "myproj" / "features"
+    pkg.mkdir(parents=True)
+    (pkg / "symbols.py").write_text("def derive_thing():\n    return 1\n", encoding="utf-8")
+    state = scan.ScanState(repo_root=tmp_path)
+
+    live = scan.verify_module(state, "myproj.features.symbols.derive_thing", "docs/DEPRECATIONS.md")
+    assert live.status == "uncertain"
+    assert live.method == "source grep"  # resolved by existence, not "documented removal"
+
+    # The same-registry name that does NOT resolve is still exempted as a removal.
+    removed = scan.verify_module(state, "myproj.features.gone.helper", "docs/DEPRECATIONS.md")
+    assert removed.status == "ok"
+    assert removed.method == "documented removal"
 
 
 def test_render_report_collapses_newlines_in_notes(tmp_path: Path) -> None:

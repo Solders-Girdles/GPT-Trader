@@ -287,6 +287,31 @@ def test_open_notional_budget_requires_candidate_notional() -> None:
     assert any("sizing_recommendation.notional is required" in violation for violation in found)
 
 
+def test_open_notional_budget_requires_measurable_open_exposure(
+    trade_idea: TradeIdea,
+) -> None:
+    policy = ApprovalPolicy()
+
+    found = policy.approval_violations(
+        trade_idea,
+        actor_type=ActorType.HUMAN,
+        budget=DEFAULT_RISK_BUDGET,
+        open_approved_count=0,
+        now=NOW,
+        budget_context=ApprovalBudgetContext(
+            open_notional=Decimal("0"),
+            open_notional_unavailable_count=1,
+            account_equity_snapshot=Decimal("10000"),
+        ),
+    )
+
+    assert any(
+        "open budget exposure includes 1 idea(s) without sizing_recommendation.notional"
+        in violation
+        for violation in found
+    )
+
+
 def test_open_notional_budget_requires_positive_equity_snapshot(trade_idea: TradeIdea) -> None:
     policy = ApprovalPolicy()
 

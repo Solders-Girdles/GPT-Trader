@@ -337,14 +337,16 @@ class TradeIdeaService:
             ),
             Decimal("0"),
         )
+        open_notionals = tuple(_absolute_notional(idea) for idea in open_ideas)
         open_notional = sum(
-            (notional for idea in open_ideas if (notional := _absolute_notional(idea)) is not None),
-            Decimal("0"),
+            (notional for notional in open_notionals if notional is not None), Decimal("0")
         )
+        open_notional_unavailable_count = sum(1 for notional in open_notionals if notional is None)
         return ApprovalBudgetContext(
             same_day_realized_loss_pct=same_day_realized_loss_pct,
             open_approved_at_risk_pct=open_approved_at_risk_pct,
             open_notional=open_notional,
+            open_notional_unavailable_count=open_notional_unavailable_count,
             account_equity_snapshot=account_equity_snapshot,
         )
 
@@ -378,6 +380,7 @@ class TradeIdeaService:
             "daily_loss_used_pct": str(daily_loss_used_pct),
             "daily_loss_headroom_pct": str(daily_loss_headroom_pct),
             "open_notional": str(context.open_notional),
+            "open_notional_unavailable_count": context.open_notional_unavailable_count,
             "open_notional_pct": _decimal_to_str(open_notional_pct),
             "open_notional_headroom": _decimal_to_str(open_notional_headroom),
             "open_notional_headroom_pct": _decimal_to_str(open_notional_headroom_pct),

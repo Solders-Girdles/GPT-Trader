@@ -53,6 +53,7 @@ class ApprovalBudgetContext:
     same_day_realized_loss_pct: Decimal = Decimal("0")
     open_approved_at_risk_pct: Decimal = Decimal("0")
     open_notional: Decimal = Decimal("0")
+    open_notional_unavailable_count: int = 0
     account_equity_snapshot: Decimal | None = None
 
 
@@ -137,6 +138,13 @@ class ApprovalPolicy:
                 )
 
         if has_budget_context:
+            if budget_context.open_notional_unavailable_count:
+                violations.append(
+                    "open budget exposure includes "
+                    f"{budget_context.open_notional_unavailable_count} idea(s) without "
+                    "sizing_recommendation.notional; max_open_notional_pct budget "
+                    "exposure cannot be verified"
+                )
             candidate_notional = idea.sizing_recommendation.notional
             if candidate_notional is None:
                 violations.append(

@@ -10,6 +10,7 @@ from tests.unit.gpt_trader.features.trade_ideas.conftest import build_trade_idea
 from gpt_trader.features.trade_ideas import (
     DEFAULT_RISK_BUDGET,
     ActorType,
+    AuditAction,
     CloseoutResolution,
     MaxLoss,
     PolicyViolationError,
@@ -185,6 +186,41 @@ def test_approval_refused_when_candidate_notional_is_missing(
 
     assert any(
         "sizing_recommendation.notional is required" in violation
+        for violation in exc_info.value.violations
+    )
+    assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED
+
+
+def test_approval_refused_when_open_exposure_notional_is_missing(
+    service: TradeIdeaService,
+) -> None:
+    legacy_open = build_trade_idea(
+        decision_id="trade-20260612-legacy-open-missing-notional",
+        sizing_recommendation=SizingRecommendation(
+            quantity=Decimal("0.1"),
+            notional=None,
+            rationale="Legacy approved idea missing absolute notional",
+        ),
+    )
+    service.propose(legacy_open, actor_id="idea-generator-v1")
+    # Model a legacy open approval that predates the stricter notional gate.
+    service._append(
+        legacy_open,
+        action=AuditAction.APPROVED,
+        after_state=TradeIdeaState.APPROVED,
+        actor_type=ActorType.HUMAN,
+        actor_id="rj",
+        reason="Legacy approval before notional was required",
+    )
+    candidate = build_trade_idea(decision_id="trade-20260612-after-legacy-open")
+    service.propose(candidate, actor_id="idea-generator-v1")
+
+    with pytest.raises(PolicyViolationError) as exc_info:
+        service.approve(candidate.decision_id, actor_id="rj", reason="Risk verified")
+
+    assert any(
+        "open budget exposure includes 1 idea(s) without sizing_recommendation.notional"
+        in violation
         for violation in exc_info.value.violations
     )
     assert service.get(candidate.decision_id).state is TradeIdeaState.PROPOSED

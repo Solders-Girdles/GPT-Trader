@@ -35,8 +35,8 @@ These flags expose adapter code paths; they are not approval to trade derivative
 A live derivatives run still requires venue/account verification and the gates in
 [Live Operations](production.md).
 
-- **CFM futures (US)**: `TRADING_MODES=cfm` + `CFM_ENABLED=1` (requires an approved US futures account)
-- **INTX perps**: `COINBASE_ENABLE_INTX_PERPS=1` (requires eligible-region INTX account access)
+- **CFM futures (US)**: `TRADING_MODES=cfm` + `CFM_ENABLED=1` (requires an approved US futures account). This is the only supported derivatives venue.
+- **INTX perps**: removed; see [decision record](decisions/intx-default-derivatives-venue.md) and [Deprecations](DEPRECATIONS.md). `COINBASE_ENABLE_INTX_PERPS` is a deprecated, warn-only alias that now enables CFM.
 
 ## Common Troubleshooting
 

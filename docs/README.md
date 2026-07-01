@@ -126,7 +126,7 @@ an open decision
 - [Environment Variable Inventory](../var/agents/configuration/environment_variables.md) - Full, code-derived reference
 - Default: Spot trading with JWT authentication
 - CFM futures (US) require `TRADING_MODES=cfm` + `CFM_ENABLED=1`
-- INTX perps require `COINBASE_ENABLE_INTX_PERPS=1`
+- INTX perps were removed ([decision record](decisions/intx-default-derivatives-venue.md), [Deprecations](DEPRECATIONS.md)); `COINBASE_ENABLE_INTX_PERPS` is a deprecated, warn-only alias for CFM enablement
 
 ## Additional Resources
 
@@ -145,12 +145,12 @@ relevant adapter; live execution still requires the gates in
 |------|----------|----------------|------|
 | **Spot (default capability)** | BTC-USD, ETH-USD, etc. | JWT (CDP key) | `TRADING_MODES=spot` |
 | **CFM futures (US)** | US futures contracts (expiry-coded symbols) | JWT (CDP key) | `TRADING_MODES=cfm` + `CFM_ENABLED=1` |
-| **INTX perps** | BTC-PERP, ETH-PERP | JWT (CDP key) | `COINBASE_ENABLE_INTX_PERPS=1` |
+| **INTX perps** | Removed — `-PERP` symbols coerce to spot | — | Removed; see [decision record](decisions/intx-default-derivatives-venue.md) |
 
 **Note:** Sandbox does not support futures/perps. Default capability is spot only.
 
 ### Current Focus
-- **Primary implementation:** Coinbase spot adapters (perps code paths compile but require INTX access and approval)
+- **Primary implementation:** Coinbase spot adapters, plus a CFM futures adapter gated on account access and approval (INTX perpetuals were removed; see [Deprecations](DEPRECATIONS.md))
 - **Architecture**: Vertical slice design under `src/gpt_trader/`
 - **Testing**: `uv run pytest`
 

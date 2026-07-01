@@ -255,7 +255,7 @@ as the source changes.
 
 - Update `docs/ARCHITECTURE.md`, `docs/RISK_INTEGRATION_GUIDE.md`, or other
   relevant guides whenever behaviour changes.
-- Note INTX gating whenever derivatives-resident code paths are touched.
+- Note CFM/`us_futures` gating whenever derivatives-resident code paths are touched (INTX perpetuals were removed; see [decision record](decisions/intx-default-derivatives-venue.md)).
 - Keep agent-facing references (`AGENTS.md`, `docs/agents/CODEBASE_MAP.md`, and generated `var/agents/**`) aligned with new workflows.
 
 ## Operational Hygiene

@@ -145,6 +145,48 @@ def test_load_optimize_candidates_accepts_best_only_parameters_export(
     assert candidates[0].optimize_objective_value == Decimal("0.42")
 
 
+def test_load_optimize_candidates_skips_invalid_walk_forward_windows(
+    tmp_path: Path,
+) -> None:
+    study_path = _write_json(
+        tmp_path / "walk-forward.json",
+        {
+            "window_results": [
+                {
+                    "window_id": "failed",
+                    "is_valid": False,
+                    "best_parameters": {
+                        "short_ma_period": 2,
+                        "long_ma_period": 4,
+                    },
+                },
+                {
+                    "window_id": "empty",
+                    "is_valid": True,
+                    "best_parameters": {},
+                },
+                {
+                    "window_id": "valid",
+                    "is_valid": True,
+                    "best_parameters": {
+                        "short_ma_period": 3,
+                        "long_ma_period": 5,
+                    },
+                },
+            ]
+        },
+    )
+
+    candidates = load_optimize_baseline_candidates(
+        study_path,
+        base_config=BaselineProposerConfig(),
+    )
+
+    assert [candidate.candidate_id for candidate in candidates] == ["valid"]
+    assert candidates[0].config.short_window == 3
+    assert candidates[0].config.long_window == 5
+
+
 def test_load_optimize_candidates_preserves_zero_trial_number(
     tmp_path: Path,
 ) -> None:

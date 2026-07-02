@@ -194,7 +194,11 @@ def _raw_candidates(payload: Any) -> list[dict[str, Any]]:
     if isinstance(payload.get("candidates"), list):
         return [item for item in payload["candidates"] if isinstance(item, dict)]
     if isinstance(payload.get("window_results"), list):
-        return [item for item in payload["window_results"] if isinstance(item, dict)]
+        return [
+            item
+            for item in payload["window_results"]
+            if isinstance(item, dict) and _is_replayable_window_result(item)
+        ]
     if isinstance(payload.get("trials"), list):
         return [
             item
@@ -206,6 +210,13 @@ def _raw_candidates(payload: Any) -> list[dict[str, Any]]:
     if isinstance(payload.get("parameters"), dict):
         return [payload]
     return []
+
+
+def _is_replayable_window_result(item: dict[str, Any]) -> bool:
+    if item.get("is_valid") is False:
+        return False
+    parameters = _first_present(item, ("parameters", "best_parameters"))
+    return isinstance(parameters, dict) and bool(parameters)
 
 
 def _candidate_from_payload(

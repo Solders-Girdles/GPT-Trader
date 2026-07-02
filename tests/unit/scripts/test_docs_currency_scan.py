@@ -27,6 +27,14 @@ def test_verify_path_marks_runtime_paths_uncertain(tmp_path: Path, item: str) ->
     assert result.status == "uncertain"
 
 
+@pytest.mark.parametrize("item", ["var/logstash/config.yml", "var/logs_archive/report.json"])
+def test_verify_path_checks_non_log_sibling_paths(tmp_path: Path, item: str) -> None:
+    state = scan.ScanState(repo_root=tmp_path, tracked_paths=set())
+
+    result = scan.verify_path(state, item)
+    assert result.status == "missing"
+
+
 def test_verify_path_ignores_untracked_local_files_when_git_index_known(tmp_path: Path) -> None:
     local_artifact = tmp_path / "var" / "ops" / "controls_smoke.json"
     local_artifact.parent.mkdir(parents=True)

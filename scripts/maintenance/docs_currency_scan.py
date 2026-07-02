@@ -412,11 +412,13 @@ def _grep_repo(state: ScanState, needle: str, *, suffixes: tuple[str, ...] = (".
 
 
 def _is_runtime_or_placeholder_path(item: str) -> bool:
+    if item == "var/logs":
+        return True
     if item.startswith(
         (
             "runtime_data/",
             "var/data/",
-            "var/logs",
+            "var/logs/",
             "var/results/",
             "var/snapshots/",
             "review_artifacts/",

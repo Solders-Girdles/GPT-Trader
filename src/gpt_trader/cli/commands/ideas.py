@@ -38,6 +38,7 @@ from gpt_trader.errors import ValidationError
 from gpt_trader.features.trade_ideas import (
     DEFAULT_TIME_IN_FORCE,
     DEFAULT_VENUE_ORDER_TYPE,
+    REPLAY_OPTIMIZE_OBJECTIVES,
     ActorType,
     AuditAction,
     AuditIntegrityError,
@@ -50,6 +51,8 @@ from gpt_trader.features.trade_ideas import (
     MarketSnapshot,
     MarketSnapshotBuilder,
     MarketSnapshotBuildRequest,
+    OptimizeBaselineCandidate,
+    OptimizeBaselineReplayReport,
     PaperFillReconciler,
     PolicyViolationError,
     ReplayReport,
@@ -66,7 +69,10 @@ from gpt_trader.features.trade_ideas import (
     canonical_ticket_json,
     create_trade_idea_service,
     is_safe_decision_id,
+    load_optimize_baseline_candidates,
     market_snapshot_to_payload,
+    optimize_replay_min_history,
+    replay_optimize_baseline_candidates,
     resolve_trade_idea_actor_id,
     validate_paper_reconciliation_profile,
 )
@@ -415,6 +421,20 @@ def register(subparsers: Any) -> None:
         "--source",
         default="fixture:candles",
         help="Source label stamped into point-in-time replay snapshots",
+    )
+    baseline.add_argument(
+        "--from-optimize-study",
+        type=Path,
+        help=(
+            "Read optimize-sourced candidate parameters from a JSON study export "
+            "and rank them by replay metrics instead of replaying one config"
+        ),
+    )
+    baseline.add_argument(
+        "--optimize-objective",
+        choices=REPLAY_OPTIMIZE_OBJECTIVES,
+        default="target-hit-rate",
+        help="Replay metric used to rank --from-optimize-study candidates",
     )
     baseline.add_argument(
         "--min-history",
@@ -969,6 +989,22 @@ def _resolve_replay_min_history(args: Namespace, config: BaselineProposerConfig)
     return requested_min_history
 
 
+def _resolve_optimize_replay_min_history(
+    args: Namespace,
+    candidates: tuple[OptimizeBaselineCandidate, ...],
+) -> int:
+    minimum_history = optimize_replay_min_history(candidates)
+    requested_min_history = cast(int | None, args.min_history)
+    if requested_min_history is None:
+        return minimum_history
+    if requested_min_history < minimum_history:
+        raise CandleInputError(
+            f"--min-history must be at least {minimum_history} for optimize candidates",
+            field="min_history",
+        )
+    return requested_min_history
+
+
 def _validate_replay_granularity(granularity: str) -> None:
     if _granularity_duration(granularity) is None:
         raise CandleInputError(
@@ -1414,8 +1450,33 @@ def _handle_replay_baseline(args: Namespace) -> CliResponse:
             expected_hold=args.expected_hold,
             price_precision=args.price_precision,
         )
+        optimize_study = cast(Path | None, getattr(args, "from_optimize_study", None))
+        if optimize_study is not None:
+            candidates = load_optimize_baseline_candidates(
+                optimize_study,
+                base_config=proposer_config,
+            )
+            min_history = _resolve_optimize_replay_min_history(args, candidates)
+            optimize_report = replay_optimize_baseline_candidates(
+                candidates,
+                study_path=optimize_study,
+                objective=args.optimize_objective,
+                symbol=args.symbol,
+                granularity=args.granularity,
+                candles=candles,
+                replay_config=ReplayRunnerConfig(source=args.source, min_history=min_history),
+            )
+            payload = optimize_report.to_dict()
+            text = _optimize_baseline_replay_text(optimize_report)
+            return _success(
+                command,
+                args,
+                payload,
+                text,
+                was_noop=all(row.report.ideas_proposed == 0 for row in optimize_report.rows),
+            )
         min_history = _resolve_replay_min_history(args, proposer_config)
-        report = TradeIdeaReplayRunner(
+        replay_report = TradeIdeaReplayRunner(
             BaselineProposer(proposer_config),
             config=ReplayRunnerConfig(source=args.source, min_history=min_history),
         ).run_series(symbol=args.symbol, granularity=args.granularity, candles=candles)
@@ -1424,9 +1485,9 @@ def _handle_replay_baseline(args: Namespace) -> CliResponse:
     except Exception as error:
         return _mapped_error(command, args, error)
 
-    payload = report.to_dict()
-    text = _replay_report_text(report)
-    return _success(command, args, payload, text, was_noop=report.ideas_proposed == 0)
+    payload = replay_report.to_dict()
+    text = _replay_report_text(replay_report)
+    return _success(command, args, payload, text, was_noop=replay_report.ideas_proposed == 0)
 
 
 def _handle_closeout_record(args: Namespace) -> CliResponse:
@@ -2436,6 +2497,35 @@ def _replay_report_text(report: ReplayReport) -> str:
             ),
         ]
     )
+
+
+def _optimize_baseline_replay_text(report: OptimizeBaselineReplayReport) -> str:
+    lines = [
+        _status_line(
+            "ideas replay baseline",
+            "OK",
+            (
+                f"{report.symbol} {report.granularity}, "
+                f"candidates={len(report.rows)}, objective={report.objective}"
+            ),
+        ),
+        f"study_path: {report.study_path}",
+        "RANK  CANDIDATE_ID  PROPOSER_ID  REPLAY_OBJECTIVE  IDEAS  TARGET_HIT_RATE  AVG_R",
+    ]
+    for row in report.rows:
+        average_return_r = row.report.average_return_r
+        lines.append(
+            "{rank}  {candidate_id}  {proposer_id}  {objective}  {ideas}  {target}  {average}".format(
+                rank=row.rank,
+                candidate_id=row.candidate_id,
+                proposer_id=row.proposer_id,
+                objective=row.replay_objective_value.normalize(),
+                ideas=row.report.ideas_proposed,
+                target=_decimal_pct(row.report.target_hit_rate),
+                average=(average_return_r.normalize() if average_return_r is not None else "n/a"),
+            )
+        )
+    return "\n".join(lines)
 
 
 def _decimal_pct(value: Decimal) -> str:
